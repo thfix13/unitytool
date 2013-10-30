@@ -1,14 +1,15 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Collections;
 using System.Linq;
 
-public class Voronoi : MonoBehaviour {
+public class PCG : MonoBehaviour {
 	
 	public static int numOfEnemies = 0;
 	public static int numOfRegions = 0;
+	public static int numOfCameras = 0;
 	public static GameObject[] gos = null;
 	public static GameObject waypointPrefab = null;
 	public static List<Vector2> voronoiCentre = null;
@@ -78,29 +79,10 @@ public class Voronoi : MonoBehaviour {
 	}
 	
 	public static int[] SelectMaximumRegions () {
-		
-		// cntList = new Array<int> (numOfEnemies);
 		cntArray = new int[numOfRegions + 1];
 		maxAreaIndexHolder = new int[numOfEnemies];
 		// counting
 		foreach (int i in nearestIndice) {
-//			switch (i) {
-//			case 0:
-//				cntArray [0]++;
-//				break;
-//			case 1:
-//				cntArray [1]++;
-//				break;
-//			case 2:
-//				cntArray [2]++;
-//				break;
-//			case 3:
-//				cntArray [3]++;
-//				break;
-//			case 4:
-//				cntArray [4]++;
-//				break;
-//			}
 			cntArray [i] ++;
 		}
 		

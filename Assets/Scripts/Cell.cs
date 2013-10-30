@@ -10,6 +10,8 @@ public class Cell
 	public bool noisy = false;
 	public bool waypoint = false;
 	
+	public int nearestVoronoiCentre = -1;
+	
 	public Boolean IsWalkable() {
 		return safe || (!(blocked || seen));
 	}

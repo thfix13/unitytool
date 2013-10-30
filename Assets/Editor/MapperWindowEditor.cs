@@ -11,14 +11,17 @@ public class MapperWindowEditor : EditorWindow
 	
 	// Data holders
 	public static Cell[][][] fullMap;
+	public static Cell[][] obs;
 	public static List<Path> paths = new List<Path> ();
 	public static List<Node> mostDanger = null, shortest = null, lengthiest = null, fastest = null, longest = null;
 	// Parameters
-	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 60, ticksBehind = 0;
-	public static bool drawMap = true, drawMoveMap = false, drawMoveUnits = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = false, smoothPath = true, drawShortestPath = false, drawLongestPath = false, drawLengthiestPath = false, drawFastestPath = false, drawMostDangerousPath = false, drawFoVOnly = false, seeByTime = false, seeByLength = false, seeByDanger = false, seeByLoS = false, seeByDanger3 = false, seeByLoS3 = false, seeByDanger3Norm = false, seeByLoS3Norm = false, seeByCrazy = false, seeByVelocity = false;
+	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 60, ticksBehind = 0, numOfEnemies = 0, numOfRegions = 0, numOfCameras = 0, iterations2 = 5;
+	public static bool drawMap = true, drawMoveMap = false, drawMoveUnits = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = false, drawVoronoi = false, smoothPath = true, drawShortestPath = false, drawLongestPath = false, drawLengthiestPath = false, drawFastestPath = false, drawMostDangerousPath = false, drawFoVOnly = false, seeByTime = false, seeByLength = false, seeByDanger = false, seeByLoS = false, seeByDanger3 = false, seeByLoS3 = false, seeByDanger3Norm = false, seeByLoS3Norm = false, seeByCrazy = false, seeByVelocity = false;
+	public static bool randomOpEnables = false, setPathOpEnables = false;
+	public static bool setEnemiesFoldout = false, queryVoronoiDiagramFoldout = false, computePathFoldout = false, default1 = true, default2 = true, default3 = true;
 	public static float stepSize = 1 / 10f, crazySeconds = 5f;
 	public static int[,] heatMap;
-	public static GameObject start = null, end = null, floor = null, playerPrefab = null;
+	public static GameObject start = null, end = null, floor = null, playerPrefab = null, enemyPrefab = null, waypointPrefab = null;
 	public static List<GameObject> waypoints = new List<GameObject> ();
 	public static Dictionary<Path, bool> toggleStatus = new Dictionary<Path, bool> ();
 	public static Dictionary<Path, GameObject> players = new Dictionary<Path, GameObject> ();
@@ -31,6 +34,7 @@ public class MapperWindowEditor : EditorWindow
 	private Mapper mapper;
 	private RRTKDTree rrt = new RRTKDTree ();
 	private MapperEditorDrawer drawer;
+	private static GameObject[] centreObjects = null;
 	
 	[MenuItem("Window/Mapper")]
 	static void Init ()
@@ -131,8 +135,8 @@ public class MapperWindowEditor : EditorWindow
 				StorePositions ();
 				simulated = true;
 			}
-			fullMap = mapper.PrecomputeMaps (floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind);
 			
+			fullMap = mapper.PrecomputeMaps (floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind);
 			drawer.fullMap = fullMap;
 			float maxSeenGrid;
 			drawer.seenNeverSeen = Analyzer.ComputeSeenValuesGrid (fullMap, out maxSeenGrid);
@@ -308,7 +312,7 @@ public class MapperWindowEditor : EditorWindow
 			Analyzer.ComputePathsLoSValues (paths, SpaceState.Enemies, floor.collider.bounds.min, SpaceState.TileSize.x, SpaceState.TileSize.y, fullMap, drawer.seenNeverSeen, drawer.seenNeverSeenMax);
 			Analyzer.ComputePathsDangerValues (paths, SpaceState.Enemies, floor.collider.bounds.min, SpaceState.TileSize.x, SpaceState.TileSize.y, fullMap, drawer.seenNeverSeen, drawer.seenNeverSeenMax);
 			Analyzer.ComputeCrazyness (paths, fullMap, Mathf.FloorToInt (crazySeconds / stepSize));
-			Analyzer.ComputePathsVelocityValues(paths);
+			Analyzer.ComputePathsVelocityValues (paths);
 			
 			arrangedByTime = new List<Path> ();
 			arrangedByTime.AddRange (paths);
@@ -487,17 +491,149 @@ public class MapperWindowEditor : EditorWindow
 		
 		// ----------------------------------
 		
-		#region Voronoi
-		/*
+		#region Random Enemies
+		
 		EditorGUILayout.LabelField ("");
-		EditorGUILayout.LabelField ("7. Voronoi");
+		EditorGUILayout.LabelField ("7. Random Enemies");
 		
-		
-		
-		if (GUILayout.Button ("Calculate Voronoi")) {
-			CalculateVoronoi ();
+		if (waypointPrefab == null) {
+			waypointPrefab = Resources.Load ("Waypoint") as GameObject;
+			if (waypointPrefab != null) {
+				Debug.Log ("Loading waypoint prefab from resources folder successfully!");
+				PCG.Initialize (waypointPrefab);
+			} else {
+				waypointPrefab = GameObject.FindGameObjectWithTag ("Waypoint");
+				if (waypointPrefab != null) {
+					Debug.Log ("Loading waypoint prefab from scene successfully!");
+				}
+			}
 		}
-		*/
+		
+		randomOpEnables = mapper != null ? true : false;
+		GUI.enabled = randomOpEnables;
+		
+		if (default1 == true) {
+			default1 = false;
+			setEnemiesFoldout = EditorGUILayout.Foldout (true, "Set Enemies");
+		} else {
+			setEnemiesFoldout = EditorGUILayout.Foldout (setEnemiesFoldout, "Set Enemies");
+		}
+		
+		if (randomOpEnables) {
+		}
+		
+		if (setEnemiesFoldout) {
+			enemyPrefab = Resources.Load ("Enemy") as GameObject;
+			enemyPrefab = (GameObject)EditorGUILayout.ObjectField ("Enemy Prefab", enemyPrefab, typeof(GameObject), false);
+			numOfEnemies = EditorGUILayout.IntField ("Number of enemies", numOfEnemies);
+			// Rules between numOfEnemies and numOfRegions; could apply art gallery theorem here
+			numOfRegions = numOfEnemies != 0 ? 2 * numOfEnemies - 1 : 0;
+			// Rules between numOfEnemies and numOfCameras; could be unrelated here
+			numOfCameras = numOfRegions - numOfEnemies;
+			
+			if (GUILayout.Button ("Populate Enemies")) {
+				obs = mapper.ComputeObstacles ();
+				Cell[][] grid = MapperEditor.grid;
+				if (grid != null) {
+					for (int x = 0; x < obs.Length; x++) {
+						for (int y = 0; y < obs[x].Length; y++)
+							if (grid [x] [y] != null)
+								obs [x] [y] = grid [x] [y];
+					}
+				}	
+				
+				if (enemyPrefab != null) {
+					Debug.Log ("Loading enemy prefab from resources folder successfully!");	
+				} else {
+					enemyPrefab = GameObject.FindGameObjectWithTag ("Enemy");
+					if (enemyPrefab != null) {
+						Debug.Log ("Loading enemy prefab from scene successfully!");	
+					}
+				}
+				
+				for (int i = 0; i < numOfRegions; i++) {
+					Vector3 position;
+					do {
+						position = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));
+					} while (obs[(int)((position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true);
+					GameObject enemy = GameObject.Instantiate (enemyPrefab, position, Quaternion.identity) as GameObject;
+					enemy.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);
+				}
+			
+//				Vector3 sgPosition;
+//				do {
+//					sgPosition = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));
+//				} while (obs[(int)((sgPosition.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((sgPosition.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true);
+//				GameObject sg = GameObject.Instantiate (sgPrefab, sgPosition, Quaternion.identity) as GameObject;
+//				sg.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);
+				
+				centreObjects = GameObject.FindGameObjectsWithTag ("Enemy").OrderBy (go => go.transform.position.x).ToArray ();
+				// Hide all region centres
+				GameObject[] enemyObjects = null;
+				enemyObjects = GameObject.FindGameObjectsWithTag ("Enemy").OrderBy (go => go.transform.position.x).ToArray ();
+				foreach (GameObject enemyObject in enemyObjects) {
+					Enemy enemyScript;
+					enemyScript = enemyObject.GetComponent ("Enemy") as Enemy;
+					enemyScript.LineForFOV = new Color (1.0f, 1.0f, 1.0f, 0.0f);
+					enemyObject.renderer.enabled = false;
+				}
+				
+				// Calculate different voronoi regions and visualization is ready
+				PCG.CalculateVoronoiRegions (floor, obs, numOfEnemies, numOfRegions);
+				drawer.voronoiGrid = obs;
+				
+				// Select [numOfEnemies] regions with maximum area
+				int[] maxAreaIndexArray = PCG.SelectMaximumRegions ();
+				
+				// Show region centres with [numOfEnemies] regions with maximum area
+				for (int i = 0; i < numOfEnemies; i++) {
+					Enemy enemyRestoredScript;
+					enemyRestoredScript = enemyObjects.ElementAt (maxAreaIndexArray [i]).GetComponent ("Enemy") as Enemy;
+					enemyRestoredScript.LineForFOV = new Color (1.0f, 0.3f, 0.0f, 1.0f);
+					enemyObjects.ElementAt (maxAreaIndexArray [i]).renderer.enabled = true;
+				}
+				setPathOpEnables = true;
+			}
+			EditorGUILayout.LabelField ("");
+		}
+		
+		if (default2 == true) {
+			default2 = false;
+			queryVoronoiDiagramFoldout = EditorGUILayout.Foldout (true, "Query Voronoi Diagram Info");
+		} else {
+			queryVoronoiDiagramFoldout = EditorGUILayout.Foldout (queryVoronoiDiagramFoldout, "Query Voronoi Diagram Info");
+		}
+		if (queryVoronoiDiagramFoldout) { 
+			// Show the number of Voronoi centres
+			numOfRegions = numOfEnemies != 0 ? 2 * numOfEnemies - 1 : 0;
+			EditorGUILayout.TextField ("Number of regions", numOfRegions.ToString ());
+			// Toggle between visualizing or not
+			drawVoronoi = EditorGUILayout.Toggle ("Draw Voronoi Cells", drawVoronoi);
+			EditorGUILayout.LabelField ("");
+		}
+		
+		// Path
+		GUI.enabled = setPathOpEnables;
+		
+		if (default3 == true) {
+			default3 = false;
+			computePathFoldout = EditorGUILayout.Foldout (true, "Compute Path");
+		} else {
+			computePathFoldout = EditorGUILayout.Foldout (computePathFoldout, "Compute Path");
+		}
+		iterations2 = EditorGUILayout.IntSlider ("Iterations", iterations2, 1, 20);
+		if (computePathFoldout) {
+			if (GUILayout.Button ("Set Patroling Path")) {
+				// ***
+				PCG.PathInVoronoiRegion (floor, obs, iterations2);
+				PCG.DestroyVoronoiCentre ();
+				// StorePositions ();
+			}
+		}
+		
+		GUI.enabled = true;
+		
+		
 		#endregion
 		
 		
@@ -535,6 +671,7 @@ public class MapperWindowEditor : EditorWindow
 			drawer.drawNeverSeen = drawNeverSeen;
 			drawer.drawPath = drawPath;
 			drawer.paths = toggleStatus;
+			drawer.drawVoronoi = drawVoronoi;
 			
 		}
 		
