@@ -528,8 +528,9 @@ public class MapperWindowEditor : EditorWindow
 			numOfEnemies = EditorGUILayout.IntField ("Number of enemies", numOfEnemies);
 			// Rules between numOfEnemies and numOfRegions; could apply art gallery theorem here
 			numOfRegions = numOfEnemies != 0 ? 2 * numOfEnemies - 1 : 0;
-			// Rules between numOfEnemies and numOfCameras; could be unrelated here
-			numOfCameras = numOfRegions - numOfEnemies;
+			// Stationary cameras
+			numOfCameras = EditorGUILayout.IntField ("Number of cameras", numOfCameras);
+			// Rotational cameras
 			
 			if (GUILayout.Button ("Populate Enemies")) {
 				obs = mapper.ComputeObstacles ();
@@ -551,6 +552,8 @@ public class MapperWindowEditor : EditorWindow
 					}
 				}
 				
+				// ----------------------------------Moving Enemies-----------------------------------//
+				
 				for (int i = 0; i < numOfRegions; i++) {
 					Vector3 position;
 					do {
@@ -559,13 +562,6 @@ public class MapperWindowEditor : EditorWindow
 					GameObject enemy = GameObject.Instantiate (enemyPrefab, position, Quaternion.identity) as GameObject;
 					enemy.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);
 				}
-			
-//				Vector3 sgPosition;
-//				do {
-//					sgPosition = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));
-//				} while (obs[(int)((sgPosition.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((sgPosition.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true);
-//				GameObject sg = GameObject.Instantiate (sgPrefab, sgPosition, Quaternion.identity) as GameObject;
-//				sg.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);
 				
 				centreObjects = GameObject.FindGameObjectsWithTag ("Enemy").OrderBy (go => go.transform.position.x).ToArray ();
 				// Hide all region centres
@@ -592,7 +588,148 @@ public class MapperWindowEditor : EditorWindow
 					enemyRestoredScript.LineForFOV = new Color (1.0f, 0.3f, 0.0f, 1.0f);
 					enemyObjects.ElementAt (maxAreaIndexArray [i]).renderer.enabled = true;
 				}
+				
+				// -------------------------------Stationary Cameras-------------------------------- //
+				
+				for (int i = 0; i < numOfCameras; i++) {
+					Vector3 position;
+					do {
+						position = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));
+					} while (obs[(int)((position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true);
+					GameObject enemy = GameObject.Instantiate (enemyPrefab, position, Quaternion.identity) as GameObject;
+					enemy.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);
+					
+					Enemy scScript;
+					scScript = enemy.GetComponent ("Enemy") as Enemy;
+					scScript.rotationSpeed = 100;
+					scScript.moveSpeed = 1;
+					
+					// Find aiming position
+					Vector3 defaultPos = enemy.transform.position;
+					Vector3 tempVector = new Vector3 (0.0f, 0.0f, 0.0f);
+					Vector3 defaultDir = new Vector3 (0.0f, 0.0f, 0.0f);
+					// rangeArray[0] = minX, rangeArray[1] = minY, rangeArray[2] = maxX, rangeArray[3] = maxY;
+					float[] rangeArray = new float[4];
+					
+					float maxDistance = 0.0f;
+					List<Vector3> lookingDirVec = new List<Vector3> ();
+					lookingDirVec.Add (new Vector3 (0.0f, 0.0f, 1.0f));
+					lookingDirVec.Add (new Vector3 (1.0f, 0.0f, 1.0f));
+					lookingDirVec.Add (new Vector3 (1.0f, 0.0f, 0.0f));
+					lookingDirVec.Add (new Vector3 (1.0f, 0.0f, -1.0f));
+					lookingDirVec.Add (new Vector3 (0.0f, 0.0f, -1.0f));
+					lookingDirVec.Add (new Vector3 (-1.0f, 0.0f, -1.0f));
+					lookingDirVec.Add (new Vector3 (-1.0f, 0.0f, 0.0f));
+					lookingDirVec.Add (new Vector3 (-1.0f, 0.0f, 1.0f));
+					// Foreach direction in 8 directions
+					foreach (Vector3 vdir in lookingDirVec) {
+						// Eliminate the possibility that a stationary guard could see the goal postion or starting postion
+						rangeArray = calculateRange (vdir, defaultPos, scScript.fovDistance, scScript.fovAngle);
+						if (((GameObject.FindGameObjectWithTag ("End").transform.position.x < rangeArray [0] || GameObject.FindGameObjectWithTag ("End").transform.position.x > rangeArray [2]
+							|| GameObject.FindGameObjectWithTag ("End").transform.position.y < rangeArray [1] || GameObject.FindGameObjectWithTag ("End").transform.position.y > rangeArray [3])
+							&& (GameObject.FindGameObjectWithTag ("Start").transform.position.x < rangeArray [0] || GameObject.FindGameObjectWithTag ("Start").transform.position.x > rangeArray [2]
+							|| GameObject.FindGameObjectWithTag ("Start").transform.position.y < rangeArray [1] || GameObject.FindGameObjectWithTag ("Start").transform.position.y > rangeArray [3]))
+							|| (Physics.Raycast (defaultPos, new Vector3 (GameObject.FindGameObjectWithTag ("End").transform.position.x - defaultPos.x, 0.0f, GameObject.FindGameObjectWithTag ("End").transform.position.z - defaultPos.z), scScript.fovDistance)
+							|| Physics.Raycast (defaultPos, new Vector3 (GameObject.FindGameObjectWithTag ("Start").transform.position.x - defaultPos.x, 0.0f, GameObject.FindGameObjectWithTag ("Start").transform.position.z - defaultPos.z), scScript.fovDistance))) {
+							RaycastHit hit;
+							if (Physics.Raycast (defaultPos, vdir, out hit)) {
+								Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+								Debug.Log (hit.distance);
+								if (hit.distance > maxDistance) {
+									maxDistance = hit.distance;
+									tempVector = vdir;
+								}
+							} else {
+								if (vdir.x == 0.0f && vdir.z == 1.0f) {
+									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									Debug.Log (defaultPos.z - floor.collider.bounds.min.z);
+									if (defaultPos.z - floor.collider.bounds.min.z > maxDistance) {
+										maxDistance = defaultPos.z - floor.collider.bounds.min.z;
+										tempVector = vdir;
+									}
+								} else if (vdir.x == 1.0f && vdir.z == 1.0f) {
+									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.z - floor.collider.bounds.min.z, 2.0f));
+									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.x - defaultPos.x, 2.0f));
+									float solution = a1 > a2 ? a2 : a1;
+									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									Debug.Log (solution);
+									if (solution > maxDistance) {
+										maxDistance = solution;
+										tempVector = vdir;
+									}
+								} else if (vdir.x == 1.0f && vdir.z == 0.0f) {
+									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									Debug.Log (floor.collider.bounds.max.x - defaultPos.x);
+									if (floor.collider.bounds.max.x - defaultPos.x > maxDistance) {
+										maxDistance = floor.collider.bounds.max.x - defaultPos.x;
+										tempVector = vdir;
+									}
+								} else if (vdir.x == 1.0f && vdir.z == -1.0f) {
+									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.x - defaultPos.x, 2.0f));
+									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.z - defaultPos.z, 2.0f));
+									float solution = a1 > a2 ? a2 : a1;
+									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									Debug.Log (solution);
+									if (solution > maxDistance) {
+										maxDistance = solution;
+										tempVector = vdir;
+									}
+								} else if (vdir.x == 0.0f && vdir.z == -1.0f) {
+									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									Debug.Log (floor.collider.bounds.max.z - defaultPos.z);
+									if (floor.collider.bounds.max.z - defaultPos.z > maxDistance) {
+										maxDistance = floor.collider.bounds.max.z - defaultPos.z;
+										tempVector = vdir;
+									}
+								} else if (vdir.x == -1.0f && vdir.z == -1.0f) {
+									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.x - floor.collider.bounds.min.x, 2.0f));
+									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.z - defaultPos.z, 2.0f));
+									float solution = a1 > a2 ? a2 : a1;
+									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									Debug.Log (solution);
+									if (solution > maxDistance) {
+										maxDistance = solution;
+										tempVector = vdir;
+									}
+								} else if (vdir.x == -1.0f && vdir.z == 0.0f) {
+									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									Debug.Log (defaultPos.x - floor.collider.bounds.min.x);
+									if (defaultPos.x - floor.collider.bounds.min.x > maxDistance) {
+										maxDistance = defaultPos.x - floor.collider.bounds.min.x;
+										tempVector = vdir;
+									}
+								} else if (vdir.x == -1.0f && vdir.z == 1.0f) {
+									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.x - floor.collider.bounds.min.x, 2.0f));
+									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.z - floor.collider.bounds.min.z, 2.0f));
+									float solution = a1 > a2 ? a2 : a1;
+									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									Debug.Log (solution);
+									if (solution > maxDistance) {
+										maxDistance = solution;
+										tempVector = vdir;
+									}
+								}
+							}
+						}
+					}
+					defaultDir = tempVector;
+					
+					// Create waiting waypoint aimed at
+					Vector3 wwpPos = new Vector3 (defaultPos.x + defaultDir.x * scScript.fovDistance / Mathf.Sqrt (defaultDir.x * defaultDir.x + defaultDir.z * defaultDir.z), 0.0f,
+						defaultPos.z + defaultDir.z * scScript.fovDistance / Mathf.Sqrt (defaultDir.x * defaultDir.x + defaultDir.z * defaultDir.z));
+					GameObject wwp = GameObject.Instantiate (waypointPrefab, wwpPos, Quaternion.identity) as GameObject;
+					wwp.AddComponent ("WaitingWaypoint");
+					DestroyImmediate (wwp.GetComponent ("Waypoint"));
+					WaitingWaypoint wwpScript;
+					wwpScript = wwp.GetComponent ("Waypoint") as WaitingWaypoint;
+					wwpScript.next = wwpScript;
+					wwpScript.waitingTime = 1000000.0f;
+					scScript.target = wwpScript;
+					scScript.transform.LookAt (wwpPos);
+				}	
+				
 				setPathOpEnables = true;
+
 			}
 			EditorGUILayout.LabelField ("");
 		}
@@ -681,6 +818,41 @@ public class MapperWindowEditor : EditorWindow
 		}
 		
 		SceneView.RepaintAll ();
+	}
+	
+	// Calculate range
+	private float[] calculateRange (Vector3 vdir, Vector3 defaultPos, float fovDistance, float fovAngle)
+	{
+		float[] range = new float[4];
+		float minX, minY, maxX, maxY;
+		float cosTheta, sinTheta, x, y, xA, yA, xB, yB;
+		Vector2 pA, pB, pC, dir;
+		pC = new Vector2 (defaultPos.x, defaultPos.z);
+		dir = new Vector2 (vdir.x, vdir.z);
+		
+		cosTheta = dir.x / Mathf.Sqrt (dir.x * dir.x + dir.y * dir.y);
+		sinTheta = dir.y / Mathf.Sqrt (dir.x * dir.x + dir.y * dir.y);
+		x = fovDistance;
+		y = fovDistance * Mathf.Tan ((fovAngle / 2) / 180.0f * Mathf.PI);
+		xA = cosTheta * x - sinTheta * y + pC.x;
+		yA = sinTheta * x + cosTheta * y + pC.y;
+		xB = cosTheta * x + sinTheta * y + pC.x;
+		yB = sinTheta * x - cosTheta * y + pC.y;
+		pA = new Vector2 (xA, yA);
+		pB = new Vector2 (xB, yB);
+		
+		// min and max
+		maxX = Mathf.Max (Mathf.Max (pA.x, pB.x), pC.x);
+		minX = Mathf.Min (Mathf.Min (pA.x, pB.x), pC.x);
+		maxY = Mathf.Max (Mathf.Max (pA.y, pB.y), pC.y);
+		minY = Mathf.Min (Mathf.Min (pA.y, pB.y), pC.y);
+		
+		range [0] = minX;
+		range [1] = minY;
+		range [2] = maxX;
+		range [3] = maxY;
+		
+		return range;
 	}
 
 	void BatchComputing ()
