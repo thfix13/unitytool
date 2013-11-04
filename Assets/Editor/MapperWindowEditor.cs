@@ -15,7 +15,7 @@ public class MapperWindowEditor : EditorWindow
 	public static List<Path> paths = new List<Path> ();
 	public static List<Node> mostDanger = null, shortest = null, lengthiest = null, fastest = null, longest = null;
 	// Parameters
-	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 60, ticksBehind = 0, numOfEnemies = 0, numOfRegions = 0, numOfCameras = 0, iterations2 = 5;
+	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 60, ticksBehind = 0, numOfEnemies = 0, numOfRegions = 0, numOfCameras = 0, numOfRotCameras = 0, iterations2 = 5;
 	public static bool drawMap = true, drawMoveMap = false, drawMoveUnits = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = false, drawVoronoi = false, smoothPath = true, drawShortestPath = false, drawLongestPath = false, drawLengthiestPath = false, drawFastestPath = false, drawMostDangerousPath = false, drawFoVOnly = false, seeByTime = false, seeByLength = false, seeByDanger = false, seeByLoS = false, seeByDanger3 = false, seeByLoS3 = false, seeByDanger3Norm = false, seeByLoS3Norm = false, seeByCrazy = false, seeByVelocity = false;
 	public static bool randomOpEnables = false, setPathOpEnables = false;
 	public static bool setEnemiesFoldout = false, queryVoronoiDiagramFoldout = false, computePathFoldout = false, default1 = true, default2 = true, default3 = true;
@@ -531,8 +531,11 @@ public class MapperWindowEditor : EditorWindow
 			// Stationary cameras
 			numOfCameras = EditorGUILayout.IntField ("Number of cameras", numOfCameras);
 			// Rotational cameras
+			numOfRotCameras = EditorGUILayout.IntField ("Number of rot cam", numOfRotCameras);
 			
 			if (GUILayout.Button ("Populate Enemies")) {
+				clearUpEnemies ();
+				clearUpPaths ();
 				obs = mapper.ComputeObstacles ();
 				Cell[][] grid = MapperEditor.grid;
 				if (grid != null) {
@@ -728,6 +731,151 @@ public class MapperWindowEditor : EditorWindow
 					scScript.transform.LookAt (wwpPos);
 				}	
 				
+				//---------------------------------Rotational Cameras-----------------------------------//
+				
+				for (int i = 0; i < numOfRotCameras; i++) {
+					Vector3 position;
+					do {
+						position = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));
+					} while (obs[(int)((position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true);
+					GameObject enemy = GameObject.Instantiate (enemyPrefab, position, Quaternion.identity) as GameObject;
+					enemy.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);
+					
+					Enemy rcScript;
+					rcScript = enemy.GetComponent ("Enemy") as Enemy;
+					rcScript.rotationSpeed = 100;
+					rcScript.moveSpeed = 1;
+					
+					// Find aiming position
+					Vector3 defaultPos = enemy.transform.position;
+					// rangeArray[0] = minX, rangeArray[1] = minY, rangeArray[2] = maxX, rangeArray[3] = maxY;
+					float[] rangeArray = new float[4];
+					
+					List<Vector3> lookingDirVec = new List<Vector3> ();
+					lookingDirVec.Add (new Vector3 (0.0f, 0.0f, 1.0f));
+					lookingDirVec.Add (new Vector3 (1.0f, 0.0f, 1.0f));
+					lookingDirVec.Add (new Vector3 (1.0f, 0.0f, 0.0f));
+					lookingDirVec.Add (new Vector3 (1.0f, 0.0f, -1.0f));
+					lookingDirVec.Add (new Vector3 (0.0f, 0.0f, -1.0f));
+					lookingDirVec.Add (new Vector3 (-1.0f, 0.0f, -1.0f));
+					lookingDirVec.Add (new Vector3 (-1.0f, 0.0f, 0.0f));
+					lookingDirVec.Add (new Vector3 (-1.0f, 0.0f, 1.0f));
+					
+					List<float> distanceList = new List<float> ();
+					
+					// Foreach direction in 8 directions
+					foreach (Vector3 vdir in lookingDirVec) {
+						// Eliminate the possibility that a stationary guard could see the goal postion or starting postion
+						rangeArray = calculateRange (vdir, defaultPos, rcScript.fovDistance, rcScript.fovAngle);
+						if (((GameObject.FindGameObjectWithTag ("End").transform.position.x < rangeArray [0] || GameObject.FindGameObjectWithTag ("End").transform.position.x > rangeArray [2]
+							|| GameObject.FindGameObjectWithTag ("End").transform.position.y < rangeArray [1] || GameObject.FindGameObjectWithTag ("End").transform.position.y > rangeArray [3])
+							&& (GameObject.FindGameObjectWithTag ("Start").transform.position.x < rangeArray [0] || GameObject.FindGameObjectWithTag ("Start").transform.position.x > rangeArray [2]
+							|| GameObject.FindGameObjectWithTag ("Start").transform.position.y < rangeArray [1] || GameObject.FindGameObjectWithTag ("Start").transform.position.y > rangeArray [3]))
+							|| (Physics.Raycast (defaultPos, new Vector3 (GameObject.FindGameObjectWithTag ("End").transform.position.x - defaultPos.x, 0.0f, GameObject.FindGameObjectWithTag ("End").transform.position.z - defaultPos.z), rcScript.fovDistance)
+							|| Physics.Raycast (defaultPos, new Vector3 (GameObject.FindGameObjectWithTag ("Start").transform.position.x - defaultPos.x, 0.0f, GameObject.FindGameObjectWithTag ("Start").transform.position.z - defaultPos.z), rcScript.fovDistance))) {
+							RaycastHit hit;
+							if (Physics.Raycast (defaultPos, vdir, out hit)) {
+								Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+								Debug.Log (hit.distance);
+								distanceList.Add (hit.distance);
+							} else {
+								if (vdir.x == 0.0f && vdir.z == 1.0f) {
+									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									Debug.Log (defaultPos.z - floor.collider.bounds.min.z);
+									distanceList.Add (defaultPos.z - floor.collider.bounds.min.z);
+								} else if (vdir.x == 1.0f && vdir.z == 1.0f) {
+									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.z - floor.collider.bounds.min.z, 2.0f));
+									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.x - defaultPos.x, 2.0f));
+									float solution = a1 > a2 ? a2 : a1;
+									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									Debug.Log (solution);
+									distanceList.Add (solution);
+								} else if (vdir.x == 1.0f && vdir.z == 0.0f) {
+									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									Debug.Log (floor.collider.bounds.max.x - defaultPos.x);
+									distanceList.Add (floor.collider.bounds.max.x - defaultPos.x);
+								} else if (vdir.x == 1.0f && vdir.z == -1.0f) {
+									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.x - defaultPos.x, 2.0f));
+									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.z - defaultPos.z, 2.0f));
+									float solution = a1 > a2 ? a2 : a1;
+									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									Debug.Log (solution);
+									distanceList.Add (solution);
+								} else if (vdir.x == 0.0f && vdir.z == -1.0f) {
+									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									Debug.Log (floor.collider.bounds.max.z - defaultPos.z);
+									distanceList.Add (floor.collider.bounds.max.z - defaultPos.z);
+								} else if (vdir.x == -1.0f && vdir.z == -1.0f) {
+									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.x - floor.collider.bounds.min.x, 2.0f));
+									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.z - defaultPos.z, 2.0f));
+									float solution = a1 > a2 ? a2 : a1;
+									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									Debug.Log (solution);
+									distanceList.Add (solution);
+								} else if (vdir.x == -1.0f && vdir.z == 0.0f) {
+									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									Debug.Log (defaultPos.x - floor.collider.bounds.min.x);
+									distanceList.Add (defaultPos.x - floor.collider.bounds.min.x);
+								} else if (vdir.x == -1.0f && vdir.z == 1.0f) {
+									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.x - floor.collider.bounds.min.x, 2.0f));
+									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.z - floor.collider.bounds.min.z, 2.0f));
+									float solution = a1 > a2 ? a2 : a1;
+									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									Debug.Log (solution);
+									distanceList.Add (solution);
+								}
+							}
+						} else {
+							distanceList.Add (-1.0f);
+						}
+					}
+					
+					int cnt = 0;
+					int maxIndex = 0;
+					float maxDistance = 0.0f;
+					foreach (float tempDistance in distanceList) {
+						if (tempDistance > maxDistance) {
+							maxDistance = tempDistance;
+							maxIndex = cnt;
+						}
+						cnt++;
+					}
+					
+					int cnt2 = 0;
+					int maxIndex2 = 0;
+					float maxDistance2 = 0.0f;
+					foreach (float tempDistance in distanceList) {
+						if (tempDistance > maxDistance2 && cnt2 != maxIndex) {
+							maxDistance2 = tempDistance;
+							maxIndex2 = cnt2;
+						}
+						cnt2++;
+					}
+					
+					// Create rotation waypoint aimed at
+					Vector3 rwpPos1 = new Vector3 (defaultPos.x + lookingDirVec.ElementAt (maxIndex).x * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex).x * lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex).z * lookingDirVec.ElementAt (maxIndex).z), 0.0f,
+						defaultPos.z + lookingDirVec.ElementAt (maxIndex).z * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex).x * lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex).z * lookingDirVec.ElementAt (maxIndex).z));
+					Vector3 rwpPos2 = new Vector3 (defaultPos.x + lookingDirVec.ElementAt (maxIndex2).x * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex2).x * lookingDirVec.ElementAt (maxIndex2).x + lookingDirVec.ElementAt (maxIndex2).z * lookingDirVec.ElementAt (maxIndex2).z), 0.0f,
+						defaultPos.z + lookingDirVec.ElementAt (maxIndex2).z * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex2).x * lookingDirVec.ElementAt (maxIndex2).x + lookingDirVec.ElementAt (maxIndex2).z * lookingDirVec.ElementAt (maxIndex2).z));
+					GameObject rwp1 = GameObject.Instantiate (waypointPrefab, rwpPos1, Quaternion.identity) as GameObject;
+					GameObject rwp2 = GameObject.Instantiate (waypointPrefab, rwpPos2, Quaternion.identity) as GameObject;
+					rwp1.AddComponent ("RotationWaypoint");
+					rwp2.AddComponent ("RotationWaypoint");
+					DestroyImmediate (rwp1.GetComponent ("Waypoint"));
+					DestroyImmediate (rwp2.GetComponent ("Waypoint"));
+					RotationWaypoint rwpScript1;
+					RotationWaypoint rwpScript2;
+					rwpScript1 = rwp1.GetComponent ("Waypoint") as RotationWaypoint;
+					rwpScript2 = rwp2.GetComponent ("Waypoint") as RotationWaypoint;
+					rwpScript1.next = rwpScript2;
+					rwpScript2.next = rwpScript1;
+					rwpScript1.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex).x, lookingDirVec.ElementAt (maxIndex).y, lookingDirVec.ElementAt (maxIndex).z);
+					rwpScript2.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex2).x, lookingDirVec.ElementAt (maxIndex2).y, lookingDirVec.ElementAt (maxIndex2).z);
+					rcScript.target = rwpScript1;
+					rcScript.transform.LookAt (rwpPos1);
+				}
+				
+				
 				setPathOpEnables = true;
 
 			}
@@ -761,7 +909,7 @@ public class MapperWindowEditor : EditorWindow
 		iterations2 = EditorGUILayout.IntSlider ("Iterations", iterations2, 1, 20);
 		if (computePathFoldout) {
 			if (GUILayout.Button ("Set Patroling Path")) {
-				// ***
+				clearUpPaths ();
 				PCG.PathInVoronoiRegion (floor, obs, iterations2);
 				PCG.DestroyVoronoiCentre ();
 				// StorePositions ();
@@ -853,6 +1001,28 @@ public class MapperWindowEditor : EditorWindow
 		range [3] = maxY;
 		
 		return range;
+	}
+	
+	private void clearUpEnemies ()
+	{
+		GameObject[] gos = null;
+		gos = GameObject.FindGameObjectsWithTag ("Enemy").OrderBy (go => go.transform.position.x).ToArray ();
+		if (gos != null) {
+			foreach (GameObject g in gos) {
+				DestroyImmediate (g);	
+			}
+		}
+	}
+	
+	private void clearUpPaths ()
+	{
+		GameObject[] wos = null;
+		wos = GameObject.FindGameObjectsWithTag ("Waypoint").ToArray ();
+		if (wos != null) {
+			foreach (GameObject w in wos) {
+				DestroyImmediate (w);	
+			}
+		}
 	}
 
 	void BatchComputing ()
