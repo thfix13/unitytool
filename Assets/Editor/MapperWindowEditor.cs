@@ -1020,7 +1020,9 @@ public class MapperWindowEditor : EditorWindow
 		wos = GameObject.FindGameObjectsWithTag ("Waypoint").ToArray ();
 		if (wos != null) {
 			foreach (GameObject w in wos) {
-				DestroyImmediate (w);	
+				if (!(w.GetComponent("Waypoint") as WaitingWaypoint || w.GetComponent("Waypoint") as RotationWaypoint)) {
+					DestroyImmediate (w);
+				}
 			}
 		}
 	}
