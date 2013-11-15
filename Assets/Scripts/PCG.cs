@@ -5,106 +5,55 @@ using UnityEngine;
 using System.Collections;
 using System.Linq;
 
-public class PCG : MonoBehaviour {
-	
-	public static int numOfEnemies = 0;
-	public static int numOfRegions = 0;
-	public static int numOfCameras = 0;
-	public static GameObject[] gos = null;
-	public static GameObject waypointPrefab = null;
-	public static List<Vector2> voronoiCentre = null;
-	public static List<int> nearestIndice = null;
-	
-	public static int[] maxAreaIndexHolder = null;	
-	public static int maxAreaIndex = 0;
-	public static int[] cntArray = null;
-//	public static Array<int> cntList = null;
+public class PCG : MonoBehaviour
+{
+	public static GameObject enemyPrefab = null, waypointPrefab = null;
+	public static List<GameObject> eos = new List<GameObject> (), cos = new List<GameObject> (), pos = new List<GameObject> (), aos = new List<GameObject> ();
+	public static int numOfEnemies = 0, numOfCameras = 0, numOfRegionsForEnemies = 0, numOfRegionsForCameras = 0;
+	public static int[] maxAreaIndexHolderE = null, maxAreaIndexHolderC = null;
+	// VoronoiDiagram instances
+	public static VoronoiDiagram vEnemy = new VoronoiDiagram ();
+	public static VoronoiDiagram vCamera = new VoronoiDiagram ();
 
 	// Use this for initialization
-	void Start () {
+	void Start ()
+	{
 	
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	void Update ()
+	{
 	
 	}
 	
-	public static void Initialize (GameObject wpPrefab) {
+	public static void Initialize (GameObject enmPrefab, GameObject wpPrefab, Cell[][] obs)
+	{
+		enemyPrefab = enmPrefab;
 		waypointPrefab = wpPrefab;
+		vEnemy.obs = obs;
+		vCamera.obs = obs;
 	}
 	
-	public static void CalculateVoronoiRegions(GameObject floor, Cell[][] obs, int n1, int n2) {
-		
-		//Get all the points to calculate the voronoi 
-		gos = GameObject.FindGameObjectsWithTag ("Enemy").OrderBy (go => go.transform.position.x).ToArray ();
-		voronoiCentre = new List<Vector2> ();	
-		nearestIndice = new List<int> ();
-		numOfEnemies = n1;
-		numOfRegions = n2;
-		
-		foreach (GameObject g in gos) {
-			voronoiCentre.Add (new Vector2 (g.transform.position.x - floor.collider.bounds.min.x, g.transform.position.z - floor.collider.bounds.min.z));
+	public static List<GameObject> PopulateEnemies (GameObject floor)
+	{
+		for (int i = 0; i < numOfRegionsForEnemies; i++) {
+			Vector3 position;
+			do {
+				position = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));
+			} while (vEnemy.obs[(int)((position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true);
+			GameObject enemy = GameObject.Instantiate (enemyPrefab, position, Quaternion.identity) as GameObject;
+			enemy.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);
 		}
-		
-		for (int i = 0; i < (int)(floor.collider.bounds.size.x / SpaceState.TileSize.x) + 1; i++) {
-			float posX;
-			posX = i * SpaceState.TileSize.x + SpaceState.TileSize.x / 2.0f;
-			for (int j = 0; j < (int)(floor.collider.bounds.size.z / SpaceState.TileSize.y) + 1; j++) {
-				if (obs [i] [j].blocked == true) {
-					obs [i] [j].nearestVoronoiCentre = -1;
-					continue;
-				}
-				int cnt = 0, nearestIndex = 0;
-				float posY, tempDis;
-				float minDistance = float.MaxValue;
-				posY = j * SpaceState.TileSize.y + SpaceState.TileSize.y / 2.0f;
-				Vector2 tilePos = new Vector2 (posX, posY);
-				foreach (Vector2 enemyPos in voronoiCentre) {
-					tempDis = Vector2.Distance (tilePos, enemyPos);
-					if (tempDis < minDistance) {
-						nearestIndex = cnt;
-						minDistance = tempDis;
-						//Debug.Log(minDistance);
-					}
-					cnt++;
-				}
-				// Flooding; need visualization here
-				// The following commented line of code would reduce computational efficiency significantly
-				// Debug.Log ("I belong to enemy " + nearestIndex);
-				obs [i] [j].nearestVoronoiCentre = nearestIndex;
-				nearestIndice.Add (nearestIndex);
-			}
-		}	
+		var intersection = GameObject.FindGameObjectsWithTag ("Enemy").OrderBy (go => go.transform.position.x).ToArray ().Except (cos);
+		foreach (GameObject e in intersection) {
+			eos.Add (e);
+		}
+		return eos;
 	}
 	
-	public static int[] SelectMaximumRegions () {
-		cntArray = new int[numOfRegions + 1];
-		maxAreaIndexHolder = new int[numOfEnemies];
-		// counting
-		foreach (int i in nearestIndice) {
-			cntArray [i] ++;
-		}
-		
-		int maxArea = 0, tempMaxArea = 0;
-		for (int j = 0; j < numOfEnemies; j++) { 
-			for (int i = 0; i < cntArray.Length; i++) {
-				tempMaxArea = cntArray [i];
-				if (tempMaxArea > maxArea) {
-					maxArea = tempMaxArea;
-					maxAreaIndex = i;
-				}
-			}
-			maxAreaIndexHolder [j] = maxAreaIndex;
-			cntArray [maxAreaIndex] = 0;
-			maxArea = 0;
-		}
-		
-		return maxAreaIndexHolder;
-	}
-	
-	public static void PathInVoronoiRegion (GameObject floor, Cell[][] obs, int iterations) {
-		
+	public static List<GameObject> PathInVoronoiRegion (GameObject floor, Cell[][] obs, int iterations)
+	{
 		for (int m = 0; m < numOfEnemies; m++) {
 			//Pick two random nodes in max area and be as large as possible after a certain iteration
 			Vector3 randomPos1, randomPos2, dir;
@@ -113,16 +62,16 @@ public class PCG : MonoBehaviour {
 			float maxDis = float.MinValue;
 			float tempDist = 0.0f;
 			// This could be another parameter
-			for (int iter = 1; iter < iterations; iter++) {
+			for (int iter = 1; iter < iterations + 1; iter++) {
 				do {
 					do {
 						randomPos1 = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));
 					} while (obs[(int)((randomPos1.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos1.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true ||
-						obs[(int)((randomPos1.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos1.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].nearestVoronoiCentre != maxAreaIndexHolder[m]);
+						obs[(int)((randomPos1.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos1.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].nearestVoronoiCentre != maxAreaIndexHolderE[m]);
 					do {
 						randomPos2 = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));	
 					} while (obs[(int)((randomPos2.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos2.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true ||
-						obs[(int)((randomPos2.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos2.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].nearestVoronoiCentre != maxAreaIndexHolder[m]);
+						obs[(int)((randomPos2.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos2.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].nearestVoronoiCentre != maxAreaIndexHolderE[m]);
 					tempDist = Vector3.Distance (randomPos1, randomPos2);
 					dir = new Vector3 (randomPos2.x - randomPos1.x, randomPos2.y - randomPos1.y, randomPos2.z - randomPos1.z);
 				} while ((tempDist < maxDis) || (Physics.Raycast(randomPos1, dir, tempDist) == true));
@@ -134,13 +83,13 @@ public class PCG : MonoBehaviour {
 				node2.z = randomPos2.z;
 				maxDis = tempDist;
 			}
-			Debug.Log ("From: [" + (int)((node1.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x) + "][" + 
-				(int)((node1.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y) + "] To: [" + 
-				(int)((node2.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x) + "][" + 
-				(int)((node2.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y) + "]. ");
+			// Debug.Log ("From: [" + (int)((node1.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x) + "][" + 
+			// (int)((node1.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y) + "] To: [" + 
+			// (int)((node2.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x) + "][" + 
+			// (int)((node2.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y) + "]. ");
 				
-			//Debug.Log("The longest path is from" + node1 + "to" + node2 + ".");
-			Debug.Log ("The longest path is " + maxDis);
+			// Debug.Log("The longest path is from" + node1 + "to" + node2 + ".");
+			// Debug.Log ("The longest path is " + maxDis);
 			
 			//Move between two nodes
 			Vector3 p1 = new Vector3 (node1.x, node1.y, node1.z);
@@ -154,27 +103,310 @@ public class PCG : MonoBehaviour {
 			wpScript1.next = wpScript2;
 			wpScript2.next = wpScript1;
 			
-			Debug.Log ("GameObject[" + maxAreaIndexHolder [m] + "]");
+			// Debug.Log ("GameObject[" + maxAreaIndexHolderE [m] + "]");
 			//Set the new patrol path
-			gos [maxAreaIndexHolder [m]].GetComponent<Enemy> ().moveSpeed = 1;
-			gos [maxAreaIndexHolder [m]].GetComponent<Enemy> ().rotationSpeed = 30;
-			gos [maxAreaIndexHolder [m]].GetComponent<Enemy> ().target = wpScript2;
-			gos [maxAreaIndexHolder [m]].transform.position = new Vector3 (wp1.transform.position.x, 
+			eos [maxAreaIndexHolderE [m]].GetComponent<Enemy> ().moveSpeed = 1;
+			eos [maxAreaIndexHolderE [m]].GetComponent<Enemy> ().rotationSpeed = 30;
+			eos [maxAreaIndexHolderE [m]].GetComponent<Enemy> ().target = wpScript2;
+			eos [maxAreaIndexHolderE [m]].transform.position = new Vector3 (wp1.transform.position.x, 
 				wp1.transform.position.y, wp1.transform.position.z);
 		}
+		var intersection = GameObject.FindGameObjectsWithTag ("Waypoint").ToArray ().Except (aos);
+		foreach (GameObject p in intersection) {
+			pos.Add (p);
+		}
+		return pos;
 	}
 	
-	public static void DestroyVoronoiCentre () {
+	public static List<GameObject> PopulateCameras (GameObject floor)
+	{
+		for (int i = 0; i < numOfRegionsForCameras; i++) {
+			Vector3 position;
+			do {
+				position = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));
+			} while (PCG.vCamera.obs[(int)((position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true);
+			GameObject enemy = GameObject.Instantiate (enemyPrefab, position, Quaternion.identity) as GameObject;
+			enemy.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);
+		}
+		var intersection = GameObject.FindGameObjectsWithTag ("Enemy").OrderBy (go => go.transform.position.x).ToArray ().Except (eos);
+		foreach (GameObject c in intersection) {
+			cos.Add (c);
+		}
+		return cos;
+	}
+	
+	public static List<GameObject> RotationInVoronoiRegion (GameObject floor, Cell[][] obs, int iterations)
+	{
+		foreach (GameObject cameraObject in cos) {
+			if (cameraObject.renderer.enabled) {
+				float maxSumOfDistance = 0.0f;
+				int maxIndex = 0, maxIndex2 = 0;
+				Vector3 finalPos = new Vector3 ();
+				
+				List<Vector3> lookingDirVec = new List<Vector3> ();
+				lookingDirVec.Add (new Vector3 (0.0f, 0.0f, 1.0f));
+				lookingDirVec.Add (new Vector3 (1.0f, 0.0f, 1.0f));
+				lookingDirVec.Add (new Vector3 (1.0f, 0.0f, 0.0f));
+				lookingDirVec.Add (new Vector3 (1.0f, 0.0f, -1.0f));
+				lookingDirVec.Add (new Vector3 (0.0f, 0.0f, -1.0f));
+				lookingDirVec.Add (new Vector3 (-1.0f, 0.0f, -1.0f));
+				lookingDirVec.Add (new Vector3 (-1.0f, 0.0f, 0.0f));
+				lookingDirVec.Add (new Vector3 (-1.0f, 0.0f, 1.0f));
+				
+				Enemy rcScript;
+				rcScript = cameraObject.GetComponent ("Enemy") as Enemy;
+				
+				for (int iter = 1; iter < iterations + 1; iter++) {
+					// Bind to walls
+					// ...
+					Vector3 position = new Vector3 (cameraObject.transform.position.x, cameraObject.transform.position.y, cameraObject.transform.position.z);
+					Vector3 defaultPos;
+					int centreBelongTo = obs [(int)((position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)] [(int)((position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].nearestVoronoiCentre;
+					int random = UnityEngine.Random.Range (0, vCamera.boundaryArray [centreBelongTo].Count - 1);
+					do {
+						random = UnityEngine.Random.Range (0, vCamera.boundaryArray [centreBelongTo].Count - 1);
+						defaultPos = new Vector3 (vCamera.boundaryXArray [centreBelongTo].ElementAt (random) * SpaceState.TileSize.x + floor.collider.bounds.min.x, 
+								position.y, vCamera.boundaryZArray [centreBelongTo].ElementAt (random) * SpaceState.TileSize.y + floor.collider.bounds.min.z);
+					} while (vCamera.boundaryArray [centreBelongTo].ElementAt (random).isNextToWall != 1);
+					
+					// Find aiming position
+					// rangeArray[0] = minX, rangeArray[1] = minY, rangeArray[2] = maxX, rangeArray[3] = maxY;
+					float[] rangeArray = new float[4];
+					
+					List<float> distanceList = new List<float> ();
+					
+					// Foreach direction in 8 directions
+					foreach (Vector3 vdir in lookingDirVec) {
+						// Eliminate the possibility that a stationary guard could see the goal postion or starting postion
+						rangeArray = PCG.CalculateRange (vdir, defaultPos, rcScript.fovDistance, rcScript.fovAngle);
+						if (((GameObject.FindGameObjectWithTag ("End").transform.position.x < rangeArray [0] || GameObject.FindGameObjectWithTag ("End").transform.position.x > rangeArray [2]
+							|| GameObject.FindGameObjectWithTag ("End").transform.position.y < rangeArray [1] || GameObject.FindGameObjectWithTag ("End").transform.position.y > rangeArray [3])
+							&& (GameObject.FindGameObjectWithTag ("Start").transform.position.x < rangeArray [0] || GameObject.FindGameObjectWithTag ("Start").transform.position.x > rangeArray [2]
+							|| GameObject.FindGameObjectWithTag ("Start").transform.position.y < rangeArray [1] || GameObject.FindGameObjectWithTag ("Start").transform.position.y > rangeArray [3]))
+							|| (Physics.Raycast (defaultPos, new Vector3 (GameObject.FindGameObjectWithTag ("End").transform.position.x - defaultPos.x, 0.0f, GameObject.FindGameObjectWithTag ("End").transform.position.z - defaultPos.z), rcScript.fovDistance)
+							|| Physics.Raycast (defaultPos, new Vector3 (GameObject.FindGameObjectWithTag ("Start").transform.position.x - defaultPos.x, 0.0f, GameObject.FindGameObjectWithTag ("Start").transform.position.z - defaultPos.z), rcScript.fovDistance))) {
+							RaycastHit hit;
+							if (Physics.Raycast (defaultPos, vdir, out hit)) {
+								// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+								// Debug.Log (hit.distance);
+								distanceList.Add (hit.distance);
+							} else {
+								if (vdir.x == 0.0f && vdir.z == 1.0f) {
+									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									// Debug.Log (defaultPos.z - floor.collider.bounds.min.z);
+									distanceList.Add (defaultPos.z - floor.collider.bounds.min.z);
+								} else if (vdir.x == 1.0f && vdir.z == 1.0f) {
+									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.z - floor.collider.bounds.min.z, 2.0f));
+									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.x - defaultPos.x, 2.0f));
+									float solution = a1 > a2 ? a2 : a1;
+									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									// Debug.Log (solution);
+									distanceList.Add (solution);
+								} else if (vdir.x == 1.0f && vdir.z == 0.0f) {
+									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									// Debug.Log (floor.collider.bounds.max.x - defaultPos.x);
+									distanceList.Add (floor.collider.bounds.max.x - defaultPos.x);
+								} else if (vdir.x == 1.0f && vdir.z == -1.0f) {
+									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.x - defaultPos.x, 2.0f));
+									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.z - defaultPos.z, 2.0f));
+									float solution = a1 > a2 ? a2 : a1;
+									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									// Debug.Log (solution);
+									distanceList.Add (solution);
+								} else if (vdir.x == 0.0f && vdir.z == -1.0f) {
+									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									// Debug.Log (floor.collider.bounds.max.z - defaultPos.z);
+									distanceList.Add (floor.collider.bounds.max.z - defaultPos.z);
+								} else if (vdir.x == -1.0f && vdir.z == -1.0f) {
+									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.x - floor.collider.bounds.min.x, 2.0f));
+									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.z - defaultPos.z, 2.0f));
+									float solution = a1 > a2 ? a2 : a1;
+									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									// Debug.Log (solution);
+									distanceList.Add (solution);
+								} else if (vdir.x == -1.0f && vdir.z == 0.0f) {
+									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									// Debug.Log (defaultPos.x - floor.collider.bounds.min.x);
+									distanceList.Add (defaultPos.x - floor.collider.bounds.min.x);
+								} else if (vdir.x == -1.0f && vdir.z == 1.0f) {
+									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.x - floor.collider.bounds.min.x, 2.0f));
+									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.z - floor.collider.bounds.min.z, 2.0f));
+									float solution = a1 > a2 ? a2 : a1;
+									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
+									// Debug.Log (solution);
+									distanceList.Add (solution);
+								}
+							}
+						} else {
+							distanceList.Add (-1.0f);
+						}
+					}
+					
+					int cnt = 0;
+					int maxIndexTemp = 0;
+					float maxDistance = 0.0f;
+					foreach (float tempDistance in distanceList) {
+						if (tempDistance > maxDistance) {
+							maxDistance = tempDistance;
+							maxIndexTemp = cnt;
+						}
+						cnt++;
+					}
+					
+					int cnt2 = 0;
+					int maxIndexTemp2 = 0;
+					float maxDistance2 = 0.0f;
+					foreach (float tempDistance in distanceList) {
+						if (tempDistance > maxDistance2 && cnt2 != maxIndexTemp) {
+							maxDistance2 = tempDistance;
+							maxIndexTemp2 = cnt2;
+						}
+						cnt2++;
+					}
+					
+					float tempSumOfDistance = maxDistance + maxDistance2;
+					if (tempSumOfDistance > maxSumOfDistance) {
+						maxSumOfDistance = tempSumOfDistance;
+						maxIndex = maxIndexTemp;
+						maxIndex2 = maxIndexTemp2;
+						finalPos = new Vector3 (defaultPos.x, defaultPos.y, defaultPos.z);
+					}	
+				}
+				
+				// Bring it to the new position
+				cameraObject.transform.position = finalPos;
+				// Create rotation waypoint aimed at
+				Vector3 rwpPos1 = new Vector3 (finalPos.x + lookingDirVec.ElementAt (maxIndex).x * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex).x * lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex).z * lookingDirVec.ElementAt (maxIndex).z), 0.0f,
+					finalPos.z + lookingDirVec.ElementAt (maxIndex).z * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex).x * lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex).z * lookingDirVec.ElementAt (maxIndex).z));
+				Vector3 rwpPos2 = new Vector3 (finalPos.x + lookingDirVec.ElementAt (maxIndex2).x * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex2).x * lookingDirVec.ElementAt (maxIndex2).x + lookingDirVec.ElementAt (maxIndex2).z * lookingDirVec.ElementAt (maxIndex2).z), 0.0f,
+					finalPos.z + lookingDirVec.ElementAt (maxIndex2).z * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex2).x * lookingDirVec.ElementAt (maxIndex2).x + lookingDirVec.ElementAt (maxIndex2).z * lookingDirVec.ElementAt (maxIndex2).z));
+				GameObject rwp1 = GameObject.Instantiate (waypointPrefab, rwpPos1, Quaternion.identity) as GameObject;
+				GameObject rwp2 = GameObject.Instantiate (waypointPrefab, rwpPos2, Quaternion.identity) as GameObject;
+				rwp1.AddComponent ("RotationWaypoint");
+				rwp2.AddComponent ("RotationWaypoint");
+				DestroyImmediate (rwp1.GetComponent ("Waypoint"));
+				DestroyImmediate (rwp2.GetComponent ("Waypoint"));
+				RotationWaypoint rwpScript1;
+				RotationWaypoint rwpScript2;
+				rwpScript1 = rwp1.GetComponent ("Waypoint") as RotationWaypoint;
+				rwpScript2 = rwp2.GetComponent ("Waypoint") as RotationWaypoint;
+				rwpScript1.next = rwpScript2;
+				rwpScript2.next = rwpScript1;
+				rwpScript1.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex).x, lookingDirVec.ElementAt (maxIndex).y, lookingDirVec.ElementAt (maxIndex).z);
+				rwpScript2.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex2).x, lookingDirVec.ElementAt (maxIndex2).y, lookingDirVec.ElementAt (maxIndex2).z);
+				rcScript.target = rwpScript1;
+				rcScript.transform.LookAt (rwpPos1);
+			}
+		}
+		var intersection = GameObject.FindGameObjectsWithTag ("Waypoint").ToArray ().Except (pos);
+		foreach (GameObject a in intersection) {
+			aos.Add (a);
+		}
+		return aos;
+	}
+	
+	public static void DestroyVoronoiCentreForEnemies ()
+	{
 		//Destroy other voronoi centres and complete the scene
-		foreach (GameObject g in gos) {
+		foreach (GameObject e in eos) {
 			for (int n = 0; n < numOfEnemies; n++) {
-				if (g == gos [maxAreaIndexHolder [n]]) {
+				if (e == eos [maxAreaIndexHolderE [n]]) {
 					break;
 				}
 				if (n == numOfEnemies - 1) {
-					GameObject.DestroyImmediate (g);		
+					GameObject.DestroyImmediate (e);		
 				}
 			}
 		}
+	}
+	
+	public static void DestroyVoronoiCentreForCameras ()
+	{
+		//Destroy other voronoi centres and complete the scene
+		foreach (GameObject c in cos) {
+			for (int n = 0; n < numOfCameras; n++) {
+				if (c == cos [maxAreaIndexHolderC [n]]) {
+					break;
+				}
+				if (n == numOfCameras - 1) {
+					GameObject.DestroyImmediate (c);		
+				}
+			}
+		}
+	}
+	
+	public static void ClearUpEnemies (GameObject[] eos)
+	{
+		if (eos != null) {
+			foreach (GameObject e in eos) {
+				DestroyImmediate (e);	
+			}
+		}
+		PCG.eos.Clear ();
+	}
+	
+	public static void ClearUpPaths (GameObject[] pos)
+	{
+		if (pos != null) {
+			foreach (GameObject p in pos) {
+				DestroyImmediate (p);	
+			}
+		}
+		PCG.pos.Clear ();
+	}
+	
+	public static void ClearUpCameras (GameObject[] cos)
+	{
+		if (cos != null) {
+			foreach (GameObject c in cos) {
+				DestroyImmediate (c);	
+			}
+		}
+		PCG.cos.Clear ();
+	}
+	
+	public static void ClearUpAngles (GameObject[] aos)
+	{
+		if (aos != null) {
+			foreach (GameObject a in aos) {
+				DestroyImmediate (a);	
+			}
+		}
+		PCG.aos.Clear ();
+	}
+	
+	// Calculate range
+	private static float[] CalculateRange (Vector3 vdir, Vector3 defaultPos, float fovDistance, float fovAngle)
+	{
+		float[] range = new float[4];
+		float minX, minY, maxX, maxY;
+		float cosTheta, sinTheta, x, y, xA, yA, xB, yB;
+		Vector2 pA, pB, pC, dir;
+		pC = new Vector2 (defaultPos.x, defaultPos.z);
+		dir = new Vector2 (vdir.x, vdir.z);
+		
+		cosTheta = dir.x / Mathf.Sqrt (dir.x * dir.x + dir.y * dir.y);
+		sinTheta = dir.y / Mathf.Sqrt (dir.x * dir.x + dir.y * dir.y);
+		x = fovDistance;
+		y = fovDistance * Mathf.Tan ((fovAngle / 2) / 180.0f * Mathf.PI);
+		xA = cosTheta * x - sinTheta * y + pC.x;
+		yA = sinTheta * x + cosTheta * y + pC.y;
+		xB = cosTheta * x + sinTheta * y + pC.x;
+		yB = sinTheta * x - cosTheta * y + pC.y;
+		pA = new Vector2 (xA, yA);
+		pB = new Vector2 (xB, yB);
+		
+		// min and max
+		maxX = Mathf.Max (Mathf.Max (pA.x, pB.x), pC.x);
+		minX = Mathf.Min (Mathf.Min (pA.x, pB.x), pC.x);
+		maxY = Mathf.Max (Mathf.Max (pA.y, pB.y), pC.y);
+		minY = Mathf.Min (Mathf.Min (pA.y, pB.y), pC.y);
+		
+		range [0] = minX;
+		range [1] = minY;
+		range [2] = maxX;
+		range [3] = maxY;
+		
+		return range;
 	}
 }

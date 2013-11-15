@@ -15,10 +15,10 @@ public class MapperWindowEditor : EditorWindow
 	public static List<Path> paths = new List<Path> ();
 	public static List<Node> mostDanger = null, shortest = null, lengthiest = null, fastest = null, longest = null;
 	// Parameters
-	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 60, ticksBehind = 0, numOfEnemies = 0, numOfRegions = 0, numOfCameras = 0, numOfRotCameras = 0, iterations2 = 5;
-	public static bool drawMap = true, drawMoveMap = false, drawMoveUnits = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = false, drawVoronoi = false, smoothPath = true, drawShortestPath = false, drawLongestPath = false, drawLengthiestPath = false, drawFastestPath = false, drawMostDangerousPath = false, drawFoVOnly = false, seeByTime = false, seeByLength = false, seeByDanger = false, seeByLoS = false, seeByDanger3 = false, seeByLoS3 = false, seeByDanger3Norm = false, seeByLoS3Norm = false, seeByCrazy = false, seeByVelocity = false;
-	public static bool randomOpEnables = false, setPathOpEnables = false;
-	public static bool setEnemiesFoldout = false, queryVoronoiDiagramFoldout = false, computePathFoldout = false, default1 = true, default2 = true, default3 = true;
+	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 60, ticksBehind = 0, numOfEnemies = 0, numOfRegionsForEnemies = 0, numOfCameras = 0, numOfRegionsForCameras = 0, iterations2 = 5, iterations3 = 5;
+	public static bool drawMap = true, drawMoveMap = false, drawMoveUnits = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = false, drawVoronoiForEnemies = false, drawVoronoiForCameras = false, smoothPath = true, drawShortestPath = false, drawLongestPath = false, drawLengthiestPath = false, drawFastestPath = false, drawMostDangerousPath = false, drawFoVOnly = false, seeByTime = false, seeByLength = false, seeByDanger = false, seeByLoS = false, seeByDanger3 = false, seeByLoS3 = false, seeByDanger3Norm = false, seeByLoS3Norm = false, seeByCrazy = false, seeByVelocity = false;
+	public static bool randomOpEnables = false, setPathOpEnables = false, setRotationOpEnables = false;
+	public static bool setEnemiesFoldout = false, setCameraFoldout = false, queryeVoronoiDiagramFoldout = false, querycVoronoiDiagramFoldout = false, computePathFoldout = false, default1 = true, default2 = true, default3 = true, default4 = true, default5 = true, default6 = true;
 	public static float stepSize = 1 / 10f, crazySeconds = 5f;
 	public static int[,] heatMap;
 	public static GameObject start = null, end = null, floor = null, playerPrefab = null, enemyPrefab = null, waypointPrefab = null;
@@ -34,7 +34,7 @@ public class MapperWindowEditor : EditorWindow
 	private Mapper mapper;
 	private RRTKDTree rrt = new RRTKDTree ();
 	private MapperEditorDrawer drawer;
-	private static GameObject[] centreObjects = null;
+	private GameObject[] enemyObjects = null, cameraObjects = null, pathObjects = null, angleObjects = null;
 	
 	[MenuItem("Window/Mapper")]
 	static void Init ()
@@ -500,11 +500,22 @@ public class MapperWindowEditor : EditorWindow
 			waypointPrefab = Resources.Load ("Waypoint") as GameObject;
 			if (waypointPrefab != null) {
 				Debug.Log ("Loading waypoint prefab from resources folder successfully!");
-				PCG.Initialize (waypointPrefab);
 			} else {
 				waypointPrefab = GameObject.FindGameObjectWithTag ("Waypoint");
 				if (waypointPrefab != null) {
 					Debug.Log ("Loading waypoint prefab from scene successfully!");
+				}
+			}
+		}
+		
+		if (enemyPrefab == null) {
+			enemyPrefab = Resources.Load ("Enemy") as GameObject;
+			if (enemyPrefab != null) {
+				Debug.Log ("Loading enemy prefab from resources folder successfully!");	
+			} else {
+				enemyPrefab = GameObject.FindGameObjectWithTag ("Enemy");
+				if (enemyPrefab != null) {
+					Debug.Log ("Loading enemy prefab from scene successfully!");	
 				}
 			}
 		}
@@ -514,62 +525,41 @@ public class MapperWindowEditor : EditorWindow
 		
 		if (default1 == true) {
 			default1 = false;
-			setEnemiesFoldout = EditorGUILayout.Foldout (true, "Set Enemies");
+			setEnemiesFoldout = EditorGUILayout.Foldout (true, "Set Moving Enemies");
 		} else {
-			setEnemiesFoldout = EditorGUILayout.Foldout (setEnemiesFoldout, "Set Enemies");
-		}
-		
-		if (randomOpEnables) {
+			setEnemiesFoldout = EditorGUILayout.Foldout (setEnemiesFoldout, "Set Moving Enemies");
 		}
 		
 		if (setEnemiesFoldout) {
-			enemyPrefab = Resources.Load ("Enemy") as GameObject;
 			enemyPrefab = (GameObject)EditorGUILayout.ObjectField ("Enemy Prefab", enemyPrefab, typeof(GameObject), false);
 			numOfEnemies = EditorGUILayout.IntField ("Number of enemies", numOfEnemies);
-			// Rules between numOfEnemies and numOfRegions; could apply art gallery theorem here
-			numOfRegions = numOfEnemies != 0 ? 2 * numOfEnemies - 1 : 0;
-			// Stationary cameras
-			numOfCameras = EditorGUILayout.IntField ("Number of cameras", numOfCameras);
-			// Rotational cameras
-			numOfRotCameras = EditorGUILayout.IntField ("Number of rot cam", numOfRotCameras);
+			// Rules between numOfEnemies and numOfRegionsForEnemies; could apply art gallery theorem here
+			numOfRegionsForEnemies = numOfEnemies != 0 ? 2 * numOfEnemies - 1 : 0;
 			
-			if (GUILayout.Button ("Populate Enemies")) {
-				clearUpEnemies ();
-				clearUpPaths ();
-				obs = mapper.ComputeObstacles ();
-				Cell[][] grid = MapperEditor.grid;
-				if (grid != null) {
-					for (int x = 0; x < obs.Length; x++) {
-						for (int y = 0; y < obs[x].Length; y++)
-							if (grid [x] [y] != null)
-								obs [x] [y] = grid [x] [y];
+			// ----------------------------------Moving Enemies-----------------------------------//
+			if (GUILayout.Button ("Populate Moving Enemies")) {
+				// Clear up enemies and their paths in the scene
+				PCG.ClearUpEnemies (enemyObjects);
+				PCG.ClearUpPaths (pathObjects);
+				
+				if (obs == null) { 
+					obs = mapper.ComputeObstacles ();
+					Cell[][] grid = MapperEditor.grid;
+					if (grid != null) {
+						for (int x = 0; x < obs.Length; x++) {
+							for (int y = 0; y < obs[x].Length; y++)
+								if (grid [x] [y] != null)
+									obs [x] [y] = grid [x] [y];
+						}
 					}
-				}	
-				
-				if (enemyPrefab != null) {
-					Debug.Log ("Loading enemy prefab from resources folder successfully!");	
-				} else {
-					enemyPrefab = GameObject.FindGameObjectWithTag ("Enemy");
-					if (enemyPrefab != null) {
-						Debug.Log ("Loading enemy prefab from scene successfully!");	
-					}
+					PCG.Initialize (enemyPrefab, waypointPrefab, obs);
 				}
+				PCG.numOfEnemies = numOfEnemies;
+				PCG.numOfRegionsForEnemies = numOfRegionsForEnemies;
+				// Populate region centres as enemies
+				enemyObjects = PCG.PopulateEnemies (floor).ToArray ();
 				
-				// ----------------------------------Moving Enemies-----------------------------------//
-				
-				for (int i = 0; i < numOfRegions; i++) {
-					Vector3 position;
-					do {
-						position = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));
-					} while (obs[(int)((position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true);
-					GameObject enemy = GameObject.Instantiate (enemyPrefab, position, Quaternion.identity) as GameObject;
-					enemy.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);
-				}
-				
-				centreObjects = GameObject.FindGameObjectsWithTag ("Enemy").OrderBy (go => go.transform.position.x).ToArray ();
 				// Hide all region centres
-				GameObject[] enemyObjects = null;
-				enemyObjects = GameObject.FindGameObjectsWithTag ("Enemy").OrderBy (go => go.transform.position.x).ToArray ();
 				foreach (GameObject enemyObject in enemyObjects) {
 					Enemy enemyScript;
 					enemyScript = enemyObject.GetComponent ("Enemy") as Enemy;
@@ -578,322 +568,46 @@ public class MapperWindowEditor : EditorWindow
 				}
 				
 				// Calculate different voronoi regions and visualization is ready
-				PCG.CalculateVoronoiRegions (floor, obs, numOfEnemies, numOfRegions);
-				drawer.voronoiGrid = obs;
+				PCG.vEnemy.calculateVoronoiRegions (floor, PCG.vEnemy.obs, PCG.numOfEnemies, PCG.numOfRegionsForEnemies, enemyObjects);
+				drawer.eVoronoiGrid = PCG.vEnemy.obs;
 				
 				// Select [numOfEnemies] regions with maximum area
-				int[] maxAreaIndexArray = PCG.SelectMaximumRegions ();
+				int[] maxAreaIndexArrayForEnemies = PCG.vEnemy.selectMaximumRegions ();
 				
 				// Show region centres with [numOfEnemies] regions with maximum area
 				for (int i = 0; i < numOfEnemies; i++) {
 					Enemy enemyRestoredScript;
-					enemyRestoredScript = enemyObjects.ElementAt (maxAreaIndexArray [i]).GetComponent ("Enemy") as Enemy;
+					enemyRestoredScript = enemyObjects.ElementAt (maxAreaIndexArrayForEnemies [i]).GetComponent ("Enemy") as Enemy;
 					enemyRestoredScript.LineForFOV = new Color (1.0f, 0.3f, 0.0f, 1.0f);
-					enemyObjects.ElementAt (maxAreaIndexArray [i]).renderer.enabled = true;
+					enemyObjects.ElementAt (maxAreaIndexArrayForEnemies [i]).renderer.enabled = true;
 				}
 				
-				// -------------------------------Stationary Cameras-------------------------------- //
+				PCG.maxAreaIndexHolderE = maxAreaIndexArrayForEnemies;
 				
-				for (int i = 0; i < numOfCameras; i++) {
-					Vector3 position;
-					do {
-						position = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));
-					} while (obs[(int)((position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true);
-					GameObject enemy = GameObject.Instantiate (enemyPrefab, position, Quaternion.identity) as GameObject;
-					enemy.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);
-					
-					Enemy scScript;
-					scScript = enemy.GetComponent ("Enemy") as Enemy;
-					scScript.rotationSpeed = 100;
-					scScript.moveSpeed = 1;
-					
-					// Find aiming position
-					Vector3 defaultPos = enemy.transform.position;
-					Vector3 tempVector = new Vector3 (0.0f, 0.0f, 0.0f);
-					Vector3 defaultDir = new Vector3 (0.0f, 0.0f, 0.0f);
-					// rangeArray[0] = minX, rangeArray[1] = minY, rangeArray[2] = maxX, rangeArray[3] = maxY;
-					float[] rangeArray = new float[4];
-					
-					float maxDistance = 0.0f;
-					List<Vector3> lookingDirVec = new List<Vector3> ();
-					lookingDirVec.Add (new Vector3 (0.0f, 0.0f, 1.0f));
-					lookingDirVec.Add (new Vector3 (1.0f, 0.0f, 1.0f));
-					lookingDirVec.Add (new Vector3 (1.0f, 0.0f, 0.0f));
-					lookingDirVec.Add (new Vector3 (1.0f, 0.0f, -1.0f));
-					lookingDirVec.Add (new Vector3 (0.0f, 0.0f, -1.0f));
-					lookingDirVec.Add (new Vector3 (-1.0f, 0.0f, -1.0f));
-					lookingDirVec.Add (new Vector3 (-1.0f, 0.0f, 0.0f));
-					lookingDirVec.Add (new Vector3 (-1.0f, 0.0f, 1.0f));
-					// Foreach direction in 8 directions
-					foreach (Vector3 vdir in lookingDirVec) {
-						// Eliminate the possibility that a stationary guard could see the goal postion or starting postion
-						rangeArray = calculateRange (vdir, defaultPos, scScript.fovDistance, scScript.fovAngle);
-						if (((GameObject.FindGameObjectWithTag ("End").transform.position.x < rangeArray [0] || GameObject.FindGameObjectWithTag ("End").transform.position.x > rangeArray [2]
-							|| GameObject.FindGameObjectWithTag ("End").transform.position.y < rangeArray [1] || GameObject.FindGameObjectWithTag ("End").transform.position.y > rangeArray [3])
-							&& (GameObject.FindGameObjectWithTag ("Start").transform.position.x < rangeArray [0] || GameObject.FindGameObjectWithTag ("Start").transform.position.x > rangeArray [2]
-							|| GameObject.FindGameObjectWithTag ("Start").transform.position.y < rangeArray [1] || GameObject.FindGameObjectWithTag ("Start").transform.position.y > rangeArray [3]))
-							|| (Physics.Raycast (defaultPos, new Vector3 (GameObject.FindGameObjectWithTag ("End").transform.position.x - defaultPos.x, 0.0f, GameObject.FindGameObjectWithTag ("End").transform.position.z - defaultPos.z), scScript.fovDistance)
-							|| Physics.Raycast (defaultPos, new Vector3 (GameObject.FindGameObjectWithTag ("Start").transform.position.x - defaultPos.x, 0.0f, GameObject.FindGameObjectWithTag ("Start").transform.position.z - defaultPos.z), scScript.fovDistance))) {
-							RaycastHit hit;
-							if (Physics.Raycast (defaultPos, vdir, out hit)) {
-								Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
-								Debug.Log (hit.distance);
-								if (hit.distance > maxDistance) {
-									maxDistance = hit.distance;
-									tempVector = vdir;
-								}
-							} else {
-								if (vdir.x == 0.0f && vdir.z == 1.0f) {
-									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
-									Debug.Log (defaultPos.z - floor.collider.bounds.min.z);
-									if (defaultPos.z - floor.collider.bounds.min.z > maxDistance) {
-										maxDistance = defaultPos.z - floor.collider.bounds.min.z;
-										tempVector = vdir;
-									}
-								} else if (vdir.x == 1.0f && vdir.z == 1.0f) {
-									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.z - floor.collider.bounds.min.z, 2.0f));
-									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.x - defaultPos.x, 2.0f));
-									float solution = a1 > a2 ? a2 : a1;
-									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
-									Debug.Log (solution);
-									if (solution > maxDistance) {
-										maxDistance = solution;
-										tempVector = vdir;
-									}
-								} else if (vdir.x == 1.0f && vdir.z == 0.0f) {
-									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
-									Debug.Log (floor.collider.bounds.max.x - defaultPos.x);
-									if (floor.collider.bounds.max.x - defaultPos.x > maxDistance) {
-										maxDistance = floor.collider.bounds.max.x - defaultPos.x;
-										tempVector = vdir;
-									}
-								} else if (vdir.x == 1.0f && vdir.z == -1.0f) {
-									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.x - defaultPos.x, 2.0f));
-									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.z - defaultPos.z, 2.0f));
-									float solution = a1 > a2 ? a2 : a1;
-									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
-									Debug.Log (solution);
-									if (solution > maxDistance) {
-										maxDistance = solution;
-										tempVector = vdir;
-									}
-								} else if (vdir.x == 0.0f && vdir.z == -1.0f) {
-									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
-									Debug.Log (floor.collider.bounds.max.z - defaultPos.z);
-									if (floor.collider.bounds.max.z - defaultPos.z > maxDistance) {
-										maxDistance = floor.collider.bounds.max.z - defaultPos.z;
-										tempVector = vdir;
-									}
-								} else if (vdir.x == -1.0f && vdir.z == -1.0f) {
-									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.x - floor.collider.bounds.min.x, 2.0f));
-									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.z - defaultPos.z, 2.0f));
-									float solution = a1 > a2 ? a2 : a1;
-									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
-									Debug.Log (solution);
-									if (solution > maxDistance) {
-										maxDistance = solution;
-										tempVector = vdir;
-									}
-								} else if (vdir.x == -1.0f && vdir.z == 0.0f) {
-									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
-									Debug.Log (defaultPos.x - floor.collider.bounds.min.x);
-									if (defaultPos.x - floor.collider.bounds.min.x > maxDistance) {
-										maxDistance = defaultPos.x - floor.collider.bounds.min.x;
-										tempVector = vdir;
-									}
-								} else if (vdir.x == -1.0f && vdir.z == 1.0f) {
-									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.x - floor.collider.bounds.min.x, 2.0f));
-									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.z - floor.collider.bounds.min.z, 2.0f));
-									float solution = a1 > a2 ? a2 : a1;
-									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
-									Debug.Log (solution);
-									if (solution > maxDistance) {
-										maxDistance = solution;
-										tempVector = vdir;
-									}
-								}
-							}
-						}
-					}
-					defaultDir = tempVector;
-					
-					// Create waiting waypoint aimed at
-					Vector3 wwpPos = new Vector3 (defaultPos.x + defaultDir.x * scScript.fovDistance / Mathf.Sqrt (defaultDir.x * defaultDir.x + defaultDir.z * defaultDir.z), 0.0f,
-						defaultPos.z + defaultDir.z * scScript.fovDistance / Mathf.Sqrt (defaultDir.x * defaultDir.x + defaultDir.z * defaultDir.z));
-					GameObject wwp = GameObject.Instantiate (waypointPrefab, wwpPos, Quaternion.identity) as GameObject;
-					wwp.AddComponent ("WaitingWaypoint");
-					DestroyImmediate (wwp.GetComponent ("Waypoint"));
-					WaitingWaypoint wwpScript;
-					wwpScript = wwp.GetComponent ("Waypoint") as WaitingWaypoint;
-					wwpScript.next = wwpScript;
-					wwpScript.waitingTime = 1000000.0f;
-					scScript.target = wwpScript;
-					scScript.transform.LookAt (wwpPos);
-				}	
-				
-				//---------------------------------Rotational Cameras-----------------------------------//
-				
-				for (int i = 0; i < numOfRotCameras; i++) {
-					Vector3 position;
-					do {
-						position = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));
-					} while (obs[(int)((position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true);
-					GameObject enemy = GameObject.Instantiate (enemyPrefab, position, Quaternion.identity) as GameObject;
-					enemy.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);
-					
-					Enemy rcScript;
-					rcScript = enemy.GetComponent ("Enemy") as Enemy;
-					rcScript.rotationSpeed = 100;
-					rcScript.moveSpeed = 1;
-					
-					// Find aiming position
-					Vector3 defaultPos = enemy.transform.position;
-					// rangeArray[0] = minX, rangeArray[1] = minY, rangeArray[2] = maxX, rangeArray[3] = maxY;
-					float[] rangeArray = new float[4];
-					
-					List<Vector3> lookingDirVec = new List<Vector3> ();
-					lookingDirVec.Add (new Vector3 (0.0f, 0.0f, 1.0f));
-					lookingDirVec.Add (new Vector3 (1.0f, 0.0f, 1.0f));
-					lookingDirVec.Add (new Vector3 (1.0f, 0.0f, 0.0f));
-					lookingDirVec.Add (new Vector3 (1.0f, 0.0f, -1.0f));
-					lookingDirVec.Add (new Vector3 (0.0f, 0.0f, -1.0f));
-					lookingDirVec.Add (new Vector3 (-1.0f, 0.0f, -1.0f));
-					lookingDirVec.Add (new Vector3 (-1.0f, 0.0f, 0.0f));
-					lookingDirVec.Add (new Vector3 (-1.0f, 0.0f, 1.0f));
-					
-					List<float> distanceList = new List<float> ();
-					
-					// Foreach direction in 8 directions
-					foreach (Vector3 vdir in lookingDirVec) {
-						// Eliminate the possibility that a stationary guard could see the goal postion or starting postion
-						rangeArray = calculateRange (vdir, defaultPos, rcScript.fovDistance, rcScript.fovAngle);
-						if (((GameObject.FindGameObjectWithTag ("End").transform.position.x < rangeArray [0] || GameObject.FindGameObjectWithTag ("End").transform.position.x > rangeArray [2]
-							|| GameObject.FindGameObjectWithTag ("End").transform.position.y < rangeArray [1] || GameObject.FindGameObjectWithTag ("End").transform.position.y > rangeArray [3])
-							&& (GameObject.FindGameObjectWithTag ("Start").transform.position.x < rangeArray [0] || GameObject.FindGameObjectWithTag ("Start").transform.position.x > rangeArray [2]
-							|| GameObject.FindGameObjectWithTag ("Start").transform.position.y < rangeArray [1] || GameObject.FindGameObjectWithTag ("Start").transform.position.y > rangeArray [3]))
-							|| (Physics.Raycast (defaultPos, new Vector3 (GameObject.FindGameObjectWithTag ("End").transform.position.x - defaultPos.x, 0.0f, GameObject.FindGameObjectWithTag ("End").transform.position.z - defaultPos.z), rcScript.fovDistance)
-							|| Physics.Raycast (defaultPos, new Vector3 (GameObject.FindGameObjectWithTag ("Start").transform.position.x - defaultPos.x, 0.0f, GameObject.FindGameObjectWithTag ("Start").transform.position.z - defaultPos.z), rcScript.fovDistance))) {
-							RaycastHit hit;
-							if (Physics.Raycast (defaultPos, vdir, out hit)) {
-								Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
-								Debug.Log (hit.distance);
-								distanceList.Add (hit.distance);
-							} else {
-								if (vdir.x == 0.0f && vdir.z == 1.0f) {
-									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
-									Debug.Log (defaultPos.z - floor.collider.bounds.min.z);
-									distanceList.Add (defaultPos.z - floor.collider.bounds.min.z);
-								} else if (vdir.x == 1.0f && vdir.z == 1.0f) {
-									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.z - floor.collider.bounds.min.z, 2.0f));
-									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.x - defaultPos.x, 2.0f));
-									float solution = a1 > a2 ? a2 : a1;
-									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
-									Debug.Log (solution);
-									distanceList.Add (solution);
-								} else if (vdir.x == 1.0f && vdir.z == 0.0f) {
-									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
-									Debug.Log (floor.collider.bounds.max.x - defaultPos.x);
-									distanceList.Add (floor.collider.bounds.max.x - defaultPos.x);
-								} else if (vdir.x == 1.0f && vdir.z == -1.0f) {
-									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.x - defaultPos.x, 2.0f));
-									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.z - defaultPos.z, 2.0f));
-									float solution = a1 > a2 ? a2 : a1;
-									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
-									Debug.Log (solution);
-									distanceList.Add (solution);
-								} else if (vdir.x == 0.0f && vdir.z == -1.0f) {
-									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
-									Debug.Log (floor.collider.bounds.max.z - defaultPos.z);
-									distanceList.Add (floor.collider.bounds.max.z - defaultPos.z);
-								} else if (vdir.x == -1.0f && vdir.z == -1.0f) {
-									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.x - floor.collider.bounds.min.x, 2.0f));
-									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.z - defaultPos.z, 2.0f));
-									float solution = a1 > a2 ? a2 : a1;
-									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
-									Debug.Log (solution);
-									distanceList.Add (solution);
-								} else if (vdir.x == -1.0f && vdir.z == 0.0f) {
-									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
-									Debug.Log (defaultPos.x - floor.collider.bounds.min.x);
-									distanceList.Add (defaultPos.x - floor.collider.bounds.min.x);
-								} else if (vdir.x == -1.0f && vdir.z == 1.0f) {
-									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.x - floor.collider.bounds.min.x, 2.0f));
-									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.z - floor.collider.bounds.min.z, 2.0f));
-									float solution = a1 > a2 ? a2 : a1;
-									Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
-									Debug.Log (solution);
-									distanceList.Add (solution);
-								}
-							}
-						} else {
-							distanceList.Add (-1.0f);
-						}
-					}
-					
-					int cnt = 0;
-					int maxIndex = 0;
-					float maxDistance = 0.0f;
-					foreach (float tempDistance in distanceList) {
-						if (tempDistance > maxDistance) {
-							maxDistance = tempDistance;
-							maxIndex = cnt;
-						}
-						cnt++;
-					}
-					
-					int cnt2 = 0;
-					int maxIndex2 = 0;
-					float maxDistance2 = 0.0f;
-					foreach (float tempDistance in distanceList) {
-						if (tempDistance > maxDistance2 && cnt2 != maxIndex) {
-							maxDistance2 = tempDistance;
-							maxIndex2 = cnt2;
-						}
-						cnt2++;
-					}
-					
-					// Create rotation waypoint aimed at
-					Vector3 rwpPos1 = new Vector3 (defaultPos.x + lookingDirVec.ElementAt (maxIndex).x * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex).x * lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex).z * lookingDirVec.ElementAt (maxIndex).z), 0.0f,
-						defaultPos.z + lookingDirVec.ElementAt (maxIndex).z * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex).x * lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex).z * lookingDirVec.ElementAt (maxIndex).z));
-					Vector3 rwpPos2 = new Vector3 (defaultPos.x + lookingDirVec.ElementAt (maxIndex2).x * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex2).x * lookingDirVec.ElementAt (maxIndex2).x + lookingDirVec.ElementAt (maxIndex2).z * lookingDirVec.ElementAt (maxIndex2).z), 0.0f,
-						defaultPos.z + lookingDirVec.ElementAt (maxIndex2).z * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex2).x * lookingDirVec.ElementAt (maxIndex2).x + lookingDirVec.ElementAt (maxIndex2).z * lookingDirVec.ElementAt (maxIndex2).z));
-					GameObject rwp1 = GameObject.Instantiate (waypointPrefab, rwpPos1, Quaternion.identity) as GameObject;
-					GameObject rwp2 = GameObject.Instantiate (waypointPrefab, rwpPos2, Quaternion.identity) as GameObject;
-					rwp1.AddComponent ("RotationWaypoint");
-					rwp2.AddComponent ("RotationWaypoint");
-					DestroyImmediate (rwp1.GetComponent ("Waypoint"));
-					DestroyImmediate (rwp2.GetComponent ("Waypoint"));
-					RotationWaypoint rwpScript1;
-					RotationWaypoint rwpScript2;
-					rwpScript1 = rwp1.GetComponent ("Waypoint") as RotationWaypoint;
-					rwpScript2 = rwp2.GetComponent ("Waypoint") as RotationWaypoint;
-					rwpScript1.next = rwpScript2;
-					rwpScript2.next = rwpScript1;
-					rwpScript1.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex).x, lookingDirVec.ElementAt (maxIndex).y, lookingDirVec.ElementAt (maxIndex).z);
-					rwpScript2.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex2).x, lookingDirVec.ElementAt (maxIndex2).y, lookingDirVec.ElementAt (maxIndex2).z);
-					rcScript.target = rwpScript1;
-					rcScript.transform.LookAt (rwpPos1);
-				}
-				
-				
+				// Enable generating paths
 				setPathOpEnables = true;
-
 			}
+			
 			EditorGUILayout.LabelField ("");
 		}
 		
 		if (default2 == true) {
 			default2 = false;
-			queryVoronoiDiagramFoldout = EditorGUILayout.Foldout (true, "Query Voronoi Diagram Info");
+			queryeVoronoiDiagramFoldout = EditorGUILayout.Foldout (true, "Query Voronoi Diagram Info for Enemies");
 		} else {
-			queryVoronoiDiagramFoldout = EditorGUILayout.Foldout (queryVoronoiDiagramFoldout, "Query Voronoi Diagram Info");
+			queryeVoronoiDiagramFoldout = EditorGUILayout.Foldout (queryeVoronoiDiagramFoldout, "Query Voronoi Diagram Info for Enemies");
 		}
-		if (queryVoronoiDiagramFoldout) { 
+		if (queryeVoronoiDiagramFoldout) { 
 			// Show the number of Voronoi centres
-			numOfRegions = numOfEnemies != 0 ? 2 * numOfEnemies - 1 : 0;
-			EditorGUILayout.TextField ("Number of regions", numOfRegions.ToString ());
+			numOfRegionsForEnemies = numOfEnemies != 0 ? 2 * numOfEnemies - 1 : 0;
+			EditorGUILayout.TextField ("Number of regions", numOfRegionsForEnemies.ToString ());
 			// Toggle between visualizing or not
-			drawVoronoi = EditorGUILayout.Toggle ("Draw Voronoi Cells", drawVoronoi);
+			bool checkedBeforeE = drawVoronoiForEnemies;
+			drawVoronoiForEnemies = EditorGUILayout.Toggle ("Draw Voronoi Cells", drawVoronoiForEnemies);
+			bool checkedAfterE = drawVoronoiForEnemies;
+			if (checkedBeforeE != checkedAfterE && drawVoronoiForCameras) {
+				drawVoronoiForCameras = false;	
+			}
 			EditorGUILayout.LabelField ("");
 		}
 		
@@ -909,12 +623,123 @@ public class MapperWindowEditor : EditorWindow
 		iterations2 = EditorGUILayout.IntSlider ("Iterations", iterations2, 1, 20);
 		if (computePathFoldout) {
 			if (GUILayout.Button ("Set Patroling Path")) {
-				clearUpPaths ();
-				PCG.PathInVoronoiRegion (floor, obs, iterations2);
-				PCG.DestroyVoronoiCentre ();
-				// StorePositions ();
+				PCG.ClearUpPaths (pathObjects);
+				pathObjects = PCG.PathInVoronoiRegion (floor, PCG.vEnemy.obs, iterations2).ToArray ();
+				PCG.DestroyVoronoiCentreForEnemies ();
+				StorePositions ();
 			}
 		}
+		EditorGUILayout.LabelField ("");
+		
+		GUI.enabled = true;
+		EditorGUILayout.LabelField ("8. Random Cameras");
+		GUI.enabled = randomOpEnables;
+		
+		if (default4 == true) {
+			default4 = false;
+			setCameraFoldout = EditorGUILayout.Foldout (true, "Set Rotational Cameras");
+		} else {
+			setCameraFoldout = EditorGUILayout.Foldout (setCameraFoldout, "Set Rotational Cameras");
+		}
+		if (setCameraFoldout) {
+			enemyPrefab = (GameObject)EditorGUILayout.ObjectField ("Enemy Prefab", enemyPrefab, typeof(GameObject), false);
+			numOfCameras = EditorGUILayout.IntField ("Number of cameras", numOfCameras);
+			
+			// ----------------------------------Rotational Cameras-----------------------------------//
+			if (GUILayout.Button ("Populate Rotational Cameras")) {
+				PCG.ClearUpCameras (cameraObjects);
+				PCG.ClearUpAngles (angleObjects);
+				PCG.numOfCameras = numOfCameras;
+				PCG.numOfRegionsForCameras = numOfRegionsForCameras;
+				
+				if (obs == null) { 
+					obs = mapper.ComputeObstacles ();
+					Cell[][] grid = MapperEditor.grid;
+					if (grid != null) {
+						for (int x = 0; x < obs.Length; x++) {
+							for (int y = 0; y < obs[x].Length; y++)
+								if (grid [x] [y] != null)
+									obs [x] [y] = grid [x] [y];
+						}
+					}
+					
+					PCG.Initialize (enemyPrefab, waypointPrefab, obs);
+				}
+				
+				cameraObjects = PCG.PopulateCameras (floor).ToArray ();
+
+				// Hide all region centres
+				foreach (GameObject cameraObject in cameraObjects) {
+					Enemy cameraScript;
+					cameraScript = cameraObject.GetComponent ("Enemy") as Enemy;
+					cameraScript.LineForFOV = new Color (1.0f, 1.0f, 1.0f, 0.0f);
+					cameraScript.renderer.enabled = false;
+				}
+				
+				// Calculate different voronoi regions and visualization is ready
+				PCG.vCamera.calculateVoronoiRegions (floor, PCG.vCamera.obs, PCG.numOfCameras, PCG.numOfRegionsForCameras, cameraObjects);
+				PCG.vCamera.calculateBoundaries (floor);
+				drawer.cVoronoiGrid = PCG.vCamera.obs;
+				
+				// Select [numOfCameras] regions with maximum area
+				int[] maxAreaIndexArrayForCameras = PCG.vCamera.selectMaximumRegions ();
+				
+				// Show region centres with [numOfCameras] regions with maximum area
+				for (int i = 0; i < numOfCameras; i++) {
+					Enemy cameraRestoredScript;
+					cameraRestoredScript = cameraObjects.ElementAt (maxAreaIndexArrayForCameras [i]).GetComponent ("Enemy") as Enemy;
+					cameraRestoredScript.LineForFOV = new Color (1.0f, 0.3f, 0.0f, 1.0f);
+					cameraObjects.ElementAt (maxAreaIndexArrayForCameras [i]).renderer.enabled = true;
+					cameraRestoredScript.rotationSpeed = 50;
+					cameraRestoredScript.moveSpeed = 1;
+				}
+				
+				PCG.maxAreaIndexHolderC = maxAreaIndexArrayForCameras;
+				
+				setRotationOpEnables = true;
+			}
+			EditorGUILayout.LabelField ("");	
+		}
+		
+		if (default5 == true) {
+			default5 = false;
+			querycVoronoiDiagramFoldout = EditorGUILayout.Foldout (true, "Query Voronoi Diagram Info");
+		} else {
+			querycVoronoiDiagramFoldout = EditorGUILayout.Foldout (querycVoronoiDiagramFoldout, "Query Voronoi Diagram Info");
+		}
+		if (querycVoronoiDiagramFoldout) { 
+			// Show the number of Voronoi centres
+			numOfRegionsForCameras = numOfCameras != 0 ? 2 * numOfCameras - 1 : 0;
+			EditorGUILayout.TextField ("Number of regions", numOfRegionsForCameras.ToString ());
+			// Toggle between visualizing or not
+			bool checkedBeforeC = drawVoronoiForCameras;
+			drawVoronoiForCameras = EditorGUILayout.Toggle ("Draw Voronoi Cells", drawVoronoiForCameras);
+			bool checkedAfterC = drawVoronoiForCameras;
+			if (checkedBeforeC != checkedAfterC && drawVoronoiForEnemies) {
+				drawVoronoiForEnemies = false;
+			}
+			EditorGUILayout.LabelField ("");
+		}
+		
+		// Rotation
+		GUI.enabled = setRotationOpEnables;
+		
+		if (default6 == true) {
+			default6 = false;
+			computePathFoldout = EditorGUILayout.Foldout (true, "Compute Rotation");
+		} else {
+			computePathFoldout = EditorGUILayout.Foldout (computePathFoldout, "Compute Rotation");
+		}
+		iterations3 = EditorGUILayout.IntSlider ("Iterations", iterations3, 1, 20);
+		if (computePathFoldout) {
+			if (GUILayout.Button ("Set Rotation Directions")) {
+				PCG.ClearUpAngles (angleObjects);
+				angleObjects = PCG.RotationInVoronoiRegion (floor, PCG.vCamera.obs, iterations3).ToArray ();
+				PCG.DestroyVoronoiCentreForCameras ();
+				StorePositions ();
+			}
+		}
+		EditorGUILayout.LabelField ("");
 		
 		GUI.enabled = true;
 		
@@ -956,8 +781,8 @@ public class MapperWindowEditor : EditorWindow
 			drawer.drawNeverSeen = drawNeverSeen;
 			drawer.drawPath = drawPath;
 			drawer.paths = toggleStatus;
-			drawer.drawVoronoi = drawVoronoi;
-			
+			drawer.drawVoronoiForEnemies = drawVoronoiForEnemies;
+			drawer.drawVoronoiForCameras = drawVoronoiForCameras;
 		}
 		
 		if (fullMap != null && lastTime != timeSlice) {
@@ -966,65 +791,6 @@ public class MapperWindowEditor : EditorWindow
 		}
 		
 		SceneView.RepaintAll ();
-	}
-	
-	// Calculate range
-	private float[] calculateRange (Vector3 vdir, Vector3 defaultPos, float fovDistance, float fovAngle)
-	{
-		float[] range = new float[4];
-		float minX, minY, maxX, maxY;
-		float cosTheta, sinTheta, x, y, xA, yA, xB, yB;
-		Vector2 pA, pB, pC, dir;
-		pC = new Vector2 (defaultPos.x, defaultPos.z);
-		dir = new Vector2 (vdir.x, vdir.z);
-		
-		cosTheta = dir.x / Mathf.Sqrt (dir.x * dir.x + dir.y * dir.y);
-		sinTheta = dir.y / Mathf.Sqrt (dir.x * dir.x + dir.y * dir.y);
-		x = fovDistance;
-		y = fovDistance * Mathf.Tan ((fovAngle / 2) / 180.0f * Mathf.PI);
-		xA = cosTheta * x - sinTheta * y + pC.x;
-		yA = sinTheta * x + cosTheta * y + pC.y;
-		xB = cosTheta * x + sinTheta * y + pC.x;
-		yB = sinTheta * x - cosTheta * y + pC.y;
-		pA = new Vector2 (xA, yA);
-		pB = new Vector2 (xB, yB);
-		
-		// min and max
-		maxX = Mathf.Max (Mathf.Max (pA.x, pB.x), pC.x);
-		minX = Mathf.Min (Mathf.Min (pA.x, pB.x), pC.x);
-		maxY = Mathf.Max (Mathf.Max (pA.y, pB.y), pC.y);
-		minY = Mathf.Min (Mathf.Min (pA.y, pB.y), pC.y);
-		
-		range [0] = minX;
-		range [1] = minY;
-		range [2] = maxX;
-		range [3] = maxY;
-		
-		return range;
-	}
-	
-	private void clearUpEnemies ()
-	{
-		GameObject[] gos = null;
-		gos = GameObject.FindGameObjectsWithTag ("Enemy").OrderBy (go => go.transform.position.x).ToArray ();
-		if (gos != null) {
-			foreach (GameObject g in gos) {
-				DestroyImmediate (g);	
-			}
-		}
-	}
-	
-	private void clearUpPaths ()
-	{
-		GameObject[] wos = null;
-		wos = GameObject.FindGameObjectsWithTag ("Waypoint").ToArray ();
-		if (wos != null) {
-			foreach (GameObject w in wos) {
-				if (!(w.GetComponent("Waypoint") as WaitingWaypoint || w.GetComponent("Waypoint") as RotationWaypoint)) {
-					DestroyImmediate (w);
-				}
-			}
-		}
 	}
 
 	void BatchComputing ()
