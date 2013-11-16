@@ -541,7 +541,7 @@ public class MapperWindowEditor : EditorWindow
 				// Clear up enemies and their paths in the scene
 				PCG.ClearUpEnemies (enemyObjects);
 				PCG.ClearUpPaths (pathObjects);
-				
+
 				if (obs == null) { 
 					obs = mapper.ComputeObstacles ();
 					Cell[][] grid = MapperEditor.grid;
@@ -553,7 +553,10 @@ public class MapperWindowEditor : EditorWindow
 						}
 					}
 					PCG.Initialize (enemyPrefab, waypointPrefab, obs);
+				} else {
+					PCG.ResetEnemiesObs ();	
 				}
+				
 				PCG.numOfEnemies = numOfEnemies;
 				PCG.numOfRegionsForEnemies = numOfRegionsForEnemies;
 				// Populate region centres as enemies
@@ -568,7 +571,8 @@ public class MapperWindowEditor : EditorWindow
 				}
 				
 				// Calculate different voronoi regions and visualization is ready
-				PCG.vEnemy.calculateVoronoiRegions (floor, PCG.vEnemy.obs, PCG.numOfEnemies, PCG.numOfRegionsForEnemies, enemyObjects);
+				// PCG.vEnemy.calculateVoronoiRegions (floor, PCG.numOfEnemies, PCG.numOfRegionsForEnemies, enemyObjects);
+				PCG.vEnemy.calculateVoronoiRegionsUsingFlooding (floor, PCG.numOfEnemies, PCG.numOfRegionsForEnemies, enemyObjects);
 				drawer.eVoronoiGrid = PCG.vEnemy.obs;
 				
 				// Select [numOfEnemies] regions with maximum area
@@ -662,8 +666,9 @@ public class MapperWindowEditor : EditorWindow
 									obs [x] [y] = grid [x] [y];
 						}
 					}
-					
 					PCG.Initialize (enemyPrefab, waypointPrefab, obs);
+				} else {
+					PCG.ResetCamerasObs ();	
 				}
 				
 				cameraObjects = PCG.PopulateCameras (floor).ToArray ();
@@ -677,7 +682,8 @@ public class MapperWindowEditor : EditorWindow
 				}
 				
 				// Calculate different voronoi regions and visualization is ready
-				PCG.vCamera.calculateVoronoiRegions (floor, PCG.vCamera.obs, PCG.numOfCameras, PCG.numOfRegionsForCameras, cameraObjects);
+				// PCG.vCamera.calculateVoronoiRegions (floor, PCG.vCamera.obs, PCG.numOfCameras, PCG.numOfRegionsForCameras, cameraObjects);
+				PCG.vCamera.calculateVoronoiRegionsUsingFlooding (floor, PCG.numOfCameras, PCG.numOfRegionsForCameras, cameraObjects);
 				PCG.vCamera.calculateBoundaries (floor);
 				drawer.cVoronoiGrid = PCG.vCamera.obs;
 				

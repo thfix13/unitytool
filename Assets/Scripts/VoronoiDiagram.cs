@@ -6,7 +6,7 @@ using System.Linq;
 public class VoronoiDiagram
 {
 	public int numOfGuards = 0, numOfRegions = 0;
-	public Cell[][] obs;
+	public Cell[][] obs = null;
 	public List<Vector2> voronoiCentre = null;
 	public List<int> nearestIndice = null;
 	public int[] maxAreaIndexHolder = null;
@@ -16,7 +16,7 @@ public class VoronoiDiagram
 	public List<int>[] boundaryXArray = null;
 	public List<int>[] boundaryZArray = null;
 	
-	public void calculateVoronoiRegions (GameObject floor, Cell[][] obs, int n1, int n2, GameObject[] gos)
+	public void calculateVoronoiRegions (GameObject floor, int n1, int n2, GameObject[] gos)
 	{
 		//Get all the points to calculate the voronoi 
 		voronoiCentre = new List<Vector2> ();	
@@ -59,9 +59,104 @@ public class VoronoiDiagram
 		}	
 	}
 	
-	public void calculateVoronoiRegions2 (GameObject floor, Cell[][] obs, int n1, int n2, GameObject[] gos)
+	public void calculateVoronoiRegionsUsingFlooding (GameObject floor, int n1, int n2, GameObject[] gos)
 	{
+		nearestIndice = new List<int> ();
+		numOfGuards = n1;
+		numOfRegions = n2;
 		
+		List<int> iList = new List<int> ();
+		List<int> jList = new List<int> ();
+		int cnt = 0;
+		
+		// Initializing lists
+		foreach (GameObject go in gos) {
+			int i = (int)((go.transform.position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x);
+			int j = (int)((go.transform.position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y);
+			obs [i] [j].nearestVoronoiCentre = cnt;
+			nearestIndice.Add (cnt);
+			// Debug.Log ("I belong to enemy " + cnt);
+			iList.Add (i);
+			jList.Add (j);
+			cnt++;
+		}
+		
+		while (iList.Count != 0) {
+			int i = iList.ElementAt (0);
+			int j = jList.ElementAt (0);
+			
+			// Traverse 8 neighbors
+			if (j > 0 && obs [i] [j - 1].nearestVoronoiCentre == -1 && obs [i] [j - 1].blocked == false) {
+				obs [i] [j - 1].nearestVoronoiCentre = obs [i] [j].nearestVoronoiCentre;
+				iList.Add (i);
+				jList.Add (j - 1);
+				nearestIndice.Add (obs [i] [j].nearestVoronoiCentre);
+				// Debug.Log ("I belong to enemy " + obs [i] [j].nearestVoronoiCentre);
+			}
+			
+			if (j > 0 && i < (int)(floor.collider.bounds.size.x / SpaceState.TileSize.x)
+				&& obs [i + 1] [j - 1].nearestVoronoiCentre == -1 && obs [i + 1] [j - 1].blocked == false) {
+				obs [i + 1] [j - 1].nearestVoronoiCentre = obs [i] [j].nearestVoronoiCentre;
+				iList.Add (i + 1);
+				jList.Add (j - 1);
+				nearestIndice.Add (obs [i] [j].nearestVoronoiCentre);
+				// Debug.Log ("I belong to enemy " + obs [i] [j].nearestVoronoiCentre);
+			}
+			
+			if (i < (int)(floor.collider.bounds.size.x / SpaceState.TileSize.x)
+				&& obs [i + 1] [j].nearestVoronoiCentre == -1 && obs [i + 1] [j].blocked == false) {
+				obs [i + 1] [j].nearestVoronoiCentre = obs [i] [j].nearestVoronoiCentre;
+				iList.Add (i + 1);
+				jList.Add (j);
+				nearestIndice.Add (obs [i] [j].nearestVoronoiCentre);
+				// Debug.Log ("I belong to enemy " + obs [i] [j].nearestVoronoiCentre);
+			}
+			
+			if (i < (int)(floor.collider.bounds.size.x / SpaceState.TileSize.x) && j < (int)(floor.collider.bounds.size.z / SpaceState.TileSize.y)
+				&& obs [i + 1] [j + 1].nearestVoronoiCentre == -1 && obs [i + 1] [j + 1].blocked == false) {
+				obs [i + 1] [j + 1].nearestVoronoiCentre = obs [i] [j].nearestVoronoiCentre;
+				iList.Add (i + 1);
+				jList.Add (j + 1);
+				nearestIndice.Add (obs [i] [j].nearestVoronoiCentre);
+				// Debug.Log ("I belong to enemy " + obs [i] [j].nearestVoronoiCentre);
+			}
+			
+			if (j < (int)(floor.collider.bounds.size.z / SpaceState.TileSize.y)
+				&& obs [i] [j + 1].nearestVoronoiCentre == -1 && obs [i] [j + 1].blocked == false) {
+				obs [i] [j + 1].nearestVoronoiCentre = obs [i] [j].nearestVoronoiCentre;
+				iList.Add (i);
+				jList.Add (j + 1);
+				nearestIndice.Add (obs [i] [j].nearestVoronoiCentre);
+				// Debug.Log ("I belong to enemy " + obs [i] [j].nearestVoronoiCentre);
+			}
+			
+			if (i > 0 && j < (int)(floor.collider.bounds.size.z / SpaceState.TileSize.y)
+				&& obs [i - 1] [j + 1].nearestVoronoiCentre == -1 && obs [i - 1] [j + 1].blocked == false) {
+				obs [i - 1] [j + 1].nearestVoronoiCentre = obs [i] [j].nearestVoronoiCentre;
+				iList.Add (i - 1);
+				jList.Add (j + 1);
+				nearestIndice.Add (obs [i] [j].nearestVoronoiCentre);
+				// Debug.Log ("I belong to enemy " + obs [i] [j].nearestVoronoiCentre);
+			}
+			
+			if (i > 0 && obs [i - 1] [j].nearestVoronoiCentre == -1 && obs [i - 1] [j].blocked == false) {
+				obs [i - 1] [j].nearestVoronoiCentre = obs [i] [j].nearestVoronoiCentre;
+				iList.Add (i - 1);
+				jList.Add (j);
+				nearestIndice.Add (obs [i] [j].nearestVoronoiCentre);
+				// Debug.Log ("I belong to enemy " + obs [i] [j].nearestVoronoiCentre);
+			}
+			
+			if (i > 0 && j > 0 && obs [i - 1] [j - 1].nearestVoronoiCentre == -1 && obs [i - 1] [j - 1].blocked == false) {
+				obs [i - 1] [j - 1].nearestVoronoiCentre = obs [i] [j].nearestVoronoiCentre;
+				iList.Add (i - 1);
+				jList.Add (j - 1);
+				nearestIndice.Add (obs [i] [j].nearestVoronoiCentre);
+				// Debug.Log ("I belong to enemy " + obs [i] [j].nearestVoronoiCentre);
+			}
+			iList.RemoveAt(0);
+			jList.RemoveAt(0);
+		}
 	}
 	
 	public void calculateBoundaries (GameObject floor)

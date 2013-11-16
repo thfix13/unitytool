@@ -31,8 +31,42 @@ public class PCG : MonoBehaviour
 	{
 		enemyPrefab = enmPrefab;
 		waypointPrefab = wpPrefab;
-		vEnemy.obs = obs;
-		vCamera.obs = obs;
+		
+		// Initialize two voronoi diagrams' instances
+		vEnemy.obs = new Cell[obs.Length][];
+		vCamera.obs = new Cell [obs.Length][];
+		for (int x = 0; x < obs.Length; x++) {
+			vEnemy.obs [x] = new Cell [obs [x].Length];	
+			vCamera.obs [x] = new Cell [obs [x].Length];
+		}
+		
+		// Value arguement
+		for (int i = 0; i < obs.Length; i++) {
+			for (int j = 0; j < obs [i].Length; j++) {
+				vEnemy.obs [i] [j] = obs [i] [j].Copy ();
+				vCamera.obs [i] [j] = obs [i] [j].Copy ();	
+			}
+		}
+	}
+	
+	public static void ResetEnemiesObs ()
+	{
+		for (int i = 0; i < vEnemy.obs.Length; i++) {
+			for (int j = 0; j < vEnemy.obs [i].Length; j++) {
+				vEnemy.obs [i] [j].nearestVoronoiCentre = -1;
+			}
+		}	
+	}
+	
+	public static void ResetCamerasObs ()
+	{
+		for (int i = 0; i < vCamera.obs.Length; i++) {
+			for (int j = 0; j < vCamera.obs [i].Length; j++) {
+				vCamera.obs [i] [j].nearestVoronoiCentre = -1;
+				vCamera.obs [i] [j].isNextToWall = -1;
+				vCamera.obs [i] [j].isVoronoiBoundary = -1;
+			}
+		}	
 	}
 	
 	public static List<GameObject> PopulateEnemies (GameObject floor)

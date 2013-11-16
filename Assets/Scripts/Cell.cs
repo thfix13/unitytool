@@ -30,6 +30,7 @@ public class Cell
 		copy.waypoint = this.waypoint;
 		copy.nearestVoronoiCentre = this.nearestVoronoiCentre;
 		copy.isVoronoiBoundary = this.isVoronoiBoundary;
+		copy.isNextToWall = this.isNextToWall;
 		return copy;
 	}
 }
