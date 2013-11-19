@@ -40,7 +40,7 @@ public class PCG : MonoBehaviour
 			vCamera.obs [x] = new Cell [obs [x].Length];
 		}
 		
-		// Value arguement
+		// Passing value not reference
 		for (int i = 0; i < obs.Length; i++) {
 			for (int j = 0; j < obs [i].Length; j++) {
 				vEnemy.obs [i] [j] = obs [i] [j].Copy ();
@@ -314,22 +314,59 @@ public class PCG : MonoBehaviour
 					finalPos.z + lookingDirVec.ElementAt (maxIndex).z * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex).x * lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex).z * lookingDirVec.ElementAt (maxIndex).z));
 				Vector3 rwpPos2 = new Vector3 (finalPos.x + lookingDirVec.ElementAt (maxIndex2).x * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex2).x * lookingDirVec.ElementAt (maxIndex2).x + lookingDirVec.ElementAt (maxIndex2).z * lookingDirVec.ElementAt (maxIndex2).z), 0.0f,
 					finalPos.z + lookingDirVec.ElementAt (maxIndex2).z * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex2).x * lookingDirVec.ElementAt (maxIndex2).x + lookingDirVec.ElementAt (maxIndex2).z * lookingDirVec.ElementAt (maxIndex2).z));
-				GameObject rwp1 = GameObject.Instantiate (waypointPrefab, rwpPos1, Quaternion.identity) as GameObject;
-				GameObject rwp2 = GameObject.Instantiate (waypointPrefab, rwpPos2, Quaternion.identity) as GameObject;
-				rwp1.AddComponent ("RotationWaypoint");
-				rwp2.AddComponent ("RotationWaypoint");
-				DestroyImmediate (rwp1.GetComponent ("Waypoint"));
-				DestroyImmediate (rwp2.GetComponent ("Waypoint"));
-				RotationWaypoint rwpScript1;
-				RotationWaypoint rwpScript2;
-				rwpScript1 = rwp1.GetComponent ("Waypoint") as RotationWaypoint;
-				rwpScript2 = rwp2.GetComponent ("Waypoint") as RotationWaypoint;
-				rwpScript1.next = rwpScript2;
-				rwpScript2.next = rwpScript1;
-				rwpScript1.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex).x, lookingDirVec.ElementAt (maxIndex).y, lookingDirVec.ElementAt (maxIndex).z);
-				rwpScript2.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex2).x, lookingDirVec.ElementAt (maxIndex2).y, lookingDirVec.ElementAt (maxIndex2).z);
-				rcScript.target = rwpScript1;
-				rcScript.transform.LookAt (rwpPos1);
+				if (!CheckObtuse (finalPos, lookingDirVec.ElementAt (maxIndex), lookingDirVec.ElementAt (maxIndex2))) {
+					GameObject rwp1 = GameObject.Instantiate (waypointPrefab, rwpPos1, Quaternion.identity) as GameObject;
+					GameObject rwp2 = GameObject.Instantiate (waypointPrefab, rwpPos2, Quaternion.identity) as GameObject;
+					rwp1.AddComponent ("RotationWaypoint");
+					rwp2.AddComponent ("RotationWaypoint");
+					DestroyImmediate (rwp1.GetComponent ("Waypoint"));
+					DestroyImmediate (rwp2.GetComponent ("Waypoint"));
+					RotationWaypoint rwpScript1;
+					RotationWaypoint rwpScript2;
+					rwpScript1 = rwp1.GetComponent ("Waypoint") as RotationWaypoint;
+					rwpScript2 = rwp2.GetComponent ("Waypoint") as RotationWaypoint;
+					rwpScript1.next = rwpScript2;
+					rwpScript2.next = rwpScript1;
+					rwpScript1.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex).x, lookingDirVec.ElementAt (maxIndex).y, lookingDirVec.ElementAt (maxIndex).z);
+					rwpScript2.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex2).x, lookingDirVec.ElementAt (maxIndex2).y, lookingDirVec.ElementAt (maxIndex2).z);
+					rcScript.target = rwpScript1;
+					rcScript.transform.LookAt (rwpPos1);
+				} else {
+					Vector3 rwpPos3 = new Vector3 (finalPos.x + (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x) * rcScript.fovDistance / Mathf.Sqrt ((lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) * (lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) + (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z) * (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z)), 0.0f,
+					finalPos.z + (- lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z) * rcScript.fovDistance / Mathf.Sqrt ((lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) * (lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) + (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z) * (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z)));
+					GameObject rwp1 = GameObject.Instantiate (waypointPrefab, rwpPos1, Quaternion.identity) as GameObject;
+					GameObject rwp2 = GameObject.Instantiate (waypointPrefab, rwpPos2, Quaternion.identity) as GameObject;
+					GameObject rwp3 = GameObject.Instantiate (waypointPrefab, rwpPos3, Quaternion.identity) as GameObject;
+					GameObject rwp4 = GameObject.Instantiate (waypointPrefab, rwpPos3, Quaternion.identity) as GameObject;
+					rwp1.AddComponent ("RotationWaypoint");
+					rwp2.AddComponent ("RotationWaypoint");
+					rwp3.AddComponent ("RotationWaypoint");
+					rwp4.AddComponent ("RotationWaypoint");
+					DestroyImmediate (rwp1.GetComponent ("Waypoint"));
+					DestroyImmediate (rwp2.GetComponent ("Waypoint"));
+					DestroyImmediate (rwp3.GetComponent ("Waypoint"));
+					DestroyImmediate (rwp4.GetComponent ("Waypoint"));
+					RotationWaypoint rwpScript1;
+					RotationWaypoint rwpScript2;
+					RotationWaypoint rwpScript3;
+					RotationWaypoint rwpScript4;
+					rwpScript1 = rwp1.GetComponent ("Waypoint") as RotationWaypoint;
+					rwpScript2 = rwp2.GetComponent ("Waypoint") as RotationWaypoint;
+					rwpScript3 = rwp3.GetComponent ("Waypoint") as RotationWaypoint;
+					rwpScript4 = rwp4.GetComponent ("Waypoint") as RotationWaypoint;
+					rwpScript1.next = rwpScript3;
+					rwpScript3.next = rwpScript2;
+					rwpScript2.next = rwpScript4;
+					rwpScript4.next = rwpScript1;
+					rwpScript1.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex).x, lookingDirVec.ElementAt (maxIndex).y, lookingDirVec.ElementAt (maxIndex).z);
+					rwpScript2.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex2).x, lookingDirVec.ElementAt (maxIndex2).y, lookingDirVec.ElementAt (maxIndex2).z);
+					rwpScript3.lookDir = new Vector3 (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x,
+						- lookingDirVec.ElementAt (maxIndex).y - lookingDirVec.ElementAt (maxIndex2).y, - lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z);
+					rwpScript4.lookDir = new Vector3 (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x,
+						- lookingDirVec.ElementAt (maxIndex).y - lookingDirVec.ElementAt (maxIndex2).y, - lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z);
+					rcScript.target = rwpScript1;
+					rcScript.transform.LookAt (rwpPos1);
+				}
 			}
 		}
 		var intersection = GameObject.FindGameObjectsWithTag ("Waypoint").ToArray ().Except (pos);
@@ -442,5 +479,24 @@ public class PCG : MonoBehaviour
 		range [3] = maxY;
 		
 		return range;
+	}
+	
+	private static bool CheckObtuse (Vector3 pos, Vector3 v1, Vector3 v2)
+	{
+		Vector3 midDir1 = new Vector3 (v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
+		Vector3 midDir2 = new Vector3 (-midDir1.x, -midDir1.y, -midDir1.z);
+		float d1 = float.MaxValue, d2 = float.MaxValue;
+		RaycastHit hit1, hit2;
+		if (Physics.Raycast (pos, midDir1, out hit1)) {
+			d1 = hit1.distance;
+		}
+		if (Physics.Raycast (pos, midDir2, out hit2)) {
+			d2 = hit2.distance;	
+		}
+		if (d1 >= d2) {
+			return false;
+		} else {
+			return true;	
+		}
 	}
 }
