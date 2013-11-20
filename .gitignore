@@ -6,3 +6,19 @@
 *.csproj
 *.unityproj
 *.sln
+
+Assets/Levels/Human Study.meta
+
+ProjectSettings/ProjectSettings.asset
+
+ProjectSettings/ProjectSettings.asset
+
+Output.pdf
+
+Output.svg
+
+clusterresults.xml
+
+pathresults.xml
+
+ProjectSettings/ProjectSettings.asset
