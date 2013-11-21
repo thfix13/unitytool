@@ -40,7 +40,7 @@ public class PCG : MonoBehaviour
 			vCamera.obs [x] = new Cell [obs [x].Length];
 		}
 		
-		// Passing value not reference
+		// Passing as value NOT as reference
 		for (int i = 0; i < obs.Length; i++) {
 			for (int j = 0; j < obs [i].Length; j++) {
 				vEnemy.obs [i] [j] = obs [i] [j].Copy ();

@@ -696,6 +696,7 @@ public class MapperWindowEditor : EditorWindow
 					cameraRestoredScript = cameraObjects.ElementAt (maxAreaIndexArrayForCameras [i]).GetComponent ("Enemy") as Enemy;
 					cameraRestoredScript.LineForFOV = new Color (1.0f, 0.3f, 0.0f, 1.0f);
 					cameraObjects.ElementAt (maxAreaIndexArrayForCameras [i]).renderer.enabled = true;
+					cameraObjects.ElementAt (maxAreaIndexArrayForCameras [i]).renderer.sharedMaterial.color = new Color (0.7f, 0.3f, 0.2f, 1.0f);
 					cameraRestoredScript.rotationSpeed = 50;
 					cameraRestoredScript.moveSpeed = 1;
 				}
