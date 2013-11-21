@@ -220,66 +220,59 @@ public class PCG : MonoBehaviour
 							|| (Physics.Raycast (defaultPos, new Vector3 (GameObject.FindGameObjectWithTag ("End").transform.position.x - defaultPos.x, 0.0f, GameObject.FindGameObjectWithTag ("End").transform.position.z - defaultPos.z), rcScript.fovDistance)
 							|| Physics.Raycast (defaultPos, new Vector3 (GameObject.FindGameObjectWithTag ("Start").transform.position.x - defaultPos.x, 0.0f, GameObject.FindGameObjectWithTag ("Start").transform.position.z - defaultPos.z), rcScript.fovDistance))) {
 							RaycastHit hit;
+							float solution = 0.0f;
 							if (Physics.Raycast (defaultPos, vdir, out hit)) {
 								// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
 								// Debug.Log (hit.distance);
-								float solution  = rcScript.fovDistance < hit.distance ? rcScript.fovDistance : hit.distance;
-								distanceList.Add (solution);
+								solution  = rcScript.fovDistance < hit.distance ? rcScript.fovDistance : hit.distance;
 							} else {
 								if (vdir.x == 0.0f && vdir.z == 1.0f) {
 									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
 									// Debug.Log (defaultPos.z - floor.collider.bounds.min.z);
-									float solution = rcScript.fovDistance < defaultPos.z - floor.collider.bounds.min.z ? rcScript.fovDistance : defaultPos.z - floor.collider.bounds.min.z;
-									distanceList.Add (solution);
+									solution = rcScript.fovDistance < defaultPos.z - floor.collider.bounds.min.z ? rcScript.fovDistance : defaultPos.z - floor.collider.bounds.min.z;
 								} else if (vdir.x == 1.0f && vdir.z == 1.0f) {
 									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.z - floor.collider.bounds.min.z, 2.0f));
 									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.x - defaultPos.x, 2.0f));
-									float solution = a1 > a2 ? a2 : a1;
+									solution = a1 > a2 ? a2 : a1;
 									solution = rcScript.fovDistance < solution ? rcScript.fovDistance : solution;
 									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
 									// Debug.Log (solution);
-									distanceList.Add (solution);
 								} else if (vdir.x == 1.0f && vdir.z == 0.0f) {
 									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
 									// Debug.Log (floor.collider.bounds.max.x - defaultPos.x);
-									float solution = rcScript.fovDistance < floor.collider.bounds.max.x - defaultPos.x ? rcScript.fovDistance : floor.collider.bounds.max.x - defaultPos.x;
-									distanceList.Add (solution);
+									solution = rcScript.fovDistance < floor.collider.bounds.max.x - defaultPos.x ? rcScript.fovDistance : floor.collider.bounds.max.x - defaultPos.x;
 								} else if (vdir.x == 1.0f && vdir.z == -1.0f) {
 									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.x - defaultPos.x, 2.0f));
 									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.z - defaultPos.z, 2.0f));
-									float solution = a1 > a2 ? a2 : a1;
+									solution = a1 > a2 ? a2 : a1;
 									solution = rcScript.fovDistance < solution ? rcScript.fovDistance : solution;
 									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
 									// Debug.Log (solution);
-									distanceList.Add (solution);
 								} else if (vdir.x == 0.0f && vdir.z == -1.0f) {
 									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
 									// Debug.Log (floor.collider.bounds.max.z - defaultPos.z);
-									float solution = rcScript.fovDistance < floor.collider.bounds.max.z - defaultPos.z ? rcScript.fovDistance : floor.collider.bounds.max.z - defaultPos.z;
-									distanceList.Add (solution);
+									solution = rcScript.fovDistance < floor.collider.bounds.max.z - defaultPos.z ? rcScript.fovDistance : floor.collider.bounds.max.z - defaultPos.z;
 								} else if (vdir.x == -1.0f && vdir.z == -1.0f) {
 									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.x - floor.collider.bounds.min.x, 2.0f));
 									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.z - defaultPos.z, 2.0f));
-									float solution = a1 > a2 ? a2 : a1;
+									solution = a1 > a2 ? a2 : a1;
 									solution = rcScript.fovDistance < solution ? rcScript.fovDistance : solution;
 									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
 									// Debug.Log (solution);
-									distanceList.Add (solution);
 								} else if (vdir.x == -1.0f && vdir.z == 0.0f) {
 									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
 									// Debug.Log (defaultPos.x - floor.collider.bounds.min.x);
-									float solution = rcScript.fovDistance < defaultPos.x - floor.collider.bounds.min.x ? rcScript.fovDistance : defaultPos.x - floor.collider.bounds.min.x;
-									distanceList.Add (defaultPos.x - floor.collider.bounds.min.x);
+									solution = rcScript.fovDistance < defaultPos.x - floor.collider.bounds.min.x ? rcScript.fovDistance : defaultPos.x - floor.collider.bounds.min.x;
 								} else if (vdir.x == -1.0f && vdir.z == 1.0f) {
 									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.x - floor.collider.bounds.min.x, 2.0f));
 									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.z - floor.collider.bounds.min.z, 2.0f));
-									float solution = a1 > a2 ? a2 : a1;
+									solution = a1 > a2 ? a2 : a1;
 									solution = rcScript.fovDistance < solution ? rcScript.fovDistance : solution;
 									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
 									// Debug.Log (solution);
-									distanceList.Add (solution);
 								}
 							}
+							distanceList.Add (solution);
 						} else {
 							distanceList.Add (-1.0f);
 						}
@@ -343,6 +336,7 @@ public class PCG : MonoBehaviour
 				} else {
 					Vector3 rwpPos3 = new Vector3 (0.0f, 0.0f, 0.0f);
 					if (CheckFlat(finalPos, lookingDirVec.ElementAt (maxIndex), lookingDirVec.ElementAt (maxIndex2), ref rwpPos3)) {
+						Vector3 imVector = new Vector3(rwpPos3.x, rwpPos3.y, rwpPos3.z);
 						rwpPos3 = new Vector3 (finalPos.x + rwpPos3.x * rcScript.fovDistance / Mathf.Sqrt (rwpPos3.x * rwpPos3.x + rwpPos3.z * rwpPos3.z), finalPos.z + rwpPos3.z * rcScript.fovDistance / Mathf.Sqrt (Mathf.Sqrt (rwpPos3.x * rwpPos3.x + rwpPos3.z * rwpPos3.z)));
 						GameObject rwp1 = GameObject.Instantiate (waypointPrefab, rwpPos1, Quaternion.identity) as GameObject;
 						GameObject rwp2 = GameObject.Instantiate (waypointPrefab, rwpPos2, Quaternion.identity) as GameObject;
@@ -370,10 +364,8 @@ public class PCG : MonoBehaviour
 						rwpScript4.next = rwpScript1;
 						rwpScript1.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex).x, lookingDirVec.ElementAt (maxIndex).y, lookingDirVec.ElementAt (maxIndex).z);
 						rwpScript2.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex2).x, lookingDirVec.ElementAt (maxIndex2).y, lookingDirVec.ElementAt (maxIndex2).z);
-						rwpScript3.lookDir = new Vector3 (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x,
-							- lookingDirVec.ElementAt (maxIndex).y - lookingDirVec.ElementAt (maxIndex2).y, - lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z);
-						rwpScript4.lookDir = new Vector3 (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x,
-							- lookingDirVec.ElementAt (maxIndex).y - lookingDirVec.ElementAt (maxIndex2).y, - lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z);
+						rwpScript3.lookDir = new Vector3 (imVector.x, imVector.y, imVector.z);
+						rwpScript4.lookDir = new Vector3 (imVector.x, imVector.y, imVector.z);
 						rcScript.target = rwpScript1;
 						rcScript.transform.LookAt (rwpPos1);
 					} else {
@@ -549,7 +541,7 @@ public class PCG : MonoBehaviour
 	private static bool CheckFlat (Vector3 pos, Vector3 v1, Vector3 v2, ref Vector3 rwpPos3) {
 		Vector3 midDir1 = new Vector3 (v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
 		Vector3 midDir2 = new Vector3 (-midDir1.x, -midDir1.y, -midDir1.z);
-		if (midDir1.Equals(midDir2)) {
+		if (midDir1 == midDir2) {
 			midDir1 = new Vector3 (v1.z, 0.0f, v1.x);
 			midDir2 = new Vector3 (v2.z, 0.0f, v2.x);
 			if (CheckFlatDir (pos, midDir1, midDir2)) {
