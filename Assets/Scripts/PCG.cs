@@ -172,7 +172,7 @@ public class PCG : MonoBehaviour
 	public static List<GameObject> RotationInVoronoiRegion (GameObject floor, Cell[][] obs, int iterations)
 	{
 		foreach (GameObject cameraObject in cos) {
-			if (cameraObject.renderer.enabled) {
+			if (cameraObject != null && cameraObject.renderer.enabled) {
 				float maxSumOfDistance = 0.0f;
 				int maxIndex = 0, maxIndex2 = 0;
 				Vector3 finalPos = new Vector3 ();
@@ -223,49 +223,58 @@ public class PCG : MonoBehaviour
 							if (Physics.Raycast (defaultPos, vdir, out hit)) {
 								// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
 								// Debug.Log (hit.distance);
-								distanceList.Add (hit.distance);
+								float solution  = rcScript.fovDistance < hit.distance ? rcScript.fovDistance : hit.distance;
+								distanceList.Add (solution);
 							} else {
 								if (vdir.x == 0.0f && vdir.z == 1.0f) {
 									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
 									// Debug.Log (defaultPos.z - floor.collider.bounds.min.z);
-									distanceList.Add (defaultPos.z - floor.collider.bounds.min.z);
+									float solution = rcScript.fovDistance < defaultPos.z - floor.collider.bounds.min.z ? rcScript.fovDistance : defaultPos.z - floor.collider.bounds.min.z;
+									distanceList.Add (solution);
 								} else if (vdir.x == 1.0f && vdir.z == 1.0f) {
 									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.z - floor.collider.bounds.min.z, 2.0f));
 									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.x - defaultPos.x, 2.0f));
 									float solution = a1 > a2 ? a2 : a1;
+									solution = rcScript.fovDistance < solution ? rcScript.fovDistance : solution;
 									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
 									// Debug.Log (solution);
 									distanceList.Add (solution);
 								} else if (vdir.x == 1.0f && vdir.z == 0.0f) {
 									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
 									// Debug.Log (floor.collider.bounds.max.x - defaultPos.x);
-									distanceList.Add (floor.collider.bounds.max.x - defaultPos.x);
+									float solution = rcScript.fovDistance < floor.collider.bounds.max.x - defaultPos.x ? rcScript.fovDistance : floor.collider.bounds.max.x - defaultPos.x;
+									distanceList.Add (solution);
 								} else if (vdir.x == 1.0f && vdir.z == -1.0f) {
 									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.x - defaultPos.x, 2.0f));
 									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.z - defaultPos.z, 2.0f));
 									float solution = a1 > a2 ? a2 : a1;
+									solution = rcScript.fovDistance < solution ? rcScript.fovDistance : solution;
 									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
 									// Debug.Log (solution);
 									distanceList.Add (solution);
 								} else if (vdir.x == 0.0f && vdir.z == -1.0f) {
 									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
 									// Debug.Log (floor.collider.bounds.max.z - defaultPos.z);
-									distanceList.Add (floor.collider.bounds.max.z - defaultPos.z);
+									float solution = rcScript.fovDistance < floor.collider.bounds.max.z - defaultPos.z ? rcScript.fovDistance : floor.collider.bounds.max.z - defaultPos.z;
+									distanceList.Add (solution);
 								} else if (vdir.x == -1.0f && vdir.z == -1.0f) {
 									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.x - floor.collider.bounds.min.x, 2.0f));
 									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (floor.collider.bounds.max.z - defaultPos.z, 2.0f));
 									float solution = a1 > a2 ? a2 : a1;
+									solution = rcScript.fovDistance < solution ? rcScript.fovDistance : solution;
 									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
 									// Debug.Log (solution);
 									distanceList.Add (solution);
 								} else if (vdir.x == -1.0f && vdir.z == 0.0f) {
 									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
 									// Debug.Log (defaultPos.x - floor.collider.bounds.min.x);
+									float solution = rcScript.fovDistance < defaultPos.x - floor.collider.bounds.min.x ? rcScript.fovDistance : defaultPos.x - floor.collider.bounds.min.x;
 									distanceList.Add (defaultPos.x - floor.collider.bounds.min.x);
 								} else if (vdir.x == -1.0f && vdir.z == 1.0f) {
 									float a1 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.x - floor.collider.bounds.min.x, 2.0f));
 									float a2 = Mathf.Sqrt (2.0f * Mathf.Pow (defaultPos.z - floor.collider.bounds.min.z, 2.0f));
 									float solution = a1 > a2 ? a2 : a1;
+									solution = rcScript.fovDistance < solution ? rcScript.fovDistance : solution;
 									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
 									// Debug.Log (solution);
 									distanceList.Add (solution);
@@ -314,7 +323,7 @@ public class PCG : MonoBehaviour
 					finalPos.z + lookingDirVec.ElementAt (maxIndex).z * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex).x * lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex).z * lookingDirVec.ElementAt (maxIndex).z));
 				Vector3 rwpPos2 = new Vector3 (finalPos.x + lookingDirVec.ElementAt (maxIndex2).x * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex2).x * lookingDirVec.ElementAt (maxIndex2).x + lookingDirVec.ElementAt (maxIndex2).z * lookingDirVec.ElementAt (maxIndex2).z), 0.0f,
 					finalPos.z + lookingDirVec.ElementAt (maxIndex2).z * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex2).x * lookingDirVec.ElementAt (maxIndex2).x + lookingDirVec.ElementAt (maxIndex2).z * lookingDirVec.ElementAt (maxIndex2).z));
-				if (!CheckObtuse (finalPos, lookingDirVec.ElementAt (maxIndex), lookingDirVec.ElementAt (maxIndex2))) {
+				if (CheckAcute (finalPos, lookingDirVec.ElementAt (maxIndex), lookingDirVec.ElementAt (maxIndex2))) {
 					GameObject rwp1 = GameObject.Instantiate (waypointPrefab, rwpPos1, Quaternion.identity) as GameObject;
 					GameObject rwp2 = GameObject.Instantiate (waypointPrefab, rwpPos2, Quaternion.identity) as GameObject;
 					rwp1.AddComponent ("RotationWaypoint");
@@ -332,40 +341,77 @@ public class PCG : MonoBehaviour
 					rcScript.target = rwpScript1;
 					rcScript.transform.LookAt (rwpPos1);
 				} else {
-					Vector3 rwpPos3 = new Vector3 (finalPos.x + (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x) * rcScript.fovDistance / Mathf.Sqrt ((lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) * (lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) + (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z) * (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z)), 0.0f,
-					finalPos.z + (- lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z) * rcScript.fovDistance / Mathf.Sqrt ((lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) * (lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) + (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z) * (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z)));
-					GameObject rwp1 = GameObject.Instantiate (waypointPrefab, rwpPos1, Quaternion.identity) as GameObject;
-					GameObject rwp2 = GameObject.Instantiate (waypointPrefab, rwpPos2, Quaternion.identity) as GameObject;
-					GameObject rwp3 = GameObject.Instantiate (waypointPrefab, rwpPos3, Quaternion.identity) as GameObject;
-					GameObject rwp4 = GameObject.Instantiate (waypointPrefab, rwpPos3, Quaternion.identity) as GameObject;
-					rwp1.AddComponent ("RotationWaypoint");
-					rwp2.AddComponent ("RotationWaypoint");
-					rwp3.AddComponent ("RotationWaypoint");
-					rwp4.AddComponent ("RotationWaypoint");
-					DestroyImmediate (rwp1.GetComponent ("Waypoint"));
-					DestroyImmediate (rwp2.GetComponent ("Waypoint"));
-					DestroyImmediate (rwp3.GetComponent ("Waypoint"));
-					DestroyImmediate (rwp4.GetComponent ("Waypoint"));
-					RotationWaypoint rwpScript1;
-					RotationWaypoint rwpScript2;
-					RotationWaypoint rwpScript3;
-					RotationWaypoint rwpScript4;
-					rwpScript1 = rwp1.GetComponent ("Waypoint") as RotationWaypoint;
-					rwpScript2 = rwp2.GetComponent ("Waypoint") as RotationWaypoint;
-					rwpScript3 = rwp3.GetComponent ("Waypoint") as RotationWaypoint;
-					rwpScript4 = rwp4.GetComponent ("Waypoint") as RotationWaypoint;
-					rwpScript1.next = rwpScript3;
-					rwpScript3.next = rwpScript2;
-					rwpScript2.next = rwpScript4;
-					rwpScript4.next = rwpScript1;
-					rwpScript1.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex).x, lookingDirVec.ElementAt (maxIndex).y, lookingDirVec.ElementAt (maxIndex).z);
-					rwpScript2.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex2).x, lookingDirVec.ElementAt (maxIndex2).y, lookingDirVec.ElementAt (maxIndex2).z);
-					rwpScript3.lookDir = new Vector3 (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x,
-						- lookingDirVec.ElementAt (maxIndex).y - lookingDirVec.ElementAt (maxIndex2).y, - lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z);
-					rwpScript4.lookDir = new Vector3 (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x,
-						- lookingDirVec.ElementAt (maxIndex).y - lookingDirVec.ElementAt (maxIndex2).y, - lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z);
-					rcScript.target = rwpScript1;
-					rcScript.transform.LookAt (rwpPos1);
+					Vector3 rwpPos3 = new Vector3 (0.0f, 0.0f, 0.0f);
+					if (CheckFlat(finalPos, lookingDirVec.ElementAt (maxIndex), lookingDirVec.ElementAt (maxIndex2), ref rwpPos3)) {
+						rwpPos3 = new Vector3 (finalPos.x + rwpPos3.x * rcScript.fovDistance / Mathf.Sqrt (rwpPos3.x * rwpPos3.x + rwpPos3.z * rwpPos3.z), finalPos.z + rwpPos3.z * rcScript.fovDistance / Mathf.Sqrt (Mathf.Sqrt (rwpPos3.x * rwpPos3.x + rwpPos3.z * rwpPos3.z)));
+						GameObject rwp1 = GameObject.Instantiate (waypointPrefab, rwpPos1, Quaternion.identity) as GameObject;
+						GameObject rwp2 = GameObject.Instantiate (waypointPrefab, rwpPos2, Quaternion.identity) as GameObject;
+						GameObject rwp3 = GameObject.Instantiate (waypointPrefab, rwpPos3, Quaternion.identity) as GameObject;
+						GameObject rwp4 = GameObject.Instantiate (waypointPrefab, rwpPos3, Quaternion.identity) as GameObject;
+						rwp1.AddComponent ("RotationWaypoint");
+						rwp2.AddComponent ("RotationWaypoint");
+						rwp3.AddComponent ("RotationWaypoint");
+						rwp4.AddComponent ("RotationWaypoint");
+						DestroyImmediate (rwp1.GetComponent ("Waypoint"));
+						DestroyImmediate (rwp2.GetComponent ("Waypoint"));
+						DestroyImmediate (rwp3.GetComponent ("Waypoint"));
+						DestroyImmediate (rwp4.GetComponent ("Waypoint"));
+						RotationWaypoint rwpScript1;
+						RotationWaypoint rwpScript2;
+						RotationWaypoint rwpScript3;
+						RotationWaypoint rwpScript4;
+						rwpScript1 = rwp1.GetComponent ("Waypoint") as RotationWaypoint;
+						rwpScript2 = rwp2.GetComponent ("Waypoint") as RotationWaypoint;
+						rwpScript3 = rwp3.GetComponent ("Waypoint") as RotationWaypoint;
+						rwpScript4 = rwp4.GetComponent ("Waypoint") as RotationWaypoint;
+						rwpScript1.next = rwpScript3;
+						rwpScript3.next = rwpScript2;
+						rwpScript2.next = rwpScript4;
+						rwpScript4.next = rwpScript1;
+						rwpScript1.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex).x, lookingDirVec.ElementAt (maxIndex).y, lookingDirVec.ElementAt (maxIndex).z);
+						rwpScript2.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex2).x, lookingDirVec.ElementAt (maxIndex2).y, lookingDirVec.ElementAt (maxIndex2).z);
+						rwpScript3.lookDir = new Vector3 (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x,
+							- lookingDirVec.ElementAt (maxIndex).y - lookingDirVec.ElementAt (maxIndex2).y, - lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z);
+						rwpScript4.lookDir = new Vector3 (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x,
+							- lookingDirVec.ElementAt (maxIndex).y - lookingDirVec.ElementAt (maxIndex2).y, - lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z);
+						rcScript.target = rwpScript1;
+						rcScript.transform.LookAt (rwpPos1);
+					} else {
+						rwpPos3 = new Vector3 (finalPos.x + (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x) * rcScript.fovDistance / Mathf.Sqrt ((lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) * (lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) + (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z) * (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z)), 0.0f,
+						finalPos.z + (- lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z) * rcScript.fovDistance / Mathf.Sqrt ((lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) * (lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) + (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z) * (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z)));
+						GameObject rwp1 = GameObject.Instantiate (waypointPrefab, rwpPos1, Quaternion.identity) as GameObject;
+						GameObject rwp2 = GameObject.Instantiate (waypointPrefab, rwpPos2, Quaternion.identity) as GameObject;
+						GameObject rwp3 = GameObject.Instantiate (waypointPrefab, rwpPos3, Quaternion.identity) as GameObject;
+						GameObject rwp4 = GameObject.Instantiate (waypointPrefab, rwpPos3, Quaternion.identity) as GameObject;
+						rwp1.AddComponent ("RotationWaypoint");
+						rwp2.AddComponent ("RotationWaypoint");
+						rwp3.AddComponent ("RotationWaypoint");
+						rwp4.AddComponent ("RotationWaypoint");
+						DestroyImmediate (rwp1.GetComponent ("Waypoint"));
+						DestroyImmediate (rwp2.GetComponent ("Waypoint"));
+						DestroyImmediate (rwp3.GetComponent ("Waypoint"));
+						DestroyImmediate (rwp4.GetComponent ("Waypoint"));
+						RotationWaypoint rwpScript1;
+						RotationWaypoint rwpScript2;
+						RotationWaypoint rwpScript3;
+						RotationWaypoint rwpScript4;
+						rwpScript1 = rwp1.GetComponent ("Waypoint") as RotationWaypoint;
+						rwpScript2 = rwp2.GetComponent ("Waypoint") as RotationWaypoint;
+						rwpScript3 = rwp3.GetComponent ("Waypoint") as RotationWaypoint;
+						rwpScript4 = rwp4.GetComponent ("Waypoint") as RotationWaypoint;
+						rwpScript1.next = rwpScript3;
+						rwpScript3.next = rwpScript2;
+						rwpScript2.next = rwpScript4;
+						rwpScript4.next = rwpScript1;
+						rwpScript1.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex).x, lookingDirVec.ElementAt (maxIndex).y, lookingDirVec.ElementAt (maxIndex).z);
+						rwpScript2.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex2).x, lookingDirVec.ElementAt (maxIndex2).y, lookingDirVec.ElementAt (maxIndex2).z);
+						rwpScript3.lookDir = new Vector3 (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x,
+							- lookingDirVec.ElementAt (maxIndex).y - lookingDirVec.ElementAt (maxIndex2).y, - lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z);
+						rwpScript4.lookDir = new Vector3 (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x,
+							- lookingDirVec.ElementAt (maxIndex).y - lookingDirVec.ElementAt (maxIndex2).y, - lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z);
+						rcScript.target = rwpScript1;
+						rcScript.transform.LookAt (rwpPos1);
+					}
 				}
 			}
 		}
@@ -481,7 +527,7 @@ public class PCG : MonoBehaviour
 		return range;
 	}
 	
-	private static bool CheckObtuse (Vector3 pos, Vector3 v1, Vector3 v2)
+	private static bool CheckAcute (Vector3 pos, Vector3 v1, Vector3 v2)
 	{
 		Vector3 midDir1 = new Vector3 (v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
 		Vector3 midDir2 = new Vector3 (-midDir1.x, -midDir1.y, -midDir1.z);
@@ -493,10 +539,44 @@ public class PCG : MonoBehaviour
 		if (Physics.Raycast (pos, midDir2, out hit2)) {
 			d2 = hit2.distance;	
 		}
-		if (d1 >= d2) {
-			return false;
+		if (d1 >= d2 && !midDir1.Equals(midDir2)) {
+			return true;
 		} else {
-			return true;	
+			return false;	
 		}
+	}
+	
+	private static bool CheckFlat (Vector3 pos, Vector3 v1, Vector3 v2, ref Vector3 rwpPos3) {
+		Vector3 midDir1 = new Vector3 (v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
+		Vector3 midDir2 = new Vector3 (-midDir1.x, -midDir1.y, -midDir1.z);
+		if (midDir1.Equals(midDir2)) {
+			midDir1 = new Vector3 (v1.z, 0.0f, v1.x);
+			midDir2 = new Vector3 (v2.z, 0.0f, v2.x);
+			if (CheckFlatDir (pos, midDir1, midDir2)) {
+				rwpPos3 = new Vector3 (midDir1.x, midDir1.y, midDir1.z);
+			} else {
+				rwpPos3 = new Vector3 (midDir2.x, midDir2.y, midDir2.z);
+			}
+			return true;
+		} else {
+			return false;	
+		}
+	}
+					
+	private static bool CheckFlatDir (Vector3 pos, Vector3 mv1, Vector3 mv2) {
+		float d1 = float.MaxValue, d2 = float.MaxValue;
+		RaycastHit hit1, hit2;			
+		if (Physics.Raycast (pos, mv1, out hit1)) {
+			d1 = hit1.distance;
+		}
+		if (Physics.Raycast (pos, mv2, out hit2)) {
+			d2 = hit2.distance;	
+		}
+		if (d1 >= d2) {	
+			return true;
+		} else {
+			return false;	
+		}
+		
 	}
 }
