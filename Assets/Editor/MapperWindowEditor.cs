@@ -19,6 +19,10 @@ namespace EditorArea
 		public static Cell[][][] fullMap;
 		public static List<Path> paths = new List<Path> ();
 		public static List<Node> mostDanger = null, shortest = null, lengthiest = null, fastest = null, longest = null;
+		
+		//Controllers
+		public static int distanceToEnemy;
+		
 		// Parameters
 		public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 60, ticksBehind = 0;
 		public static bool drawMap = true, drawMoveMap = false, drawMoveUnits = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = true, smoothPath = true, drawShortestPath = false, drawLongestPath = false, drawLengthiestPath = false, drawFastestPath = false, drawMostDangerousPath = false, drawFoVOnly = true, seeByTime = false, seeByLength = false, seeByDanger = false, seeByLoS = false, seeByDanger3 = false, seeByLoS3 = false, seeByDanger3Norm = false, seeByLoS3Norm = false, seeByCrazy = false, seeByVelocity = false;
@@ -47,6 +51,28 @@ namespace EditorArea
 			window.ShowTab ();
 		}
 		
+		void OnDrawGizmos()
+		{
+			
+			/*
+			for( int i = 0; i<50; i++)
+			{
+				for( int j = 0; j<10; j++)
+				{
+					if(fullMap[0][i][j].IsWalkable())	
+					{
+						GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+						cube.transform.localScale = new Vector3(0.5f,0.5f,0.5f);
+						cube.transform.position = new Vector3(i,0,j) + posInit;
+						DestroyImmediate(cube.collider);
+						cube.tag = "Cube";
+						
+					}
+				}	
+			}
+			*/
+			
+		}
 		void OnGUI ()
 		{
 			// Wait for the floor to be set and initialize the drawer and the mapper
@@ -108,6 +134,7 @@ namespace EditorArea
 			stepInTicks = ((long)(stepSize * 10000000L));
 			ticksBehind = EditorGUILayout.IntSlider (new GUIContent ("Ticks behind", "Number of ticks that the FoV will remain seen after the enemy has no visibility on that cell (prevents noise/jitter like behaviours)"), ticksBehind, 0, 100);
 			
+			
 			if (GUILayout.Button ("Precompute Maps")) {
 				
 				//Find this is the view
@@ -154,6 +181,32 @@ namespace EditorArea
 				
 				fullMap = mapper.PrecomputeMaps (SpaceState.Editor, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind, baseMap);
 				
+	
+				//Draw cubes here. 
+				
+				foreach ( GameObject o in GameObject.FindGameObjectsWithTag("Cube"))
+				{
+					DestroyImmediate(o); 
+				}
+				
+
+				//First dimension is t
+				//Second might be x or y
+				//third might be x or y
+				Debug.Log(fullMap.Length);
+				Debug.Log(fullMap[0].Length);
+				Debug.Log(fullMap[0][0].Length);
+				
+				GameObject refCubes = new GameObject();
+				refCubes.tag = "Cube";
+				
+				refCubes.transform.position = new Vector3(-50,0,0);
+				//GameObject.Instantiate(refCubes);
+				
+				
+				
+				
+				
 				drawer.fullMap = fullMap;
 				float maxSeenGrid;
 				drawer.seenNeverSeen = Analyzer.ComputeSeenValuesGrid (fullMap, out maxSeenGrid);
@@ -180,6 +233,56 @@ namespace EditorArea
 			iterations = EditorGUILayout.IntSlider ("Iterations", iterations, 1, 1500);
 			smoothPath = EditorGUILayout.Toggle ("Smooth path", smoothPath);
 			
+			//Controllers
+			distanceToEnemy = EditorGUILayout.IntSlider ("Distance to Enemy", distanceToEnemy, 0, 100);
+			
+			if (GUILayout.Button ("Get Triangle")) 
+			{
+				GameObject triangle = new GameObject();
+				triangle.name = "Triangle";
+				
+				MeshFilter meshFilter = triangle.AddComponent<MeshFilter>();
+				
+				MeshRenderer renderer = triangle.AddComponent<MeshRenderer>();
+				//r.material = 
+					
+				
+				//Create Mesh
+		 		Mesh m = new Mesh();
+				float width = 10;
+				float height = 10;
+				
+				m.name = "ScriptedMesh";
+				m.vertices = new Vector3[] 
+				{
+					new Vector3(-width, 0,-height),
+					new Vector3(width, 0,-height),
+					new Vector3(width, 0,height),
+					new Vector3(-width, 0, height)
+				};
+				
+				m.uv = new Vector2[] 
+				{
+					new Vector2 (0, 0),
+					new Vector2 (0, 1),
+					new Vector2(1, 1),
+					new Vector2 (1, 0)
+				};
+				
+				m.triangles = new int[] { 0, 1, 2, 0, 2, 3};
+				m.RecalculateNormals();
+				//Normal
+				meshFilter.mesh = m; 
+				
+				Material myMaterial = Resources.Load("Material/Triangle", typeof(Material)) as Material;
+				Debug.Log(myMaterial); 
+				renderer.material = myMaterial;
+				
+				
+			}
+			
+			
+			
 			// Future work planned, allow the RRT to pass through this safe spots
 			/*someBoolean = EditorGUILayout.Foldout (someBoolean, "Passby Waypoints");
 			if (someBoolean) {
@@ -201,6 +304,8 @@ namespace EditorArea
 				if (newone != null)
 					waypoints.Add (newone);
 			}*/
+			
+			
 			
 			if (GUILayout.Button ("Compute Path")) {
 				float speed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
@@ -291,6 +396,8 @@ namespace EditorArea
 			if (GUILayout.Button (playing ? "Stop" : "Play")) {
 				playing = !playing;
 			}
+			GUILayout.Button("Draw seach space");
+			//Add the controllers here to draw and stop draw.
 			
 			EditorGUILayout.LabelField ("");
 			

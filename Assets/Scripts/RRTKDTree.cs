@@ -6,8 +6,10 @@ using UnityEditor;
 using KDTreeDLL;
 using Common;
 using Objects;
+//using EditorArea;
 
-namespace Exploration {
+namespace Exploration 
+{
 	public class RRTKDTree
 	{
 		private Cell[][][] nodeMatrix;
@@ -89,7 +91,9 @@ namespace Exploration {
 				int ry = Random.Range (0, nodeMatrix [rt] [rx].Length);
 				//int rx = p.x, ry = p.y;
 				nodeVisiting = GetNode (rt, rx, ry);
-				if (nodeVisiting.visited || !nodeVisiting.cell.IsWalkable()) {
+				
+				if (nodeVisiting.visited || !nodeVisiting.cell.IsWalkable()) 
+				{
 					i--;
 					continue;
 				}
@@ -106,17 +110,27 @@ namespace Exploration {
 				Vector3 p1 = nodeVisiting.GetVector3 ();
 				Vector3 p2 = nodeTheClosestTo.GetVector3 ();
 				Vector3 pd = p1 - p2;
+				
 				if (Vector3.Angle (pd, new Vector3 (pd.x, 0f, pd.z)) < angle) {
 					continue;
 				}
+				
+				//Check Controller rules
+				//1- distance to the enenmy
+				if(CheckDistanceTooCloseEnemies(nodeVisiting))
+					continue;
 				
 				// And we have line of sight
 				if (!nodeVisiting.cell.IsWalkable() || CheckCollision (nodeVisiting, nodeTheClosestTo))
 					continue;
 				
-				try {
+				try 
+				{
 					tree.insert (nodeVisiting.GetArray (), nodeVisiting);
-				} catch (KeyDuplicateException) {
+				} 
+				catch (KeyDuplicateException) 
+				{
+				
 				}
 				
 				nodeVisiting.parent = nodeTheClosestTo;
@@ -154,6 +168,30 @@ namespace Exploration {
 			return new List<Node> ();
 		}
 		
+		private bool CheckDistanceTooCloseEnemies(Node n)
+		{
+			//True if too close
+			//False if OK! 
+			
+			if (enemies != null && ((Cell)n.cell).noisy) 
+			{
+				foreach (Enemy enemy in enemies) 
+				{
+					Vector3 dupe = enemy.positions[n.t];
+					dupe.x = (dupe.x - min.x) / tileSizeX;
+					dupe.y = n.t;
+					dupe.z = (dupe.z - min.z) / tileSizeZ;
+					
+					//Check if there is a line of sight
+					// Check distance
+					//John: How do you use namespace
+					//if (Vector3.Distance (dupe, n.GetVector3 ()) < MapperEditorHol)
+					//	return true;
+				}
+			}
+			return false;
+		}
+					
 		// Checks for collision between two nodes and their children
 		private bool CheckCollision (Node n1, Node n2, int deep = 0)
 		{
@@ -165,7 +203,8 @@ namespace Exploration {
 			Node n3 = GetNode (t, x, y);
 			
 			// Noisy calculation
-			if (enemies != null && ((Cell)n3.cell).noisy) {
+			if (enemies != null && ((Cell)n3.cell).noisy) 
+			{
 				foreach (Enemy enemy in enemies) {
 					Vector3 dupe = enemy.positions[t];
 					dupe.x = (dupe.x - min.x) / tileSizeX;
@@ -175,6 +214,11 @@ namespace Exploration {
 					// This distance is in number of cells size radius i.e. a 10 tilesize circle around the point
 					if (Vector3.Distance (dupe, n3.GetVector3 ()) < 10)
 						return true;
+					
+					//Adding the controller for the distance to an enemy
+					if (Vector3.Distance (dupe, n3.GetVector3 ()) < 100)
+						return true;
+					
 				} 
 			}
 			
