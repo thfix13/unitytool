@@ -43,6 +43,8 @@ namespace EditorArea
 		private RRTKDTree rrt = new RRTKDTree ();
 		private MapperEditorDrawer drawer;
 		
+		private Material myMaterial; 
+		
 		[MenuItem("Window/Mapper")]
 		static void Init ()
 		{
@@ -50,7 +52,12 @@ namespace EditorArea
 			window.title = "Mapper";
 			window.ShowTab ();
 		}
-		
+		void OnAwake()
+		{
+			myMaterial = EditorGUIUtility.LoadRequired("Triangle.mat") as Material;
+			Debug.Log(myMaterial); 
+				
+		}
 		void OnDrawGizmos()
 		{
 			
@@ -274,9 +281,7 @@ namespace EditorArea
 				//Normal
 				meshFilter.mesh = m; 
 				
-				Material myMaterial = Resources.Load("Material/Triangle", typeof(Material)) as Material;
-				Debug.Log(myMaterial); 
-				renderer.material = myMaterial;
+				//renderer.material = myMaterial;
 				
 				
 			}
