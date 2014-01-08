@@ -256,16 +256,18 @@ namespace EditorArea
 				
 				//Create Mesh
 		 		Mesh m = new Mesh();
-				float width = 10;
-				float height = 10;
+				float h = 4;
 				
 				m.name = "ScriptedMesh";
 				m.vertices = new Vector3[] 
 				{
-					new Vector3(-width, 0,-height),
-					new Vector3(width, 0,-height),
-					new Vector3(width, 0,height),
-					new Vector3(-width, 0, height)
+					new Vector3(0, 0,0),
+					new Vector3(1, 0,1),
+					new Vector3(1, 0,-1),
+					
+					new Vector3(0, h,0),
+					new Vector3(1, h,1),
+					new Vector3(1, h,-1),
 				};
 				
 				m.uv = new Vector2[] 
@@ -276,7 +278,7 @@ namespace EditorArea
 					new Vector2 (1, 0)
 				};
 				
-				m.triangles = new int[] { 0, 1, 2, 0, 2, 3};
+				m.triangles = new int[] { 0, 1, 2,3,4,5};
 				m.RecalculateNormals();
 				//Normal
 				meshFilter.mesh = m; 
