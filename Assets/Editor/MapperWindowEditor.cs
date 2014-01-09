@@ -257,6 +257,7 @@ namespace EditorArea
 				//Create Mesh
 		 		Mesh m = new Mesh();
 				float h = 4;
+				float speed = 3;
 				
 				m.name = "ScriptedMesh";
 				m.vertices = new Vector3[] 
@@ -265,29 +266,112 @@ namespace EditorArea
 					new Vector3(1, 0,1),
 					new Vector3(1, 0,-1),
 					
-					new Vector3(0, h,0),
-					new Vector3(1, h,1),
-					new Vector3(1, h,-1),
+					new Vector3(0 + speed, h,0),
+					new Vector3(1 + speed, h,1),
+					new Vector3(1 + speed, h,-1),
 				};
 				
-				m.uv = new Vector2[] 
-				{
-					new Vector2 (0, 0),
-					new Vector2 (0, 1),
-					new Vector2(1, 1),
-					new Vector2 (1, 0)
-				};
 				
-				m.triangles = new int[] { 0, 1, 2,3,4,5};
+				m.triangles = new int[] { 2, 1, 0, //base
+					3,4,5, //top
+					0,3,2, //panel right
+					2,3,5,
+					3,0,1, //panel left
+					4,3,1,
+					1,2,5,//front
+					5,4,1
+
+				};
 				m.RecalculateNormals();
 				//Normal
+				
 				meshFilter.mesh = m; 
 				
 				//renderer.material = myMaterial;
 				
 				
 			}
+			if (GUILayout.Button ("Get Triangle Square")) 
+			{
 			
+				GameObject triangle = GameObject.Find("Triangle");
+				MeshFilter meshFilter = null; 
+				if(triangle == null)
+				{
+					triangle = new GameObject();
+				
+					triangle.name = "Triangle";
+				
+					meshFilter = triangle.AddComponent<MeshFilter>();
+				
+					MeshRenderer renderer = triangle.AddComponent<MeshRenderer>();
+				}
+				else
+				{
+					meshFilter = triangle.GetComponent<MeshFilter>();
+					
+				}
+					//r.material = 
+					
+				
+				//Create Mesh
+		 		Mesh m = new Mesh();
+				float h = 4;
+				float speed = 3;
+				
+
+				m.name = "ScriptedMesh";
+				m.vertices = new Vector3[] 
+				{
+					new Vector3(0, 0+h, 0), //0
+					new Vector3(3, 0+h, 2), //1
+					new Vector3(3, 0+h, 1),  //2
+					new Vector3(1, 0+h, 0.5f), //3 square
+					new Vector3(1, 0+h, -0.5f), //4 square
+					new Vector3(3, 0+h, -1), //5 
+					new Vector3(3, 0+h, -2), //6
+					
+					new Vector3(-2, 0, 0),
+					new Vector3(1, 0, 2),
+					new Vector3(1, 0, -2),
+					
+					new Vector3(1, 0, 0.5f), //3 square
+					new Vector3(1, 0, -0.5f), //4 square
+				};
+				
+				
+				m.triangles = new int[] { 
+					0,1,3,
+					1,2,3,
+					0,3,4,
+					0,4,6,
+					4,5,6,
+					9,8,7,
+					11,4,3,
+					10,11,3,
+					10,3,2,
+					5,4,11,
+					10,2,1,
+					1,8,10,
+					9,5,11,
+					9,6,5,
+					7,0,6,
+					7,6,9,
+					7,1,0,
+					7,8,1
+					
+					
+
+				};
+				m.RecalculateNormals();
+				//Normal
+				
+				meshFilter.mesh = m; 
+				
+				//renderer.material = myMaterial;
+				
+				
+			}
 			
 			
 			// Future work planned, allow the RRT to pass through this safe spots
