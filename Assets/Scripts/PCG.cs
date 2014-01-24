@@ -97,25 +97,51 @@ public class PCG : MonoBehaviour
 			float tempDist = 0.0f;
 			// This could be another parameter
 			for (int iter = 1; iter < iterations + 1; iter++) {
-				do {
+				if (iter == 1) {
 					do {
-						randomPos1 = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));
-					} while (obs[(int)((randomPos1.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos1.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true ||
-						obs[(int)((randomPos1.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos1.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].nearestVoronoiCentre != maxAreaIndexHolderE[m]);
+						do {
+							randomPos1 = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));
+						} while (obs[(int)((randomPos1.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos1.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true ||
+							obs[(int)((randomPos1.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos1.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].nearestVoronoiCentre != maxAreaIndexHolderE[m]);
+						do {
+							randomPos2 = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));	
+						} while (obs[(int)((randomPos2.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos2.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true ||
+							obs[(int)((randomPos2.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos2.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].nearestVoronoiCentre != maxAreaIndexHolderE[m]);
+						tempDist = Vector3.Distance (randomPos1, randomPos2);
+						dir = new Vector3 (randomPos2.x - randomPos1.x, randomPos2.y - randomPos1.y, randomPos2.z - randomPos1.z);
+					} while ((tempDist <= maxDis) || (Physics.Raycast(randomPos1, dir, tempDist) == true));
+					node1.x = randomPos1.x;
+					node1.y = randomPos1.y;
+					node1.z = randomPos1.z;
+					node2.x = randomPos2.x;
+					node2.y = randomPos2.y;
+					node2.z = randomPos2.z;
+					maxDis = tempDist;
+				} else {
 					do {
-						randomPos2 = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));	
-					} while (obs[(int)((randomPos2.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos2.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true ||
-						obs[(int)((randomPos2.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos2.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].nearestVoronoiCentre != maxAreaIndexHolderE[m]);
-					tempDist = Vector3.Distance (randomPos1, randomPos2);
-					dir = new Vector3 (randomPos2.x - randomPos1.x, randomPos2.y - randomPos1.y, randomPos2.z - randomPos1.z);
-				} while ((tempDist < maxDis) || (Physics.Raycast(randomPos1, dir, tempDist) == true));
-				node1.x = randomPos1.x;
-				node1.y = randomPos1.y;
-				node1.z = randomPos1.z;
-				node2.x = randomPos2.x;
-				node2.y = randomPos2.y;
-				node2.z = randomPos2.z;
-				maxDis = tempDist;
+						do {
+							randomPos1 = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));
+						} while (obs[(int)((randomPos1.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos1.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true ||
+							obs[(int)((randomPos1.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos1.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].nearestVoronoiCentre != maxAreaIndexHolderE[m]);
+						do {
+							randomPos2 = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));	
+						} while (obs[(int)((randomPos2.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos2.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true ||
+							obs[(int)((randomPos2.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos2.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].nearestVoronoiCentre != maxAreaIndexHolderE[m]);
+						tempDist = Vector3.Distance (randomPos1, randomPos2);
+						dir = new Vector3 (randomPos2.x - randomPos1.x, randomPos2.y - randomPos1.y, randomPos2.z - randomPos1.z);
+					} while (Physics.Raycast(randomPos1, dir, tempDist) == true);
+					if (tempDist <= maxDis) {
+						continue;	
+					} else {
+						node1.x = randomPos1.x;
+						node1.y = randomPos1.y;
+						node1.z = randomPos1.z;
+						node2.x = randomPos2.x;
+						node2.y = randomPos2.y;
+						node2.z = randomPos2.z;
+						maxDis = tempDist;
+					}
+				}
 			}
 			// Debug.Log ("From: [" + (int)((node1.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x) + "][" + 
 			// (int)((node1.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y) + "] To: [" + 
@@ -224,7 +250,7 @@ public class PCG : MonoBehaviour
 							if (Physics.Raycast (defaultPos, vdir, out hit)) {
 								// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
 								// Debug.Log (hit.distance);
-								solution  = rcScript.fovDistance < hit.distance ? rcScript.fovDistance : hit.distance;
+								solution = rcScript.fovDistance < hit.distance ? rcScript.fovDistance : hit.distance;
 							} else {
 								if (vdir.x == 0.0f && vdir.z == 1.0f) {
 									// Debug.Log ("(" + vdir.x + "," + vdir.z + ")");
@@ -335,8 +361,8 @@ public class PCG : MonoBehaviour
 					rcScript.transform.LookAt (rwpPos1);
 				} else {
 					Vector3 rwpPos3 = new Vector3 (0.0f, 0.0f, 0.0f);
-					if (CheckFlat(finalPos, lookingDirVec.ElementAt (maxIndex), lookingDirVec.ElementAt (maxIndex2), ref rwpPos3)) {
-						Vector3 imVector = new Vector3(rwpPos3.x, rwpPos3.y, rwpPos3.z);
+					if (CheckFlat (finalPos, lookingDirVec.ElementAt (maxIndex), lookingDirVec.ElementAt (maxIndex2), ref rwpPos3)) {
+						Vector3 imVector = new Vector3 (rwpPos3.x, rwpPos3.y, rwpPos3.z);
 						rwpPos3 = new Vector3 (finalPos.x + rwpPos3.x * rcScript.fovDistance / Mathf.Sqrt (rwpPos3.x * rwpPos3.x + rwpPos3.z * rwpPos3.z), finalPos.z + rwpPos3.z * rcScript.fovDistance / Mathf.Sqrt (Mathf.Sqrt (rwpPos3.x * rwpPos3.x + rwpPos3.z * rwpPos3.z)));
 						GameObject rwp1 = GameObject.Instantiate (waypointPrefab, rwpPos1, Quaternion.identity) as GameObject;
 						GameObject rwp2 = GameObject.Instantiate (waypointPrefab, rwpPos2, Quaternion.identity) as GameObject;
@@ -531,14 +557,15 @@ public class PCG : MonoBehaviour
 		if (Physics.Raycast (pos, midDir2, out hit2)) {
 			d2 = hit2.distance;	
 		}
-		if (d1 >= d2 && !midDir1.Equals(midDir2)) {
+		if (d1 >= d2 && !midDir1.Equals (midDir2)) {
 			return true;
 		} else {
 			return false;	
 		}
 	}
 	
-	private static bool CheckFlat (Vector3 pos, Vector3 v1, Vector3 v2, ref Vector3 rwpPos3) {
+	private static bool CheckFlat (Vector3 pos, Vector3 v1, Vector3 v2, ref Vector3 rwpPos3)
+	{
 		Vector3 midDir1 = new Vector3 (v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
 		Vector3 midDir2 = new Vector3 (-midDir1.x, -midDir1.y, -midDir1.z);
 		if (midDir1 == midDir2) {
@@ -555,7 +582,8 @@ public class PCG : MonoBehaviour
 		}
 	}
 					
-	private static bool CheckFlatDir (Vector3 pos, Vector3 mv1, Vector3 mv2) {
+	private static bool CheckFlatDir (Vector3 pos, Vector3 mv1, Vector3 mv2)
+	{
 		float d1 = float.MaxValue, d2 = float.MaxValue;
 		RaycastHit hit1, hit2;			
 		if (Physics.Raycast (pos, mv1, out hit1)) {

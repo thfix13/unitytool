@@ -170,7 +170,10 @@ public class VoronoiDiagram
 					obs [i] [j].isVoronoiBoundary = -1;
 					obs [i] [j].isNextToWall = -1;
 					continue;
-				}			
+				}
+				if (obs [i] [j].nearestVoronoiCentre == -1) {
+					continue;
+				}
 				if ((i > 0 && (obs [i - 1] [j].blocked == true || obs [i - 1] [j].nearestVoronoiCentre != obs [i] [j].nearestVoronoiCentre)) 
 					|| (j > 0 && (obs [i] [j - 1].blocked == true || obs [i] [j - 1].nearestVoronoiCentre != obs [i] [j].nearestVoronoiCentre))
 					|| (i > 0 && j > 0 && (obs [i - 1] [j - 1].blocked == true || obs [i - 1] [j - 1].nearestVoronoiCentre != obs [i] [j].nearestVoronoiCentre))
