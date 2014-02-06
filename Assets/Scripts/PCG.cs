@@ -14,11 +14,11 @@ public class PCG : MonoBehaviour
 	// VoronoiDiagram instances
 	public static VoronoiDiagram vEnemy = new VoronoiDiagram ();
 	public static VoronoiDiagram vCamera = new VoronoiDiagram ();
+	public static Skeletonization sBoundary = new Skeletonization ();
 
 	// Use this for initialization
 	void Start ()
 	{
-	
 	}
 	
 	// Update is called once per frame
@@ -597,6 +597,19 @@ public class PCG : MonoBehaviour
 		} else {
 			return false;	
 		}
-		
+	}
+	
+	public static void InitializeSkeleton (Cell[][] obs)
+	{
+		sBoundary.obs = new Cell[obs.Length][];
+		for (int x = 0; x <obs.Length; x++) {
+			sBoundary.obs [x] = new Cell[obs [x].Length];
+		}
+		// Passing as value NOT as reference
+		for (int i = 0; i < obs.Length; i++) {
+			for (int j = 0; j < obs [i].Length; j++) {
+				sBoundary.obs [i] [j] = obs [i] [j].Copy ();
+			}
+		}
 	}
 }

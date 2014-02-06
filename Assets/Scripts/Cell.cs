@@ -14,6 +14,8 @@ public class Cell
 	public int isVoronoiBoundary = -1;
 	// if is wall => isNextToWall = -1; if is not next to wall => isNextToWall = 0; if next to wall => isNextToWall = 1;
 	public int isNextToWall = -1;
+	// if is visited => isVisited = true
+	public bool visited = false;
 	
 	public Boolean IsWalkable ()
 	{
@@ -31,6 +33,7 @@ public class Cell
 		copy.nearestVoronoiCentre = this.nearestVoronoiCentre;
 		copy.isVoronoiBoundary = this.isVoronoiBoundary;
 		copy.isNextToWall = this.isNextToWall;
+		copy.visited = this.visited;
 		return copy;
 	}
 }
