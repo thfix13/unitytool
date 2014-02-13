@@ -286,7 +286,22 @@ namespace EditorArea {
 			#endregion
 			
 			// ----------------------------------
+
+			#region Triangle
+
+
+
+			EditorGUILayout.LabelField ("Triangle");
 			
+			EditorGUILayout.LabelField (""); 
+
+			if (GUILayout.Button ("Triangulate Space")) 
+			{
+				TriangulationSpace(); 
+			}
+	
+			#endregion
+
 			#region 6. Paths
 			
 			EditorGUILayout.LabelField ("6. Paths");
@@ -569,7 +584,44 @@ namespace EditorArea {
 				
 			previous = DateTime.Now;
 		}
-		
+
+		public void TriangulationSpace()
+		{
+			//Compute one step of the discritzation
+			//Find this is the view
+
+			if (floor == null) {
+				floor = (GameObject)GameObject.Find ("Floor");
+				
+				if (mapper == null) {
+					mapper = floor.GetComponent<Mapper> ();
+					
+					if (mapper == null)
+						mapper = floor.AddComponent<Mapper> ();
+					
+					mapper.hideFlags = HideFlags.None;
+					
+				}
+				drawer = floor.gameObject.GetComponent<MapperEditorDrawer> ();
+				if (drawer == null) {
+					drawer = floor.gameObject.AddComponent<MapperEditorDrawer> ();
+					drawer.hideFlags = HideFlags.HideInInspector;
+				}
+			}
+			
+
+
+			Cell[][] obstacles = mapper.ComputeObstacles ();
+
+
+
+			//First Find the vertex position
+			
+			
+		}
+
+
+
 		private void ClearPathsRepresentation () {
 			toggleStatus.Clear ();
 			
