@@ -16,7 +16,7 @@ public class MapperWindowEditor : EditorWindow
 	public static List<Node> mostDanger = null, shortest = null, lengthiest = null, fastest = null, longest = null;
 	// Parameters
 	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 60, ticksBehind = 0, numOfEnemies = 0, numOfRegionsForEnemies = 0, numOfCameras = 0, numOfRegionsForCameras = 0, iterations2 = 5, iterations3 = 5, noeB = 0, nocB = 0, noreB = 0, norcB = 0;
-	public static bool drawMap = true, drawMoveMap = false, drawMoveUnits = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = false, drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, smoothPath = true, drawShortestPath = false, drawLongestPath = false, drawLengthiestPath = false, drawFastestPath = false, drawMostDangerousPath = false, drawFoVOnly = false, seeByTime = false, seeByLength = false, seeByDanger = false, seeByLoS = false, seeByDanger3 = false, seeByLoS3 = false, seeByDanger3Norm = false, seeByLoS3Norm = false, seeByCrazy = false, seeByVelocity = false;
+	public static bool drawMap = true, drawMoveMap = false, drawMoveUnits = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = false, drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawRoadmaps = false, smoothPath = true, drawShortestPath = false, drawLongestPath = false, drawLengthiestPath = false, drawFastestPath = false, drawMostDangerousPath = false, drawFoVOnly = false, seeByTime = false, seeByLength = false, seeByDanger = false, seeByLoS = false, seeByDanger3 = false, seeByLoS3 = false, seeByDanger3Norm = false, seeByLoS3Norm = false, seeByCrazy = false, seeByVelocity = false;
 	public static bool randomOpEnables = false, setPathOpEnables = false, setRotationOpEnables = false;
 	public static bool setEnemiesFoldout = false, setCameraFoldout = false, queryeVoronoiDiagramFoldout = false, querycVoronoiDiagramFoldout = false, computePathFoldout = false, default1 = true, default2 = true, default3 = true, default4 = true, default5 = true, default6 = true;
 	public static float stepSize = 1 / 10f, crazySeconds = 5f;
@@ -976,6 +976,13 @@ public class MapperWindowEditor : EditorWindow
 		
 		drawVoronoiForBoundaries = EditorGUILayout.Toggle ("Draw Voronoi Cells", drawVoronoiForBoundaries);
 		
+		if (GUILayout.Button ("Retrieve Roadmap")) {
+			PCG.sBoundary.extractContours (floor);	
+			drawer.contoursList = PCG.sBoundary.contoursList;
+		}
+		
+		drawRoadmaps = EditorGUILayout.Toggle ("Draw Roadmaps", drawRoadmaps);
+		
 		#endregion
 		
 		foreach (KeyValuePair<Path, bool> p in toggleStatus) {
@@ -1015,6 +1022,7 @@ public class MapperWindowEditor : EditorWindow
 			drawer.drawVoronoiForEnemies = drawVoronoiForEnemies;
 			drawer.drawVoronoiForCameras = drawVoronoiForCameras;
 			drawer.drawVoronoiForBoundaries = drawVoronoiForBoundaries;
+			drawer.drawRoadmaps = drawRoadmaps;
 		}
 		
 		if (fullMap != null && lastTime != timeSlice) {

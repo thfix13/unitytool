@@ -16,11 +16,12 @@ public class MapperEditorDrawer : MonoBehaviour
 	public int timeSlice;
 	public Vector2 zero = new Vector2 ();
 	public Vector2 tileSize = new Vector2 ();
-	public bool drawMap = true, drawMoveMap = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = true, drawPath = false, editGrid = false, drawFoVOnly = false, drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false;
+	public bool drawMap = true, drawMoveMap = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = true, drawPath = false, editGrid = false, drawFoVOnly = false, drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawRoadmaps = false;
 	public Cell[][] editingGrid;
 	public Cell[][] eVoronoiGrid;
 	public Cell[][] cVoronoiGrid;
 	public Cell[][] sBoundaryGrid;
+	public List<ContourNode> contoursList;
 		
 	// Fixed values
 	private Color orange = new Color (1.0f, 0.64f, 0f, 1f), transparent = new Color (1f, 1f, 1f, 0f);
@@ -149,6 +150,15 @@ public class MapperEditorDrawer : MonoBehaviour
 								0.1f,
 								(n.parent.y * tileSize.y + zero.y)));
 				}
+		}
+		
+		if (drawRoadmaps && contoursList.Count != 0) {
+			foreach (ContourNode root in contoursList) {
+				ContourNode currentNode = root;
+				foreach (ContourNode cn in currentNode.children) {
+					recurse (cn);
+				}
+			}
 		}
 		
 		if (drawVoronoiForBoundaries && sBoundaryGrid != null) {
@@ -345,5 +355,23 @@ public class MapperEditorDrawer : MonoBehaviour
 				}
 			}
 		}
+	}
+	
+	private void recurse (ContourNode currentContourNode)
+	{
+		ContourNode parent = currentContourNode.parent;
+		if (parent.i != 0 && parent.j != 0) {
+			Gizmos.color = Color.magenta;
+			Gizmos.DrawLine (new Vector3 ((currentContourNode.i * tileSize.x + zero.x), 0.1f, (currentContourNode.j * tileSize.x + zero.y)), 
+				new Vector3 ((parent.i * tileSize.y + zero.x), 0.1f, (parent.j * tileSize.y + zero.y)));
+		}
+		if (currentContourNode.children.Count == 0) {
+			return;	
+		} else {
+			foreach (ContourNode cn in currentContourNode.children) {
+				recurse (cn);	
+			}
+		}
+		return;
 	}
 }
