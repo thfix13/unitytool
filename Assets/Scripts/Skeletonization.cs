@@ -224,6 +224,170 @@ public class Skeletonization
 			depthFirstSearch (i - 1, j + 1, cn);
 			depthFirstSearch (i - 1, j - 1, cn);
 		}
+		if (i > 0 && j > 0 && i < imax && j < jmax
+			&& obs [i] [j].nearestVoronoiCentre == obs [i - 1] [j].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j - 1].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre != obs [i + 1] [j].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j + 1].nearestVoronoiCentre
+			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
+			&& obs [i] [j].visited == false) {
+			// Create a new contour node and assign parent-child relations
+			ContourNode cn = new ContourNode (i, j);
+			cn.parent = parent;
+			parent.children.Add (cn);
+			// Set visited to true
+			obs [i] [j].visited = true;
+			// Dig deeper
+			depthFirstSearch (i, j + 1, cn);
+			depthFirstSearch (i, j - 1, cn);
+			depthFirstSearch (i + 1, j, cn);
+			depthFirstSearch (i + 1, j + 1, cn);
+			depthFirstSearch (i + 1, j - 1, cn);
+		}
+		if (i > 0 && j > 0 && i < imax && j < jmax
+			&& obs [i] [j].nearestVoronoiCentre == obs [i - 1] [j].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j + 1].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre != obs [i + 1] [j].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j - 1].nearestVoronoiCentre
+			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
+			&& obs [i] [j].visited == false) {
+			// Create a new contour node and assign parent-child relations
+			ContourNode cn = new ContourNode (i, j);
+			cn.parent = parent;
+			parent.children.Add (cn);
+			// Set visited to true
+			obs [i] [j].visited = true;
+			// Dig deeper
+			depthFirstSearch (i, j + 1, cn);
+			depthFirstSearch (i, j - 1, cn);
+			depthFirstSearch (i + 1, j, cn);
+			depthFirstSearch (i + 1, j + 1, cn);
+			depthFirstSearch (i + 1, j - 1, cn);
+		}
+		if (i > 0 && j > 0 && i < imax && j < jmax
+			&& obs [i] [j].nearestVoronoiCentre == obs [i + 1] [j].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j + 1].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre != obs [i - 1] [j].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j - 1].nearestVoronoiCentre
+			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
+			&& obs [i] [j].visited == false) {
+			// Create a new contour node and assign parent-child relations
+			ContourNode cn = new ContourNode (i, j);
+			cn.parent = parent;
+			parent.children.Add (cn);
+			// Set visited to true
+			obs [i] [j].visited = true;
+			// Dig deeper
+			depthFirstSearch (i, j + 1, cn);
+			depthFirstSearch (i, j - 1, cn);
+			depthFirstSearch (i + 1, j, cn);
+			depthFirstSearch (i + 1, j + 1, cn);
+			depthFirstSearch (i + 1, j - 1, cn);
+		}
+		if (i > 0 && j > 0 && i < imax && j < jmax
+			&& obs [i] [j].nearestVoronoiCentre == obs [i + 1] [j].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j - 1].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre != obs [i - 1] [j].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j + 1].nearestVoronoiCentre
+			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
+			&& obs [i] [j].visited == false) {
+			// Create a new contour node and assign parent-child relations
+			ContourNode cn = new ContourNode (i, j);
+			cn.parent = parent;
+			parent.children.Add (cn);
+			// Set visited to true
+			obs [i] [j].visited = true;
+			// Dig deeper
+			depthFirstSearch (i, j + 1, cn);
+			depthFirstSearch (i, j - 1, cn);
+			depthFirstSearch (i + 1, j, cn);
+			depthFirstSearch (i + 1, j + 1, cn);
+			depthFirstSearch (i + 1, j - 1, cn);
+		}
+		if (i > 0 && j > 0 && i < imax && j < jmax
+			&& obs [i] [j].nearestVoronoiCentre == obs [i + 1] [j].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j - 1].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j + 1].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre != obs [i - 1] [j].nearestVoronoiCentre
+			&& obs [i - 1] [j].nearestVoronoiCentre == obs [i - 2] [j].nearestVoronoiCentre
+			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
+			&& obs [i] [j].visited == false) {
+			// Create a new contour node and assign parent-child relations
+			ContourNode cn = new ContourNode (i, j);
+			cn.parent = parent;
+			parent.children.Add (cn);
+			// Set visited to true
+			obs [i] [j].visited = true;
+			// Dig deeper
+			depthFirstSearch (i, j + 1, cn);
+			depthFirstSearch (i, j - 1, cn);
+			depthFirstSearch (i + 1, j, cn);
+			depthFirstSearch (i + 1, j + 1, cn);
+			depthFirstSearch (i + 1, j - 1, cn);
+		}
+		if (i > 0 && j > 0 && i < imax && j < jmax
+			&& obs [i] [j].nearestVoronoiCentre == obs [i - 1] [j].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j - 1].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j + 1].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre != obs [i + 1] [j].nearestVoronoiCentre
+			&& obs [i + 1] [j].nearestVoronoiCentre == obs [i + 2] [j].nearestVoronoiCentre
+			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
+			&& obs [i] [j].visited == false) {
+			// Create a new contour node and assign parent-child relations
+			ContourNode cn = new ContourNode (i, j);
+			cn.parent = parent;
+			parent.children.Add (cn);
+			// Set visited to true
+			obs [i] [j].visited = true;
+			// Dig deeper
+			depthFirstSearch (i, j + 1, cn);
+			depthFirstSearch (i, j - 1, cn);
+			depthFirstSearch (i + 1, j, cn);
+			depthFirstSearch (i + 1, j + 1, cn);
+			depthFirstSearch (i + 1, j - 1, cn);
+		}
+		if (i > 0 && j > 0 && i < imax && j < jmax
+			&& obs [i] [j].nearestVoronoiCentre == obs [i - 1] [j].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j + 1].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre == obs [i + 1] [j].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j - 1].nearestVoronoiCentre
+			&& obs [i] [j - 1].nearestVoronoiCentre == obs [i] [j - 2].nearestVoronoiCentre
+			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
+			&& obs [i] [j].visited == false) {
+			// Create a new contour node and assign parent-child relations
+			ContourNode cn = new ContourNode (i, j);
+			cn.parent = parent;
+			parent.children.Add (cn);
+			// Set visited to true
+			obs [i] [j].visited = true;
+			// Dig deeper
+			depthFirstSearch (i, j + 1, cn);
+			depthFirstSearch (i, j - 1, cn);
+			depthFirstSearch (i + 1, j, cn);
+			depthFirstSearch (i + 1, j + 1, cn);
+			depthFirstSearch (i + 1, j - 1, cn);
+		}
+		if (i > 0 && j > 0 && i < imax && j < jmax
+			&& obs [i] [j].nearestVoronoiCentre == obs [i - 1] [j].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j - 1].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre == obs [i + 1] [j].nearestVoronoiCentre
+			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j + 1].nearestVoronoiCentre
+			&& obs [i] [j + 1].nearestVoronoiCentre == obs [i] [j + 2].nearestVoronoiCentre
+			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
+			&& obs [i] [j].visited == false) {
+			// Create a new contour node and assign parent-child relations
+			ContourNode cn = new ContourNode (i, j);
+			cn.parent = parent;
+			parent.children.Add (cn);
+			// Set visited to true
+			obs [i] [j].visited = true;
+			// Dig deeper
+			depthFirstSearch (i, j + 1, cn);
+			depthFirstSearch (i, j - 1, cn);
+			depthFirstSearch (i + 1, j, cn);
+			depthFirstSearch (i + 1, j + 1, cn);
+			depthFirstSearch (i + 1, j - 1, cn);
+		}
 		if (i == 0 && j > 0 && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j - 1].nearestVoronoiCentre
