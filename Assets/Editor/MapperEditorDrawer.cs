@@ -362,8 +362,8 @@ public class MapperEditorDrawer : MonoBehaviour
 		ContourNode parent = currentContourNode.parent;
 		if (parent.i != 0 && parent.j != 0) {
 			Gizmos.color = Color.magenta;
-			Gizmos.DrawLine (new Vector3 ((currentContourNode.i * tileSize.x + zero.x + tileSize.x / 2f), 0.1f, (currentContourNode.j * tileSize.x + zero.y + tileSize.y / 2f)), 
-				new Vector3 ((parent.i * tileSize.y + zero.x + tileSize.x / 2f), 0.1f, (parent.j * tileSize.y + zero.y + tileSize.y / 2f)));
+			Gizmos.DrawLine (new Vector3 ((currentContourNode.i * tileSize.x + zero.x + tileSize.x / 2f), 2f, (currentContourNode.j * tileSize.x + zero.y + tileSize.y / 2f)), 
+				new Vector3 ((parent.i * tileSize.y + zero.x + tileSize.x / 2f), 2f, (parent.j * tileSize.y + zero.y + tileSize.y / 2f)));
 		}
 		if (currentContourNode.children.Count == 0) {
 			return;	

@@ -16,7 +16,8 @@ public class Cell
 	public int isNextToWall = -1;
 	// if is visited => isVisited = true
 	public bool visited = false;
-	
+	public bool node = false; 
+
 	public Boolean IsWalkable ()
 	{
 		return safe || (!(blocked || seen));
