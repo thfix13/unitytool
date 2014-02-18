@@ -13,6 +13,7 @@ public class Mapper : MonoBehaviour {
 	private float minX, minZ;
 
 	// This computes the map that contains only the obstacles
+
 	public Cell[][] ComputeObstacles () {
 		Cell[][] baseMap = new Cell[cellsX][];
 		

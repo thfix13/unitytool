@@ -27,5 +27,9 @@ namespace Common {
 			copy.cluster = this.cluster;
 			return copy;
 		}
+		public String ToString() 
+		{
+			return IsWalkable().ToString();
+		}
 	}
 }

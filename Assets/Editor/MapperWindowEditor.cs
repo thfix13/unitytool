@@ -585,6 +585,8 @@ namespace EditorArea {
 			previous = DateTime.Now;
 		}
 
+		
+
 		public void TriangulationSpace()
 		{
 			//Compute one step of the discritzation
@@ -609,15 +611,19 @@ namespace EditorArea {
 				}
 			}
 			
+			Cell[][] obstacles = null; 
+			Debug.Log(mapper);
+
+			mapper.ComputeTileSize (SpaceState.Editor, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize);
+
+			obstacles = mapper.ComputeObstacles ();
 
 
-			Cell[][] obstacles = mapper.ComputeObstacles ();
 
+			//Print the map 
 
-
-			//First Find the vertex position
 			
-			
+			//First Find the vertex positions
 		}
 
 
