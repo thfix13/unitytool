@@ -152,15 +152,7 @@ public class MapperEditorDrawer : MonoBehaviour
 				}
 		}
 		
-		if (drawRoadmaps && sBoundaryGrid != null && contoursList.Count != 0) {
-			foreach (ContourNode root in contoursList) {
-				ContourNode currentNode = root;
-				foreach (ContourNode cn in currentNode.children) {
-					recurse (cn);
-				}
-			}
-		}
-		
+
 		if (drawVoronoiForBoundaries && sBoundaryGrid != null) {
 			for (int x = 0; x < sBoundaryGrid.Length; x++) {
 				for (int y = 0; y < sBoundaryGrid[x].Length; y++) {
@@ -354,7 +346,16 @@ public class MapperEditorDrawer : MonoBehaviour
 					}
 				}
 			}
+		}		
+		if (drawRoadmaps && sBoundaryGrid != null && contoursList.Count != 0) {
+			foreach (ContourNode root in contoursList) {
+				ContourNode currentNode = root;
+				foreach (ContourNode cn in currentNode.children) {
+					recurse (cn);
+				}
+			}
 		}
+
 	}
 	
 	private void recurse (ContourNode currentContourNode)

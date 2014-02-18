@@ -158,7 +158,7 @@ public class Skeletonization
 			depthFirstSearch (i - 1, j - 1, cn);
 		}
 		//<-
-		if (i > 0 && j > 0 && i < imax && j < jmax 
+		else if (i > 0 && j > 0 && i < imax && j < jmax 
 			&& obs [i] [j].nearestVoronoiCentre == obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i - 1] [j].nearestVoronoiCentre 
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j - 1].nearestVoronoiCentre
@@ -185,7 +185,7 @@ public class Skeletonization
 		}
 		//^
 		//|
-		if (i > 0 && j > 0 && i < imax && j < jmax
+		else if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i + 1] [j].nearestVoronoiCentre 
 			&& obs [i] [j].nearestVoronoiCentre != obs [i - 1] [j].nearestVoronoiCentre
@@ -212,7 +212,7 @@ public class Skeletonization
 		}
 		// |
 		// _
-		if (i > 0 && j > 0 && i < imax && j < jmax
+		else if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i + 1] [j].nearestVoronoiCentre 
 			&& obs [i] [j].nearestVoronoiCentre != obs [i - 1] [j].nearestVoronoiCentre
@@ -237,30 +237,40 @@ public class Skeletonization
 			depthFirstSearch (i - 1, j + 1, cn);
 			depthFirstSearch (i - 1, j - 1, cn);
 		}
-		/*
-		if (i > 0 && j > 0 && i < imax && j < jmax
+
+		//  r
+		// ccr 
+		//  c
+		else if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
-		    && obs [i] [j].visited == false && obs[i+1][j].node == false) {
+		         && obs [i] [j].visited == false && ( ! obs[i+1][j].node || !obs[i][j+1].node  ) ) {
 			// Create a new contour node and assign parent-child relations
 			ContourNode cn = new ContourNode (i, j);
 			cn.parent = parent;
 			parent.children.Add (cn);
+
 			// Set visited to true
 			obs [i] [j].visited = true;
 			obs [i] [j].node = true;
+
 			// Dig deeper
 			depthFirstSearch (i, j + 1, cn);
 			depthFirstSearch (i, j - 1, cn);
+			depthFirstSearch (i - 1, j, cn);
 			depthFirstSearch (i + 1, j, cn);
 			depthFirstSearch (i + 1, j + 1, cn);
 			depthFirstSearch (i + 1, j - 1, cn);
+			depthFirstSearch (i - 1, j + 1, cn);
+			depthFirstSearch (i - 1, j - 1, cn);
 		}
-
-		if (i > 0 && j > 0 && i < imax && j < jmax
+		//  c
+		// ccr
+		//  r
+		else if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i + 1] [j].nearestVoronoiCentre
@@ -277,17 +287,25 @@ public class Skeletonization
 			// Dig deeper
 			depthFirstSearch (i, j + 1, cn);
 			depthFirstSearch (i, j - 1, cn);
+			depthFirstSearch (i - 1, j, cn);
 			depthFirstSearch (i + 1, j, cn);
 			depthFirstSearch (i + 1, j + 1, cn);
 			depthFirstSearch (i + 1, j - 1, cn);
+			depthFirstSearch (i - 1, j + 1, cn);
+			depthFirstSearch (i - 1, j - 1, cn);
 		}
-		if (i > 0 && j > 0 && i < imax && j < jmax
+
+		//  c
+		// rcc
+		//  r
+
+		else if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
-			&& obs [i] [j].visited == false) {
+	        && obs [i] [j].visited == false && (! obs[i-1][j].node || ! obs[i][j-1].node )) {
 			// Create a new contour node and assign parent-child relations
 			ContourNode cn = new ContourNode (i, j);
 			cn.parent = parent;
@@ -298,17 +316,25 @@ public class Skeletonization
 			// Dig deeper
 			depthFirstSearch (i, j + 1, cn);
 			depthFirstSearch (i, j - 1, cn);
+			depthFirstSearch (i - 1, j, cn);
 			depthFirstSearch (i + 1, j, cn);
 			depthFirstSearch (i + 1, j + 1, cn);
 			depthFirstSearch (i + 1, j - 1, cn);
+			depthFirstSearch (i - 1, j + 1, cn);
+			depthFirstSearch (i - 1, j - 1, cn);
 		}
-		if (i > 0 && j > 0 && i < imax && j < jmax
+
+		//  r
+		// rcc
+		//  c
+
+		else if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
-			&& obs [i] [j].visited == false) {
+	        && obs [i] [j].visited == false && (! obs[i-1][j].node || ! obs[i][j+1].node )) {
 			// Create a new contour node and assign parent-child relations
 			ContourNode cn = new ContourNode (i, j);
 			cn.parent = parent;
@@ -319,18 +345,25 @@ public class Skeletonization
 			// Dig deeper
 			depthFirstSearch (i, j + 1, cn);
 			depthFirstSearch (i, j - 1, cn);
+			depthFirstSearch (i - 1, j, cn);
 			depthFirstSearch (i + 1, j, cn);
 			depthFirstSearch (i + 1, j + 1, cn);
 			depthFirstSearch (i + 1, j - 1, cn);
+			depthFirstSearch (i - 1, j + 1, cn);
+			depthFirstSearch (i - 1, j - 1, cn);
 		}
-		if (i > 0 && j > 0 && i < imax && j < jmax
+		// c 
+		//rccc
+		// c
+
+		else if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i - 1] [j].nearestVoronoiCentre == obs [i - 2] [j].nearestVoronoiCentre
 			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
-			&& obs [i] [j].visited == false) {
+	        && obs [i] [j].visited == false && ! obs[i-1][j].node ) {
 			// Create a new contour node and assign parent-child relations
 			ContourNode cn = new ContourNode (i, j);
 			cn.parent = parent;
@@ -341,18 +374,25 @@ public class Skeletonization
 			// Dig deeper
 			depthFirstSearch (i, j + 1, cn);
 			depthFirstSearch (i, j - 1, cn);
+			depthFirstSearch (i - 1, j, cn);
 			depthFirstSearch (i + 1, j, cn);
+
 			depthFirstSearch (i + 1, j + 1, cn);
 			depthFirstSearch (i + 1, j - 1, cn);
+			depthFirstSearch (i - 1, j + 1, cn);
+			depthFirstSearch (i - 1, j - 1, cn);
 		}
-		if (i > 0 && j > 0 && i < imax && j < jmax
+		//  c
+		//cccr
+		//  c
+		else if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i + 1] [j].nearestVoronoiCentre == obs [i + 2] [j].nearestVoronoiCentre
 			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
-			&& obs [i] [j].visited == false) {
+	        && obs [i] [j].visited == false && ! obs[i+1][j].node) {
 			// Create a new contour node and assign parent-child relations
 			ContourNode cn = new ContourNode (i, j);
 			cn.parent = parent;
@@ -363,18 +403,26 @@ public class Skeletonization
 			// Dig deeper
 			depthFirstSearch (i, j + 1, cn);
 			depthFirstSearch (i, j - 1, cn);
+			depthFirstSearch (i - 1, j, cn);
 			depthFirstSearch (i + 1, j, cn);
 			depthFirstSearch (i + 1, j + 1, cn);
 			depthFirstSearch (i + 1, j - 1, cn);
+			depthFirstSearch (i - 1, j + 1, cn);
+			depthFirstSearch (i - 1, j - 1, cn);
 		}
-		if (i > 0 && j > 0 && i < imax && j < jmax
+		// 
+		// c
+		//ccc
+		// r
+		// r
+		else if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i] [j - 1].nearestVoronoiCentre == obs [i] [j - 2].nearestVoronoiCentre
 			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
-			&& obs [i] [j].visited == false) {
+	        && obs [i] [j].visited == false && ! obs[i][j-1].node) {
 			// Create a new contour node and assign parent-child relations
 			ContourNode cn = new ContourNode (i, j);
 			cn.parent = parent;
@@ -385,18 +433,26 @@ public class Skeletonization
 			// Dig deeper
 			depthFirstSearch (i, j + 1, cn);
 			depthFirstSearch (i, j - 1, cn);
+			depthFirstSearch (i - 1, j, cn);
 			depthFirstSearch (i + 1, j, cn);
 			depthFirstSearch (i + 1, j + 1, cn);
 			depthFirstSearch (i + 1, j - 1, cn);
+			depthFirstSearch (i - 1, j + 1, cn);
+			depthFirstSearch (i - 1, j - 1, cn);
+
 		}
-		if (i > 0 && j > 0 && i < imax && j < jmax
+		// r
+		//ccc
+		// c
+		// c
+		else if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j + 1].nearestVoronoiCentre
-			&& obs [i] [j + 1].nearestVoronoiCentre == obs [i] [j + 2].nearestVoronoiCentre
+			&& obs [i] [j  1].nearestVoronoiCentre == obs [i] [j - 2].nearestVoronoiCentre
 			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
-			&& obs [i] [j].visited == false) {
+	        && obs [i] [j].visited == false && ! obs[i][j+1].node) {
 			// Create a new contour node and assign parent-child relations
 			ContourNode cn = new ContourNode (i, j);
 			cn.parent = parent;
@@ -407,13 +463,16 @@ public class Skeletonization
 			// Dig deeper
 			depthFirstSearch (i, j + 1, cn);
 			depthFirstSearch (i, j - 1, cn);
+			depthFirstSearch (i - 1, j, cn);
 			depthFirstSearch (i + 1, j, cn);
 			depthFirstSearch (i + 1, j + 1, cn);
 			depthFirstSearch (i + 1, j - 1, cn);
+			depthFirstSearch (i - 1, j + 1, cn);
+			depthFirstSearch (i - 1, j - 1, cn);
 		}
-		*/
 
-		if (i == 0 && j > 0 && j < jmax
+
+		else if (i == 0 && j > 0 && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i + 1] [j].nearestVoronoiCentre
@@ -435,7 +494,7 @@ public class Skeletonization
 			depthFirstSearch (i + 1, j - 1, cn);
 		}
 		//
-		if (j == 0 && i > 0 && i < imax
+		else if (j == 0 && i > 0 && i < imax
 			&& obs [i] [j].nearestVoronoiCentre != obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j + 1].nearestVoronoiCentre

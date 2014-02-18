@@ -1,16 +1,16 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\Skeletonization.cs">
     <Files>
+      <File FileName="Assets\Editor\MapperWindowEditor.cs" Line="1" Column="1" />
       <File FileName="Assets\Editor\MapperWindowEditor.cs" Line="1370" Column="1" />
-      <File FileName="Assets\Editor\MapperEditorDrawer.cs" Line="336" Column="15" />
-      <File FileName="Assets\Scripts\Skeletonization.cs" Line="415" Column="3" />
+      <File FileName="Assets\Editor\MapperEditorDrawer.cs" Line="350" Column="3" />
+      <File FileName="Assets\Scripts\Skeletonization.cs" Line="417" Column="7" />
       <File FileName="Assets\Scripts\PCG.cs" Line="1" Column="1" />
       <File FileName="Assets\Scripts\VoronoiDiagram.cs" Line="1" Column="1" />
       <File FileName="Assets\Scripts\ContourNode.cs" Line="1" Column="1" />
       <File FileName="Assets\Scripts\Node.cs" Line="1" Column="1" />
-      <File FileName="Assets\Editor\MapperWindowEditor.cs" Line="1" Column="1" />
-      <File FileName="Assets\Scripts\Cell.cs" Line="19" Column="28" />
+      <File FileName="Assets\Scripts\Cell.cs" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
