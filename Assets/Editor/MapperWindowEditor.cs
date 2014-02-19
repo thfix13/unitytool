@@ -635,6 +635,8 @@ namespace EditorArea {
 			tempGeometry.vertex[2] = mesh.transform.TransformPoint(t[110]);
 			tempGeometry.vertex[3] = mesh.transform.TransformPoint(t[120]);
 
+			geos.Add(tempGeometry); 
+			//Add sphere markers
 			foreach( Vector3 v in tempGeometry.vertex)
 			{
 				GameObject g = GameObject.CreatePrimitive(PrimitiveType.Sphere) as GameObject;
@@ -643,19 +645,33 @@ namespace EditorArea {
 
 			//Obstacles
 
+
+
 			GameObject[] obs = GameObject.FindGameObjectsWithTag("Obs");
 
+
+			//Only one geometry for now
+			
 
 			mesh = (MeshFilter)(obs[0].GetComponent("MeshFilter")) ;
 			t = mesh.sharedMesh.vertices; 
 
-			for(int i = 6; i<10; i++)//Vector3 v in )
+			tempGeometry = new Geometry(); 
+
+			tempGeometry.vertex[0] = mesh.transform.TransformPoint(t[6]);
+			tempGeometry.vertex[1] = mesh.transform.TransformPoint(t[7]);
+			tempGeometry.vertex[2] = mesh.transform.TransformPoint(t[8]);
+			tempGeometry.vertex[3] = mesh.transform.TransformPoint(t[9]);
+
+			
+			geos.Add(tempGeometry); 
+			//Add sphere markers
+			foreach( Vector3 v in tempGeometry.vertex)
 			{
-				//GameObject g = Instantiate(GameObject.CreatePrimitive(PrimitiveType.Sphere)) as GameObject;
-				//g.transform.position = mesh.transform.TransformPoint(t[i]);
-				Debug.Log( mesh.transform.TransformPoint(t[i]));
-				
+				GameObject g = GameObject.CreatePrimitive(PrimitiveType.Sphere) as GameObject;
+				g.transform.position = v; 
 			}
+
 
 
 			//Print the map 
