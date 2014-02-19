@@ -22,3 +22,4 @@ clusterresults.xml
 pathresults.xml
 
 ProjectSettings/ProjectSettings.asset
+*.userprefs
