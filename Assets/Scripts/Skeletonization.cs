@@ -450,7 +450,7 @@ public class Skeletonization
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j + 1].nearestVoronoiCentre
-			&& obs [i] [j  1].nearestVoronoiCentre == obs [i] [j - 2].nearestVoronoiCentre
+			&& obs [i] [j -1].nearestVoronoiCentre == obs [i] [j - 2].nearestVoronoiCentre
 			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
 	        && obs [i] [j].visited == false && ! obs[i][j+1].node) {
 			// Create a new contour node and assign parent-child relations
