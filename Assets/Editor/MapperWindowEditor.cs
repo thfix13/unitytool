@@ -612,12 +612,50 @@ namespace EditorArea {
 			}
 			
 			Cell[][] obstacles = null; 
-			Debug.Log(mapper);
+
 
 			mapper.ComputeTileSize (SpaceState.Editor, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize);
 
 			obstacles = mapper.ComputeObstacles ();
 
+			//First geometry is the outer one
+			List<Geometry> geos = new List<Geometry>();
+
+
+			//Floor
+			Vector3[] f = new Vector3[4];
+			MeshFilter mesh = (MeshFilter)(floor.GetComponent("MeshFilter")) ;
+			Vector3[] t = mesh.sharedMesh.vertices; 
+
+			Geometry tempGeometry = new Geometry(); 
+
+
+			tempGeometry.vertex[0] = mesh.transform.TransformPoint(t[0]);
+			tempGeometry.vertex[1] = mesh.transform.TransformPoint(t[10]);
+			tempGeometry.vertex[2] = mesh.transform.TransformPoint(t[110]);
+			tempGeometry.vertex[3] = mesh.transform.TransformPoint(t[120]);
+
+			foreach( Vector3 v in tempGeometry.vertex)
+			{
+				GameObject g = GameObject.CreatePrimitive(PrimitiveType.Sphere) as GameObject;
+				g.transform.position = v; 
+			}
+
+			//Obstacles
+
+			GameObject[] obs = GameObject.FindGameObjectsWithTag("Obs");
+
+
+			mesh = (MeshFilter)(obs[0].GetComponent("MeshFilter")) ;
+			t = mesh.sharedMesh.vertices; 
+
+			for(int i = 6; i<10; i++)//Vector3 v in )
+			{
+				//GameObject g = Instantiate(GameObject.CreatePrimitive(PrimitiveType.Sphere)) as GameObject;
+				//g.transform.position = mesh.transform.TransformPoint(t[i]);
+				Debug.Log( mesh.transform.TransformPoint(t[i]));
+				
+			}
 
 
 			//Print the map 
