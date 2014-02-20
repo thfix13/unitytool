@@ -631,16 +631,22 @@ namespace EditorArea {
 
 
 			tempGeometry.vertex[0] = mesh.transform.TransformPoint(t[0]);
-			tempGeometry.vertex[1] = mesh.transform.TransformPoint(t[10]);
-			tempGeometry.vertex[2] = mesh.transform.TransformPoint(t[110]);
-			tempGeometry.vertex[3] = mesh.transform.TransformPoint(t[120]);
+			tempGeometry.vertex[2] = mesh.transform.TransformPoint(t[120]);
+			tempGeometry.vertex[1] = mesh.transform.TransformPoint(t[110]);
+			tempGeometry.vertex[3] = mesh.transform.TransformPoint(t[10]);
 
+			tempGeometry.vertex[0].y = 1; 
+			tempGeometry.vertex[1].y = 1; 
+			tempGeometry.vertex[2].y = 1; 
+			tempGeometry.vertex[3].y = 1; 
+
+			
 			geos.Add(tempGeometry); 
 			//Add sphere markers
 			foreach( Vector3 v in tempGeometry.vertex)
 			{
-				GameObject g = GameObject.CreatePrimitive(PrimitiveType.Sphere) as GameObject;
-				g.transform.position = v; 
+//				GameObject g = GameObject.CreatePrimitive(PrimitiveType.Sphere) as GameObject;
+//				g.transform.position = v; 
 			}
 
 			//Obstacles
@@ -652,34 +658,126 @@ namespace EditorArea {
 
 			//Only one geometry for now
 			
-
-			mesh = (MeshFilter)(obs[0].GetComponent("MeshFilter")) ;
-			t = mesh.sharedMesh.vertices; 
-
-			tempGeometry = new Geometry(); 
-
-			tempGeometry.vertex[0] = mesh.transform.TransformPoint(t[6]);
-			tempGeometry.vertex[1] = mesh.transform.TransformPoint(t[7]);
-			tempGeometry.vertex[2] = mesh.transform.TransformPoint(t[8]);
-			tempGeometry.vertex[3] = mesh.transform.TransformPoint(t[9]);
-
-			
-			geos.Add(tempGeometry); 
-			//Add sphere markers
-			foreach( Vector3 v in tempGeometry.vertex)
+			foreach(GameObject o in obs)
 			{
-				GameObject g = GameObject.CreatePrimitive(PrimitiveType.Sphere) as GameObject;
-				g.transform.position = v; 
+				mesh = (MeshFilter)(o.GetComponent("MeshFilter")) ;
+				t = mesh.sharedMesh.vertices; 
+				
+				tempGeometry = new Geometry(); 
+				
+				tempGeometry.vertex[0] = mesh.transform.TransformPoint(t[6]);
+				tempGeometry.vertex[1] = mesh.transform.TransformPoint(t[8]);
+				tempGeometry.vertex[3] = mesh.transform.TransformPoint(t[7]);
+				tempGeometry.vertex[2] = mesh.transform.TransformPoint(t[9]);
+
+				tempGeometry.vertex[0].y = 1; 
+				tempGeometry.vertex[2].y = 1; 
+				tempGeometry.vertex[1].y = 1; 
+				tempGeometry.vertex[3].y = 1; 
+				
+				
+				geos.Add(tempGeometry); 
+
+			}
+
+			//lines are defined by all the points in  obs
+			List<Line> lines = new List<Line>(); 
+			foreach(Geometry g in geos)
+			{
+				for(int i = 0; i< g.vertex.Length; i+=1)
+			    {
+					if(i<g.vertex.Length -1)
+						lines.Add(new Line(g.vertex[i],g.vertex[i+1]));
+					else 	       
+						lines.Add(new Line(g.vertex[0],g.vertex[i]));
+						      
+				}
+
+			}
+
+			foreach (Line l in lines)
+			{
+				Debug.DrawLine(l.vertex[0],l.vertex[1],Color.blue);
+				
+			}
+			//Lines are also the one added. 
+
+			//Compare each point to every point 
+
+			foreach(Geometry g1 in geos)
+			{
+				foreach(Geometry g2 in geos)
+				{
+					if (g2 == g1)
+						continue;
+					for(int i = 0; i<g1.vertex.Length; i++)
+					{
+						List<Line> toAdd = new List<Line>(); 
+
+						for(int j = 0; j<g2.vertex.Length; j++)
+						{
+							Debug.DrawLine(g1.vertex[i],g2.vertex[j],Color.red);
+
+							foreach (Line l in lines)
+							{
+
+								if(! LineIntersection(g1.vertex[i], g2.vertex[j],
+								                           l.vertex[0],l.vertex[1]))
+								{
+									toAdd.Add(new Line(g1.vertex[i],g2.vertex[j])); 
+									Debug.DrawLine(l.vertex[0],l.vertex[1],Color.red);
+								}
+								else 
+									Debug.DrawLine(l.vertex[0],l.vertex[1],Color.blue);
+								   
+							}
+						
+						}
+						foreach(Line l in toAdd)
+							lines.Add(l);
+
+					}
+				}
+			}
+			foreach (Line l in lines)
+			{
+				//Debug.DrawLine(l.vertex[0],l.vertex[1],Color.blue);
+				
 			}
 
 
 
-			//Print the map 
-
-			
-			//First Find the vertex positions
 		}
 
+
+		private Boolean LineIntersection(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
+		{
+			// a-b
+			// c-d
+			if( CounterClockWise(a,c,d) == CounterClockWise(b,c,d))
+				return false;
+			else if (CounterClockWise(a,b,c) == CounterClockWise(a,b,d))
+				return false; 
+			else 
+				return true; 
+
+		}
+
+		private Boolean CounterClockWise(Vector3 v1,Vector3 v2,Vector3 v3)
+		{
+			//v1 = a,b
+			//v2 = c,d
+			//v3 = e,f
+
+			float a = v1.x, b = v1.z;  
+			float c = v2.x, d = v2.z;  
+			float e = v3.x, f = v3.z;  
+
+			if((f-b)*(c-a)> (d-b)*(e-a))
+				return true;
+			else
+				return false; 
+		}
 
 
 		private void ClearPathsRepresentation () {
