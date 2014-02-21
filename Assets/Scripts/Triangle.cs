@@ -1,8 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using System; 
 
 public class Triangle{
 	public Vector3[] vertex = new Vector3[3];
+
+	public List<Triangle> voisins = new List<Triangle>();  
 
 	public Triangle(Vector3 v1, Vector3 v2,Vector3 v3)
 	{
@@ -13,6 +17,18 @@ public class Triangle{
 
 	}
 
+	public Line[] getLines()
+	{
+		Line[] l = new Line[3];
+		l[0] = new Line(vertex[0],vertex[1]);
+		l[1] = new Line(vertex[1],vertex[2]);
+		l[2] = new Line(vertex[0],vertex[2]);
+		
+		return l; 
+	}
+
+
+
 	public Vector3 GetCenterTriangle()
 	{
 		return new Vector3( (vertex[0].x + vertex[1].x +vertex[2].x ) / 3,
@@ -20,40 +36,66 @@ public class Triangle{
 		                   (vertex[0].z + vertex[1].z +vertex[2].z ) / 3);
 	}
 
-	public bool ShareEdged(Triangle t)
+	public Line ShareEdged(Triangle t)
 	{
-		int i = 0; 
-		int j = 1; 
+		if(this.Equals(t))
+			return Line.Zero; 
+			
+		Line[] l1 = getLines(); 
+		Line[] l2 = t.getLines(); 
 
-		//check with all faces
-		for(int a = 0; a<1; a++)
+		for(int i = 0; i<3; i++)
 		{
-			if(vertex[i].Equals(t.vertex[a]) && vertex[j].Equals(t.vertex[a+1]) )
-				return true; 
-		}
-		if(vertex[i].Equals(t.vertex[0]) && vertex[j].Equals(t.vertex[2]) )
-			return true;
+			for(int j = 0; j<3;j++)
+			{
+				if(l1[i].Equals(l2[j]))
+				{
+					if(! voisins.Contains(t) && this != t)
+						voisins.Add(t); 
 
-		i = 1; j = 2; 
-		for(int a = 0; a<1; a++)
-		{
-			if(vertex[i].Equals(t.vertex[a]) && vertex[j].Equals(t.vertex[a+1]) )
-				return true; 
-		}
-		if(vertex[i].Equals(t.vertex[0]) && vertex[j].Equals(t.vertex[2]) )
-			return true;
+					//Debug.DrawLine(this.GetCenterTriangle(),l1[i].MidPoint(),Color.cyan);
 
-		i = 0; j = 2; 
-		for(int a = 0; a<1; a++)
-		{
-			if(vertex[i].Equals(t.vertex[a]) && vertex[j].Equals(t.vertex[a+1]) )
-				return true; 
+					return l1[i]; 
+				}
+			}
 		}
-		if(vertex[i].Equals(t.vertex[0]) && vertex[j].Equals(t.vertex[2]) )
-			return true;
 
-		return false; 
+
+
+		return Line.Zero; 
 
 	}
+	public bool Equals(Triangle t)
+	{
+		return GetCenterTriangle().Equals(t.GetCenterTriangle());
+	}
+	public Line[] GetSharedLines()
+	{
+		List<Line> t = new List<Line>();
+		foreach(Triangle tt in voisins)
+		{
+			if(!t.Contains(ShareEdged(tt)))
+				t.Add(ShareEdged(tt)); 
+		}
 
+		return t.ToArray(); 
+	}
+
+
+}
+class TriangleEqualityComparer : IEqualityComparer<Triangle>
+{
+	
+	public bool Equals(Triangle b1, Triangle b2)
+	{
+		return b1.Equals(b2);
+	}
+	
+	
+	public int GetHashCode(Triangle bx)
+	{
+		int hCode = (int)(bx.GetCenterTriangle().sqrMagnitude);
+		return hCode.GetHashCode();
+	}
+	
 }

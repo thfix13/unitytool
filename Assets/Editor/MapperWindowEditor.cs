@@ -785,7 +785,7 @@ namespace EditorArea {
 								Boolean isAlready = false; 
 								foreach(Triangle tt in triangles)
 								{
-									if (tt.GetCenterTriangle().Equals(toAddTriangle))
+									if (tt.Equals(toAddTriangle))
 									{
 										isAlready = true; 
 										break; 
@@ -793,8 +793,13 @@ namespace EditorArea {
 
 								}
 								if(!isAlready)
-									triangles.Add(toAddTriangle);
-								//return; 
+								{
+
+
+									//if(! triangles.Contains(toAddTriangle))
+										triangles.Add(toAddTriangle);
+								}
+									//return; 
 							}
 						}
 					}
@@ -809,7 +814,7 @@ namespace EditorArea {
 
 			List<Line> roadMap = new List<Line>(); 
 
-			//Find shared edge
+			//Find shared edge and triangle structure
 
 			foreach(Triangle tt in triangles)
 			{
@@ -817,15 +822,35 @@ namespace EditorArea {
 				{
 					if(tt == ttt)
 						continue; 
-					if(tt.ShareEdged(ttt))
-					{
+					tt.ShareEdged(ttt);
+					
+				}
 
-						//if(!collided)
-						Debug.DrawLine(tt.GetCenterTriangle(),ttt.GetCenterTriangle(),Color.red);
-						//return;
+			}
+			Debug.Log (triangles.Count());
+
+			foreach(Triangle tt in triangles)
+			{
+				Line[] ll = tt.GetSharedLines(); 
+
+				if(ll.Count() > 2)
+				{
+					for(int i = 0; i<ll.Length; i++)
+					{
+						Debug.DrawLine(ll[i].MidPoint(), tt.GetCenterTriangle(),Color.red);
 					}
 				}
+
+				else
+				{
+					for(int i = 0; i<ll.Length; i++)
+					{
+						Debug.DrawLine(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint(),Color.red);
+					}
+				}
+
 			}
+
 
 			/*
 			 * old approach with reachability
@@ -920,7 +945,7 @@ namespace EditorArea {
 			//Debug.Log(s); 
 			//Debug.Log(t); 
 
-			if (s>0 && s< 1 )
+			if ( (s>0 && s< 1) && (t>0 && t< 1) )
 				return true;
 
 			return false; 
