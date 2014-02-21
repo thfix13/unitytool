@@ -697,69 +697,261 @@ namespace EditorArea {
 
 			foreach (Line l in lines)
 			{
-				Debug.DrawLine(l.vertex[0],l.vertex[1],Color.blue);
+				//Debug.DrawLine(l.vertex[0],l.vertex[1],Color.blue);
 				
 			}
 			//Lines are also the one added. 
 
 			//Compare each point to every point 
 
-			foreach(Geometry g1 in geos)
+			for (int i = 0; i < geos.Count; i++)
 			{
-				foreach(Geometry g2 in geos)
-				{
-					if (g2 == g1)
-						continue;
-					for(int i = 0; i<g1.vertex.Length; i++)
-					{
-						List<Line> toAdd = new List<Line>(); 
 
-						for(int j = 0; j<g2.vertex.Length; j++)
+				for(int j = i+1; j < geos.Count; j++)
+				{
+
+					for(int w = 0; w<geos[i].vertex.Length; w++)
+					{
+
+						for(int z = 0; z<geos[j].vertex.Length; z++)
 						{
-							Debug.DrawLine(g1.vertex[i],g2.vertex[j],Color.red);
+													
+							List<Line> toAdd = new List<Line>(); 
+
+							Boolean foundBreak = false; 
 
 							foreach (Line l in lines)
 							{
 
-								if(! LineIntersection(g1.vertex[i], g2.vertex[j],
+								if( LineIntersection(geos[i].vertex[w], geos[j].vertex[z],
 								                           l.vertex[0],l.vertex[1]))
 								{
-									toAdd.Add(new Line(g1.vertex[i],g2.vertex[j])); 
-									Debug.DrawLine(l.vertex[0],l.vertex[1],Color.red);
-								}
-								else 
-									Debug.DrawLine(l.vertex[0],l.vertex[1],Color.blue);
+									 
+									foundBreak = true; 
+									break; 
+								}								
 								   
 							}
-						
+							if(!foundBreak)
+							{	
+								//Debug.DrawLine(geos[i].vertex[w], geos[j].vertex[z], Color.blue);
+								lines.Add(new Line(geos[i].vertex[w], geos[j].vertex[z])); 		
+							}	
 						}
-						foreach(Line l in toAdd)
-							lines.Add(l);
-
 					}
 				}
 			}
+
+			//Find the centers 
+			List<Triangle> triangles = new List<Triangle>(); 
+			//Well why be efficient when you can be not efficient
 			foreach (Line l in lines)
 			{
-				//Debug.DrawLine(l.vertex[0],l.vertex[1],Color.blue);
+				Vector3 v1 = l.vertex[0]; 
+				Vector3 v2 = l.vertex[1];
+				foreach (Line l2 in lines)
+				{
+					if (l == l2)
+						continue;
+					Vector3 v3 = Vector3.zero; 
+
+
+					if (l2.vertex[0].Equals(v2))
+					{
+						v3 = l2.vertex[1];
+						//have to check if closes
+					}
+					else if (l2.vertex[1].Equals(v2))
+					{
+						v3 = l2.vertex[0];
+					}
+
+					if(v3 != Vector3.zero)
+					{
+						foreach (Line l3 in lines)
+						{
+							if(l3 == l2 || l3 == l)
+								continue; 
+							if( (l3.vertex[0].Equals(v1) && l3.vertex[1].Equals(v3))
+							   || (l3.vertex[1].Equals(v1) && l3.vertex[0].Equals(v3)))
+							{
+								//Debug.DrawLine(v1,v2,Color.red); 
+								//Debug.DrawLine(v2,v3,Color.red); 
+								//Debug.DrawLine(v3,v1,Color.red); 
+
+								//Add the traingle
+								Triangle toAddTriangle = new Triangle(v1,v2,v3); 
+
+								Boolean isAlready = false; 
+								foreach(Triangle tt in triangles)
+								{
+									if (tt.GetCenterTriangle().Equals(toAddTriangle))
+									{
+										isAlready = true; 
+										break; 
+									}
+
+								}
+								if(!isAlready)
+									triangles.Add(toAddTriangle);
+								//return; 
+							}
+						}
+					}
+				}
+			}
+
+			foreach (Line l in lines)
+			{
+				Debug.DrawLine(l.vertex[0],l.vertex[1],Color.blue);
 				
 			}
 
+			List<Line> roadMap = new List<Line>(); 
+
+			//Find shared edge
+
+			foreach(Triangle tt in triangles)
+			{
+				foreach(Triangle ttt in triangles)
+				{
+					if(tt == ttt)
+						continue; 
+					if(tt.ShareEdged(ttt))
+					{
+
+						//if(!collided)
+						Debug.DrawLine(tt.GetCenterTriangle(),ttt.GetCenterTriangle(),Color.red);
+						//return;
+					}
+				}
+			}
+
+			/*
+			 * old approach with reachability
+			for(int i = 0; i<triangles.Count-1;i++)
+			{
+				Boolean collided = false; 
+
+				foreach(Geometry g in geos)
+				{
+					for(int j = 0; j<3; j++)
+					{
+						if( LineIntersection(triangles[i].GetCenterTriangle(),
+						                     triangles[i+1].GetCenterTriangle(),
+						                     g.vertex[j],g.vertex[j+1]))
+						{
+							collided = true; 
+							break; 
+						}
+
+					}
+
+				
+
+					if(collided)
+						break; 
+				}
+
+				foreach (Line l in roadMap)
+				{
+					if( LineIntersection(triangles[i].GetCenterTriangle(),
+					                     triangles[i+1].GetCenterTriangle(),
+					                     l.vertex[0],l.vertex[1]))
+					{
+						collided = true; 
+						break; 
+					}
 
 
+				}
+
+				if(!collided)
+				{
+					roadMap.Add(new Line(triangles[i].GetCenterTriangle(),
+				                     triangles[i+1].GetCenterTriangle()));
+                }
+				//Gizmos.DrawSphere(triangles[i].GetCenterTriangle(),1);	
+			}
+			*/
+			foreach (Line l in roadMap)
+			{
+				Debug.DrawLine(l.vertex[0],l.vertex[1],Color.red);
+				
+			}
+
+			/*
+			Vector3 v1 = new Vector3(10.0f, 1.0f, 10.0f); 
+			Vector3 v2 = new Vector3(-4.1f, 1.0f, 5.9f);
+			
+			Vector3 v3 = new Vector3(-4.1f, 1.0f, 1.8f);
+			Vector3 v4 = new Vector3(-4.1f, 1.0f, 5.9f);
+
+			Debug.DrawLine(v1,v2,Color.blue); 
+			Debug.DrawLine(v3,v4,Color.red); 
+			
+
+			Debug.Log(LineIntersect(v1, v2, v3, v4));
+			Debug.Log(LineIntersection(v1, v2, v3, v4));
+			*/
 		}
 
+		private Boolean LineIntersect(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
+		{
+			//Debug.Log(a); 
+			//Debug.Log(b); 
+			//Debug.Log(c); 
+			//Debug.Log(d); 
+
+			Vector2 u = new Vector2(b.x,b.z) - new Vector2(a.x,a.z);
+			Vector2 p0 = new Vector2(a.x,a.z); Vector2 p1 = new Vector2(b.x,b.z); 
+
+			Vector2 v = new Vector2(d.x,d.z) - new Vector2(c.x,c.z);
+			Vector2 q0 = new Vector2(c.x,c.z); Vector2 q1 = new Vector2(d.x,d.z);
+
+			Vector2 w = new Vector2(a.x,a.z) - new Vector2(d.x,d.z);
+
+
+			//if (u.x * v.y - u.y*v.y == 0)
+			//	return true;
+
+			double s = (v.y* w.x - v.x*w.y) / (v.x*u.y - v.y*u.x);
+			double t = (u.x*w.y-u.y*w.x) / (u.x*v.y- u.y*v.x); 
+			//Debug.Log(s); 
+			//Debug.Log(t); 
+
+			if (s>0 && s< 1 )
+				return true;
+
+			return false; 
+		}
 
 		private Boolean LineIntersection(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
 		{
+
+
+
 			// a-b
 			// c-d
-			if( CounterClockWise(a,c,d) == CounterClockWise(b,c,d))
-				return false;
-			else if (CounterClockWise(a,b,c) == CounterClockWise(a,b,d))
-				return false; 
-			else 
-				return true; 
+			//if the same lines
+
+			//When share a point use the other algo
+			if(a.Equals(c) || a.Equals(d) || b.Equals(c) || b.Equals(d))
+				return LineIntersect(a,b,c,d); 
+
+
+
+
+			return CounterClockWise(a,c,d) != CounterClockWise(b,c,d) && 
+				CounterClockWise(a,b,c) != CounterClockWise(a,b,d);
+
+			//if( CounterClockWise(a,c,d) == CounterClockWise(b,c,d))
+			//	return false;
+			//else if (CounterClockWise(a,b,c) == CounterClockWise(a,b,d))
+			//	return false; 
+			//else 
+			//	return true; 
+
 
 		}
 
