@@ -7,13 +7,331 @@ public class Skeletonization
 {
 	private int imax = 0, jmax = 0;
 	public Cell[][] obs = null;
+	
+	// --Obsolete--
 	public List<Cell> boundaryArray = new List<Cell> ();
 	public List<int> boundaryXArray = new List<int> ();
 	public List<int> boundaryZArray = new List<int> ();
 	public List<int> nearestIndice = new List<int> ();
-	
-	// Store a collection of valid roots of contours
 	public List<ContourNode> contoursList = new List<ContourNode> ();
+	// --Obsolete--
+	
+	public int boundaryIndex = 0;
+	public List<List<Cell>> boundaryContoursList = new List<List<Cell>> ();
+	public List<Cell> freeCells = new List<Cell> ();
+	
+	public void identifyObstacleContours (GameObject floor)
+	{
+		imax = (int)(floor.collider.bounds.size.x / SpaceState.TileSize.x);
+		jmax = (int)(floor.collider.bounds.size.z / SpaceState.TileSize.y);
+		for (int i = 0; i < imax + 1; i++) {
+			for (int j = 0; j < jmax + 1; j++) {
+				if (obs [i] [j].obsVisited) {
+					continue;	
+				}
+				boundaryIndex++;
+				depthFirstSearchForObstacles(i, j, boundaryIndex);
+				if (boundaryContoursList.Count != boundaryIndex) {
+					boundaryIndex--;	
+				}
+			}	
+		}
+	}
+	
+	private void depthFirstSearchForObstacles (int i, int j, int boundaryIndex) 
+	{
+		if (obs [i][j].obsVisited) {
+			return;	
+		}
+		
+		if ((obs [i][j].blocked == true || (obs [i] [j].blocked == false && (i == 0 || j == 0 
+			|| i == imax
+			|| j == jmax))) && obs[i][j].obsVisited == false) {
+			
+			obs [i] [j].obsVisited = true;	
+			
+			if(i > 0 && j > 0 && i < imax && j < jmax && (!obs [i - 1] [j].blocked || !obs [i + 1] [j].blocked || !obs [i] [j + 1].blocked || !obs [i] [j - 1].blocked
+				|| !obs [i - 1] [j + 1].blocked || !obs [i + 1] [j + 1].blocked || !obs [i + 1] [j - 1].blocked || !obs [i - 1] [j - 1].blocked)) {
+				obs [i] [j].obstacleBelongTo = boundaryIndex;
+				
+				if (boundaryContoursList.Count != boundaryIndex) {
+					List<Cell> boundary = new List<Cell> ();
+					boundaryContoursList.Add (boundary);
+					boundaryContoursList.ElementAt (boundaryIndex - 1).Add (obs [i] [j]);
+				} else if (boundaryContoursList.Count == boundaryIndex) {
+					boundaryContoursList.ElementAt (boundaryIndex - 1).Add (obs [i] [j]);
+				}
+				// Dig deeper
+				depthFirstSearchForObstacles (i - 1, j, boundaryIndex);
+				depthFirstSearchForObstacles (i, j + 1, boundaryIndex);
+				depthFirstSearchForObstacles (i + 1, j, boundaryIndex);
+				depthFirstSearchForObstacles (i, j - 1, boundaryIndex);
+			}
+			
+			// Boundary of the map
+			if (i == 0 && j > 0 && j < jmax && (!obs [i + 1] [j].blocked || !obs [i] [j - 1].blocked || !obs [i] [j + 1].blocked)) {
+				obs [i] [j].obstacleBelongTo = boundaryIndex;
+				if (boundaryContoursList.Count != boundaryIndex) {
+					List<Cell> boundary = new List<Cell> ();
+					boundaryContoursList.Add (boundary);
+					boundaryContoursList.ElementAt (boundaryIndex - 1).Add (obs [i] [j]);
+				} else if (boundaryContoursList.Count == boundaryIndex) {
+					boundaryContoursList.ElementAt (boundaryIndex - 1).Add (obs [i] [j]);
+				}
+				depthFirstSearchForObstacles (i, j + 1, boundaryIndex);
+				depthFirstSearchForObstacles (i + 1, j, boundaryIndex);
+				depthFirstSearchForObstacles (i, j - 1, boundaryIndex);
+			}
+			if (j == 0 && i > 0 && i < imax && (!obs [i - 1] [j].blocked || !obs [i + 1] [j].blocked || !obs [i][j+1].blocked)) {
+				obs [i] [j].obstacleBelongTo = boundaryIndex;
+				if (boundaryContoursList.Count != boundaryIndex) {
+					List<Cell> boundary = new List<Cell> ();
+					boundaryContoursList.Add (boundary);
+					boundaryContoursList.ElementAt (boundaryIndex - 1).Add (obs [i] [j]);
+				} else if (boundaryContoursList.Count == boundaryIndex) {
+					boundaryContoursList.ElementAt (boundaryIndex - 1).Add (obs [i] [j]);
+				}
+				depthFirstSearchForObstacles (i - 1, j, boundaryIndex);
+				depthFirstSearchForObstacles (i, j + 1, boundaryIndex);
+				depthFirstSearchForObstacles (i + 1, j, boundaryIndex);
+			}
+			if (i == imax && j > 0 && j < jmax
+				&& (!obs [i -1] [j].blocked || !obs [i][j-1].blocked || !obs [i][j+1].blocked)) {
+				obs [i] [j].obstacleBelongTo = boundaryIndex;
+				if (boundaryContoursList.Count != boundaryIndex) {
+					List<Cell> boundary = new List<Cell> ();
+					boundaryContoursList.Add (boundary);
+					boundaryContoursList.ElementAt (boundaryIndex - 1).Add (obs [i] [j]);
+				} else if (boundaryContoursList.Count == boundaryIndex) {
+					boundaryContoursList.ElementAt (boundaryIndex - 1).Add (obs [i] [j]);
+				}
+				depthFirstSearchForObstacles (i - 1, j, boundaryIndex);
+				depthFirstSearchForObstacles (i, j + 1, boundaryIndex);
+				depthFirstSearchForObstacles (i, j - 1, boundaryIndex);	
+			}
+			if (j == jmax && i > 0 && i < imax
+				&& (!obs [i -1] [j].blocked || !obs [i][j-1].blocked || !obs [i + 1][j].blocked)) {
+				obs [i] [j].obstacleBelongTo = boundaryIndex;
+				if (boundaryContoursList.Count != boundaryIndex) {
+					List<Cell> boundary = new List<Cell> ();
+					boundaryContoursList.Add (boundary);
+					boundaryContoursList.ElementAt (boundaryIndex - 1).Add (obs [i] [j]);
+				} else if (boundaryContoursList.Count == boundaryIndex) {
+					boundaryContoursList.ElementAt (boundaryIndex - 1).Add (obs [i] [j]);
+				}
+				depthFirstSearchForObstacles (i - 1, j, boundaryIndex);
+				depthFirstSearchForObstacles (i + 1, j, boundaryIndex);
+				depthFirstSearchForObstacles (i, j - 1, boundaryIndex);
+			}
+			if (i == 0 && j == 0 && (!obs [i] [j + 1].blocked || !obs [i + 1] [j].blocked)) {
+				obs [i] [j].obstacleBelongTo = boundaryIndex;
+				if (boundaryContoursList.Count != boundaryIndex) {
+					List<Cell> boundary = new List<Cell> ();
+					boundaryContoursList.Add (boundary);
+					boundaryContoursList.ElementAt (boundaryIndex - 1).Add (obs [i] [j]);
+				} else if (boundaryContoursList.Count == boundaryIndex) {
+					boundaryContoursList.ElementAt (boundaryIndex - 1).Add (obs [i] [j]);
+				}
+				depthFirstSearchForObstacles (i, j + 1, boundaryIndex);
+				depthFirstSearchForObstacles (i + 1, j, boundaryIndex);
+			}
+			if (i == 0 && j == jmax && (!obs [i] [j - 1].blocked || !obs [i + 1] [j].blocked)) {	
+				obs [i] [j].obstacleBelongTo = boundaryIndex;
+				if (boundaryContoursList.Count != boundaryIndex) {
+					List<Cell> boundary = new List<Cell> ();
+					boundaryContoursList.Add (boundary);
+					boundaryContoursList.ElementAt (boundaryIndex - 1).Add (obs [i] [j]);
+				} else if (boundaryContoursList.Count == boundaryIndex) {
+					boundaryContoursList.ElementAt (boundaryIndex - 1).Add (obs [i] [j]);
+				}
+				depthFirstSearchForObstacles (i, j - 1, boundaryIndex);
+				depthFirstSearchForObstacles (i + 1, j, boundaryIndex);
+			}
+			if (j == 0 && i == imax && (!obs [i - 1] [j].blocked || !obs [i] [j + 1].blocked)) {
+				if (boundaryContoursList.Count != boundaryIndex) {
+					List<Cell> boundary = new List<Cell> ();
+					boundaryContoursList.Add (boundary);
+					boundaryContoursList.ElementAt (boundaryIndex - 1).Add (obs [i] [j]);
+				} else if (boundaryContoursList.Count == boundaryIndex) {
+					boundaryContoursList.ElementAt (boundaryIndex - 1).Add (obs [i] [j]);
+				}
+				depthFirstSearchForObstacles (i, j + 1, boundaryIndex);
+				depthFirstSearchForObstacles (i - 1, j, boundaryIndex);
+			}
+			if (j == jmax && i == imax && (!obs [i - 1] [j].blocked || !obs [i] [j - 1].blocked)) {
+				obs [i] [j].obstacleBelongTo = boundaryIndex;
+				if (boundaryContoursList.Count != boundaryIndex) {
+					List<Cell> boundary = new List<Cell> ();
+					boundaryContoursList.Add (boundary);
+					boundaryContoursList.ElementAt (boundaryIndex - 1).Add (obs [i] [j]);
+				} else if (boundaryContoursList.Count == boundaryIndex) {
+					boundaryContoursList.ElementAt (boundaryIndex - 1).Add (obs [i] [j]);
+				}
+				depthFirstSearchForObstacles (i, j - 1, boundaryIndex);
+				depthFirstSearchForObstacles (i - 1, j, boundaryIndex);
+			}
+			
+			// Not boundary but blocked
+			if (i >0 && j > 0 && i < imax && j < jmax 
+				&& obs [i - 1] [j].blocked && obs [i - 1] [j + 1].blocked && obs [i] [j + 1].blocked
+				&& obs [i + 1] [j + 1].blocked && obs [i + 1] [j].blocked && obs [i + 1] [j - 1].blocked
+				&& obs [i] [j - 1].blocked && obs [i - 1] [j - 1].blocked ) {
+				obs [i] [j].obstacleBelongTo = 0;	
+			}
+			if (i == 0 && j > 0 && j < jmax
+				&& obs [i] [j + 1].blocked && obs [i + 1] [j + 1].blocked && obs [i + 1] [j].blocked && obs [i + 1] [j - 1].blocked
+				&& obs [i] [j - 1].blocked) {
+				obs [i] [j].obstacleBelongTo = 0;	
+			}
+			if (j == 0 && i > 0 && i < imax
+				&& obs [i - 1] [j].blocked && obs [i - 1] [j + 1].blocked && obs [i] [j + 1].blocked
+				&& obs [i + 1] [j + 1].blocked && obs [i + 1] [j].blocked ) {
+				obs [i] [j].obstacleBelongTo = 0;
+			}
+			if (i == imax && j > 0 && j < jmax
+				&& obs [i - 1] [j].blocked && obs [i - 1] [j + 1].blocked && obs [i] [j + 1].blocked
+				&& obs [i] [j - 1].blocked && obs [i - 1] [j - 1].blocked ) {
+				obs [i] [j].obstacleBelongTo = 0;
+			}
+			if (j == jmax && i > 0 && i < imax
+				&& obs [i - 1] [j].blocked && obs [i + 1] [j].blocked && obs [i + 1] [j - 1].blocked
+				&& obs [i] [j - 1].blocked && obs [i - 1] [j - 1].blocked ) {
+				obs [i] [j].obstacleBelongTo = 0;
+			}
+			if (i == 0 && j == 0 && obs [i] [j + 1].blocked && obs [i + 1] [j + 1].blocked && obs [i + 1] [j].blocked ) {
+				obs [i] [j].obstacleBelongTo = 0;
+			}
+			if (i == 0 && j == jmax && obs [i] [j - 1].blocked && obs [i + 1] [j - 1].blocked && obs [i] [j - 1].blocked ) {
+				obs [i] [j].obstacleBelongTo = 0;
+			}
+			if (i == imax && j == jmax && obs [i - 1] [j].blocked && obs [i - 1] [j - 1].blocked && obs [i] [j - 1].blocked ) {
+				obs [i] [j].obstacleBelongTo = 0;
+			}
+			if (i == imax && j == 0 && obs [i - 1] [j].blocked && obs [i - 1] [j + 1].blocked && obs [i] [j + 1].blocked ) {
+				obs [i] [j].obstacleBelongTo = 0;
+			}
+			
+		}
+		return;
+	}
+	
+	public void boundaryContoursFlooding (GameObject floor) 
+	{
+
+		imax = (int)(floor.collider.bounds.size.x / SpaceState.TileSize.x);
+		jmax = (int)(floor.collider.bounds.size.z / SpaceState.TileSize.y);
+		
+		calculateFreeCells (floor);
+		while (freeCells.Count != 0) {
+		//for (int a = 0; a < 6; a++) {
+			foreach (List<Cell> boundaryContour in boundaryContoursList) {
+				int numOfCells = boundaryContour.Count;
+				bool changedLT = false, changedRT = false, changedRB = false, changedLB = false;
+				for (int cnt = 0; cnt < numOfCells; cnt++) {
+					Cell boundaryCell = boundaryContour.First ();
+					if (boundaryCell.i > 0 && obs [boundaryCell.i - 1] [boundaryCell.j].obstacleBelongTo == -1) {
+						obs [boundaryCell.i - 1] [boundaryCell.j].obstacleBelongTo = boundaryCell.obstacleBelongTo;
+						boundaryContour.Add (obs [boundaryCell.i - 1] [boundaryCell.j]);
+						freeCells.Remove (obs [boundaryCell.i - 1] [boundaryCell.j]);
+					}
+					if (boundaryCell.i > 0 && boundaryCell.j < jmax && obs [boundaryCell.i - 1] [boundaryCell.j + 1].obstacleBelongTo == -1) {
+						changedLT = true;
+						obs [boundaryCell.i - 1] [boundaryCell.j + 1].obstacleBelongTo = boundaryCell.obstacleBelongTo;
+						boundaryContour.Add (obs [boundaryCell.i - 1] [boundaryCell.j + 1]);
+						freeCells.Remove (obs [boundaryCell.i - 1] [boundaryCell.j + 1]);
+					}
+					if (boundaryCell.j < jmax && obs [boundaryCell.i] [boundaryCell.j + 1].obstacleBelongTo == -1) {
+						obs [boundaryCell.i] [boundaryCell.j + 1].obstacleBelongTo = boundaryCell.obstacleBelongTo;
+						boundaryContour.Add (obs [boundaryCell.i] [boundaryCell.j + 1]);
+						freeCells.Remove (obs [boundaryCell.i] [boundaryCell.j + 1]);
+					}
+					if (boundaryCell.i < imax && boundaryCell.j < jmax && obs [boundaryCell.i + 1] [boundaryCell.j + 1].obstacleBelongTo == -1) {
+						changedRT = true;
+						obs [boundaryCell.i + 1] [boundaryCell.j + 1].obstacleBelongTo = boundaryCell.obstacleBelongTo;
+						boundaryContour.Add (obs [boundaryCell.i + 1] [boundaryCell.j + 1]);
+						freeCells.Remove (obs [boundaryCell.i + 1] [boundaryCell.j + 1]);
+					}
+					if (boundaryCell.i < imax && obs [boundaryCell.i + 1] [boundaryCell.j].obstacleBelongTo == -1) {
+						obs [boundaryCell.i + 1] [boundaryCell.j].obstacleBelongTo = boundaryCell.obstacleBelongTo;
+						boundaryContour.Add (obs [boundaryCell.i + 1] [boundaryCell.j]);
+						freeCells.Remove (obs [boundaryCell.i + 1] [boundaryCell.j]);
+					}
+					if (boundaryCell.i < imax && boundaryCell.j > 0 && obs [boundaryCell.i + 1] [boundaryCell.j - 1].obstacleBelongTo == -1) {
+						changedRB = true;
+						obs [boundaryCell.i + 1] [boundaryCell.j - 1].obstacleBelongTo = boundaryCell.obstacleBelongTo;
+						boundaryContour.Add (obs [boundaryCell.i + 1] [boundaryCell.j - 1]);	
+						freeCells.Remove (obs [boundaryCell.i + 1] [boundaryCell.j - 1]);
+					}
+					if (boundaryCell.j > 0 && obs [boundaryCell.i] [boundaryCell.j - 1].obstacleBelongTo == -1) {
+						obs [boundaryCell.i] [boundaryCell.j - 1].obstacleBelongTo = boundaryCell.obstacleBelongTo;
+						boundaryContour.Add (obs [boundaryCell.i] [boundaryCell.j - 1]);
+						freeCells.Remove (obs [boundaryCell.i] [boundaryCell.j - 1]);
+					}
+					if (boundaryCell.i > 0 && boundaryCell.j > 0 && obs [boundaryCell.i - 1] [boundaryCell.j - 1].obstacleBelongTo == -1) {
+						changedLB = true;
+						obs [boundaryCell.i - 1] [boundaryCell.j - 1].obstacleBelongTo = boundaryCell.obstacleBelongTo;
+						boundaryContour.Add (obs [boundaryCell.i - 1] [boundaryCell.j - 1]);
+						freeCells.Remove (obs [boundaryCell.i - 1] [boundaryCell.j - 1]);
+					}
+					
+					// Dealing with collision
+					if (changedLT) {
+						if (boundaryCell.i > 0 && boundaryCell.j < jmax && ((obs [boundaryCell.i - 1] [boundaryCell.j].obstacleBelongTo != -1
+							&& obs [boundaryCell.i - 1] [boundaryCell.j].obstacleBelongTo != 0
+							&& obs [boundaryCell.i - 1] [boundaryCell.j].obstacleBelongTo != boundaryCell.obstacleBelongTo)
+							|| (obs [boundaryCell.i] [boundaryCell.j + 1].obstacleBelongTo != -1
+							&& obs [boundaryCell.i] [boundaryCell.j + 1].obstacleBelongTo != 0
+							&& obs [boundaryCell.i] [boundaryCell.j + 1].obstacleBelongTo != boundaryCell.obstacleBelongTo))) {
+							obs [boundaryCell.i - 1] [boundaryCell.j + 1].obstacleBelongTo = -1;
+						}
+					}
+					if (changedRT) {
+						if (boundaryCell.i < imax && boundaryCell.j < jmax && ((obs [boundaryCell.i] [boundaryCell.j + 1].obstacleBelongTo != -1
+							&& obs [boundaryCell.i] [boundaryCell.j + 1].obstacleBelongTo != 0
+							&& obs [boundaryCell.i] [boundaryCell.j + 1].obstacleBelongTo != boundaryCell.obstacleBelongTo)
+							|| (obs [boundaryCell.i + 1] [boundaryCell.j].obstacleBelongTo != -1
+							&& obs [boundaryCell.i + 1] [boundaryCell.j].obstacleBelongTo != 0
+							&& obs [boundaryCell.i + 1] [boundaryCell.j].obstacleBelongTo != boundaryCell.obstacleBelongTo))) {
+							obs [boundaryCell.i + 1] [boundaryCell.j + 1].obstacleBelongTo = -1;
+						}
+					}
+					if (changedRB) {
+						if (boundaryCell.i < imax && boundaryCell.j > 0 && ((obs [boundaryCell.i + 1] [boundaryCell.j].obstacleBelongTo != -1
+							&& obs [boundaryCell.i + 1] [boundaryCell.j].obstacleBelongTo != 0
+							&& obs [boundaryCell.i + 1] [boundaryCell.j].obstacleBelongTo != boundaryCell.obstacleBelongTo)
+							|| (obs [boundaryCell.i] [boundaryCell.j - 1].obstacleBelongTo != -1
+							&& obs [boundaryCell.i] [boundaryCell.j - 1].obstacleBelongTo != 0
+							&& obs [boundaryCell.i] [boundaryCell.j - 1].obstacleBelongTo != boundaryCell.obstacleBelongTo))) {
+							obs [boundaryCell.i + 1] [boundaryCell.j - 1].obstacleBelongTo = -1;
+						}
+					}
+					if (changedLB) {
+						if (boundaryCell.i > 0 && boundaryCell.j > 0 && ((obs [boundaryCell.i - 1] [boundaryCell.j].obstacleBelongTo != -1
+							&& obs [boundaryCell.i - 1] [boundaryCell.j].obstacleBelongTo != 0
+							&& obs [boundaryCell.i - 1] [boundaryCell.j].obstacleBelongTo != boundaryCell.obstacleBelongTo)
+							|| (obs [boundaryCell.i] [boundaryCell.j - 1].obstacleBelongTo != -1
+							&& obs [boundaryCell.i] [boundaryCell.j - 1].obstacleBelongTo != 0
+							&& obs [boundaryCell.i] [boundaryCell.j - 1].obstacleBelongTo != boundaryCell.obstacleBelongTo))) {
+							obs [boundaryCell.i - 1] [boundaryCell.j - 1].obstacleBelongTo = -1;;
+						}
+					}
+					boundaryContour.RemoveAt (0);
+					changedLT = changedRT = changedRB = changedLB = false;
+				}
+			}
+		}
+	}
+	
+	private void calculateFreeCells (GameObject floor)
+	{
+		for (int i = 0; i < (int)(floor.collider.bounds.size.x / SpaceState.TileSize.x) + 1; i++) {
+			for (int j = 0; j < (int)(floor.collider.bounds.size.z / SpaceState.TileSize.y) + 1; j++) {
+				if (obs [i] [j].obstacleBelongTo == -1) {
+					freeCells.Add (obs [i] [j]);
+				}
+			}	
+		}
+	}
 	
 	public void calculateBoundaries (GameObject floor)
 	{

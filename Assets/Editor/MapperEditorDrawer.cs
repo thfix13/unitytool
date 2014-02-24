@@ -16,7 +16,7 @@ public class MapperEditorDrawer : MonoBehaviour
 	public int timeSlice;
 	public Vector2 zero = new Vector2 ();
 	public Vector2 tileSize = new Vector2 ();
-	public bool drawMap = true, drawMoveMap = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = true, drawPath = false, editGrid = false, drawFoVOnly = false, drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawRoadmaps = false;
+	public bool drawMap = true, drawMoveMap = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = true, drawPath = false, editGrid = false, drawFoVOnly = false, drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawBoundaries = false, drawRoadmaps = false, drawRoadmaps2 = false;
 	public Cell[][] editingGrid;
 	public Cell[][] eVoronoiGrid;
 	public Cell[][] cVoronoiGrid;
@@ -39,7 +39,6 @@ public class MapperEditorDrawer : MonoBehaviour
 			for (int x = 0; x < editingGrid.Length; x++)
 				for (int y = 0; y < editingGrid[x].Length; y++) {
 					Cell c = editingGrid [x] [y];
-				
 					if (drawFoVOnly) {
 						if (c != null && c.seen)
 							Gizmos.color = orange;
@@ -152,7 +151,73 @@ public class MapperEditorDrawer : MonoBehaviour
 				}
 		}
 		
-
+		if (drawBoundaries && sBoundaryGrid != null) {
+			for (int x = 0; x < sBoundaryGrid.Length; x++) {
+				for (int y = 0; y < sBoundaryGrid[x].Length; y++) {
+					Cell c = sBoundaryGrid [x] [y];
+					if (c.obstacleBelongTo >= 0) {
+						switch (c.obstacleBelongTo % 14) {
+						case 0:
+							
+							Gizmos.color = Color.gray;
+							break;
+						case 1:
+							Gizmos.color = Color.yellow;
+							break; 
+						case 2:
+							Gizmos.color = Color.Lerp (Color.magenta, Color.blue, 0.6f);
+							;
+							break;
+						case 3:
+							Gizmos.color = Color.cyan;
+							break;
+						case 4:
+							Gizmos.color = Color.magenta;
+							break;
+						case 5:
+							Gizmos.color = Color.blue;
+							break;
+						case 6:
+							Gizmos.color = Color.Lerp (Color.red, Color.yellow, 0.4f);
+							break;
+						case 7:
+							Gizmos.color = Color.Lerp (Color.yellow, Color.blue, 0.2f);
+							break;
+						case 8:
+							Gizmos.color = Color.Lerp (Color.red, Color.blue, 0.2f);
+							break;
+						case 9:
+							Gizmos.color = Color.Lerp (Color.green, Color.red, 0.2f);
+							break;
+						case 10:
+							Gizmos.color = Color.Lerp (Color.green, Color.yellow, 0.7f);
+							break;
+						case 11:
+							Gizmos.color = Color.Lerp (Color.blue, Color.green, 0.3f);
+							break;
+						case 12:
+							Gizmos.color = Color.Lerp (Color.magenta, Color.gray, 0.6f);
+							break;
+						case 13:
+							Gizmos.color = Color.Lerp (Color.cyan, Color.yellow, 0.6f);
+							break;
+						default:
+							break;
+						}
+						
+						Gizmos.DrawCube (new Vector3
+								(x * tileSize.x + zero.x + tileSize.x / 2f,
+								0.1f,
+								y * tileSize.y + zero.y + tileSize.y / 2f),
+								new Vector3
+									(tileSize.x - tileSize.x * 0.05f,
+									0.0f,
+									tileSize.y - tileSize.y * 0.05f));
+					}
+				}
+			}
+		}
+		
 		if (drawVoronoiForBoundaries && sBoundaryGrid != null) {
 			for (int x = 0; x < sBoundaryGrid.Length; x++) {
 				for (int y = 0; y < sBoundaryGrid[x].Length; y++) {
@@ -346,7 +411,8 @@ public class MapperEditorDrawer : MonoBehaviour
 					}
 				}
 			}
-		}		
+		}
+		
 		if (drawRoadmaps && sBoundaryGrid != null && contoursList.Count != 0) {
 			foreach (ContourNode root in contoursList) {
 				ContourNode currentNode = root;
@@ -355,7 +421,33 @@ public class MapperEditorDrawer : MonoBehaviour
 				}
 			}
 		}
-
+		
+		if (drawRoadmaps2 && sBoundaryGrid != null) {
+			for (int x = 0; x < sBoundaryGrid.Length; x++) {
+				for (int y = 0; y < sBoundaryGrid[x].Length; y++) {
+					Cell c = sBoundaryGrid [x] [y];
+					if (c.obstacleBelongTo != 0) {
+						Gizmos.color = Color.magenta;
+						if (x > 0 && c.obstacleBelongTo != sBoundaryGrid [x - 1] [y].obstacleBelongTo && sBoundaryGrid [x - 1] [y].obstacleBelongTo != 0) {
+							Gizmos.DrawLine (new Vector3 ((x * tileSize.x + zero.x), 0.1f, (y * tileSize.y + zero.y + tileSize.y)), 
+								new Vector3 ((x * tileSize.x + zero.x), 0.1f, (y * tileSize.y + zero.y)));
+						}
+						if (y < (sBoundaryGrid [x].Length - 1) && c.obstacleBelongTo != sBoundaryGrid [x] [y + 1].obstacleBelongTo && sBoundaryGrid [x] [y + 1].obstacleBelongTo != 0) {
+							Gizmos.DrawLine (new Vector3 ((x * tileSize.x + zero.x), 0.1f, (y * tileSize.y + zero.y + tileSize.y)), 
+								new Vector3 ((x * tileSize.x + zero.x + tileSize.x), 0.1f, (y * tileSize.y + zero.y + tileSize.y)));							
+						}
+						if (x < (sBoundaryGrid.Length - 1) && c.obstacleBelongTo != sBoundaryGrid [x + 1] [y].obstacleBelongTo && sBoundaryGrid [x + 1] [y].obstacleBelongTo != 0) {
+							Gizmos.DrawLine (new Vector3 ((x * tileSize.x + zero.x + tileSize.x), 2f, (y * tileSize.y + zero.y + tileSize.y)), 
+								new Vector3 ((x * tileSize.x + zero.x + tileSize.x), 0.1f, (y * tileSize.y + zero.y)));							
+						}
+						if (y > 0 && c.obstacleBelongTo != sBoundaryGrid [x] [y - 1].obstacleBelongTo && sBoundaryGrid [x] [y - 1].obstacleBelongTo != 0) {
+							Gizmos.DrawLine (new Vector3 ((x * tileSize.x + zero.x), 0.1f, (y * tileSize.y + zero.y)), 
+								new Vector3 ((x * tileSize.x + zero.x + tileSize.x), 0.1f, (y * tileSize.y + zero.y)));							
+						}
+					}
+				}
+			}
+		}
 	}
 	
 	private void recurse (ContourNode currentContourNode)

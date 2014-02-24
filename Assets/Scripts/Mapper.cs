@@ -25,6 +25,8 @@ public class Mapper : MonoBehaviour
 				pos.Set ((x + tileSizeX / 2 - cellsX / 2) * tileSizeX, 0f, (y + tileSizeZ / 2 - cellsZ / 2) * tileSizeZ);
 				c.blocked = Physics.CheckSphere (pos, (tileSizeX + tileSizeZ) / 4, 1 << layer);
 				baseMap [x] [y] = c;
+				baseMap [x] [y].i = x;
+				baseMap [x] [y].j = y;
 			}
 		}
 

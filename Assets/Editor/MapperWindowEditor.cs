@@ -16,7 +16,7 @@ public class MapperWindowEditor : EditorWindow
 	public static List<Node> mostDanger = null, shortest = null, lengthiest = null, fastest = null, longest = null;
 	// Parameters
 	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 75, ticksBehind = 0, numOfEnemies = 0, numOfRegionsForEnemies = 0, numOfCameras = 0, numOfRegionsForCameras = 0, iterations2 = 5, iterations3 = 5, noeB = 0, nocB = 0, noreB = 0, norcB = 0;
-	public static bool drawMap = true, drawMoveMap = false, drawMoveUnits = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = false, drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawRoadmaps = false, smoothPath = true, drawShortestPath = false, drawLongestPath = false, drawLengthiestPath = false, drawFastestPath = false, drawMostDangerousPath = false, drawFoVOnly = false, seeByTime = false, seeByLength = false, seeByDanger = false, seeByLoS = false, seeByDanger3 = false, seeByLoS3 = false, seeByDanger3Norm = false, seeByLoS3Norm = false, seeByCrazy = false, seeByVelocity = false;
+	public static bool drawMap = true, drawMoveMap = false, drawMoveUnits = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = false, drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawBoundaries = false, drawRoadmaps = false, drawRoadmaps2 = false, smoothPath = true, drawShortestPath = false, drawLongestPath = false, drawLengthiestPath = false, drawFastestPath = false, drawMostDangerousPath = false, drawFoVOnly = false, seeByTime = false, seeByLength = false, seeByDanger = false, seeByLoS = false, seeByDanger3 = false, seeByLoS3 = false, seeByDanger3Norm = false, seeByLoS3Norm = false, seeByCrazy = false, seeByVelocity = false;
 	public static bool randomOpEnables = false, setPathOpEnables = false, setRotationOpEnables = false;
 	public static bool setEnemiesFoldout = false, setCameraFoldout = false, queryeVoronoiDiagramFoldout = false, querycVoronoiDiagramFoldout = false, computePathFoldout = false, default1 = true, default2 = true, default3 = true, default4 = true, default5 = true, default6 = true;
 	public static float stepSize = 1 / 10f, crazySeconds = 5f;
@@ -959,29 +959,56 @@ public class MapperWindowEditor : EditorWindow
 				Cell[][] grid = MapperEditor.grid;
 				if (grid != null) {
 					for (int x = 0; x < obs.Length; x++) {
-						for (int y = 0; y < obs[x].Length; y++)
-							if (grid [x] [y] != null)
-								obs [x] [y] = grid [x] [y];
+						for (int y = 0; y < obs[x].Length; y++) {
+							if (grid [x] [y] != null) {
+								obs [x] [y] = grid [x] [y];	
+							}
+						}
 					}
 				}
 				PCG.InitializeSkeleton (obs);
 			}
-			PCG.sBoundary.calculateBoundaries (floor);
-		}
-		
-		if (GUILayout.Button ("Flooding")) {
-			PCG.sBoundary.boundaryPointsFlooding (floor);
+			PCG.sBoundary.identifyObstacleContours (floor);
 			drawer.sBoundaryGrid = PCG.sBoundary.obs;
 		}
 		
-		drawVoronoiForBoundaries = EditorGUILayout.Toggle ("Draw Voronoi Cells", drawVoronoiForBoundaries);
+		drawBoundaries = EditorGUILayout.Toggle ("Draw Boundaries", drawBoundaries);
 		
-		if (GUILayout.Button ("Retrieve Roadmap")) {
-			PCG.sBoundary.extractContours (floor);	
-			drawer.contoursList = PCG.sBoundary.contoursList;
+		if (GUILayout.Button ("Boundaries Flooding")) {
+			PCG.sBoundary.boundaryContoursFlooding (floor);
 		}
 		
-		drawRoadmaps = EditorGUILayout.Toggle ("Draw Roadmaps", drawRoadmaps);
+		drawRoadmaps2 = EditorGUILayout.Toggle ("Draw Roadmaps", drawRoadmaps2);
+		
+//		if (GUILayout.Button ("Select Boundaries")) {
+//			if (obs == null) { 
+//				obs = mapper.ComputeObstacles ();
+//				Cell[][] grid = MapperEditor.grid;
+//				if (grid != null) {
+//					for (int x = 0; x < obs.Length; x++) {
+//						for (int y = 0; y < obs[x].Length; y++)
+//							if (grid [x] [y] != null)
+//								obs [x] [y] = grid [x] [y];
+//					}
+//				}
+//				PCG.InitializeSkeleton (obs);
+//			}
+//			PCG.sBoundary.calculateBoundaries (floor);
+//		}
+//		
+//		if (GUILayout.Button ("Flooding")) {
+//			PCG.sBoundary.boundaryPointsFlooding (floor);
+//			drawer.sBoundaryGrid = PCG.sBoundary.obs;
+//		}
+//		
+//		drawVoronoiForBoundaries = EditorGUILayout.Toggle ("Draw Voronoi Cells", drawVoronoiForBoundaries);
+//		
+//		if (GUILayout.Button ("Retrieve Roadmap")) {
+//			PCG.sBoundary.extractContours (floor);	
+//			drawer.contoursList = PCG.sBoundary.contoursList;
+//		}
+//		
+//		drawRoadmaps = EditorGUILayout.Toggle ("Draw Roadmaps", drawRoadmaps);
 		
 		#endregion
 		
@@ -1022,7 +1049,9 @@ public class MapperWindowEditor : EditorWindow
 			drawer.drawVoronoiForEnemies = drawVoronoiForEnemies;
 			drawer.drawVoronoiForCameras = drawVoronoiForCameras;
 			drawer.drawVoronoiForBoundaries = drawVoronoiForBoundaries;
+			drawer.drawBoundaries = drawBoundaries;
 			drawer.drawRoadmaps = drawRoadmaps;
+			drawer.drawRoadmaps2 = drawRoadmaps2;
 		}
 		
 		if (fullMap != null && lastTime != timeSlice) {
