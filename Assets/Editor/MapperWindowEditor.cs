@@ -983,6 +983,7 @@ public class MapperWindowEditor : EditorWindow
 		if (GUILayout.Button ("Extract Roadmaps")) {
 			PCG.sBoundary.extractRoadmaps (floor);
 			drawer.roadmapNodesList = PCG.sBoundary.roadmapNodesList;
+			PCG.sBoundary.selectSuperNodes ();
 		}
 		
 		drawRoadmaps3 = EditorGUILayout.Toggle ("Draw Roadmaps Nodes", drawRoadmaps3);

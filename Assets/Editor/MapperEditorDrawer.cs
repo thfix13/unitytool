@@ -481,7 +481,7 @@ public class MapperEditorDrawer : MonoBehaviour
 	private void recurse (RoadmapNode currentRoadmapNode)
 	{
 		RoadmapNode parent = currentRoadmapNode.parent;
-		if (parent.x1 != -1 && parent.x1 != -1 && parent.x2 != -1 && parent.x2 != -1) {
+		if (parent.x1 != -1 && parent.x1 != -1 && parent.x2 != -1 && parent.x2 != -1 && currentRoadmapNode.isKept == true) {
 			Gizmos.color = Color.red;
 			Gizmos.DrawSphere (new Vector3 ((currentRoadmapNode.x1 * tileSize.x + zero.x + tileSize.x / 2f + currentRoadmapNode.x2 * tileSize.x + zero.x + tileSize.x / 2f) / 2f, 0f, 
 				(currentRoadmapNode.y1 * tileSize.y + zero.y + tileSize.y / 2f + currentRoadmapNode.y2 * tileSize.y + zero.y + tileSize.y / 2f) / 2f), 0.05f);

@@ -442,6 +442,70 @@ public class Skeletonization
 		}
 	}
 	
+	public void selectSuperNodes ()
+	{
+		foreach (RoadmapNode root in roadmapNodesList) {
+			RoadmapNode currentNode = root;
+			foreach (RoadmapNode rn in currentNode.children) {
+				rn.isKept = true;
+				recurse (rn);
+			}
+		}
+	}
+	
+	private void recurse (RoadmapNode currentRoadmapNode)
+	{
+		RoadmapNode parent = currentRoadmapNode.parent;
+		if (parent.x1 != -1 && parent.x1 != -1 && parent.x2 != -1 && parent.x2 != -1) {
+			// -
+			if (currentRoadmapNode.x1 == currentRoadmapNode.x2 && currentRoadmapNode.y2 - currentRoadmapNode.y2 == 1) {
+				foreach (RoadmapNode childRoadmapNode in currentRoadmapNode.children) {
+					if (childRoadmapNode.y1 == childRoadmapNode.y2 && childRoadmapNode.x2 - childRoadmapNode.x1 == 1) {
+						//currentRoadmapNode.isKept = true;
+						recurseChildren (childRoadmapNode);
+					}
+				}
+			}
+			// |
+			if (currentRoadmapNode.y1 == currentRoadmapNode.y2 && currentRoadmapNode.x2 - currentRoadmapNode.x1 == 1) {
+				foreach (RoadmapNode childRoadmapNode in currentRoadmapNode.children) {
+					if (childRoadmapNode.x1 == childRoadmapNode.x2 && childRoadmapNode.y2 - childRoadmapNode.y1 == 1) {
+						//currentRoadmapNode.isKept = true;
+						recurseChildren (childRoadmapNode);
+					}
+				}
+			}
+		}
+		if (currentRoadmapNode.children.Count == 0) {
+			//currentRoadmapNode.isKept = true;
+			return;	
+		} else {
+			foreach (RoadmapNode rn in currentRoadmapNode.children) {
+				recurse (rn);	
+			}
+		}
+		return;
+	}
+	
+	private void recurseChildren (RoadmapNode currentRoadmapNode) 
+	{	
+		if (currentRoadmapNode.children.Count == 0) {
+			return;	
+		} else {
+			foreach (RoadmapNode rn in currentRoadmapNode.children) {
+				if (currentRoadmapNode.y1 == currentRoadmapNode.y2 && currentRoadmapNode.x2 - currentRoadmapNode.x1 == 1
+					&& rn.x1 == rn.x2 && rn.y2 - rn.y1 == 1) {
+					recurseChildren (rn);
+				} else if (currentRoadmapNode.x1 == currentRoadmapNode.x2 && currentRoadmapNode.y2 - currentRoadmapNode.y1 == 1
+					&& rn.y1 == rn.y2 && rn.x2 - rn.x1 == 1) {
+					recurseChildren (rn);
+				}
+			}
+			//currentRoadmapNode.isKept = true;
+		}
+		return;
+	}
+	
 	public void boundaryPointsFlooding (GameObject floor)
 	{
 		int numOfPoints = boundaryArray.Count;

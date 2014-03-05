@@ -7,7 +7,7 @@ public class RoadmapNode
 {
 	public int x1, y1, x2, y2;
 	public float posX, posY;
-	public bool isKept = true;
+	public bool isKept = false;
 	public bool isVisited = false;
 	
 	// Parenting
