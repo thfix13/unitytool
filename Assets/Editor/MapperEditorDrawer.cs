@@ -16,12 +16,13 @@ public class MapperEditorDrawer : MonoBehaviour
 	public int timeSlice;
 	public Vector2 zero = new Vector2 ();
 	public Vector2 tileSize = new Vector2 ();
-	public bool drawMap = true, drawMoveMap = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = true, drawPath = false, editGrid = false, drawFoVOnly = false, drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawBoundaries = false, drawRoadmaps = false, drawRoadmaps2 = false;
+	public bool drawMap = true, drawMoveMap = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = true, drawPath = false, editGrid = false, drawFoVOnly = false, drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawBoundaries = false, drawRoadmaps = false, drawRoadmaps2 = false, drawRoadmaps3 = false;
 	public Cell[][] editingGrid;
 	public Cell[][] eVoronoiGrid;
 	public Cell[][] cVoronoiGrid;
 	public Cell[][] sBoundaryGrid;
 	public List<ContourNode> contoursList = null;
+	public List<RoadmapNode> roadmapNodesList = null;
 		
 	// Fixed values
 	private Color orange = new Color (1.0f, 0.64f, 0f, 1f), transparent = new Color (1f, 1f, 1f, 0f);
@@ -448,6 +449,15 @@ public class MapperEditorDrawer : MonoBehaviour
 				}
 			}
 		}
+		
+		if (drawRoadmaps3 && sBoundaryGrid != null && roadmapNodesList.Count != 0) {
+			foreach (RoadmapNode root in roadmapNodesList) {
+				RoadmapNode currentNode = root;
+				foreach (RoadmapNode rn in currentNode.children) {
+					recurse (rn);
+				}
+			}
+		}
 	}
 	
 	private void recurse (ContourNode currentContourNode)
@@ -463,6 +473,24 @@ public class MapperEditorDrawer : MonoBehaviour
 		} else {
 			foreach (ContourNode cn in currentContourNode.children) {
 				recurse (cn);	
+			}
+		}
+		return;
+	}
+	
+	private void recurse (RoadmapNode currentRoadmapNode)
+	{
+		RoadmapNode parent = currentRoadmapNode.parent;
+		if (parent.x1 != -1 && parent.x1 != -1 && parent.x2 != -1 && parent.x2 != -1) {
+			Gizmos.color = Color.red;
+			Gizmos.DrawSphere (new Vector3 ((currentRoadmapNode.x1 * tileSize.x + zero.x + tileSize.x / 2f + currentRoadmapNode.x2 * tileSize.x + zero.x + tileSize.x / 2f) / 2f, 0f, 
+				(currentRoadmapNode.y1 * tileSize.y + zero.y + tileSize.y / 2f + currentRoadmapNode.y2 * tileSize.y + zero.y + tileSize.y / 2f) / 2f), 0.05f);
+		}
+		if (currentRoadmapNode.children.Count == 0) {
+			return;	
+		} else {
+			foreach (RoadmapNode rn in currentRoadmapNode.children) {
+				recurse (rn);	
 			}
 		}
 		return;

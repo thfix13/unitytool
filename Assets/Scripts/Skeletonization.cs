@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +19,10 @@ public class Skeletonization
 	public int boundaryIndex = 0;
 	public List<List<Cell>> boundaryContoursList = new List<List<Cell>> ();
 	public List<Cell> freeCells = new List<Cell> ();
+	
+	// Roadmap Stuff
+	public List<RoadmapNode> roadmapNodesList = new List<RoadmapNode> ();
+	public Dictionary<string, RoadmapNode> roadmapDictionary = new Dictionary<string, RoadmapNode> ();
 	
 	public void identifyObstacleContours (GameObject floor)
 	{
@@ -217,7 +221,6 @@ public class Skeletonization
 	
 	public void boundaryContoursFlooding (GameObject floor) 
 	{
-
 		imax = (int)(floor.collider.bounds.size.x / SpaceState.TileSize.x);
 		jmax = (int)(floor.collider.bounds.size.z / SpaceState.TileSize.y);
 		
@@ -324,13 +327,91 @@ public class Skeletonization
 	
 	private void calculateFreeCells (GameObject floor)
 	{
-		for (int i = 0; i < (int)(floor.collider.bounds.size.x / SpaceState.TileSize.x) + 1; i++) {
-			for (int j = 0; j < (int)(floor.collider.bounds.size.z / SpaceState.TileSize.y) + 1; j++) {
+		for (int i = 0; i < imax + 1; i++) {
+			for (int j = 0; j < jmax + 1; j++) {
 				if (obs [i] [j].obstacleBelongTo == -1) {
 					freeCells.Add (obs [i] [j]);
 				}
 			}	
 		}
+	}
+	
+	public void extractRoadmaps (GameObject floor) 
+	{
+		imax = (int)(floor.collider.bounds.size.x / SpaceState.TileSize.x);
+		jmax = (int)(floor.collider.bounds.size.z / SpaceState.TileSize.y);
+		
+		constructDictionary ();
+		
+		for (int i = 0; i < imax + 1; i++) {
+			for (int j = 0; j < jmax + 1; j++) {
+				if (obs [i] [j].obstacleBelongTo == 0) {
+					continue;
+				}
+				RoadmapNode root = new RoadmapNode (-1, -1, -1, -1);
+				depthFirstSearchForRoadmaps (i, j, i, j + 1, root);
+				depthFirstSearchForRoadmaps (i, j, i + 1, j, root);
+				if (root.children.Count != 0) {
+					roadmapNodesList.Add (root);
+				}
+			}
+		}
+	}
+	
+	private void constructDictionary () 
+	{
+		for (int i = 0; i < imax + 1; i++) {
+			for (int j = 0; j < jmax + 1; j++) {
+				RoadmapNode rn1 = new RoadmapNode (i, j, i, j + 1);
+				RoadmapNode rn2 = new RoadmapNode (i, j, i + 1, j);
+				int i2 = i + 1, j2 = j + 1;
+				roadmapDictionary.Add (i + ", " + j + ", " + i + ", " + j2, rn1);
+				roadmapDictionary.Add (i + ", " + j + ", " + i2 + ", " + j, rn2);
+			}
+		}
+	}
+	
+	private void depthFirstSearchForRoadmaps (int i1, int j1, int i2, int j2, RoadmapNode parent)
+	{
+		if (roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2].isVisited == true) {
+			return;	
+		}
+		// Guarantee x1 <= x2 && y1 <= y2 to avoid duplicated roadmap nodes
+		if ((i2 - i1 == 0) && (j2 - j1 == 1)) {
+			if (j1 < jmax && obs [i1] [j1].obstacleBelongTo != obs [i2] [j2].obstacleBelongTo && obs [i2] [j2].obstacleBelongTo != 0) {
+				RoadmapNode rn = new RoadmapNode (i1, j1, i2, j2);
+				rn.isVisited = true;
+				rn.parent = parent; 
+				parent.children.Add (rn);
+				roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2].isVisited = true;
+				// obs [i1] [j1].visited = true;
+				// Dig deeper
+				depthFirstSearchForRoadmaps (i1 + 1, j1, i1 + 1, j1 + 1, rn);
+				depthFirstSearchForRoadmaps (i1 - 1, j1, i1 - 1, j1 + 1, rn);
+				depthFirstSearchForRoadmaps (i1 - 1, j1 + 1, i1, j1 + 1, rn);
+				depthFirstSearchForRoadmaps (i1, j1 + 1, i1 + 1, j1 + 1, rn);
+				depthFirstSearchForRoadmaps (i1 - 1, j1, i1, j1, rn);
+				depthFirstSearchForRoadmaps (i1, j1, i1 + 1, j1, rn);			
+			}
+		}
+		if ((i2 - i1 == 1) && (j2 - j1 == 0)) {
+			if (i1 < imax && obs [i1] [j1].obstacleBelongTo != obs [i2] [j2].obstacleBelongTo && obs [i2] [j2].obstacleBelongTo != 0) {
+				RoadmapNode rn = new RoadmapNode (i1, j1, i2, j2);
+				rn.isVisited = true;
+				rn.parent = parent;
+				parent.children.Add (rn);
+				roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2].isVisited = true;
+				// obs [i] [j].visited = true;
+				// Dig deeper
+				depthFirstSearchForRoadmaps (i1, j1 + 1, i1 + 1, j1 + 1, rn);
+				depthFirstSearchForRoadmaps (i1, j1 - 1, i1 + 1, j1 - 1, rn);
+				depthFirstSearchForRoadmaps (i1, j1, i1, j1 + 1, rn);
+				depthFirstSearchForRoadmaps (i1, j1 - 1, i1, j1, rn);
+				depthFirstSearchForRoadmaps (i1 + 1, j1, i1 + 1, j1 + 1, rn);
+				depthFirstSearchForRoadmaps (i1 + 1, j1 - 1, i1 + 1, j1, rn);
+			}
+		}
+		return;
 	}
 	
 	public void calculateBoundaries (GameObject floor)
