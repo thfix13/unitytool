@@ -458,26 +458,68 @@ public class Skeletonization
 		RoadmapNode parent = currentRoadmapNode.parent;
 		if (parent.x1 != -1 && parent.x1 != -1 && parent.x2 != -1 && parent.x2 != -1) {
 			// -
-			if (currentRoadmapNode.x1 == currentRoadmapNode.x2 && currentRoadmapNode.y2 - currentRoadmapNode.y2 == 1) {
-				foreach (RoadmapNode childRoadmapNode in currentRoadmapNode.children) {
-					if (childRoadmapNode.y1 == childRoadmapNode.y2 && childRoadmapNode.x2 - childRoadmapNode.x1 == 1) {
-						//currentRoadmapNode.isKept = true;
-						recurseChildren (childRoadmapNode);
-					}
+			if (currentRoadmapNode.x1 == currentRoadmapNode.x2 && currentRoadmapNode.y2 - currentRoadmapNode.y1 == 1) {
+				// check top-left
+				if (roadmapDictionary [(currentRoadmapNode.x2 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].isVisited == true) {
+					currentRoadmapNode.isKept = true;
+					recurseChildren (roadmapDictionary [(currentRoadmapNode.x2 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2]);					
 				}
+				// check top-right
+				if (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].isVisited == true) {
+					currentRoadmapNode.isKept = true;
+					recurseChildren (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2]);										
+				}
+				// check bot-left
+				if (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].isVisited == true) {
+					currentRoadmapNode.isKept = true;
+					recurseChildren (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1]);										
+				}
+				// check bot-right
+				if (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1].isVisited == true) {
+					currentRoadmapNode.isKept = true;
+					recurseChildren (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1]);										
+				}
+				
+//				foreach (RoadmapNode childRoadmapNode in currentRoadmapNode.children) {
+//					if (childRoadmapNode.y1 == childRoadmapNode.y2 && childRoadmapNode.x2 - childRoadmapNode.x1 == 1) {
+//						currentRoadmapNode.isKept = true;
+//						recurseChildren (childRoadmapNode);
+//					}
+//				}
 			}
 			// |
 			if (currentRoadmapNode.y1 == currentRoadmapNode.y2 && currentRoadmapNode.x2 - currentRoadmapNode.x1 == 1) {
-				foreach (RoadmapNode childRoadmapNode in currentRoadmapNode.children) {
-					if (childRoadmapNode.x1 == childRoadmapNode.x2 && childRoadmapNode.y2 - childRoadmapNode.y1 == 1) {
-						//currentRoadmapNode.isKept = true;
-						recurseChildren (childRoadmapNode);
-					}
+				// check top-left
+				if (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1)].isVisited == true) {
+					currentRoadmapNode.isKept = true;
+					recurseChildren (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1)]);					
 				}
+				// check top-right
+				if (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].isVisited == true) {
+					currentRoadmapNode.isKept = true;
+					recurseChildren (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)]);										
+				}
+				// check bot-left
+				if (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].isVisited == true) {
+					currentRoadmapNode.isKept = true;
+					recurseChildren (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1]);										
+				}
+				// check bot-right
+				if (roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].isVisited == true) {
+					currentRoadmapNode.isKept = true;
+					recurseChildren (roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2]);										
+				}	
+			
+//				foreach (RoadmapNode childRoadmapNode in currentRoadmapNode.children) {
+//					if (childRoadmapNode.x1 == childRoadmapNode.x2 && childRoadmapNode.y2 - childRoadmapNode.y1 == 1) {
+//						currentRoadmapNode.isKept = true;
+//						recurseChildren (childRoadmapNode);
+//					}
+//				}
 			}
 		}
 		if (currentRoadmapNode.children.Count == 0) {
-			//currentRoadmapNode.isKept = true;
+			currentRoadmapNode.isKept = true;
 			return;	
 		} else {
 			foreach (RoadmapNode rn in currentRoadmapNode.children) {
@@ -501,7 +543,7 @@ public class Skeletonization
 					recurseChildren (rn);
 				}
 			}
-			//currentRoadmapNode.isKept = true;
+			currentRoadmapNode.isKept = true;
 		}
 		return;
 	}
