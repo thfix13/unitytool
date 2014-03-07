@@ -24,6 +24,9 @@ public class Skeletonization
 	public List<RoadmapNode> roadmapNodesList = new List<RoadmapNode> ();
 	public Dictionary<string, RoadmapNode> roadmapDictionary = new Dictionary<string, RoadmapNode> ();
 	
+	// Graph Stuff
+	public List<GraphNode> graphNodesList = new List<GraphNode> ();
+	
 	public void identifyObstacleContours (GameObject floor)
 	{
 		imax = (int)(floor.collider.bounds.size.x / SpaceState.TileSize.x);
@@ -606,6 +609,46 @@ public class Skeletonization
 			return;
 		}
 		return;
+	}
+	
+	
+	public void initializeGraph () 
+	{
+		foreach (RoadmapNode root in roadmapNodesList) {
+			RoadmapNode currentNode = root;
+			foreach (RoadmapNode rn in currentNode.children) {
+				GraphNode gn = new GraphNode (rn.x1, rn.y1, rn.x2, rn.y2);
+				graphNodesList.Add (gn);
+				depthFirstSearchForGraphNodes (rn, gn);
+			}
+		}		
+	}
+	
+	private void depthFirstSearchForGraphNodes (RoadmapNode currentRoadmapNode, GraphNode prevGraphNode)
+	{
+		RoadmapNode parentRoadmapNode = currentRoadmapNode.parent;
+		GraphNode gn = new GraphNode (prevGraphNode.x1, prevGraphNode.y1, prevGraphNode.x2, prevGraphNode.y2);
+		if (parentRoadmapNode.x1 != -1 && parentRoadmapNode.y1 != -1 && parentRoadmapNode.x2 != -1 && parentRoadmapNode.y2 != -1) {
+			if (currentRoadmapNode.isKept == true) {
+				gn.setIndice (currentRoadmapNode.x1, currentRoadmapNode.y1, currentRoadmapNode.x2, currentRoadmapNode.y2);
+				graphNodesList.Add (gn);
+				gn.neighbors.Add (prevGraphNode);
+				prevGraphNode.neighbors.Add (gn);
+			}
+		}
+		if (currentRoadmapNode.children.Count == 0) {
+			return;	
+		} else {
+			foreach (RoadmapNode rn in currentRoadmapNode.children) {
+				depthFirstSearchForGraphNodes (rn, gn);	
+			}
+		}
+		return;
+	}
+	
+	public void fuse ()
+	{
+		// Operate on the adjacent list	
 	}
 	
 	public void boundaryPointsFlooding (GameObject floor)
