@@ -9,6 +9,7 @@ public class RoadmapNode
 	public float posX, posY;
 	public bool isKept = false;
 	public bool isVisited = false;
+	public bool isChecked = false;
 	
 	// Parenting
 	public RoadmapNode parent = null;

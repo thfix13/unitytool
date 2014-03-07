@@ -379,36 +379,30 @@ public class Skeletonization
 		// Guarantee x1 <= x2 && y1 <= y2 to avoid duplicated roadmap nodes
 		if ((i2 - i1 == 0) && (j2 - j1 == 1)) {
 			if (j1 < jmax && obs [i1] [j1].obstacleBelongTo != obs [i2] [j2].obstacleBelongTo && obs [i2] [j2].obstacleBelongTo != 0) {
-				RoadmapNode rn = new RoadmapNode (i1, j1, i2, j2);
-				rn.isVisited = true;
-				rn.parent = parent; 
-				parent.children.Add (rn);
 				roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2].isVisited = true;
-				// obs [i1] [j1].visited = true;
+				roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2].parent = parent;
+				parent.children.Add (roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2]);
 				// Dig deeper
-				depthFirstSearchForRoadmaps (i1 + 1, j1, i1 + 1, j1 + 1, rn);
-				depthFirstSearchForRoadmaps (i1 - 1, j1, i1 - 1, j1 + 1, rn);
-				depthFirstSearchForRoadmaps (i1 - 1, j1 + 1, i1, j1 + 1, rn);
-				depthFirstSearchForRoadmaps (i1, j1 + 1, i1 + 1, j1 + 1, rn);
-				depthFirstSearchForRoadmaps (i1 - 1, j1, i1, j1, rn);
-				depthFirstSearchForRoadmaps (i1, j1, i1 + 1, j1, rn);			
+				depthFirstSearchForRoadmaps (i1 + 1, j1, i1 + 1, j1 + 1, roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2]);
+				depthFirstSearchForRoadmaps (i1 - 1, j1, i1 - 1, j1 + 1, roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2]);
+				depthFirstSearchForRoadmaps (i1 - 1, j1 + 1, i1, j1 + 1, roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2]);
+				depthFirstSearchForRoadmaps (i1, j1 + 1, i1 + 1, j1 + 1, roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2]);
+				depthFirstSearchForRoadmaps (i1 - 1, j1, i1, j1, roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2]);
+				depthFirstSearchForRoadmaps (i1, j1, i1 + 1, j1, roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2]);			
 			}
 		}
 		if ((i2 - i1 == 1) && (j2 - j1 == 0)) {
 			if (i1 < imax && obs [i1] [j1].obstacleBelongTo != obs [i2] [j2].obstacleBelongTo && obs [i2] [j2].obstacleBelongTo != 0) {
-				RoadmapNode rn = new RoadmapNode (i1, j1, i2, j2);
-				rn.isVisited = true;
-				rn.parent = parent;
-				parent.children.Add (rn);
 				roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2].isVisited = true;
-				// obs [i] [j].visited = true;
+				roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2].parent = parent;
+				parent.children.Add (roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2]);
 				// Dig deeper
-				depthFirstSearchForRoadmaps (i1, j1 + 1, i1 + 1, j1 + 1, rn);
-				depthFirstSearchForRoadmaps (i1, j1 - 1, i1 + 1, j1 - 1, rn);
-				depthFirstSearchForRoadmaps (i1, j1, i1, j1 + 1, rn);
-				depthFirstSearchForRoadmaps (i1, j1 - 1, i1, j1, rn);
-				depthFirstSearchForRoadmaps (i1 + 1, j1, i1 + 1, j1 + 1, rn);
-				depthFirstSearchForRoadmaps (i1 + 1, j1 - 1, i1 + 1, j1, rn);
+				depthFirstSearchForRoadmaps (i1, j1 + 1, i1 + 1, j1 + 1, roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2]);
+				depthFirstSearchForRoadmaps (i1, j1 - 1, i1 + 1, j1 - 1, roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2]);
+				depthFirstSearchForRoadmaps (i1, j1, i1, j1 + 1, roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2]);
+				depthFirstSearchForRoadmaps (i1, j1 - 1, i1, j1, roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2]);
+				depthFirstSearchForRoadmaps (i1 + 1, j1, i1 + 1, j1 + 1, roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2]);
+				depthFirstSearchForRoadmaps (i1 + 1, j1 - 1, i1 + 1, j1, roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2]);
 			}
 		}
 		return;
@@ -453,97 +447,163 @@ public class Skeletonization
 		}
 	}
 	
+	// Recurse through the connected roadmap
 	private void recurse (RoadmapNode currentRoadmapNode)
 	{
-		RoadmapNode parent = currentRoadmapNode.parent;
-		if (parent.x1 != -1 && parent.x1 != -1 && parent.x2 != -1 && parent.x2 != -1) {
-			// -
-			if (currentRoadmapNode.x1 == currentRoadmapNode.x2 && currentRoadmapNode.y2 - currentRoadmapNode.y1 == 1) {
-				// check top-left
-				if (roadmapDictionary [(currentRoadmapNode.x2 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].isVisited == true) {
-					currentRoadmapNode.isKept = true;
-					recurseChildren (roadmapDictionary [(currentRoadmapNode.x2 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2]);					
-				}
-				// check top-right
-				if (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].isVisited == true) {
-					currentRoadmapNode.isKept = true;
-					recurseChildren (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2]);										
-				}
-				// check bot-left
-				if (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].isVisited == true) {
-					currentRoadmapNode.isKept = true;
-					recurseChildren (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1]);										
-				}
-				// check bot-right
-				if (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1].isVisited == true) {
-					currentRoadmapNode.isKept = true;
-					recurseChildren (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1]);										
-				}
-				
-//				foreach (RoadmapNode childRoadmapNode in currentRoadmapNode.children) {
-//					if (childRoadmapNode.y1 == childRoadmapNode.y2 && childRoadmapNode.x2 - childRoadmapNode.x1 == 1) {
-//						currentRoadmapNode.isKept = true;
-//						recurseChildren (childRoadmapNode);
-//					}
-//				}
+		// -
+		if (currentRoadmapNode.x1 == currentRoadmapNode.x2 && currentRoadmapNode.y2 - currentRoadmapNode.y1 == 1 && currentRoadmapNode.isChecked == false) {
+			// check top-left
+			if (roadmapDictionary [(currentRoadmapNode.x2 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].isVisited == true
+				&& roadmapDictionary [(currentRoadmapNode.x2 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].isChecked == false) {
+				currentRoadmapNode.isKept = true;
+				recurseChildren (roadmapDictionary [(currentRoadmapNode.x2 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2]);					
 			}
-			// |
-			if (currentRoadmapNode.y1 == currentRoadmapNode.y2 && currentRoadmapNode.x2 - currentRoadmapNode.x1 == 1) {
-				// check top-left
-				if (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1)].isVisited == true) {
-					currentRoadmapNode.isKept = true;
-					recurseChildren (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1)]);					
-				}
-				// check top-right
-				if (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].isVisited == true) {
-					currentRoadmapNode.isKept = true;
-					recurseChildren (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)]);										
-				}
-				// check bot-left
-				if (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].isVisited == true) {
-					currentRoadmapNode.isKept = true;
-					recurseChildren (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1]);										
-				}
-				// check bot-right
-				if (roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].isVisited == true) {
-					currentRoadmapNode.isKept = true;
-					recurseChildren (roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2]);										
-				}	
-			
-//				foreach (RoadmapNode childRoadmapNode in currentRoadmapNode.children) {
-//					if (childRoadmapNode.x1 == childRoadmapNode.x2 && childRoadmapNode.y2 - childRoadmapNode.y1 == 1) {
-//						currentRoadmapNode.isKept = true;
-//						recurseChildren (childRoadmapNode);
-//					}
-//				}
+			// check top-right
+			if (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].isVisited == true
+				&& roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].isChecked == false) {
+				currentRoadmapNode.isKept = true;
+				recurseChildren (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2]);										
+			}
+			// check bot-left
+			if (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].isVisited == true
+				&& roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].isChecked == false) {
+				currentRoadmapNode.isKept = true;
+				recurseChildren (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1]);										
+			}
+			// check bot-right
+			if (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1].isVisited == true
+				&& roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1].isChecked == false) {				
+				currentRoadmapNode.isKept = true;
+				recurseChildren (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1]);										
+			}
+		}
+		// |
+		if (currentRoadmapNode.y1 == currentRoadmapNode.y2 && currentRoadmapNode.x2 - currentRoadmapNode.x1 == 1 && currentRoadmapNode.isChecked == false) {
+			// check top-left
+			if (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1)].isVisited == true
+				&& roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1)].isChecked == false) {				
+				currentRoadmapNode.isKept = true;
+				recurseChildren (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1)]);					
+			}
+			// check top-right
+			if (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].isVisited == true
+				&& roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].isChecked == false) {					
+				currentRoadmapNode.isKept = true;
+				recurseChildren (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)]);										
+			}
+			// check bot-left
+			if (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].isVisited == true
+				&& roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].isChecked == false) {
+				currentRoadmapNode.isKept = true;
+				recurseChildren (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1]);										
+			}
+			// check bot-right
+			if (roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].isVisited == true
+				&& roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].isChecked == false) {					
+				currentRoadmapNode.isKept = true;
+				recurseChildren (roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2]);										
 			}
 		}
 		if (currentRoadmapNode.children.Count == 0) {
+			// Assign a node at the end of roadmap
 			currentRoadmapNode.isKept = true;
+			currentRoadmapNode.isChecked = true;
 			return;	
 		} else {
 			foreach (RoadmapNode rn in currentRoadmapNode.children) {
+				currentRoadmapNode.isChecked = true;
 				recurse (rn);	
 			}
 		}
 		return;
 	}
 	
+	// Ignore redundant nodes produced by Zig-zag 
 	private void recurseChildren (RoadmapNode currentRoadmapNode) 
-	{	
-		if (currentRoadmapNode.children.Count == 0) {
-			return;	
-		} else {
-			foreach (RoadmapNode rn in currentRoadmapNode.children) {
-				if (currentRoadmapNode.y1 == currentRoadmapNode.y2 && currentRoadmapNode.x2 - currentRoadmapNode.x1 == 1
-					&& rn.x1 == rn.x2 && rn.y2 - rn.y1 == 1) {
-					recurseChildren (rn);
-				} else if (currentRoadmapNode.x1 == currentRoadmapNode.x2 && currentRoadmapNode.y2 - currentRoadmapNode.y1 == 1
-					&& rn.y1 == rn.y2 && rn.x2 - rn.x1 == 1) {
-					recurseChildren (rn);
-				}
+	{
+		// |
+		if (currentRoadmapNode.y1 == currentRoadmapNode.y2 && currentRoadmapNode.x2 - currentRoadmapNode.x1 == 1) {
+			// Check top-left edge
+			if (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1)].isVisited == true
+				&& roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1)].isChecked == false) {
+				currentRoadmapNode.isChecked = true;
+				recurseChildren (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1)]);					
 			}
-			currentRoadmapNode.isKept = true;
+			// Check top-right edge
+			if (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].isVisited == true
+				&& roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].isChecked == false) {
+				currentRoadmapNode.isChecked = true;
+				recurseChildren (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)]);										
+			}
+			// Check bot-left edge
+			if (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].isVisited == true
+				&& roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].isChecked == false) {
+				currentRoadmapNode.isChecked = true;
+				recurseChildren (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1]);										
+			}
+			// Check bot-right edge
+			if (roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].isVisited == true
+				&& roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].isChecked == false) {
+				currentRoadmapNode.isChecked = true;
+				recurseChildren (roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2]);										
+			}
+			// Check top edge
+			if (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].isVisited == true
+				&& roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].isChecked == false) {
+				currentRoadmapNode.isChecked = true;
+				currentRoadmapNode.isKept = true;
+				return;
+			}
+			// Check bot edge
+			if (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1)].isVisited == true
+				&& roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1)].isChecked == false) {
+				currentRoadmapNode.isChecked = true;
+				currentRoadmapNode.isKept = true;
+				return;
+			}
+			return;
+		}
+		// -
+		if (currentRoadmapNode.x1 == currentRoadmapNode.x2 && currentRoadmapNode.y2 - currentRoadmapNode.y1 == 1) {
+			// Check top-left edge
+			if (roadmapDictionary [(currentRoadmapNode.x2 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].isVisited == true
+				&& roadmapDictionary [(currentRoadmapNode.x2 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].isChecked == false) {
+				currentRoadmapNode.isChecked = true;
+				recurseChildren (roadmapDictionary [(currentRoadmapNode.x2 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2]);					
+			}
+			// Check top-right edge
+			if (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].isVisited == true
+				&& roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].isChecked == false) {
+				currentRoadmapNode.isChecked = true;
+				recurseChildren (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2]);										
+			}
+			// Check bot-left edge
+			if (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].isVisited == true
+				&& roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].isChecked == false) {
+				currentRoadmapNode.isChecked = true;
+				recurseChildren (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1]);										
+			}
+			// Check bot-right edge
+			if (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1].isVisited == true
+				&& roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1].isChecked == false) {
+				currentRoadmapNode.isChecked = true;
+				recurseChildren (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1]);										
+			}
+			// Check left edge
+			if (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x2 - 1) + ", " + currentRoadmapNode.y2].isVisited == true
+				&& roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x2 - 1) + ", " + currentRoadmapNode.y2].isChecked == false) {
+				currentRoadmapNode.isChecked = true;
+				currentRoadmapNode.isKept = true;
+				return;
+			}
+			// Check right edge
+			if (roadmapDictionary [(currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].isVisited == true
+				&& roadmapDictionary [(currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].isChecked == false) {
+				currentRoadmapNode.isChecked = true;
+				currentRoadmapNode.isKept = true;			
+				return;
+			}
+			return;
 		}
 		return;
 	}
