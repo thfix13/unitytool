@@ -14,6 +14,7 @@ public class RoadmapNode
 	// Parenting
 	public RoadmapNode parent = null;
 	public List<RoadmapNode> children = new List<RoadmapNode> ();
+	public GraphNode previous = null;
 	
 	public RoadmapNode (int i1, int j1, int i2, int j2)
 	{

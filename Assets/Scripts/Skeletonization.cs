@@ -26,6 +26,7 @@ public class Skeletonization
 	
 	// Graph Stuff
 	public List<GraphNode> graphNodesList = new List<GraphNode> ();
+	public List<GraphNode> finalGraphNodesList = new List<GraphNode> ();
 	
 	public void identifyObstacleContours (GameObject floor)
 	{
@@ -614,6 +615,7 @@ public class Skeletonization
 	
 	public void initializeGraph () 
 	{
+		// Collect all graph nodes
 		foreach (RoadmapNode root in roadmapNodesList) {
 			RoadmapNode currentNode = root;
 			foreach (RoadmapNode rn in currentNode.children) {
@@ -621,34 +623,353 @@ public class Skeletonization
 				graphNodesList.Add (gn);
 				depthFirstSearchForGraphNodes (rn, gn);
 			}
-		}		
+		}
+		
+		// Reconstruct a graph
+		
+		foreach (GraphNode gn in graphNodesList) {
+			GraphNode graphNode = new GraphNode (gn.x1, gn.y1, gn.x2, gn.y2);
+			finalGraphNodesList.Add (graphNode);
+		}
+		foreach (GraphNode gn in graphNodesList) {
+			foreach (GraphNode neighbor in gn.neighbors) {
+				foreach (GraphNode finalGraphNode in finalGraphNodesList) {
+					if (finalGraphNode.x1 == gn.x1 && finalGraphNode.y1 == gn.y1 && finalGraphNode.x2 == gn.x2 && finalGraphNode.y2 == gn.y2) {
+						foreach (GraphNode finalNeighbor in finalGraphNodesList) {
+							if (finalNeighbor.x1 == neighbor.x1 && finalNeighbor.y1 == neighbor.y1 && finalNeighbor.x2 == neighbor.x2 && finalNeighbor.y2 == neighbor.y2) {
+								if (!finalGraphNode.neighbors.Contains (finalNeighbor)) {
+									finalGraphNode.neighbors.Add (finalNeighbor);
+								}
+								if (!finalNeighbor.neighbors.Contains (finalGraphNode)) {
+									finalNeighbor.neighbors.Add (finalGraphNode);
+								}
+							}
+						}
+		
+					}
+				}
+			}
+		}
+	
+		foreach (GraphNode currentGraphNode in finalGraphNodesList) {
+			// Is a tail node
+			if (currentGraphNode.neighbors.Count == 1) {
+				//Debug.Log ("Cur: x1:" + currentGraphNode.x1 + ", y1: " + currentGraphNode.y1 + ", x2: " + currentGraphNode.x2 + ", y2: " + currentGraphNode.y2);	
+				int minDist = int.MaxValue;
+				GraphNode nearestNode = null;
+				GraphNode theOnlyNeighbor = currentGraphNode.neighbors.ElementAt (0);
+				int xVector = theOnlyNeighbor.x1 - currentGraphNode.x1;
+				if (xVector == 0) {
+					xVector = theOnlyNeighbor.x2 - currentGraphNode.x2;	
+				}
+				if (xVector > 0) {
+					foreach (GraphNode gn in finalGraphNodesList) {
+						if (gn.x1 - currentGraphNode.x1 < 0 || gn.x2 - currentGraphNode.x2 < 0) {
+							int tempDist = gn.distance (currentGraphNode);
+							if (tempDist < minDist) {
+								minDist = tempDist;
+								nearestNode = gn;
+							}
+						}
+					}
+				}
+				if (xVector < 0) {
+					foreach (GraphNode gn in finalGraphNodesList) {
+						if (gn.x1 - currentGraphNode.x1 > 0 || gn.x2 - currentGraphNode.x2 > 0) {
+							int tempDist = gn.distance (currentGraphNode);
+							if (tempDist < minDist) {
+								minDist = tempDist;
+								nearestNode = gn;
+							}
+						}
+					}					
+				}
+				if (xVector == 0) {
+					int yVector = theOnlyNeighbor.y1 - currentGraphNode.y1;
+					if (yVector == 0) {
+						yVector = theOnlyNeighbor.y2 - currentGraphNode.y2;	
+					}
+					if (yVector > 0) {
+						foreach (GraphNode gn in finalGraphNodesList) {
+							if (gn.y1 - currentGraphNode.y1 < 0 || gn.y2 - currentGraphNode.y2 < 0) {
+								int tempDist = gn.distance (currentGraphNode);
+								if (tempDist < minDist) {
+									minDist = tempDist;
+									nearestNode = gn;
+								}
+							}
+						}
+					}
+					if (yVector < 0) {
+						foreach (GraphNode gn in finalGraphNodesList) {
+							if (gn.y1 - currentGraphNode.y1 > 0 || gn.y2 - currentGraphNode.y2 > 0) {
+								int tempDist = gn.distance (currentGraphNode);
+								if (tempDist < minDist) {
+									minDist = tempDist;
+									nearestNode = gn;
+								}
+							}
+						}					
+					}					
+				}
+				if (nearestNode != null) {
+					currentGraphNode.neighbors.Add (nearestNode);
+					nearestNode.neighbors.Add (currentGraphNode);
+				}
+			}
+		}
+		
+		// Collect all graph edges
 	}
 	
 	private void depthFirstSearchForGraphNodes (RoadmapNode currentRoadmapNode, GraphNode prevGraphNode)
 	{
 		RoadmapNode parentRoadmapNode = currentRoadmapNode.parent;
+		//Debug.Log ("Prev: x1:" + prevGraphNode.x1 + ", y1: " + prevGraphNode.y1 + ", x2: " + prevGraphNode.x2 + ", y2: " + prevGraphNode.y2);		
+		//Debug.Log ("Cur: x1:" + currentRoadmapNode.x1 + ", y1: " + currentRoadmapNode.y1 + ", x2: " + currentRoadmapNode.x2 + ", y2: " + currentRoadmapNode.y2);		
 		GraphNode gn = new GraphNode (prevGraphNode.x1, prevGraphNode.y1, prevGraphNode.x2, prevGraphNode.y2);
 		if (parentRoadmapNode.x1 != -1 && parentRoadmapNode.y1 != -1 && parentRoadmapNode.x2 != -1 && parentRoadmapNode.y2 != -1) {
 			if (currentRoadmapNode.isKept == true) {
-				gn.setIndice (currentRoadmapNode.x1, currentRoadmapNode.y1, currentRoadmapNode.x2, currentRoadmapNode.y2);
-				graphNodesList.Add (gn);
-				gn.neighbors.Add (prevGraphNode);
-				prevGraphNode.neighbors.Add (gn);
+					gn.setIndice (currentRoadmapNode.x1, currentRoadmapNode.y1, currentRoadmapNode.x2, currentRoadmapNode.y2);
+					graphNodesList.Add (gn);
+					gn.neighbors.Add (prevGraphNode);
+					prevGraphNode.neighbors.Add (gn);
+					currentRoadmapNode.previous = gn;
+					gn.isVisited = true;
+				
+				// Deal with corner cases leading to wrong previous graphnode
+				// -
+				if (currentRoadmapNode.x1 == currentRoadmapNode.x2 && currentRoadmapNode.y2 - currentRoadmapNode.y1 == 1) {
+					if (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y2].isKept == false 
+						&& roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y2].isVisited == true) {
+						roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y2].previous = gn;					
+					}
+					if (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].isKept == false
+						&& roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].isVisited == true) {
+						roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].previous = gn;
+					}
+					if (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].isKept == false
+						 && roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].isVisited == true) {
+						roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].previous = gn;
+					}
+					if (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1].isKept == false
+						&& roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1].isVisited == true) {
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1].previous = gn;
+					}
+					if (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2].isKept == false
+						&& roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2].isVisited == true) {
+						roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2].previous = gn;	
+					}
+					if (roadmapDictionary [(currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y2].isKept == false
+						&& roadmapDictionary [(currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y2].isVisited == true) {
+						roadmapDictionary [(currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y2].previous = gn;	
+					}
+				}
+				// |
+				if (currentRoadmapNode.x2 - currentRoadmapNode.x1 == 1 && currentRoadmapNode.y1 == currentRoadmapNode.y2) {
+					if (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1)].isKept == false
+						&& roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1)].isVisited == true) {
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1)].previous = gn;
+					}
+					if (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].isKept == false
+						&& roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].isVisited == true) {
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].previous = gn;
+					}
+					if (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].isKept == false
+						&& roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].isVisited == true) {
+						roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].previous = gn;
+					}
+					if (roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].isKept == false
+						&& roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].isVisited == true) {
+						roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].previous = gn;
+					}
+					if (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].isKept == false
+						&& roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].isVisited == true) {
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].previous = gn;					
+					}	
+					if (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1)].isKept == false
+						&& roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1)].isVisited == true) {
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1)].previous = gn;	
+					}			
+				}
+			}
+			
+			// 
+			if (currentRoadmapNode.isKept == false) {
+				// Deal with corner cases leading to wrong previous graphnode
+				// -
+				if (currentRoadmapNode.x1 == currentRoadmapNode.x2 && currentRoadmapNode.y2 - currentRoadmapNode.y1 == 1) {
+					if (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y2].isKept == true 
+						&& roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0)
+						!= roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y2]
+						&& (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].parent != roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y2])) {
+//						|| roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.Contains (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y2]))) {
+						roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y2].previous = new GraphNode();
+						roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y2].previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
+						gn.setIndice (currentRoadmapNode.x1 - 1, currentRoadmapNode.y2, currentRoadmapNode.x1, currentRoadmapNode.y2);					
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous = new GraphNode();
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
+					}
+					if (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].isKept == true
+						&& roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0)
+						!= roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2]
+						&& (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].parent != roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2])) {
+//						|| roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.Contains (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2]))) {
+						roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].previous = new GraphNode();
+						roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
+						gn.setIndice (currentRoadmapNode.x2, currentRoadmapNode.y2, currentRoadmapNode.x2 + 1, currentRoadmapNode.y2);
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous = new GraphNode();
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);					
+					}
+					if (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].isKept == true
+						&& roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0)
+						!= roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1]
+						&& (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].parent != roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1])) {
+//						|| roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.Contains (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1]))) {
+						roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].previous = new GraphNode ();
+						roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
+						gn.setIndice (currentRoadmapNode.x1 -1, currentRoadmapNode.y1, currentRoadmapNode.x1, currentRoadmapNode.y1);
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous = new GraphNode ();
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);										
+					}
+					if (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1].isKept == true
+						&& roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0)
+						!= roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1]
+						&& (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].parent != roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1])) {
+//						|| roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.Contains (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1]))) {
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1].previous = new GraphNode ();
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1].previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
+						gn.setIndice (currentRoadmapNode.x1, currentRoadmapNode.y1, currentRoadmapNode.x1 + 1, currentRoadmapNode.y1);
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous = new GraphNode ();
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);					
+					}
+					if (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2].isKept == true
+						&& roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0)
+						!= roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2]
+						&& (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].parent != roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2])) {
+//						|| roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.Contains (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2]))) {
+						roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2].previous = new GraphNode ();
+						roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2].previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
+						gn.setIndice (currentRoadmapNode.x1 - 1, currentRoadmapNode.y1, currentRoadmapNode.x1 - 1, currentRoadmapNode.y2);
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous = new GraphNode ();
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);					
+					}
+					if (roadmapDictionary [(currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y2].isKept == true
+						&& roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0)
+						!= roadmapDictionary [(currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y2]
+						&& (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].parent != roadmapDictionary [(currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y2])) {
+//						|| roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.Contains (roadmapDictionary [(currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y2]))) {
+						roadmapDictionary [(currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y2].previous = new GraphNode ();
+						roadmapDictionary [(currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y2].previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
+						gn.setIndice (currentRoadmapNode.x1 + 1, currentRoadmapNode.y1, currentRoadmapNode.x1 + 1, currentRoadmapNode.y2);
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous = new GraphNode ();
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);										
+					}
+				}
+				// |
+				if (currentRoadmapNode.x2 - currentRoadmapNode.x1 == 1 && currentRoadmapNode.y1 == currentRoadmapNode.y2) {
+					// --------------------
+					if (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1)].isKept == true
+						&& roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0)
+						!= roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1)]
+						&& (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].parent != roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1)])) {
+//						|| roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.Contains (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1)]))) {
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1)].previous = new GraphNode ();
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1)].previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
+						gn.setIndice (currentRoadmapNode.x1, currentRoadmapNode.y1, currentRoadmapNode.x1, currentRoadmapNode.y1 + 1);					
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous = new GraphNode ();
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
+						
+					}
+					if (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].isKept == true
+						&& roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0)
+						!= roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1]
+						&& (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].parent != roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1])) {
+//						|| roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.Contains (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1]))) {
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].previous = new GraphNode ();
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
+						gn.setIndice (currentRoadmapNode.x1, currentRoadmapNode.y1 - 1, currentRoadmapNode.x1, currentRoadmapNode.y1);					
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous = new GraphNode ();
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
+					}
+					if (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].isKept == true
+						&& roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0)
+						!= roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)]
+						&& (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].parent != roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)])) {
+//						|| roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.Contains (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)]))) {
+						roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].previous = new GraphNode ();
+						roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
+						gn.setIndice (currentRoadmapNode.x2, currentRoadmapNode.y2, currentRoadmapNode.x2, currentRoadmapNode.y2 + 1);					
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous = new GraphNode ();
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
+					}
+					if (roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].isKept == true
+						&& roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0)
+						!= roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2]
+						&& (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].parent != roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2])) {
+//						|| roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.Contains (roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2]))) {
+						roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].previous = new GraphNode ();
+						roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
+						gn.setIndice (currentRoadmapNode.x2, currentRoadmapNode.y2 - 1, currentRoadmapNode.x2, currentRoadmapNode.y2);					
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous = new GraphNode ();
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
+					}
+					if (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].isKept == true
+						&& roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0)
+						!= roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)]
+						&& (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].parent != roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)])) {
+//						|| roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.Contains (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)]))) {
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].previous = new GraphNode ();	
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
+						gn.setIndice (currentRoadmapNode.x1, currentRoadmapNode.y1 + 1, currentRoadmapNode.x2, currentRoadmapNode.y2 + 1);					
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous = new GraphNode ();
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
+					}	
+					if (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1)].isKept == true
+						&& roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0) 
+						!= roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1)]
+						&& (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].parent != roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1)])) {
+//						|| roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.Contains (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1)]))) {
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1)].previous = new GraphNode ();
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1)].previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
+						gn.setIndice (currentRoadmapNode.x1, currentRoadmapNode.y1 - 1, currentRoadmapNode.x2, currentRoadmapNode.y2 - 1);					
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous = new GraphNode ();
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
+					}
+				}
 			}
 		}
 		if (currentRoadmapNode.children.Count == 0) {
+			// Connect tail node to a reasonable intermediate node by flooding
 			return;	
 		} else {
 			foreach (RoadmapNode rn in currentRoadmapNode.children) {
-				depthFirstSearchForGraphNodes (rn, gn);	
+				if ( rn.isVisited == true && rn.previous == null) {
+					if (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].previous != null) {
+						gn = roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].previous;
+					}
+					rn.previous = gn;	
+				}
+				depthFirstSearchForGraphNodes (rn, rn.previous);	
 			}
 		}
 		return;
 	}
 	
-	public void fuse ()
+	public void merge ()
 	{
 		// Operate on the adjacent list	
+		foreach (GraphNode currentGraphNode in finalGraphNodesList) {
+			foreach (GraphNode otherGraphNode in finalGraphNodesList) {
+				if (otherGraphNode != currentGraphNode) {
+					int distance = currentGraphNode.distance (otherGraphNode);
+					if (distance == 1) {
+						if (!(currentGraphNode.x1 == otherGraphNode.x1 && currentGraphNode.x2 == otherGraphNode.x2) || (currentGraphNode.y1 == otherGraphNode.y1 && currentGraphNode.y2 == otherGraphNode.y2)) {
+						}
+					}
+				}
+			}
+		}
 	}
 	
 	public void boundaryPointsFlooding (GameObject floor)

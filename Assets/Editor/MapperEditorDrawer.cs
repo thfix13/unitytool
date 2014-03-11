@@ -16,13 +16,14 @@ public class MapperEditorDrawer : MonoBehaviour
 	public int timeSlice;
 	public Vector2 zero = new Vector2 ();
 	public Vector2 tileSize = new Vector2 ();
-	public bool drawMap = true, drawMoveMap = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = true, drawPath = false, editGrid = false, drawFoVOnly = false, drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawBoundaries = false, drawRoadmaps = false, drawRoadmaps2 = false, drawRoadmaps3 = false;
+	public bool drawMap = true, drawMoveMap = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = true, drawPath = false, editGrid = false, drawFoVOnly = false, drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawBoundaries = false, drawRoadmaps = false, drawRoadmaps2 = false, drawRoadmaps3 = false, drawGraph = false;
 	public Cell[][] editingGrid;
 	public Cell[][] eVoronoiGrid;
 	public Cell[][] cVoronoiGrid;
 	public Cell[][] sBoundaryGrid;
 	public List<ContourNode> contoursList = null;
 	public List<RoadmapNode> roadmapNodesList = null;
+	public List<GraphNode> graphNodesList = null;
 		
 	// Fixed values
 	private Color orange = new Color (1.0f, 0.64f, 0f, 1f), transparent = new Color (1f, 1f, 1f, 0f);
@@ -455,6 +456,20 @@ public class MapperEditorDrawer : MonoBehaviour
 				RoadmapNode currentNode = root;
 				foreach (RoadmapNode rn in currentNode.children) {
 					recurse (rn);
+				}
+			}
+		}
+		
+		if (drawGraph && sBoundaryGrid != null && graphNodesList.Count != 0) {
+			foreach (GraphNode gn in graphNodesList) {
+				Gizmos.color = Color.gray;
+				Gizmos.DrawSphere (new Vector3 ((gn.x1 * tileSize.x + zero.x + tileSize.x / 2f + gn.x2 * tileSize.x + zero.x + tileSize.x / 2f) / 2f, 0f, 
+					(gn.y1 * tileSize.y + zero.y + tileSize.y / 2f + gn.y2 * tileSize.y + zero.y + tileSize.y / 2f) / 2f), 0.1f);			
+				foreach (GraphNode neighbor in gn.neighbors) {
+					Gizmos.color = Color.grey;
+					Gizmos.DrawLine (new Vector3 ((gn.x1 * tileSize.x + zero.x + tileSize.x / 2f + gn.x2 * tileSize.x + zero.x + tileSize.x / 2f) / 2f, 0f, 
+					(gn.y1 * tileSize.y + zero.y + tileSize.y / 2f + gn.y2 * tileSize.y + zero.y + tileSize.y / 2f) / 2f), new Vector3 ((neighbor.x1 * tileSize.x + zero.x + tileSize.x / 2f + neighbor.x2 * tileSize.x + zero.x + tileSize.x / 2f) / 2f, 0f, 
+					(neighbor.y1 * tileSize.y + zero.y + tileSize.y / 2f + neighbor.y2 * tileSize.y + zero.y + tileSize.y / 2f) / 2f));
 				}
 			}
 		}

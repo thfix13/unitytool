@@ -6,7 +6,16 @@ using System.Linq;
 public class GraphNode
 {
 	public int x1, y1, x2, y2;
+	public bool isVisited = false;
 	public List<GraphNode> neighbors = new List<GraphNode> ();
+	
+	public GraphNode ()
+	{
+		this.x1 = 0;
+		this.y1 = 0;
+		this.x2 = 0;
+		this.y2 = 0;
+	}
 	
 	public GraphNode (int i1, int j1, int i2, int j2)
 	{
