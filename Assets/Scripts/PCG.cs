@@ -165,8 +165,8 @@ public class PCG : MonoBehaviour
 			
 			// Debug.Log ("GameObject[" + maxAreaIndexHolderE [m] + "]");
 			//Set the new patrol path
-			eos [maxAreaIndexHolderE [m]].GetComponent<Enemy> ().moveSpeed = 1;
-			eos [maxAreaIndexHolderE [m]].GetComponent<Enemy> ().rotationSpeed = 30;
+			eos [maxAreaIndexHolderE [m]].GetComponent<Enemy> ().moveSpeed = 0.5f;
+			eos [maxAreaIndexHolderE [m]].GetComponent<Enemy> ().rotationSpeed = 10;
 			eos [maxAreaIndexHolderE [m]].GetComponent<Enemy> ().target = wpScript2;
 			eos [maxAreaIndexHolderE [m]].transform.position = new Vector3 (wp1.transform.position.x, 
 				wp1.transform.position.y, wp1.transform.position.z);

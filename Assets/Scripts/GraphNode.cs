@@ -17,7 +17,20 @@ public class GraphNode
 		this.x2 = 0;
 		this.y2 = 0;
 	}
-	
+	public Vector3 Pos(GameObject floor)
+	{
+		float posX=0, posY=0;
+		if (x1 == x2 && y2 - y1 == 1) {
+			posX = SpaceState.TileSize.x * x1 + SpaceState.TileSize.x / 2.0f + floor.collider.bounds.min.x;
+			posY = SpaceState.TileSize.y * y1 + SpaceState.TileSize.y + floor.collider.bounds.min.z;
+		}
+		if (y1 == y2 && x2 - x1 == 1) {
+			posX = SpaceState.TileSize.x * x2 + floor.collider.bounds.min.x;
+			posY = SpaceState.TileSize.y * y1 + SpaceState.TileSize.y / 2.0f + floor.collider.bounds.min.z;
+		}
+		return new Vector3 (posX, 0f, posY);
+	}
+
 	public GraphNode (int i1, int j1, int i2, int j2)
 	{
 		this.x1 = i1;

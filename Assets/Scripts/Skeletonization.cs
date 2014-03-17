@@ -995,7 +995,55 @@ public class Skeletonization
 		}
 		
 		// GraphNode keyNode = new GraphNode (finalGraphNodesList.ElementAt (0).x1, finalGraphNodesList.ElementAt (0).y1, finalGraphNodesList.ElementAt (0).x2, finalGraphNodesList.ElementAt (0).y2);
-		
+
+
+		foreach(GraphNode g in finalGraphNodesList)
+		{
+			bool seen = true; 
+
+			while (seen)
+			{
+				seen = false; 
+				List<GraphNode> temp = null; 
+				GraphNode[] t = new GraphNode[g.neighbors.Count]; 
+				g.neighbors.CopyTo(t);
+				temp = t.ToList();
+
+				foreach(GraphNode n in g.neighbors)
+				{
+
+					if(n.neighbors.Count == 2)
+					{
+						GraphNode m = (g == n.neighbors[0]) ?  n.neighbors[1] : n.neighbors[0];
+
+						//ray casting
+						Vector3 v1 = g.Pos(floor);
+						Vector3 v2 = m.Pos(floor);
+						Vector3 dir = v2-v1;
+						float dist = Vector3.Distance (v1, v2) + Mathf.Epsilon;
+						// not Collided
+						if (! Physics.Raycast (v1, dir, dist)) 
+						{
+							seen = true; 
+							//Changing neigbhoor for g
+							temp.Remove(n);
+							temp.Add (m); 
+							//changing neigbhors for m
+							m.neighbors.Remove(n); 
+							m.neighbors.Add(g); 
+							n.neighbors.Clear (); 
+							break; 
+						}
+					}
+
+				}
+				g.neighbors = temp; 
+			}
+		}
+		finalGraphNodesList = tempList; 
+		return; 
+
+
 		GraphNode prevNode = tempList.ElementAt (0), curNode = tempList.ElementAt (0);
 		float prevPosX = 0.0f, prevPosY = 0.0f, curPosX = 0.0f, curPosY = 0.0f;
 		int nodeIndex = -1, prevIndex = 0, tailIndex = 0;
