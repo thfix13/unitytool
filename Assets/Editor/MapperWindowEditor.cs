@@ -1027,6 +1027,12 @@ public class MapperWindowEditor : EditorWindow
 			PCG.sBoundary.initializeGraph ();
 			drawer.graphNodesList = PCG.sBoundary.finalGraphNodesList;
 		}
+		if (GUILayout.Button ("Merge")) {
+			PCG.sBoundary.cleanUp (floor);	
+		}
+		
+		
+		
 		drawGraph = EditorGUILayout.Toggle ("Draw Graph", drawGraph);
 		
 		#endregion

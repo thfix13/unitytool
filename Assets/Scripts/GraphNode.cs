@@ -7,6 +7,7 @@ public class GraphNode
 {
 	public int x1, y1, x2, y2;
 	public bool isVisited = false;
+	public bool isTail = false;
 	public List<GraphNode> neighbors = new List<GraphNode> ();
 	
 	public GraphNode ()
