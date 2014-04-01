@@ -358,6 +358,7 @@ public class PCG : MonoBehaviour
 					rwpScript1.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex).x, lookingDirVec.ElementAt (maxIndex).y, lookingDirVec.ElementAt (maxIndex).z);
 					rwpScript2.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex2).x, lookingDirVec.ElementAt (maxIndex2).y, lookingDirVec.ElementAt (maxIndex2).z);
 					rcScript.target = rwpScript1;
+					rcScript.rotationSpeed = 7;
 					rcScript.transform.LookAt (rwpPos1);
 				} else {
 					Vector3 rwpPos3 = new Vector3 (0.0f, 0.0f, 0.0f);
@@ -393,6 +394,7 @@ public class PCG : MonoBehaviour
 						rwpScript3.lookDir = new Vector3 (imVector.x, imVector.y, imVector.z);
 						rwpScript4.lookDir = new Vector3 (imVector.x, imVector.y, imVector.z);
 						rcScript.target = rwpScript1;
+						rcScript.rotationSpeed = 7;
 						rcScript.transform.LookAt (rwpPos1);
 					} else {
 						rwpPos3 = new Vector3 (finalPos.x + (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x) * rcScript.fovDistance / Mathf.Sqrt ((lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) * (lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) + (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z) * (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z)), 0.0f,
@@ -428,6 +430,7 @@ public class PCG : MonoBehaviour
 						rwpScript4.lookDir = new Vector3 (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x,
 							- lookingDirVec.ElementAt (maxIndex).y - lookingDirVec.ElementAt (maxIndex2).y, - lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z);
 						rcScript.target = rwpScript1;
+						rcScript.rotationSpeed = 7;
 						rcScript.transform.LookAt (rwpPos1);
 					}
 				}
