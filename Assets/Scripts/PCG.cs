@@ -162,6 +162,8 @@ public class PCG : MonoBehaviour
 			wpScript2 = wp2.GetComponent ("Waypoint") as Waypoint;
 			wpScript1.next = wpScript2;
 			wpScript2.next = wpScript1;
+			wpScript1.type = 1;
+			wpScript2.type = 1;
 			
 			// Debug.Log ("GameObject[" + maxAreaIndexHolderE [m] + "]");
 			//Set the new patrol path
@@ -357,6 +359,10 @@ public class PCG : MonoBehaviour
 					rwpScript2.next = rwpScript1;
 					rwpScript1.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex).x, lookingDirVec.ElementAt (maxIndex).y, lookingDirVec.ElementAt (maxIndex).z);
 					rwpScript2.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex2).x, lookingDirVec.ElementAt (maxIndex2).y, lookingDirVec.ElementAt (maxIndex2).z);
+					rwpScript1.type = 2;
+					rwpScript2.type = 2;
+					rwpScript1.center = rcScript;
+					rwpScript2.center = rcScript;
 					rcScript.target = rwpScript1;
 					rcScript.rotationSpeed = 7;
 					rcScript.transform.LookAt (rwpPos1);
@@ -393,6 +399,14 @@ public class PCG : MonoBehaviour
 						rwpScript2.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex2).x, lookingDirVec.ElementAt (maxIndex2).y, lookingDirVec.ElementAt (maxIndex2).z);
 						rwpScript3.lookDir = new Vector3 (imVector.x, imVector.y, imVector.z);
 						rwpScript4.lookDir = new Vector3 (imVector.x, imVector.y, imVector.z);
+						rwpScript1.type = 2;
+						rwpScript2.type = 2;
+						rwpScript3.type = 2;
+						rwpScript4.type = 2;
+						rwpScript1.center = rcScript;
+						rwpScript2.center = rcScript;
+						rwpScript3.center = rcScript;
+						rwpScript4.center = rcScript;
 						rcScript.target = rwpScript1;
 						rcScript.rotationSpeed = 7;
 						rcScript.transform.LookAt (rwpPos1);
@@ -423,12 +437,20 @@ public class PCG : MonoBehaviour
 						rwpScript3.next = rwpScript2;
 						rwpScript2.next = rwpScript4;
 						rwpScript4.next = rwpScript1;
+						rwpScript1.type = 2;
+						rwpScript2.type = 2;
+						rwpScript3.type = 2;
+						rwpScript4.type = 2;
 						rwpScript1.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex).x, lookingDirVec.ElementAt (maxIndex).y, lookingDirVec.ElementAt (maxIndex).z);
 						rwpScript2.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex2).x, lookingDirVec.ElementAt (maxIndex2).y, lookingDirVec.ElementAt (maxIndex2).z);
 						rwpScript3.lookDir = new Vector3 (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x,
 							- lookingDirVec.ElementAt (maxIndex).y - lookingDirVec.ElementAt (maxIndex2).y, - lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z);
 						rwpScript4.lookDir = new Vector3 (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x,
 							- lookingDirVec.ElementAt (maxIndex).y - lookingDirVec.ElementAt (maxIndex2).y, - lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z);
+						rwpScript1.center = rcScript;
+						rwpScript2.center = rcScript;
+						rwpScript3.center = rcScript;
+						rwpScript4.center = rcScript;
 						rcScript.target = rwpScript1;
 						rcScript.rotationSpeed = 7;
 						rcScript.transform.LookAt (rwpPos1);
