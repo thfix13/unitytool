@@ -370,7 +370,7 @@ public class PCG : MonoBehaviour
 					Vector3 rwpPos3 = new Vector3 (0.0f, 0.0f, 0.0f);
 					if (CheckFlat (finalPos, lookingDirVec.ElementAt (maxIndex), lookingDirVec.ElementAt (maxIndex2), ref rwpPos3)) {
 						Vector3 imVector = new Vector3 (rwpPos3.x, rwpPos3.y, rwpPos3.z);
-						rwpPos3 = new Vector3 (finalPos.x + rwpPos3.x * rcScript.fovDistance / Mathf.Sqrt (rwpPos3.x * rwpPos3.x + rwpPos3.z * rwpPos3.z), finalPos.z + rwpPos3.z * rcScript.fovDistance / Mathf.Sqrt (Mathf.Sqrt (rwpPos3.x * rwpPos3.x + rwpPos3.z * rwpPos3.z)));
+						rwpPos3 = new Vector3 (finalPos.x + rwpPos3.x * rcScript.fovDistance / Mathf.Sqrt (rwpPos3.x * rwpPos3.x + rwpPos3.z * rwpPos3.z), 0.0f, finalPos.z + rwpPos3.z * rcScript.fovDistance / Mathf.Sqrt (Mathf.Sqrt (rwpPos3.x * rwpPos3.x + rwpPos3.z * rwpPos3.z)));
 						GameObject rwp1 = GameObject.Instantiate (waypointPrefab, rwpPos1, Quaternion.identity) as GameObject;
 						GameObject rwp2 = GameObject.Instantiate (waypointPrefab, rwpPos2, Quaternion.identity) as GameObject;
 						GameObject rwp3 = GameObject.Instantiate (waypointPrefab, rwpPos3, Quaternion.identity) as GameObject;
