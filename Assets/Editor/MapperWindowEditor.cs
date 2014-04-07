@@ -15,12 +15,12 @@ public class MapperWindowEditor : EditorWindow
 	public static List<Path> paths = new List<Path> ();
 	public static List<Node> mostDanger = null, shortest = null, lengthiest = null, fastest = null, longest = null;
 	// Parameters
-	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 75, ticksBehind = 0, numOfEnemies = 0, numOfRegionsForEnemies = 0, numOfCameras = 0, numOfRegionsForCameras = 0, iterations2 = 5, iterations3 = 5, noeB = 0, nocB = 0, noreB = 0, norcB = 0;
+	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 75, ticksBehind = 0, numOfEnemies = 0, numOfRegionsForEnemies = 0, numOfCameras = 0, numOfRegionsForCameras = 0, iterations2 = 5, iterations3 = 5, noeB = 0, nocB = 0, noreB = 0, norcB = 0, numOfFixedGuards = 0;
 	public static bool drawMap = true, drawMoveMap = false, drawMoveUnits = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = false, 
 				drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawBoundaries = false, drawRoadmaps = false, drawRoadmaps2 = false, drawRoadmaps3 = false, drawGraph = false,
 				smoothPath = true, drawShortestPath = false, drawLongestPath = false, drawLengthiestPath = false, drawFastestPath = false, drawMostDangerousPath = false, drawFoVOnly = true, seeByTime = false, seeByLength = false, seeByDanger = false, seeByLoS = false, seeByDanger3 = false, seeByLoS3 = false, seeByDanger3Norm = false, seeByLoS3Norm = false, seeByCrazy = false, seeByVelocity = false;
-	public static bool randomOpEnables = false, setPathOpEnables = false, setRotationOpEnables = false;
-	public static bool setEnemiesFoldout = false, setCameraFoldout = false, queryeVoronoiDiagramFoldout = false, querycVoronoiDiagramFoldout = false, computePathFoldout = false, default1 = true, default2 = true, default3 = true, default4 = true, default5 = true, default6 = true;
+	public static bool randomOpEnables = false, setPathOpEnables = false, setRotationOpEnables = false, boundariesFloodingOpEnables = false, extractRoadmapOpEnables = false, initializeGraphOpEnables = false, mergeOpEnables = false, behaviorOpEnables = false;
+	public static bool setEnemiesFoldout = false, setCameraFoldout = false, queryeVoronoiDiagramFoldout = false, querycVoronoiDiagramFoldout = false, computePathFoldout = false, setEnemiesFoldout2 = false, setCameraFoldout2 = false, default1 = true, default2 = true, default3 = true, default4 = true, default5 = true, default6 = true, default7 = true, default8 = true;
 	public static float stepSize = 1 / 10f, crazySeconds = 5f;
 	public static int[,] heatMap;
 	public static GameObject start = null, end = null, floor = null, playerPrefab = null, enemyPrefab = null, waypointPrefab = null;
@@ -37,7 +37,7 @@ public class MapperWindowEditor : EditorWindow
 	private Mapper mapper;
 	private RRTKDTree rrt = new RRTKDTree ();
 	private MapperEditorDrawer drawer;
-	private GameObject[] enemyObjects = null, cameraObjects = null, pathObjects = null, angleObjects = null;
+	private GameObject[] enemyObjects = null, cameraObjects = null, pathObjects = null, angleObjects = null, enemypathObjects = null, cameraangleObjects = null;
 	private List<GameObject> playerObjects = new List<GameObject> ();
 	
 	[MenuItem("Window/Mapper")]
@@ -74,7 +74,7 @@ public class MapperWindowEditor : EditorWindow
 		
 		scrollPos = EditorGUILayout.BeginScrollView (scrollPos);
 		
-				#region 1. Map
+		#region 1. Map
 		
 		EditorGUILayout.LabelField ("1. Map");
 		playerPrefab = (GameObject)EditorGUILayout.ObjectField ("Player Prefab", playerPrefab, typeof(GameObject), false);
@@ -84,11 +84,11 @@ public class MapperWindowEditor : EditorWindow
 
 		EditorGUILayout.LabelField ("");
 		
-				#endregion
+		#endregion
 		
 		// ----------------------------------
 		
-				#region 2. Units
+		#region 2. Units
 		
 		EditorGUILayout.LabelField ("2. Units");
 		
@@ -97,11 +97,11 @@ public class MapperWindowEditor : EditorWindow
 		}
 		EditorGUILayout.LabelField ("");
 		
-				#endregion
+		#endregion
 		
 		// ----------------------------------
 		
-				#region 3. Map Computation
+		#region 3. Map Computation
 		
 		EditorGUILayout.LabelField ("3. Map Computation");
 		timeSamples = EditorGUILayout.IntSlider ("Time samples", timeSamples, 1, 10000);
@@ -152,11 +152,11 @@ public class MapperWindowEditor : EditorWindow
 		} 
 		EditorGUILayout.LabelField ("");
 		
-				#endregion
+		#endregion
 		
 		// ----------------------------------
 		
-				#region 4. Path
+		#region 4. Path
 		
 		EditorGUILayout.LabelField ("4. Path");
 		
@@ -241,11 +241,11 @@ public class MapperWindowEditor : EditorWindow
 		}
 		EditorGUILayout.LabelField ("");
 		
-				#endregion
+		#endregion
 		
 		// ----------------------------------
 		
-				#region 5. Visualization
+		#region 5. Visualization
 		
 		EditorGUILayout.LabelField ("5. Visualization");
 		
@@ -281,11 +281,11 @@ public class MapperWindowEditor : EditorWindow
 		
 		
 		
-				#endregion
+		#endregion
 		
 		// ----------------------------------
 		
-				#region 6. Paths
+		#region 6. Paths
 		
 		EditorGUILayout.LabelField ("6. Paths");
 		
@@ -491,11 +491,11 @@ public class MapperWindowEditor : EditorWindow
 		}
 		
 		
-				#endregion
+		#endregion
 		
 		// ----------------------------------
 		
-				#region Random Enemies
+		#region Random Enemies
 		
 		EditorGUILayout.LabelField ("");
 		EditorGUILayout.LabelField ("7. Random Enemies");
@@ -790,7 +790,7 @@ public class MapperWindowEditor : EditorWindow
 		
 		#endregion
 		
-				#region Batch
+		#region Batch
 		
 		EditorGUILayout.LabelField ("");
 		EditorGUILayout.LabelField ("9. Batch Computing");
@@ -987,12 +987,14 @@ public class MapperWindowEditor : EditorWindow
 		}
 		GUI.enabled = true;
 		
-				#endregion
+		#endregion
 		
-				#region Skeleton
+		#region Skeleton
 		
 		EditorGUILayout.LabelField ("");
 		EditorGUILayout.LabelField ("10. Skeleton");
+		
+		GUI.enabled = randomOpEnables;
 		
 		if (GUILayout.Button ("Select Boundaries")) {
 			if (obs == null) { 
@@ -1011,20 +1013,25 @@ public class MapperWindowEditor : EditorWindow
 			}
 			PCG.sBoundary.identifyObstacleContours (floor);
 			drawer.sBoundaryGrid = PCG.sBoundary.obs;
+			boundariesFloodingOpEnables = true;
 		}
 		
 		drawBoundaries = EditorGUILayout.Toggle ("Draw Boundaries", drawBoundaries);
 		
+		GUI.enabled = boundariesFloodingOpEnables;
 		if (GUILayout.Button ("Boundaries Flooding")) {
 			PCG.sBoundary.boundaryContoursFlooding (floor);
+			extractRoadmapOpEnables = true;
 		}
 		
 		drawRoadmaps2 = EditorGUILayout.Toggle ("Draw Roadmaps", drawRoadmaps2);
 		
+		GUI.enabled = extractRoadmapOpEnables;
 		if (GUILayout.Button ("Extract Roadmaps")) {
 			PCG.sBoundary.extractRoadmaps (floor);
 			drawer.roadmapNodesList = PCG.sBoundary.roadmapNodesList;
 			PCG.sBoundary.selectSuperNodes ();
+			initializeGraphOpEnables = true;
 		}
 		
 		drawRoadmaps3 = EditorGUILayout.Toggle ("Draw Roadmaps Nodes", drawRoadmaps3);
@@ -1058,23 +1065,121 @@ public class MapperWindowEditor : EditorWindow
 //		
 //		drawRoadmaps = EditorGUILayout.Toggle ("Draw Roadmaps", drawRoadmaps);
 		
-				#endregion
+		#endregion
 		
-				#region Graph
+		#region Graph
 		
+		GUI.enabled = initializeGraphOpEnables;
 		if (GUILayout.Button ("Initialize Graph")) {
 			PCG.sBoundary.initializeGraph ();
 			drawer.graphNodesList = PCG.sBoundary.finalGraphNodesList;
+			mergeOpEnables = true;
 		}
+		
+		GUI.enabled = mergeOpEnables;
 		if (GUILayout.Button ("Merge")) {
 			PCG.sBoundary.cleanUp (floor);	
+			behaviorOpEnables = true;
 		}
-		
-		
 		
 		drawGraph = EditorGUILayout.Toggle ("Draw Graph", drawGraph);
 		
-				#endregion
+		GUI.enabled = true;
+		
+		#endregion
+		
+		#region Behaviors
+		
+		EditorGUILayout.LabelField ("");
+		EditorGUILayout.LabelField ("11. Behaviours");
+		
+		if (waypointPrefab == null) {
+			waypointPrefab = Resources.Load ("Waypoint") as GameObject;
+			if (waypointPrefab != null) {
+				Debug.Log ("Loading waypoint prefab from resources folder successfully!");
+			} else {
+				waypointPrefab = GameObject.FindGameObjectWithTag ("Waypoint");
+				if (waypointPrefab != null) {
+					Debug.Log ("Loading waypoint prefab from scene successfully!");
+				}
+			}
+		}
+		
+		if (enemyPrefab == null) {
+			enemyPrefab = Resources.Load ("Enemy") as GameObject;
+			if (enemyPrefab != null) {
+				Debug.Log ("Loading enemy prefab from resources folder successfully!");	
+			} else {
+				enemyPrefab = GameObject.FindGameObjectWithTag ("Enemy");
+				if (enemyPrefab != null) {
+					Debug.Log ("Loading enemy prefab from scene successfully!");	
+				}
+			}
+		}
+		
+		if (default7 == true) {
+			default7 = false;
+			setEnemiesFoldout2 = EditorGUILayout.Foldout (true, "Set Guards");
+		} else {
+			setEnemiesFoldout2 = EditorGUILayout.Foldout (setEnemiesFoldout2, "Set Guards");
+		}
+		
+		GUI.enabled = behaviorOpEnables;
+		
+		if (setEnemiesFoldout2) {
+			enemyPrefab = (GameObject)EditorGUILayout.ObjectField ("Enemy Prefab", enemyPrefab, typeof(GameObject), false);
+			numOfEnemies = EditorGUILayout.IntField ("Number of enemies", numOfEnemies);
+			numOfCameras = EditorGUILayout.IntField ("Number of cameras", numOfCameras);	
+
+			// ----------------------------------Mixed Guards-----------------------------------//
+			if (GUILayout.Button ("Populate Guards")) {
+				// Clear up enemies and their paths in the scene
+				PCG.ClearUpObjects (enemypathObjects);
+				PCG.numOfEnemies = numOfEnemies;
+				PCG.numOfCameras = numOfCameras;
+				
+				// Populate guards in the graph
+				enemypathObjects = PCG.PopulateGuardsInGraph (enemyPrefab, waypointPrefab, floor).ToArray ();
+				StorePositions ();
+			}
+		}
+		
+		GUI.enabled = true;
+		if (GUILayout.Button ("Reset")) {
+			PCG.ClearUpObjects (enemypathObjects);
+			fullMap = null;
+			drawer.fullMap = fullMap;
+			simulated = false;
+			foreach (GameObject p in playerObjects) {
+				DestroyImmediate (p);
+			}
+			players.Clear ();
+			playing = false;
+			ResetAI ();
+			obs = null;
+			PCG.vEnemy.obs = null;
+			drawer.eVoronoiGrid = PCG.vEnemy.obs;
+			PCG.vCamera.obs = null;
+			drawer.cVoronoiGrid = PCG.vCamera.obs;
+
+			numOfEnemies = 0;
+			numOfCameras = 0;
+			numOfRegionsForEnemies = 0;
+			numOfRegionsForCameras = 0;
+			setPathOpEnables = false;
+			setRotationOpEnables = false;
+			//randomOpEnables = false;
+			
+			boundariesFloodingOpEnables = false;
+			extractRoadmapOpEnables = false;
+			initializeGraphOpEnables = false;
+			mergeOpEnables = false;
+			behaviorOpEnables = false;
+		}
+		
+		GUI.enabled = true;
+		
+		#endregion
 		
 		foreach (KeyValuePair<Path, bool> p in toggleStatus) {
 			if (p.Value) {

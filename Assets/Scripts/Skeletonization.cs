@@ -653,15 +653,9 @@ public class Skeletonization
 	
 		foreach (GraphNode currentGraphNode in finalGraphNodesList) {
 			// Is a tail node
-			if (currentGraphNode.x1 == 5 && currentGraphNode.y1 == 23) {
-				Debug.Log (currentGraphNode.neighbors.Count);
-				Debug.Log ("Neighbor1: x1:" + currentGraphNode.neighbors.ElementAt (0).x1 + ", y1: " + currentGraphNode.neighbors.ElementAt (0).y1);
-				Debug.Log ("Neighbor1: x2:" + currentGraphNode.neighbors.ElementAt (1).x1 + ", y1: " + currentGraphNode.neighbors.ElementAt (1).y1);
-			}
 			if (currentGraphNode.neighbors.Count == 1) {
 				currentGraphNode.isTail = true;
-				Debug.Log ("Yo, this is MC");
-				Debug.Log ("Cur: x1:" + currentGraphNode.x1 + ", y1: " + currentGraphNode.y1 + ", x2: " + currentGraphNode.x2 + ", y2: " + currentGraphNode.y2);	
+				// Debug.Log ("Cur: x1:" + currentGraphNode.x1 + ", y1: " + currentGraphNode.y1 + ", x2: " + currentGraphNode.x2 + ", y2: " + currentGraphNode.y2);	
 				int minDist = int.MaxValue;
 				GraphNode nearestNode = null;
 				GraphNode theOnlyNeighbor = currentGraphNode.neighbors.ElementAt (0);
@@ -991,7 +985,6 @@ public class Skeletonization
 				newGraphNode.isTail = true;
 			}
 			tempList.Add (newGraphNode);
-			Debug.Log ("x1: " + gn.x1 + " ,y1: " + gn.y1);
 		}
 		
 		// GraphNode keyNode = new GraphNode (finalGraphNodesList.ElementAt (0).x1, finalGraphNodesList.ElementAt (0).y1, finalGraphNodesList.ElementAt (0).x2, finalGraphNodesList.ElementAt (0).y2);
@@ -999,6 +992,7 @@ public class Skeletonization
 
 		foreach(GraphNode g in finalGraphNodesList)
 		{
+			int layerMask = 1 << 8;
 			bool seen = true; 
 
 			while (seen)
@@ -1011,7 +1005,6 @@ public class Skeletonization
 
 				foreach(GraphNode n in g.neighbors)
 				{
-
 					if(n.neighbors.Count == 2)
 					{
 						GraphNode m = (g == n.neighbors[0]) ?  n.neighbors[1] : n.neighbors[0];
@@ -1022,7 +1015,7 @@ public class Skeletonization
 						Vector3 dir = v2-v1;
 						float dist = Vector3.Distance (v1, v2) + Mathf.Epsilon;
 						// not Collided
-						if (! Physics.Raycast (v1, dir, dist)) 
+						if (! Physics.Raycast (v1, dir, dist, layerMask)) 
 						{
 							seen = true; 
 							//Changing neigbhoor for g
@@ -1040,7 +1033,7 @@ public class Skeletonization
 				g.neighbors = temp; 
 			}
 		}
-		finalGraphNodesList = tempList; 
+		// finalGraphNodesList = tempList; 
 		return; 
 
 

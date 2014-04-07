@@ -8,7 +8,7 @@ using System.Linq;
 public class PCG : MonoBehaviour
 {
 	public static GameObject enemyPrefab = null, waypointPrefab = null;
-	public static List<GameObject> eos = new List<GameObject> (), cos = new List<GameObject> (), pos = new List<GameObject> (), aos = new List<GameObject> ();
+	public static List<GameObject> eos = new List<GameObject> (), cos = new List<GameObject> (), pos = new List<GameObject> (), aos = new List<GameObject> (), oos = new List<GameObject> ();
 	public static int numOfEnemies = 0, numOfCameras = 0, numOfRegionsForEnemies = 0, numOfRegionsForCameras = 0;
 	public static int[] maxAreaIndexHolderE = null, maxAreaIndexHolderC = null;
 	// VoronoiDiagram instances
@@ -465,6 +465,119 @@ public class PCG : MonoBehaviour
 		return aos;
 	}
 	
+	public static List<GameObject> PopulateGuardsInGraph (GameObject enmPrefab, GameObject wpPrefab, GameObject floor)
+	{
+		enemyPrefab = enmPrefab;
+		waypointPrefab = wpPrefab;
+		
+		for (int i = 0; i < numOfEnemies; i++) {
+			int startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count - 1);
+			// Should modify the finalGraphNodesList first
+			while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0) {
+				startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count - 1);
+			}
+			int neighborIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count - 1);
+			int endIndex = sBoundary.finalGraphNodesList.IndexOf (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.ElementAt (neighborIndex));
+			Vector3 startVec = sBoundary.finalGraphNodesList.ElementAt (startIndex).Pos (floor);
+			Vector3 endVec = sBoundary.finalGraphNodesList.ElementAt (endIndex).Pos (floor);
+			Vector3 dir = endVec - startVec;
+			float factor = UnityEngine.Random.Range (0.0f, 1.0f);
+			Vector3 position = startVec + dir * factor;
+			GameObject enemy = GameObject.Instantiate (enemyPrefab, position, Quaternion.identity) as GameObject;
+			enemy.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);
+			
+			//Move between two waypoints wp1, wp2;
+			GameObject wp1 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
+			GameObject wp2 = GameObject.Instantiate (waypointPrefab, endVec, Quaternion.identity) as GameObject;
+			Waypoint wpScript1, wpScript2;
+			wpScript1 = wp1.GetComponent ("Waypoint") as Waypoint;
+			wpScript2 = wp2.GetComponent ("Waypoint") as Waypoint;
+			wpScript1.next = wpScript2;
+			wpScript2.next = wpScript1;
+			wpScript1.type = 1;
+			wpScript2.type = 1;
+			
+			enemy.GetComponent<Enemy> ().moveSpeed = 0.5f;
+			enemy.GetComponent<Enemy> ().rotationSpeed = 10;
+			enemy.GetComponent<Enemy> ().target = wpScript2;
+		}
+		
+		for (int i = 0; i < numOfCameras; i++) {
+			int startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count - 1);
+			// Should modify the finalGraphNodesList first
+			while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0) {
+				startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count - 1);
+			}
+			int neighborIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count - 1);
+			int endIndex = sBoundary.finalGraphNodesList.IndexOf (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.ElementAt (neighborIndex));
+			Vector3 startVec = sBoundary.finalGraphNodesList.ElementAt (startIndex).Pos (floor);
+			Vector3 endVec = sBoundary.finalGraphNodesList.ElementAt (endIndex).Pos (floor);
+			Vector3 dir = endVec - startVec;
+			float factor = UnityEngine.Random.Range (0.0f, 1.0f);
+			Vector3 position = startVec + dir * factor;
+			GameObject enemy = GameObject.Instantiate (enemyPrefab, position, Quaternion.identity) as GameObject;
+			enemy.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);
+			
+			// Swipe 360 degree
+			Vector3 n1 = Vector3.Cross (dir, new Vector3 (0.0f, 1.0f, 0.0f));
+			Vector3 n2 = Vector3.Cross (new Vector3 (0.0f, 1.0f, 0.0f), dir);
+			
+			Enemy rcScript = enemy.GetComponent ("Enemy") as Enemy;
+			
+			GameObject rwp1 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
+			GameObject rwp2 = GameObject.Instantiate (waypointPrefab, endVec, Quaternion.identity) as GameObject;
+			GameObject rwp3 = GameObject.Instantiate (waypointPrefab, n1, Quaternion.identity) as GameObject;
+			GameObject rwp4 = GameObject.Instantiate (waypointPrefab, n2, Quaternion.identity) as GameObject;
+			rwp1.AddComponent ("RotationWaypoint");
+			rwp2.AddComponent ("RotationWaypoint");
+			rwp3.AddComponent ("RotationWaypoint");
+			rwp4.AddComponent ("RotationWaypoint");
+			DestroyImmediate (rwp1.GetComponent ("Waypoint"));
+			DestroyImmediate (rwp2.GetComponent ("Waypoint"));
+			DestroyImmediate (rwp3.GetComponent ("Waypoint"));
+			DestroyImmediate (rwp4.GetComponent ("Waypoint"));
+			RotationWaypoint rwpScript1;
+			RotationWaypoint rwpScript2;
+			RotationWaypoint rwpScript3;
+			RotationWaypoint rwpScript4;
+			rwpScript1 = rwp1.GetComponent ("Waypoint") as RotationWaypoint;
+			rwpScript2 = rwp2.GetComponent ("Waypoint") as RotationWaypoint;
+			rwpScript3 = rwp3.GetComponent ("Waypoint") as RotationWaypoint;
+			rwpScript4 = rwp4.GetComponent ("Waypoint") as RotationWaypoint;
+
+			rwpScript1.next = rwpScript3;
+			rwpScript3.next = rwpScript2;
+			rwpScript2.next = rwpScript4;
+			rwpScript4.next = rwpScript1;
+			rwpScript1.lookDir = startVec;
+			rwpScript2.lookDir = endVec;
+			rwpScript3.lookDir = n1;
+			rwpScript4.lookDir = n2;		
+			//rwpScript1.type = 2;
+			//rwpScript2.type = 2;
+			//rwpScript3.type = 2;
+			//rwpScript4.type = 2;
+			rwpScript1.center = rcScript;
+			rwpScript2.center = rcScript;
+			rwpScript3.center = rcScript;
+			rwpScript4.center = rcScript;
+			rcScript.target = rwpScript1;
+			rcScript.rotationSpeed = 7;
+			rcScript.transform.LookAt (startVec);
+		}
+		
+		var enemies = GameObject.FindGameObjectsWithTag ("Enemy").OrderBy (go => go.transform.position.x).ToArray ();
+		foreach (GameObject g in enemies) {
+			oos.Add (g);
+		}
+		
+		var waypoints = GameObject.FindGameObjectsWithTag ("Waypoint").ToArray ();
+		foreach (GameObject w in waypoints) {
+			oos.Add (w);
+		}
+		return oos;
+	}
+	
 	public static void DestroyVoronoiCentreForEnemies ()
 	{
 		//Destroy other voronoi centres and complete the scene
@@ -533,6 +646,16 @@ public class PCG : MonoBehaviour
 			}
 		}
 		PCG.aos.Clear ();
+	}
+	
+	public static void ClearUpObjects (GameObject[] oos)
+	{	
+		if (oos != null) {
+			foreach (GameObject o in oos) {
+				DestroyImmediate (o);	
+			}
+		}
+		PCG.oos.Clear ();
 	}
 	
 	// Calculate range
@@ -637,4 +760,6 @@ public class PCG : MonoBehaviour
 			}
 		}
 	}
+	
+	
 }
