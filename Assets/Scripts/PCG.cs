@@ -9,7 +9,7 @@ public class PCG : MonoBehaviour
 {
 	public static GameObject enemyPrefab = null, waypointPrefab = null;
 	public static List<GameObject> eos = new List<GameObject> (), cos = new List<GameObject> (), pos = new List<GameObject> (), aos = new List<GameObject> (), oos = new List<GameObject> ();
-	public static int numOfEnemies = 0, numOfCameras = 0, numOfRegionsForEnemies = 0, numOfRegionsForCameras = 0;
+	public static int numOfEnemies = 0, numOfCameras = 0, numOfRegionsForEnemies = 0, numOfRegionsForCameras = 0, numOfGuards = 0;
 	public static int[] maxAreaIndexHolderE = null, maxAreaIndexHolderC = null;
 	// VoronoiDiagram instances
 	public static VoronoiDiagram vEnemy = new VoronoiDiagram ();
@@ -576,6 +576,31 @@ public class PCG : MonoBehaviour
 			oos.Add (w);
 		}
 		return oos;
+	}
+	
+	public static void PopulateGuardsWithBehaviours (GameObject enmPrefab, GameObject wpPrefab, GameObject floor)
+	{		
+		enemyPrefab = enmPrefab;
+		waypointPrefab = wpPrefab;
+		
+		for (int i = 0; i < numOfGuards; i++) {
+			int startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count - 1);
+			// Should modify the finalGraphNodesList first
+			while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0) {
+				startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count - 1);
+			}
+			int neighborIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count - 1);
+			int endIndex = sBoundary.finalGraphNodesList.IndexOf (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.ElementAt (neighborIndex));
+			Vector3 startVec = sBoundary.finalGraphNodesList.ElementAt (startIndex).Pos (floor);
+			Vector3 endVec = sBoundary.finalGraphNodesList.ElementAt (endIndex).Pos (floor);
+			Vector3 dir = endVec - startVec;
+			float factor = UnityEngine.Random.Range (0.0f, 1.0f);
+			Vector3 position = startVec + dir * factor;
+			GameObject enemy = GameObject.Instantiate (enemyPrefab, position, Quaternion.identity) as GameObject;
+			enemy.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);	
+			FSM currentFSM = (FSM)enemy.AddComponent<FSM>();
+			FSMController.FSMList.Add (currentFSM);
+		}
 	}
 	
 	public static void DestroyVoronoiCentreForEnemies ()
