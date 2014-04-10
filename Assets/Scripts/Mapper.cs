@@ -115,6 +115,80 @@ public class Mapper : MonoBehaviour
 		return fullMap;
 	}
 	
+	
+	// Precompute a timestamps number of maps in the future by simulating the enemies movement across the map
+	public Cell[][][] PrecomputeMapsOverRhythm (Vector3 floorMin, Vector3 floorMax, int cellsX, int cellsZ, int timestamps, float stepSize, int ticksBehind = 0, Cell[][] baseMap = null)
+	{
+		// Initial computation
+		this.cellsX = cellsX;
+		this.cellsZ = cellsZ;
+		ComputeTileSize (floorMin, floorMax, cellsX, cellsZ);
+		
+		// Compute the fixed obstacle map
+		if (baseMap == null)
+			baseMap = ComputeObstacles ();
+		
+		// Prepare the dataholders (used afterwards by the callers)
+		GameObject[] en = GameObject.FindGameObjectsWithTag ("Enemy") as GameObject[];
+		Enemy[] enemies = new Enemy[en.Length];
+		for (int i = 0; i < en.Length; i++) {
+			enemies [i] = en [i].GetComponent<Enemy> ();
+			enemies [i].positions = new Vector3[timestamps];
+			enemies [i].forwards = new Vector3[timestamps];
+			enemies [i].rotations = new Quaternion[timestamps];
+			enemies [i].cells = new Vector2[timestamps][];
+		}
+		Cell[][][] fullMap = new Cell[timestamps][][];
+		
+		List<List<Vector2>> cells = new List<List<Vector2>> ();
+		// Prepare the cells by enemy
+		for (int i = 0; i < enemies.Length; i++) {
+			cells.Add (new List<Vector2> ());
+		}
+		
+		
+		// Foreach period time, we advance a stepsize into the future and compute the map for it
+		for (int counter = 0; counter < timestamps; counter++) {
+			// Simulate and store the values for future use
+			int elapseIndex = counter / FSMController.timeInterval;
+			
+			foreach (Enemy e in enemies) {
+				if ((counter + 1) % FSMController.timeInterval == 0 && counter != 0) {
+					e.SimulateOverRhythm (stepSize, elapseIndex);
+				} else {
+					e.Simulate (stepSize);
+				}
+				e.positions [counter] = e.GetSimulationPosition ();
+				e.forwards [counter] = e.GetSimulatedForward ();
+				e.rotations [counter] = e.GetSimulatedRotation ();
+			}
+				
+			fullMap [counter] = ComputeMap (baseMap, enemies, cells);
+			
+			// Store the seen cells in the enemy class
+			List<Vector2>[] arr = cells.ToArray ();
+			for (int i = 0; i < enemies.Length; i++) {
+				enemies [i].cells [counter] = arr [i].ToArray ();
+				arr [i].Clear ();
+			}
+		}
+	
+		// From the last time to the first, pick a cell and look back in time to see if it was seen previously
+		if (ticksBehind > 0)
+			for (int counter = timestamps-1; counter >= 0; counter--) 
+				for (int ticks = 1; ticks <= ticksBehind && counter - ticks > 0; ticks++) 
+					foreach (Enemy e in enemies)
+						foreach (Vector2 v in e.cells[counter - ticks])
+							if (fullMap [counter - ticks] [(int)v.x] [(int)v.y].seen) {
+								fullMap [counter] [(int)v.x] [(int)v.y].seen = true;
+							}
+		
+		SpaceState.Instance.enemies = enemies;
+		SpaceState.Instance.fullMap = fullMap;
+		
+		return fullMap;
+	}
+	
 	public Cell[][] ComputeMap (Cell[][] baseMap, Enemy[] enemies, List<List<Vector2>> cellsByEnemy)
 	{
 		Cell[][] im = new Cell[cellsX][];

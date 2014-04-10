@@ -28,7 +28,7 @@ public class EnemyMover
 			
 			if (w.times.TryGetValue (id, out t)) {
 				if (t > w.waitingTime) {
-					w.times[id] = 0f;
+					w.times [id] = 0f;
 					Solve (id, position, rotation, moveSpeed, rotationSpeed, tpf, waypoint.next, collisionRadius, out outPosition, out outRotation, out outWaypoint);
 					return;
 				}
@@ -44,6 +44,7 @@ public class EnemyMover
 			outRotation = rotation;
 		} else {
 			
+			//if (waypoint.next != null) {
 			if (Dist (position, waypoint.transform.position) <= collisionRadius) {
 				Solve (id, position, rotation, moveSpeed, rotationSpeed, tpf, waypoint.next, collisionRadius, out outPosition, out outRotation, out outWaypoint);
 				return;

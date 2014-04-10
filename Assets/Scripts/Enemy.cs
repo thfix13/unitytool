@@ -1,13 +1,14 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 public class Enemy : MonoBehaviour
 {
 	
 	public Waypoint target;
-	public float moveSpeed;
-	public float rotationSpeed;
+	public float moveSpeed = 0.2f;
+	public float rotationSpeed = 10.0f;
 	public float fovAngle = 33;
 	public float fovDistance = 5;
 	public float radius = 0.5f;
@@ -20,6 +21,9 @@ public class Enemy : MonoBehaviour
 	private Waypoint dummyTarget;
 	private Vector3 dummyPosition;
 	private Quaternion dummyRotation;
+	private Waypoint dummyTargets;
+	private Vector3[] dummyPositions;
+	private Quaternion dummyRotations;
 	//
 	private Vector3 initialPosition;
 	private Quaternion initialRotation;
@@ -71,6 +75,45 @@ public class Enemy : MonoBehaviour
 		Waypoint outWay;
 		
 		EnemyMover.Solve (gameObject.GetHashCode (), dummyPosition, dummyRotation, moveSpeed, rotationSpeed, time, dummyTarget, 0.25f, out outPos, out outRot, out outWay);
+		
+		dummyPosition = outPos;
+		dummyRotation = outRot;
+		dummyTarget = outWay;
+	}
+	
+	// Reset back the dummy and actual gameobject back to the initial position
+	public void ResetSimulationOverRhythm ()
+	{
+		transform.position = initialPosition;
+		transform.rotation = initialRotation;
+		target = initialTarget;
+		
+		dummyPosition = transform.position;
+		dummyRotation = transform.rotation;
+		dummyTarget = target;
+	}
+	
+	// Sets the initial position with the current transform coordinates within a time interval
+	public void SetInitialPositionOverRhythm (int elapseIndex)
+	{
+//		Debug.Log (gameObject.GetComponent <FSM> ().sequence.Count);
+		initialTarget = gameObject.GetComponent <FSM> ().sequence.ElementAt (elapseIndex).ElementAt (0);
+		initialPosition = transform.position;
+		initialRotation = transform.rotation;
+		
+		ResetSimulationOverRhythm ();
+	}
+	
+	
+	// This siumulates the enemy's movement based on the actual enemy movement for different intervals
+	public void SimulateOverRhythm (float time, int elapseIndex)
+	{
+		dummyTarget = gameObject.GetComponent <FSM> ().sequence.ElementAt (elapseIndex).ElementAt (0);
+		Vector3 outPos;
+		Quaternion outRot;
+		Waypoint outWay;	
+		
+		EnemyMover.Solve (gameObject.GetHashCode (), dummyPosition, dummyRotation, moveSpeed, rotationSpeed, time, dummyTarget, 0.25f , out outPos, out outRot, out outWay);
 		
 		dummyPosition = outPos;
 		dummyRotation = outRot;

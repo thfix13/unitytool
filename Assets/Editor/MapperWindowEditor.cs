@@ -1196,10 +1196,26 @@ public class MapperWindowEditor : EditorWindow
 				// numofene?
 				PCG.numOfGuards = numOfGuards;
 				PCG.PopulateGuardsWithBehaviours (enemyPrefab, waypointPrefab, floor);
+				// Run all the finite state machine instances assigned to each guard
+				FSMController.RunFSM (timeSamples);
+			}
+			
+			if (GUILayout.Button ("Prepare for Simulation")) {
+				StorePositionsOverRhythm ();
+				fullMap = mapper.PrecomputeMapsOverRhythm (floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind);
+				drawer.fullMap = fullMap;
+				float maxSeenGrid;
+				drawer.seenNeverSeen = Analyzer.ComputeSeenValuesGrid (fullMap, out maxSeenGrid);
+				drawer.seenNeverSeenMax = maxSeenGrid;
+				drawer.tileSize = SpaceState.TileSize;
+				drawer.zero.Set (floor.collider.bounds.min.x, floor.collider.bounds.min.z);
+				
+				ResetAI ();
 			}
 			
 			EditorGUILayout.LabelField ("");
 			EditorGUILayout.LabelField ("Rythm Indicator");
+			
 		}
 		
 		#endregion
@@ -1490,7 +1506,6 @@ public class MapperWindowEditor : EditorWindow
 	
 	public void Update ()
 	{
-		FSMController.RunFSM ();
 
 		if (playing) {
 			playTime += 1 / 100f;
@@ -1604,4 +1619,15 @@ public class MapperWindowEditor : EditorWindow
 		}
 	}
 	
+	public void StorePositionsOverRhythm ()
+	{
+		GameObject[] objs = GameObject.FindGameObjectsWithTag ("Enemy") as GameObject[];
+		for (int i = 0; i < objs.Length; i++) {
+			objs [i].GetComponent<Enemy> ().SetInitialPositionOverRhythm (0);
+		}
+		objs = GameObject.FindGameObjectsWithTag ("AI") as GameObject[];
+		for (int i = 0; i < objs.Length; i++) {
+			objs [i].GetComponent<Player> ().SetInitialPosition ();
+		}	
+	}
 }

@@ -3,23 +3,47 @@ using UnityEngine;
 using System.Collections;
 using System.Linq;
 
-public class FSMController : MonoBehaviour {
-	
+public class FSMController : MonoBehaviour
+{
+	public static int timeInterval = 100;
+	public static int timeElapse = 0, timeBehind = 0;
 	public static List<FSM> FSMList = new List<FSM> ();
-	
+
 	// Use this for initialization
-	void Start () {
+	void Start ()
+	{
 	
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	void Update ()
+	{
 	
 	}
 	
-	public static void RunFSM () {
-		foreach (FSM currentFSM in FSMList) {
-			currentFSM.Run ();	
+	
+	public static void RunFSM (int timeStamps)
+	{
+		while (timeBehind < timeStamps) {
+			if ((timeBehind + 1) % timeInterval == 0) {
+			// if (timeBehind == 0) {
+				foreach (FSM currentFSM in FSMList) {
+					currentFSM.Run ();	
+				}
+			}
+			timeBehind ++;
 		}
+		
+		foreach (FSM currentFSM in FSMList) {
+			foreach (List<Waypoint> lwp in currentFSM.sequence) {
+				int index = currentFSM.sequence.IndexOf (lwp);
+				if (index != currentFSM.sequence.Count - 1) {
+					lwp.Last ().next = 	currentFSM.sequence.ElementAt (index + 1).ElementAt (0).next;
+				}
+				else 
+					lwp.Last ().next = lwp.Last ();
+			}
+		}
+		return;
 	}
 }

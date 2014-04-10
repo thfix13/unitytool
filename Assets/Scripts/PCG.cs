@@ -584,12 +584,12 @@ public class PCG : MonoBehaviour
 		waypointPrefab = wpPrefab;
 		
 		for (int i = 0; i < numOfGuards; i++) {
-			int startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count - 1);
+			int startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
 			// Should modify the finalGraphNodesList first
 			while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0) {
-				startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count - 1);
+				startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
 			}
-			int neighborIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count - 1);
+			int neighborIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count);
 			int endIndex = sBoundary.finalGraphNodesList.IndexOf (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.ElementAt (neighborIndex));
 			Vector3 startVec = sBoundary.finalGraphNodesList.ElementAt (startIndex).Pos (floor);
 			Vector3 endVec = sBoundary.finalGraphNodesList.ElementAt (endIndex).Pos (floor);
@@ -597,8 +597,16 @@ public class PCG : MonoBehaviour
 			float factor = UnityEngine.Random.Range (0.0f, 1.0f);
 			Vector3 position = startVec + dir * factor;
 			GameObject enemy = GameObject.Instantiate (enemyPrefab, position, Quaternion.identity) as GameObject;
-			enemy.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);	
-			FSM currentFSM = (FSM)enemy.AddComponent<FSM>();
+			enemy.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);
+			enemy.GetComponent<Enemy> ().moveSpeed = 1.0f;
+			FSM currentFSM = enemy.AddComponent<FSM> () as FSM;
+			currentFSM.startIndex = startIndex;
+			currentFSM.endIndex = endIndex;
+			currentFSM.position = position;
+			currentFSM.sBoundary = sBoundary;
+			currentFSM.enemyPrefab = enmPrefab;
+			currentFSM.waypointPrefab = wpPrefab;
+			currentFSM.floor = floor;
 			FSMController.FSMList.Add (currentFSM);
 		}
 	}
