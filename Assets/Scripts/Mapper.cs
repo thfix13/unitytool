@@ -150,10 +150,10 @@ public class Mapper : MonoBehaviour
 		// Foreach period time, we advance a stepsize into the future and compute the map for it
 		for (int counter = 0; counter < timestamps; counter++) {
 			// Simulate and store the values for future use
-			int elapseIndex = counter / FSMController.timeInterval;
+			int elapseIndex = (counter + 1) / FSMController.timeInterval;
 			
 			foreach (Enemy e in enemies) {
-				if ((counter + 1) % FSMController.timeInterval == 0 && counter != 0) {
+				if ((counter + 1) % FSMController.timeInterval == 0) {
 					e.SimulateOverRhythm (stepSize, elapseIndex);
 				} else {
 					e.Simulate (stepSize);

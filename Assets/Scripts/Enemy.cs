@@ -108,7 +108,7 @@ public class Enemy : MonoBehaviour
 	// This siumulates the enemy's movement based on the actual enemy movement for different intervals
 	public void SimulateOverRhythm (float time, int elapseIndex)
 	{
-		dummyTarget = gameObject.GetComponent <FSM> ().sequence.ElementAt (elapseIndex).ElementAt (0);
+		//dummyTarget = gameObject.GetComponent <FSM> ().sequence.ElementAt (elapseIndex).ElementAt (1);
 		Vector3 outPos;
 		Quaternion outRot;
 		Waypoint outWay;	

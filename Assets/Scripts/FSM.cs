@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using System.Collections;
 using System.Linq;
@@ -31,7 +31,7 @@ public class FSM : MonoBehaviour
 	public void Run ()
 	{
 		int index = UnityEngine.Random.Range (1, System.Enum.GetValues (typeof(States)).Length + 1);
-//		Debug.Log ("random index: " + index);
+
 		// Switch between different status
 		// Pause
 //		if (index == (int)States.PAUSE) {
@@ -48,21 +48,22 @@ public class FSM : MonoBehaviour
 //		} 
 //		// Move
 //		else 
+		
 		if (index == (int)States.MOVE) {
-		 	Vector3 endVec = sBoundary.finalGraphNodesList.ElementAt (endIndex).Pos (floor);
+			// Initial the head of list for each interval
+			Vector3 endVec = sBoundary.finalGraphNodesList.ElementAt (endIndex).Pos (floor);
 			GameObject wp = GameObject.Instantiate (waypointPrefab, endVec, Quaternion.identity) as GameObject;
 			Waypoint wpScript;
 			wpScript = wp.GetComponent ("Waypoint") as Waypoint;
-			// this.gameObject.GetComponent <Enemy> ().target = wpScript;
 			List<Waypoint> newList = new List<Waypoint> ();
 			newList.Add (wpScript);
 			sequence.Add (newList);
 			
-			
-			float totalDist = this.gameObject.GetComponent <Enemy> ().moveSpeed * FSMController.timeInterval * 1 / 10f;
 			// Give predictions in current timeInterval
+			// Total length the guard could travel
+			float totalDist = this.gameObject.GetComponent <Enemy> ().moveSpeed * FSMController.timeInterval * 1 / 10f;
 			while (totalDist >= Mathf.Epsilon) {
-//				Debug.Log (Vector3.Distance (position, endVec));
+				// Deduct next section's length
 				totalDist -= Vector3.Distance (position, endVec);
 				if (totalDist >= Mathf.Epsilon) {
 					int neighborIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.ElementAt (endIndex).neighbors.Count);

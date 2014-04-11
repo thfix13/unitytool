@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using System.Collections;
 using System.Linq;
@@ -34,14 +34,16 @@ public class FSMController : MonoBehaviour
 			timeBehind ++;
 		}
 		
+		// Accomplish the data structure
 		foreach (FSM currentFSM in FSMList) {
 			foreach (List<Waypoint> lwp in currentFSM.sequence) {
 				int index = currentFSM.sequence.IndexOf (lwp);
 				if (index != currentFSM.sequence.Count - 1) {
-					lwp.Last ().next = 	currentFSM.sequence.ElementAt (index + 1).ElementAt (0).next;
+					lwp.Last ().next = 	currentFSM.sequence.ElementAt (index + 1).ElementAt (0);
 				}
-				else 
-					lwp.Last ().next = lwp.Last ();
+				else {
+					lwp.Last ().next = lwp.ElementAt (lwp.Count - 2);
+				}
 			}
 		}
 		return;
