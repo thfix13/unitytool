@@ -14,7 +14,8 @@ public class FSM : MonoBehaviour
 	public enum States
 	{
 		PAUSE = 1,
-		MOVE
+		MOVE, 
+		ROTATE
 	};
 	
 	// Use this for initialization
@@ -32,7 +33,7 @@ public class FSM : MonoBehaviour
 	public void Run ()
 	{
 		int index = UnityEngine.Random.Range (1, System.Enum.GetValues (typeof(States)).Length + 1);
-
+		Debug.Log (index);
 		// Switch between different status
 		
 		// Pause
@@ -69,6 +70,7 @@ public class FSM : MonoBehaviour
 				if (totalDist >= Mathf.Epsilon) {
 					int neighborIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.ElementAt (endIndex).neighbors.Count);
 					int tempIndex = sBoundary.finalGraphNodesList.IndexOf (sBoundary.finalGraphNodesList.ElementAt (endIndex).neighbors.ElementAt (neighborIndex));
+					startIndex = endIndex;
 					position = endVec;
 					endVec = sBoundary.finalGraphNodesList.ElementAt (tempIndex).Pos (floor);
 					endIndex = tempIndex;
@@ -84,7 +86,48 @@ public class FSM : MonoBehaviour
 				}
 			}
 		} else {
+			Vector3 startVec = sBoundary.finalGraphNodesList.ElementAt (startIndex).Pos (floor);
+			Vector3 endVec = sBoundary.finalGraphNodesList.ElementAt (endIndex).Pos (floor);
+			Vector3 dir = endVec - startVec;
+			Vector3 n1 = Vector3.Cross (dir, new Vector3 (0.0f, 1.0f, 0.0f));
+			Vector3 n2 = Vector3.Cross (new Vector3 (0.0f, 1.0f, 0.0f), dir);
 			
+			GameObject rwp1 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
+			GameObject rwp2 = GameObject.Instantiate (waypointPrefab, endVec, Quaternion.identity) as GameObject;
+			GameObject rwp3 = GameObject.Instantiate (waypointPrefab, n1, Quaternion.identity) as GameObject;
+			GameObject rwp4 = GameObject.Instantiate (waypointPrefab, n2, Quaternion.identity) as GameObject;
+			rwp1.AddComponent ("RotationWaypoint");
+			rwp2.AddComponent ("RotationWaypoint");
+			rwp3.AddComponent ("RotationWaypoint");
+			rwp4.AddComponent ("RotationWaypoint");
+			DestroyImmediate (rwp1.GetComponent ("Waypoint"));
+			DestroyImmediate (rwp2.GetComponent ("Waypoint"));
+			DestroyImmediate (rwp3.GetComponent ("Waypoint"));
+			DestroyImmediate (rwp4.GetComponent ("Waypoint"));
+			RotationWaypoint rwpScript1;
+			RotationWaypoint rwpScript2;
+			RotationWaypoint rwpScript3;
+			RotationWaypoint rwpScript4;
+			rwpScript1 = rwp1.GetComponent ("Waypoint") as RotationWaypoint;
+			rwpScript2 = rwp2.GetComponent ("Waypoint") as RotationWaypoint;
+			rwpScript3 = rwp3.GetComponent ("Waypoint") as RotationWaypoint;
+			rwpScript4 = rwp4.GetComponent ("Waypoint") as RotationWaypoint;
+			rwpScript1.next = rwpScript3;
+			rwpScript3.next = rwpScript2;
+			rwpScript2.next = rwpScript4;
+			rwpScript4.next = rwpScript1;
+			
+			rwpScript1.lookDir = startVec;
+			rwpScript2.lookDir = endVec;
+			rwpScript3.lookDir = n1;
+			rwpScript4.lookDir = n2;
+			
+			List<Waypoint> newList = new List<Waypoint> ();
+			newList.Add (rwpScript1);
+			newList.Add (rwpScript2);
+			newList.Add (rwpScript3);
+			newList.Add (rwpScript4);
+			sequence.Add (newList);
 		} 
 	}
 }

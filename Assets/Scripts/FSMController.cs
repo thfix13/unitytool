@@ -44,7 +44,9 @@ public class FSMController : MonoBehaviour
 					if (lwp.Count == 1) {
 						lwp.Last ().next = currentFSM.sequence.ElementAt (index - 1).Last ();
 					} else {
-						lwp.Last ().next = lwp.ElementAt (lwp.Count - 2);
+						if (lwp.Last ().next == null) {
+							lwp.Last ().next = lwp.ElementAt (lwp.Count - 2);
+						}
 					}
 				}
 			}

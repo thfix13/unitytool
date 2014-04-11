@@ -599,6 +599,7 @@ public class PCG : MonoBehaviour
 			GameObject enemy = GameObject.Instantiate (enemyPrefab, position, Quaternion.identity) as GameObject;
 			enemy.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);
 			enemy.GetComponent<Enemy> ().moveSpeed = 1.0f;
+			enemy.GetComponent<Enemy> ().rotationSpeed = 7.0f;
 			FSM currentFSM = enemy.AddComponent<FSM> () as FSM;
 			currentFSM.startIndex = startIndex;
 			currentFSM.endIndex = endIndex;
