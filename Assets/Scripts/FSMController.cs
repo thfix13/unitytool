@@ -21,12 +21,11 @@ public class FSMController : MonoBehaviour
 	
 	}
 	
-	
 	public static void RunFSM (int timeStamps)
 	{
 		while (timeBehind < timeStamps) {
 			if ((timeBehind + 1) % timeInterval == 0) {
-			// if (timeBehind == 0) {
+				// if (timeBehind == 0) {
 				foreach (FSM currentFSM in FSMList) {
 					currentFSM.Run ();	
 				}
@@ -39,10 +38,14 @@ public class FSMController : MonoBehaviour
 			foreach (List<Waypoint> lwp in currentFSM.sequence) {
 				int index = currentFSM.sequence.IndexOf (lwp);
 				if (index != currentFSM.sequence.Count - 1) {
-					lwp.Last ().next = 	currentFSM.sequence.ElementAt (index + 1).ElementAt (0);
-				}
-				else {
-					lwp.Last ().next = lwp.ElementAt (lwp.Count - 2);
+					lwp.Last ().next = currentFSM.sequence.ElementAt (index + 1).ElementAt (0);
+				} else {
+					// Waiting waypoint
+					if (lwp.Count == 1) {
+						lwp.Last ().next = currentFSM.sequence.ElementAt (index - 1).Last ();
+					} else {
+						lwp.Last ().next = lwp.ElementAt (lwp.Count - 2);
+					}
 				}
 			}
 		}

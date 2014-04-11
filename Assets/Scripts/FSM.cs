@@ -13,19 +13,20 @@ public class FSM : MonoBehaviour
 	
 	public enum States
 	{
-//		PAUSE = 1,
-		MOVE = 1
+		PAUSE = 1,
+		MOVE
 	};
 	
 	// Use this for initialization
 	void Start ()
 	{
+		
 	}
 	
 	// Update is called once per frame
 	void Update ()
 	{
-
+		
 	}
 	
 	public void Run ()
@@ -33,23 +34,23 @@ public class FSM : MonoBehaviour
 		int index = UnityEngine.Random.Range (1, System.Enum.GetValues (typeof(States)).Length + 1);
 
 		// Switch between different status
-		// Pause
-//		if (index == (int)States.PAUSE) {
-//			// Waiting waypoint
-//			GameObject wwp = GameObject.Instantiate (waypointPrefab, this.gameObject.transform.position, Quaternion.identity) as GameObject;
-//			wwp.AddComponent ("WaitingWaypoint");
-//			DestroyImmediate (wwp.GetComponent ("Waypoint"));
-//			WaitingWaypoint wwpScript;
-//			wwpScript = wwp.GetComponent ("Waypoint") as WaitingWaypoint;
-//			wwpScript.waitingTime = FSMController.timeInterval;
-//			List<Waypoint> newList = new List<Waypoint> ();
-//			newList.Add (wwpScript);
-//			sequence.Add (newList);
-//		} 
-//		// Move
-//		else 
 		
-		if (index == (int)States.MOVE) {
+		// Pause
+		if (index == (int)States.PAUSE) {
+			// Waiting waypoint
+			GameObject wwp = GameObject.Instantiate (waypointPrefab, position, Quaternion.identity) as GameObject;
+			wwp.AddComponent ("WaitingWaypoint");
+			DestroyImmediate (wwp.GetComponent ("Waypoint"));
+			WaitingWaypoint wwpScript;
+			wwpScript = wwp.GetComponent ("Waypoint") as WaitingWaypoint;
+			wwpScript.waitingTime = FSMController.timeInterval * 1 / 10f;
+			List<Waypoint> newList = new List<Waypoint> ();
+			newList.Add (wwpScript);
+			sequence.Add (newList);
+		} 
+		
+		// Move
+		else if (index == (int)States.MOVE) {
 			// Initial the head of list for each interval
 			Vector3 endVec = sBoundary.finalGraphNodesList.ElementAt (endIndex).Pos (floor);
 			GameObject wp = GameObject.Instantiate (waypointPrefab, endVec, Quaternion.identity) as GameObject;
