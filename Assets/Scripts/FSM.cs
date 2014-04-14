@@ -33,9 +33,7 @@ public class FSM : MonoBehaviour
 	public void Run ()
 	{
 		int index = UnityEngine.Random.Range (1, System.Enum.GetValues (typeof(States)).Length + 1);
-		Debug.Log (index);
 		// Switch between different status
-		
 		// Pause
 		if (index == (int)States.PAUSE) {
 			// Waiting waypoint

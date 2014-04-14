@@ -153,7 +153,7 @@ public class Mapper : MonoBehaviour
 			int elapseIndex = (counter + 1) / FSMController.timeInterval;
 			
 			foreach (Enemy e in enemies) {
-				if ((counter + 1) % FSMController.timeInterval == 0) {
+				if ((counter + 1) % FSMController.timeInterval == 0 && counter != timestamps - 1) {
 					e.SimulateOverRhythm (stepSize, elapseIndex);
 				} else {
 					e.Simulate (stepSize);

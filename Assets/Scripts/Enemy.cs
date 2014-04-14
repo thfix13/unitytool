@@ -96,7 +96,6 @@ public class Enemy : MonoBehaviour
 	// Sets the initial position with the current transform coordinates within a time interval
 	public void SetInitialPositionOverRhythm (int elapseIndex)
 	{
-//		Debug.Log (gameObject.GetComponent <FSM> ().sequence.Count);
 		initialTarget = gameObject.GetComponent <FSM> ().sequence.ElementAt (elapseIndex).ElementAt (0);
 		initialPosition = transform.position;
 		initialRotation = transform.rotation;
@@ -108,12 +107,13 @@ public class Enemy : MonoBehaviour
 	// This siumulates the enemy's movement based on the actual enemy movement for different intervals
 	public void SimulateOverRhythm (float time, int elapseIndex)
 	{
-		//dummyTarget = gameObject.GetComponent <FSM> ().sequence.ElementAt (elapseIndex).ElementAt (1);
+		dummyTarget = gameObject.GetComponent <FSM> ().sequence.ElementAt (elapseIndex).ElementAt (0);
+		
 		Vector3 outPos;
 		Quaternion outRot;
 		Waypoint outWay;	
 		
-		EnemyMover.Solve (gameObject.GetHashCode (), dummyPosition, dummyRotation, moveSpeed, rotationSpeed, time, dummyTarget, 0.25f , out outPos, out outRot, out outWay);
+		EnemyMover.Solve (gameObject.GetHashCode (), dummyPosition, dummyRotation, moveSpeed, rotationSpeed, time, dummyTarget, 0.25f, out outPos, out outRot, out outWay);
 		
 		dummyPosition = outPos;
 		dummyRotation = outRot;
