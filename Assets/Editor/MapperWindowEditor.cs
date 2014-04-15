@@ -655,6 +655,10 @@ namespace EditorArea {
 
 			GameObject[] obs = GameObject.FindGameObjectsWithTag("Obs");
 
+			//data holder
+			Triangulation triangulation = GameObject.Find("Triangulation").GetComponent<Triangulation>(); 
+			triangulation.points.Clear();
+			triangulation.colours.Clear(); 
 
 			//Only one geometry for now
 			
@@ -690,7 +694,8 @@ namespace EditorArea {
 						lines.Add(new Line(g.vertex[i],g.vertex[i+1]));
 					else 	       
 						lines.Add(new Line(g.vertex[0],g.vertex[i]));
-						      
+					triangulation.points.Add(g.vertex[i]);	      
+					triangulation.colours.Add(Color.cyan);	      
 				}
 
 			}
@@ -780,13 +785,20 @@ namespace EditorArea {
 								//Debug.DrawLine(v3,v1,Color.red); 
 
 								//Add the traingle
-								Triangle toAddTriangle = new Triangle(v1,v2,v3); 
+								Triangle toAddTriangle = new Triangle(
+									v1,triangulation.points.IndexOf(v1),
+									v2,triangulation.points.IndexOf(v2),
+									v3,triangulation.points.IndexOf(v3));
+								                                       
 
 								Boolean isAlready = false; 
 								foreach(Triangle tt in triangles)
 								{
 									if (tt.Equals(toAddTriangle))
 									{
+										//Debug.Log(toAddTriangle.refPoints[0]+", "+
+										//          toAddTriangle.refPoints[1]+", "+
+										//          toAddTriangle.refPoints[2]+", "); 
 										isAlready = true; 
 										break; 
 									}
@@ -794,12 +806,9 @@ namespace EditorArea {
 								}
 								if(!isAlready)
 								{
-
-
-									//if(! triangles.Contains(toAddTriangle))
-										triangles.Add(toAddTriangle);
+									triangles.Add(toAddTriangle);
 								}
-									//return; 
+									
 							}
 						}
 					}
@@ -827,7 +836,7 @@ namespace EditorArea {
 				}
 
 			}
-			Debug.Log (triangles.Count());
+			//Debug.Log (triangles.Count());
 
 			foreach(Triangle tt in triangles)
 			{
@@ -852,73 +861,61 @@ namespace EditorArea {
 			}
 
 
-			/*
-			 * old approach with reachability
-			for(int i = 0; i<triangles.Count-1;i++)
-			{
-				Boolean collided = false; 
 
-				foreach(Geometry g in geos)
-				{
-					for(int j = 0; j<3; j++)
-					{
-						if( LineIntersection(triangles[i].GetCenterTriangle(),
-						                     triangles[i+1].GetCenterTriangle(),
-						                     g.vertex[j],g.vertex[j+1]))
-						{
-							collided = true; 
-							break; 
-						}
-
-					}
-
-				
-
-					if(collided)
-						break; 
-				}
-
-				foreach (Line l in roadMap)
-				{
-					if( LineIntersection(triangles[i].GetCenterTriangle(),
-					                     triangles[i+1].GetCenterTriangle(),
-					                     l.vertex[0],l.vertex[1]))
-					{
-						collided = true; 
-						break; 
-					}
-
-
-				}
-
-				if(!collided)
-				{
-					roadMap.Add(new Line(triangles[i].GetCenterTriangle(),
-				                     triangles[i+1].GetCenterTriangle()));
-                }
-				//Gizmos.DrawSphere(triangles[i].GetCenterTriangle(),1);	
-			}
-			*/
 			foreach (Line l in roadMap)
 			{
-				Debug.DrawLine(l.vertex[0],l.vertex[1],Color.red);
-				
+				//Debug.DrawLine(l.vertex[0],l.vertex[1],Color.red);				
 			}
 
+
+
+			foreach (Triangle tPointDraw in triangles)
+			{
+				tPointDraw.data = triangulation;
+			}
+
+			int triangleStart = UnityEngine.Random.Range(0,triangles.Count);
+
+			triangles[3].SetColour(); 
+			//triangles[triangleStart].SetColour(); 
+
 			/*
-			Vector3 v1 = new Vector3(10.0f, 1.0f, 10.0f); 
-			Vector3 v2 = new Vector3(-4.1f, 1.0f, 5.9f);
-			
-			Vector3 v3 = new Vector3(-4.1f, 1.0f, 1.8f);
-			Vector3 v4 = new Vector3(-4.1f, 1.0f, 5.9f);
+			foreach (Triangle tPointDraw in triangles)
+			{
 
-			Debug.DrawLine(v1,v2,Color.blue); 
-			Debug.DrawLine(v3,v4,Color.red); 
-			
+				for(int i = 0; i<tPointDraw.vertex.Length; i++)
+				{
+					if(!triangulation.points.Contains(tPointDraw.vertex[i]))
+					{
+						triangulation.points.Add(tPointDraw.vertex[i]);
 
-			Debug.Log(LineIntersect(v1, v2, v3, v4));
-			Debug.Log(LineIntersection(v1, v2, v3, v4));
+						switch(tPointDraw.colourVertex[i])
+						{
+							case 1:
+								triangulation.colours.Add(Color.red);
+								break;
+
+							case 2:
+								triangulation.colours.Add(Color.blue);
+								break;
+
+							case 3:
+								triangulation.colours.Add(Color.green);
+								break;
+
+							default:
+								triangulation.colours.Add(Color.cyan);
+								break; 
+								
+						}
+
+						//triangulation.points.Add(tPointDraw.vertex[i]);
+
+					}
+				}
+			}
 			*/
+
 		}
 
 		private Boolean LineIntersect(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
