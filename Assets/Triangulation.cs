@@ -25,5 +25,7 @@ public class Triangulation : MonoBehaviour
 		//Gizmos.color = Color.red;
 		//Gizmos.DrawSphere (new Vector3(0,2,0), 1);
 	}
-
+	public void AddPoint(Vector3 v)
+	{
+		<
 }

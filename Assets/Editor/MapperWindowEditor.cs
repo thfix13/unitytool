@@ -299,7 +299,12 @@ namespace EditorArea {
 			{
 				TriangulationSpace(); 
 			}
-	
+
+			if (GUILayout.Button ("quadrilateralization Space")) 
+			{
+				QuadrilateralizationSpace(); 
+			}
+
 			#endregion
 
 			#region 6. Paths
@@ -584,8 +589,65 @@ namespace EditorArea {
 				
 			previous = DateTime.Now;
 		}
+		public void QuadrilateralizationSpace()
+		{
+			if (floor == null) {
+				floor = (GameObject)GameObject.Find ("Floor");
+				
+				if (mapper == null) {
+					mapper = floor.GetComponent<Mapper> ();
+					
+					if (mapper == null)
+						mapper = floor.AddComponent<Mapper> ();
+					
+					mapper.hideFlags = HideFlags.None;
+					
+				}
+				drawer = floor.gameObject.GetComponent<MapperEditorDrawer> ();
+				if (drawer == null) {
+					drawer = floor.gameObject.AddComponent<MapperEditorDrawer> ();
+					drawer.hideFlags = HideFlags.HideInInspector;
+				}
+			}
+			
+			Cell[][] obstacles = null; 
+			
+			
+			mapper.ComputeTileSize (SpaceState.Editor, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize);
+			
+			obstacles = mapper.ComputeObstacles ();
+			
+			//First geometry is the outer one
+			List<Geometry> geos = new List<Geometry>();
+			
+			
+			//Floor
+			Vector3[] f = new Vector3[4];
+			MeshFilter mesh = (MeshFilter)(floor.GetComponent("MeshFilter")) ;
+			Vector3[] t = mesh.sharedMesh.vertices; 
+			
+			Geometry tempGeometry = new Geometry(); 
+			
+			
+			tempGeometry.vertex[0] = mesh.transform.TransformPoint(t[0]);
+			tempGeometry.vertex[2] = mesh.transform.TransformPoint(t[120]);
+			tempGeometry.vertex[1] = mesh.transform.TransformPoint(t[110]);
+			tempGeometry.vertex[3] = mesh.transform.TransformPoint(t[10]);
+			
+			tempGeometry.vertex[0].y = 1; 
+			tempGeometry.vertex[1].y = 1; 
+			tempGeometry.vertex[2].y = 1; 
+			tempGeometry.vertex[3].y = 1; 
+			
+			
+			geos.Add(tempGeometry); 
+			//Add sphere markers
+			foreach( Vector3 v in tempGeometry.vertex)
+			{
 
-		
+			}
+
+		}
 
 		public void TriangulationSpace()
 		{
@@ -694,8 +756,8 @@ namespace EditorArea {
 						lines.Add(new Line(g.vertex[i],g.vertex[i+1]));
 					else 	       
 						lines.Add(new Line(g.vertex[0],g.vertex[i]));
-					triangulation.points.Add(g.vertex[i]);	      
-					triangulation.colours.Add(Color.cyan);	      
+					//triangulation.points.Add(g.vertex[i]);	      
+					//triangulation.colours.Add(Color.cyan);	      
 				}
 
 			}
@@ -840,9 +902,12 @@ namespace EditorArea {
 
 			foreach(Triangle tt in triangles)
 			{
+				triangulation.points.Add(tt.GetCenterTriangle());
+				triangulation.colours.Add(Color.cyan); 
+
 				Line[] ll = tt.GetSharedLines(); 
 
-				if(ll.Count() > 2)
+				if(ll.Count() > 1)
 				{
 					for(int i = 0; i<ll.Length; i++)
 					{

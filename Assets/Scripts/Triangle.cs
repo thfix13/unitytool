@@ -101,10 +101,10 @@ public class Triangle
 		if(6-sum == 3)
 			data.colours[point] = Color.green;
 
-		//foreach(Triangle t in voisins)
-		//{
-		//	t.SetColour2();  
-		//}
+		foreach(Triangle t in voisins)
+		{
+			t.SetColour2();  
+		}
 	}
 	public void PrintRefPosition()
 	{
