@@ -300,9 +300,14 @@ namespace EditorArea {
 				TriangulationSpace(); 
 			}
 
-			if (GUILayout.Button ("quadrilateralization Space")) 
+			if (GUILayout.Button ("Quadrilateralization Space")) 
 			{
 				QuadrilateralizationSpace(); 
+			}
+
+			if (GUILayout.Button ("Reduce the space")) 
+			{
+				ReduceSpace(); 
 			}
 
 			#endregion
@@ -589,8 +594,13 @@ namespace EditorArea {
 				
 			previous = DateTime.Now;
 		}
-		public void QuadrilateralizationSpace()
+		public void ReduceSpace()
 		{
+			//data holder
+			Triangulation triangulation = GameObject.Find("Triangulation").GetComponent<Triangulation>(); 
+			triangulation.points.Clear();
+			triangulation.colours.Clear(); 
+			
 			if (floor == null) {
 				floor = (GameObject)GameObject.Find ("Floor");
 				
@@ -618,7 +628,7 @@ namespace EditorArea {
 			obstacles = mapper.ComputeObstacles ();
 			
 			//First geometry is the outer one
-			List<Geometry> geos = new List<Geometry>();
+			List<Quadrilater> geos = new List<Quadrilater>();
 			
 			
 			//Floor
@@ -626,7 +636,7 @@ namespace EditorArea {
 			MeshFilter mesh = (MeshFilter)(floor.GetComponent("MeshFilter")) ;
 			Vector3[] t = mesh.sharedMesh.vertices; 
 			
-			Geometry tempGeometry = new Geometry(); 
+			Quadrilater tempGeometry = new Quadrilater(); 
 			
 			
 			tempGeometry.vertex[0] = mesh.transform.TransformPoint(t[0]);
@@ -639,14 +649,437 @@ namespace EditorArea {
 			tempGeometry.vertex[2].y = 1; 
 			tempGeometry.vertex[3].y = 1; 
 			
+			tempGeometry.SetLine(); 
 			
 			geos.Add(tempGeometry); 
-			//Add sphere markers
-			foreach( Vector3 v in tempGeometry.vertex)
+			
+			GameObject[] obs = GameObject.FindGameObjectsWithTag("Obs");
+			
+			foreach(GameObject o in obs)
 			{
-
+				mesh = (MeshFilter)(o.GetComponent("MeshFilter")) ;
+				t = mesh.sharedMesh.vertices; 
+				
+				tempGeometry = new Quadrilater(); 
+				
+				tempGeometry.vertex[0] = mesh.transform.TransformPoint(t[6]);
+				tempGeometry.vertex[1] = mesh.transform.TransformPoint(t[8]);
+				tempGeometry.vertex[3] = mesh.transform.TransformPoint(t[7]);
+				tempGeometry.vertex[2] = mesh.transform.TransformPoint(t[9]);
+				
+				tempGeometry.vertex[0].y = 1; 
+				tempGeometry.vertex[2].y = 1; 
+				tempGeometry.vertex[1].y = 1; 
+				tempGeometry.vertex[3].y = 1; 
+				
+				tempGeometry.SetLine(); 
+				geos.Add(tempGeometry); 
 			}
 
+
+			//lines are defined by all the points in  obs
+			List<Line> lines = new List<Line>(); 
+			foreach(Quadrilater g in geos)
+			{
+				for(int i = 0; i< g.vertex.Length; i+=1)
+				{
+					if(i<g.vertex.Length -1)
+						lines.Add(new Line(g.vertex[i],g.vertex[i+1]));
+					else 	       
+						lines.Add(new Line(g.vertex[0],g.vertex[i]));
+					//triangulation.points.Add(g.vertex[i]);	      
+					//triangulation.colours.Add(Color.cyan);	      
+				}
+				
+			}
+
+
+
+
+			
+			List<Quadrilater> covered = new List<Quadrilater>(); 
+			List<Line> linesLinking = new List<Line>(); 
+
+			List<Quadrilater> toCheck = new List<Quadrilater>(); 
+
+			for(int i = 1; i<geos.Count;i++)
+			{
+				toCheck.Add(geos[i]);
+			}
+
+
+			foreach(Quadrilater q in toCheck)
+			{
+				q.SetVoisins(toCheck);
+				//q.DrawVoisin(); 
+			}
+
+
+			//Now link the closest one to the polygon.
+
+			//Minimum spanning tree.
+
+
+			Quadrilater start = geos[0].findClosestQuad(geos[0].vertex[0],toCheck,new List<Quadrilater>());
+			linesLinking.Add(geos[0].GetClosestLine(start,toCheck));
+
+			start.visited = true;
+
+			List<Quadrilater> toCheckNode = new List<Quadrilater>(); 
+			toCheckNode.Add(start); 
+
+
+
+			Line LinetoAdd = start.voisinsLine[0];
+
+			while(LinetoAdd != null)
+			{
+				LinetoAdd = null; 
+				Quadrilater qToAdd =null; 
+
+				//Check all 
+				foreach(Quadrilater q in toCheckNode)
+				{
+					
+					for(int i = 0; i<q.voisins.Count;i++)
+				    {
+						if(! q.voisins[i].visited)
+						{
+							if(LinetoAdd != null)
+							{
+								//get the shortest line
+								if(LinetoAdd.Magnitude()>=q.voisinsLine[i].Magnitude())
+								{
+									LinetoAdd = q.voisinsLine[i];
+									qToAdd = q.voisins[i]; 
+									 
+								}
+							}
+							else 
+							{
+								qToAdd = q.voisins[i]; 
+								LinetoAdd = q.voisinsLine[i];
+							}
+						}
+						else
+						{
+							continue; 
+						}
+					}
+				}
+				if(LinetoAdd!= null)
+				{
+					linesLinking.Add (LinetoAdd); 
+					qToAdd.visited = true; 
+					toCheckNode.Add(qToAdd); 
+				}
+			}
+
+			/*
+			Old code
+			foreach(Vector3 v in geos[0].vertex)
+			{
+				Quadrilater start = geos[0].findClosestQuad(v,toCheck,new List<Quadrilater>());
+				linesLinking.Clear(); 
+				covered.Clear(); 
+				//Random start
+
+
+
+				if(start!= null)
+				{
+
+					linesLinking.Add(geos[0].GetClosestLine(start,toCheck));
+					
+				}
+
+				Quadrilater checking = start;
+				covered.Add(checking); 
+
+
+
+				while(checking!=null)
+				{
+					Quadrilater closest = checking.findClosestQuad(toCheck,covered);
+
+					if(closest == null)
+					{
+						break; 
+					}
+
+					linesLinking.Add(checking.GetClosestLine(closest,toCheck));
+					covered.Add(closest); 
+					checking = closest;
+				}
+				if(covered.Count == geos.Count-1)
+					break;
+
+			}
+			*/
+
+			foreach(Line l in linesLinking)
+			{
+				l.DrawLine(Color.red); 
+			}
+
+		}
+
+		public void QuadrilateralizationSpace()
+		{
+			//data holder
+			Triangulation triangulation = GameObject.Find("Triangulation").GetComponent<Triangulation>(); 
+			triangulation.points.Clear();
+			triangulation.colours.Clear(); 
+
+			if (floor == null) {
+				floor = (GameObject)GameObject.Find ("Floor");
+				
+				if (mapper == null) {
+					mapper = floor.GetComponent<Mapper> ();
+					
+					if (mapper == null)
+						mapper = floor.AddComponent<Mapper> ();
+					
+					mapper.hideFlags = HideFlags.None;
+					
+				}
+				drawer = floor.gameObject.GetComponent<MapperEditorDrawer> ();
+				if (drawer == null) {
+					drawer = floor.gameObject.AddComponent<MapperEditorDrawer> ();
+					drawer.hideFlags = HideFlags.HideInInspector;
+				}
+			}
+			
+			Cell[][] obstacles = null; 
+			
+			
+			mapper.ComputeTileSize (SpaceState.Editor, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize);
+			
+			obstacles = mapper.ComputeObstacles ();
+			
+			//First geometry is the outer one
+			List<Quadrilater> geos = new List<Quadrilater>();
+			
+			
+			//Floor
+			Vector3[] f = new Vector3[4];
+			MeshFilter mesh = (MeshFilter)(floor.GetComponent("MeshFilter")) ;
+			Vector3[] t = mesh.sharedMesh.vertices; 
+			
+			Quadrilater tempGeometry = new Quadrilater(); 
+			
+			
+			tempGeometry.vertex[0] = mesh.transform.TransformPoint(t[0]);
+			tempGeometry.vertex[2] = mesh.transform.TransformPoint(t[120]);
+			tempGeometry.vertex[1] = mesh.transform.TransformPoint(t[110]);
+			tempGeometry.vertex[3] = mesh.transform.TransformPoint(t[10]);
+			
+			tempGeometry.vertex[0].y = 1; 
+			tempGeometry.vertex[1].y = 1; 
+			tempGeometry.vertex[2].y = 1; 
+			tempGeometry.vertex[3].y = 1; 
+			
+			tempGeometry.SetLine(); 
+
+			geos.Add(tempGeometry); 
+
+			GameObject[] obs = GameObject.FindGameObjectsWithTag("Obs");
+
+			foreach(GameObject o in obs)
+			{
+				mesh = (MeshFilter)(o.GetComponent("MeshFilter")) ;
+				t = mesh.sharedMesh.vertices; 
+				
+				tempGeometry = new Quadrilater(); 
+				
+				tempGeometry.vertex[0] = mesh.transform.TransformPoint(t[6]);
+				tempGeometry.vertex[1] = mesh.transform.TransformPoint(t[8]);
+				tempGeometry.vertex[3] = mesh.transform.TransformPoint(t[7]);
+				tempGeometry.vertex[2] = mesh.transform.TransformPoint(t[9]);
+				
+				tempGeometry.vertex[0].y = 1; 
+				tempGeometry.vertex[2].y = 1; 
+				tempGeometry.vertex[1].y = 1; 
+				tempGeometry.vertex[3].y = 1; 
+				
+				tempGeometry.SetLine(); 
+				geos.Add(tempGeometry); 
+			}
+			//lines are defined by all the points in  obs
+			List<Line> lines = new List<Line>(); 
+			foreach(Quadrilater g in geos)
+			{
+				for(int i = 0; i< g.vertex.Length; i+=1)
+				{
+					if(i<g.vertex.Length -1)
+						lines.Add(new Line(g.vertex[i],g.vertex[i+1]));
+					else 	       
+						lines.Add(new Line(g.vertex[0],g.vertex[i]));
+					//triangulation.points.Add(g.vertex[i]);	      
+					//triangulation.colours.Add(Color.cyan);	      
+				}
+				
+			}
+
+
+			 
+
+			List<Quadrilater> candidates = getQuadrilater(lines,geos.ToArray()); 
+
+			foreach(Quadrilater q in candidates)
+			{
+				triangulation.AddPoint(q.GetCenterQuad(),q.c); 
+				q.DrawDebug(); 
+			}
+
+			Debug.Log(candidates.Count); 
+		}
+
+
+		public List<Quadrilater> getQuadrilater(List<Line> lines,Quadrilater[] geos)
+		{
+			List<Quadrilater> candidates = new List<Quadrilater>(); 
+			
+			//Starting line
+
+
+
+			List<Line> linesUpdated = new List<Line>();
+
+			//foreach(Line l in lines)
+			//	linesUpdated.Add(l); 
+
+			foreach(Line l in lines)
+			//for(int i = 0; i<linesUpdated.Count;i++)
+			{
+				//Line l = linesUpdated[i];
+				//Otherside line
+				Quadrilater toAddQuad = null ; 
+				Line l1 = null;
+				Line l2 = null; 
+
+				//foreach(Line ll in linesUpdated)
+				foreach(Line ll in lines)
+				{
+					if(ll.ShareVertex(l) || l == ll)
+						continue; 
+					
+					l1 = new Line(l.vertex[0],ll.vertex[0]);
+					l2 = new Line(l.vertex[1],ll.vertex[1]); 
+					
+					//Cannot cross
+					if(l1.LineIntersection(l2))
+					{
+						l1 = new Line(l.vertex[1],ll.vertex[0]);
+						l2 = new Line(l.vertex[0],ll.vertex[1]);
+					}
+					var r1 = new Line(l1.vertex[0],l2.vertex[1]);
+					var r2 = new Line(l1.vertex[1],l2.vertex[0]); 
+					
+					if(!r1.LineIntersection(r2))
+						continue; 
+					
+					
+					//cannot be a duplicate
+					bool duplicate = false; 
+
+					foreach(Line lCheck in lines)
+					{	
+						
+						if(lCheck == l || ll == lCheck ) 
+							continue; 
+						//lCheck.DrawLine(Color.green);
+						
+						if( l1 == lCheck || l2 == lCheck ||
+						    lCheck.LineIntersection(l1) || lCheck.LineIntersection(l2) 
+						    ||
+							lCheck.LineIntersection(r1) || lCheck.LineIntersection(r2) 
+						   )	
+						{
+							
+							duplicate = true; 
+							break; 
+						}
+					}
+
+					
+					
+					if(duplicate)
+						continue; 
+					
+					Quadrilater tQuad = new Quadrilater(l,ll,l1,l2); 
+
+					//tQuad.DrawDebug(); 	
+
+					foreach(Quadrilater q in candidates)
+					{
+						foreach(Line lQ in q.lines)
+						{
+							if(lQ.LineIntersection(l2) || lQ.LineIntersection(l1))
+							{
+								duplicate = true; 
+								break; 
+							}
+						}
+					}
+					
+					if(duplicate)
+						continue; 
+					
+					
+					
+					foreach(Quadrilater q in candidates)
+					{
+						if(q.Collide(tQuad) || q.Equals(tQuad))
+						{	
+							duplicate = true;
+							break; 
+						}
+
+					}
+
+					foreach(Quadrilater q in geos)
+					{
+						if(q.Equals(tQuad))
+						{	
+							duplicate = true;
+							break; 
+						}
+						
+					}
+					if(duplicate)
+						continue; 
+
+					//tQuad.DrawDebug();
+
+					if(toAddQuad != null)
+					{
+						if(tQuad.GetLength() < toAddQuad.GetLength())
+						{
+							toAddQuad = tQuad; 
+						}
+					}
+					else
+						toAddQuad = tQuad; 
+
+					
+
+					//break;
+				}
+				if(toAddQuad!=null && !candidates.Contains(toAddQuad) && ! geos.Contains(toAddQuad))
+				{ 
+
+					candidates.Add(toAddQuad);
+					candidates[candidates.Count-1].DrawDebug(); 
+					linesUpdated.Add(l1); 
+					linesUpdated.Add(l2); 
+				}
+
+
+
+
+			}
+			return candidates;
 		}
 
 		public void TriangulationSpace()
@@ -703,15 +1136,7 @@ namespace EditorArea {
 			tempGeometry.vertex[3].y = 1; 
 
 			
-			geos.Add(tempGeometry); 
-			//Add sphere markers
-			foreach( Vector3 v in tempGeometry.vertex)
-			{
-//				GameObject g = GameObject.CreatePrimitive(PrimitiveType.Sphere) as GameObject;
-//				g.transform.position = v; 
-			}
-
-			//Obstacles
+			geos.Add(tempGeometry);
 
 
 
@@ -877,13 +1302,6 @@ namespace EditorArea {
 				}
 			}
 
-			foreach (Line l in lines)
-			{
-				Debug.DrawLine(l.vertex[0],l.vertex[1],Color.blue);
-				
-			}
-
-			List<Line> roadMap = new List<Line>(); 
 
 			//Find shared edge and triangle structure
 
@@ -898,88 +1316,10 @@ namespace EditorArea {
 				}
 
 			}
-			//Debug.Log (triangles.Count());
 
-			foreach(Triangle tt in triangles)
-			{
-				triangulation.points.Add(tt.GetCenterTriangle());
-				triangulation.colours.Add(Color.cyan); 
-
-				Line[] ll = tt.GetSharedLines(); 
-
-				if(ll.Count() > 1)
-				{
-					for(int i = 0; i<ll.Length; i++)
-					{
-						Debug.DrawLine(ll[i].MidPoint(), tt.GetCenterTriangle(),Color.red);
-					}
-				}
-
-				else
-				{
-					for(int i = 0; i<ll.Length; i++)
-					{
-						Debug.DrawLine(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint(),Color.red);
-					}
-				}
-
-			}
+			triangulation.triangles = triangles; 
 
 
-
-			foreach (Line l in roadMap)
-			{
-				//Debug.DrawLine(l.vertex[0],l.vertex[1],Color.red);				
-			}
-
-
-
-			foreach (Triangle tPointDraw in triangles)
-			{
-				tPointDraw.data = triangulation;
-			}
-
-			int triangleStart = UnityEngine.Random.Range(0,triangles.Count);
-
-			triangles[3].SetColour(); 
-			//triangles[triangleStart].SetColour(); 
-
-			/*
-			foreach (Triangle tPointDraw in triangles)
-			{
-
-				for(int i = 0; i<tPointDraw.vertex.Length; i++)
-				{
-					if(!triangulation.points.Contains(tPointDraw.vertex[i]))
-					{
-						triangulation.points.Add(tPointDraw.vertex[i]);
-
-						switch(tPointDraw.colourVertex[i])
-						{
-							case 1:
-								triangulation.colours.Add(Color.red);
-								break;
-
-							case 2:
-								triangulation.colours.Add(Color.blue);
-								break;
-
-							case 3:
-								triangulation.colours.Add(Color.green);
-								break;
-
-							default:
-								triangulation.colours.Add(Color.cyan);
-								break; 
-								
-						}
-
-						//triangulation.points.Add(tPointDraw.vertex[i]);
-
-					}
-				}
-			}
-			*/
 
 		}
 

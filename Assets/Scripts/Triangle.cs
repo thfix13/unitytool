@@ -15,6 +15,10 @@ public class Triangle
 
 	public Triangulation data; 
 
+	public Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
+	                           UnityEngine.Random.Range(0.0f,1.0f),
+	                           UnityEngine.Random.Range(0.0f,1.0f)) ;
+
 	public Triangle(Vector3 v1, Vector3 v2,Vector3 v3)
 	{
 		vertex[0]=v1; 
@@ -43,13 +47,21 @@ public class Triangle
 		return l; 
 	}
 
-	
+	public void DrawDebug()
+	{
+		//Add get lines method. 
+		foreach(Line l in getLines())
+		{
+			Debug.DrawLine(l.vertex[0],l.vertex[1],c); 
+		}
+
+	}
 
 	public Vector3 GetCenterTriangle()
 	{
-		return new Vector3( (vertex[0].x + vertex[1].x +vertex[2].x ) / 3,
-		                    (vertex[0].y + vertex[1].y +vertex[2].y ) / 3,
-		                   (vertex[0].z + vertex[1].z +vertex[2].z ) / 3);
+		return new Vector3( (vertex[0].x + vertex[1].x + vertex[2].x ) / 3,
+		                    (vertex[0].y + vertex[1].y + vertex[2].y ) / 3,
+		                    (vertex[0].z + vertex[1].z + vertex[2].z ) / 3);
 	}
 	public void SetColour()
 	{
