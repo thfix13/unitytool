@@ -309,7 +309,27 @@ namespace EditorArea {
 			{
 				ReduceSpace(); 
 			}
+			if(GUILayout.Button("Clear Enemies"))
+			{
 
+				GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+				GameObject[] waypoints = GameObject.FindGameObjectsWithTag("Waypoint");
+
+				//Clear the enemies
+
+				if(enemies != null)
+				{	
+				    
+				    foreach (GameObject g in enemies) {
+						DestroyImmediate(g);
+					}
+					
+				}
+				foreach (GameObject g in waypoints) 
+		    	{
+					DestroyImmediate(g);
+				}	
+			}
 			#endregion
 
 			#region 6. Paths
@@ -775,53 +795,338 @@ namespace EditorArea {
 				}
 			}
 
-			/*
-			Old code
-			foreach(Vector3 v in geos[0].vertex)
+
+
+			//foreach(Line l in linesLinking)
+			//{
+			//	l.DrawLine(Color.red); 
+			//}
+
+			//Triangulate
+			for (int i = 0; i < geos.Count; i++)
 			{
-				Quadrilater start = geos[0].findClosestQuad(v,toCheck,new List<Quadrilater>());
-				linesLinking.Clear(); 
-				covered.Clear(); 
-				//Random start
-
-
-
-				if(start!= null)
+				
+				for(int j = i+1; j < geos.Count; j++)
 				{
-
-					linesLinking.Add(geos[0].GetClosestLine(start,toCheck));
+					
+					for(int w = 0; w<geos[i].vertex.Length; w++)
+					{
+						
+						for(int z = 0; z<geos[j].vertex.Length; z++)
+						{
+							
+							List<Line> toAdd = new List<Line>(); 
+							
+							Boolean foundBreak = false; 
+							
+							foreach (Line l in lines)
+							{
+								
+								if( LineIntersection(geos[i].vertex[w], geos[j].vertex[z],
+								                     l.vertex[0],l.vertex[1]))
+								{
+									
+									foundBreak = true; 
+									break; 
+								}								
+								
+							}
+							if(!foundBreak)
+							{	
+								//Debug.DrawLine(geos[i].vertex[w], geos[j].vertex[z], Color.blue);
+								lines.Add(new Line(geos[i].vertex[w], geos[j].vertex[z])); 		
+							}	
+						}
+					}
+				}
+			}
+			
+			//Find the centers 
+			List<Triangle> triangles = new List<Triangle>(); 
+			//Well why be efficient when you can be not efficient
+			foreach (Line l in lines)
+			{
+				Vector3 v1 = l.vertex[0]; 
+				Vector3 v2 = l.vertex[1];
+				foreach (Line l2 in lines)
+				{
+					if (l == l2)
+						continue;
+					Vector3 v3 = Vector3.zero; 
+					
+					
+					if (l2.vertex[0].Equals(v2))
+					{
+						v3 = l2.vertex[1];
+						//have to check if closes
+					}
+					else if (l2.vertex[1].Equals(v2))
+					{
+						v3 = l2.vertex[0];
+					}
+					
+					if(v3 != Vector3.zero)
+					{
+						foreach (Line l3 in lines)
+						{
+							if(l3 == l2 || l3 == l)
+								continue; 
+							if( (l3.vertex[0].Equals(v1) && l3.vertex[1].Equals(v3))
+							   || (l3.vertex[1].Equals(v1) && l3.vertex[0].Equals(v3)))
+							{
+								//Debug.DrawLine(v1,v2,Color.red); 
+								//Debug.DrawLine(v2,v3,Color.red); 
+								//Debug.DrawLine(v3,v1,Color.red); 
+								
+								//Add the traingle
+								Triangle toAddTriangle = new Triangle(
+									v1,triangulation.points.IndexOf(v1),
+									v2,triangulation.points.IndexOf(v2),
+									v3,triangulation.points.IndexOf(v3));
+								
+								
+								Boolean isAlready = false; 
+								foreach(Triangle tt in triangles)
+								{
+									if (tt.Equals(toAddTriangle))
+									{
+										//Debug.Log(toAddTriangle.refPoints[0]+", "+
+										//          toAddTriangle.refPoints[1]+", "+
+										//          toAddTriangle.refPoints[2]+", "); 
+										isAlready = true; 
+										break; 
+									}
+									
+								}
+								if(!isAlready)
+								{
+									triangles.Add(toAddTriangle);
+								}
+								
+							}
+						}
+					}
+				}
+			}
+			
+			
+			//Find shared edge and triangle structure
+			
+			foreach(Triangle tt in triangles)
+			{
+				foreach(Triangle ttt in triangles)
+				{
+					if(tt == ttt)
+						continue; 
+					tt.ShareEdged(ttt,linesLinking);
 					
 				}
+				
+			}
 
-				Quadrilater checking = start;
-				covered.Add(checking); 
+			triangles[0].SetColour();
 
+			//Count Where to put guards 
+			List<Vector3> points = new List<Vector3>(); 
+			List<Color> coloursPoints = new List<Color>(); 
 
+			int[] count = new int[3];
+			//0 red, 1 blue, 2 green
 
-				while(checking!=null)
+			foreach(Triangle tt in triangles)
+			{
+				//foreach(Vector3 v in tt.vertex)
+				for(int j = 0; j<tt.vertex.Length;j++)
 				{
-					Quadrilater closest = checking.findClosestQuad(toCheck,covered);
+					bool vectorToAdd = true;
 
-					if(closest == null)
-					{
-						break; 
+					for(int i = 0; i<points.Count;i++)
+				    {
+						if(points[i] == tt.vertex[j] && coloursPoints[i] == tt.colourVertex[j])
+							vectorToAdd = false; 
+
+					
 					}
 
-					linesLinking.Add(checking.GetClosestLine(closest,toCheck));
-					covered.Add(closest); 
-					checking = closest;
+					if(vectorToAdd)
+					{
+						points.Add(tt.vertex[j]); 
+						coloursPoints.Add(tt.colourVertex[j]); 
+					}
+
 				}
-				if(covered.Count == geos.Count-1)
-					break;
-
 			}
-			*/
 
-			foreach(Line l in linesLinking)
+			foreach(Color c in coloursPoints)
 			{
-				l.DrawLine(Color.red); 
+				if(c == Color.red)
+					count[0]++; 
+				else if(c == Color.blue)
+					count[1]++; 
+				else
+					count[2]++; 
+					
+			}
+			//Debug.Log(count[0]); 
+			//Debug.Log(count[1]); 
+			//Debug.Log(count[2]); 
+
+
+			//Get points with the least colour
+			Color cGuard = Color.cyan; 
+			int lowest = 100000000; 
+
+			for(int i = 0;i<count.Length;i++)
+			{
+				if(count[i]<lowest)
+				{
+					if(i == 0)
+						cGuard = Color.red;
+					else if(i == 1)
+						cGuard = Color.blue;
+					else
+						cGuard = Color.green;
+					lowest = count[i];
+				}
 			}
 
+			List<Vector3> posGuard = new List<Vector3>(); 
+
+			for(int i = 0;i<coloursPoints.Count;i++)
+			{
+				if (coloursPoints[i] == cGuard)
+				{
+					triangulation.AddPoint(points[i]);
+					posGuard.Add(points[i]);
+				}
+			}
+
+			triangulation.triangles = triangles; 
+
+
+			//Put the cameras
+			GameObject guard = GameObject.Find("Enemy") as GameObject;
+			GameObject waypoint = GameObject.Find("Waypoint");
+			
+			//find enemies and clear them
+			//put them in a place holder
+
+			GameObject holder = GameObject.Find("Enemies");
+			GameObject wayHolder = GameObject.Find("Waypoints");
+			//Clear the enemies
+
+			if(holder == null)
+			{	
+			 	holder = new GameObject(); 
+				holder.name = "Enemies";
+			}
+			if(wayHolder == null)
+			{	
+			 	wayHolder = new GameObject(); 
+				wayHolder.name = "Waypoints";
+			}    
+			//Clearing the place for new enemies
+			GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+			GameObject[] waypoints = GameObject.FindGameObjectsWithTag("Waypoint");
+
+			//Clear the enemies
+
+		    foreach (GameObject g in enemies) 
+		    {
+				DestroyImmediate(g);
+			}
+			foreach (GameObject g in waypoints) 
+		    {
+				DestroyImmediate(g);
+			}	
+			    
+		    triangulation.lines.Clear(); 
+			foreach(Vector3 v in posGuard)
+			{
+				GameObject g = Instantiate(guard,v,Quaternion.identity) as GameObject;	
+				g.transform.parent = holder.transform; 
+				g.tag = "Enemy";
+				
+				List<GameObject>ways = new List<GameObject>(); 
+				
+				//Set orientation
+				//Find obstacle linked to. 
+				foreach(Quadrilater q in geos)
+				{
+					Line[] lView = q.GetLine(v);  
+					GameObject way = null; 
+					if(lView.Length>0 )
+					{
+						foreach(Line ll in lView)
+						{
+
+							triangulation.lines.Add(ll);
+							way = Instantiate(waypoint,ll.GetOther(v),
+								Quaternion.identity) as GameObject;
+							way.transform.parent = wayHolder.transform;
+							way.tag = "Waypoint";
+							//ll.DrawLine(Color.red); 
+							ways.Add(way);
+						}
+						Vector3 center = q.GetCenterQuad();
+						Vector3 toAdd = (center - v).normalized;
+
+						if(geos[0] == q)
+							toAdd = (v - center).normalized;							
+
+						way = Instantiate(waypoint,v - (toAdd ),
+							Quaternion.identity) as GameObject;
+						way.transform.parent = wayHolder.transform;
+						way.tag = "Waypoint";
+
+						ways.Add(way);
+
+						way = Instantiate(waypoint,v - (toAdd ),
+							Quaternion.identity) as GameObject;
+						
+						way.transform.parent = wayHolder.transform;
+						way.tag = "Waypoint";
+
+						ways.Add(way);
+
+						//Connect the waypoints
+						break;
+					}
+
+				}
+				//for(int i = 0; i<ways.Count;i++)
+				//{
+				
+
+				RotationWaypoint wGauche = ways[0].GetComponent<RotationWaypoint>();
+				RotationWaypoint wDroite = ways[1].GetComponent<RotationWaypoint>();
+
+				RotationWaypoint wDevant1 = ways[2].GetComponent<RotationWaypoint>();
+				RotationWaypoint wDevant2 = ways[3].GetComponent<RotationWaypoint>();
+
+				wGauche.gameObject.name ="Gauche";
+				wDroite.gameObject.name ="Droite";
+				wDevant1.gameObject.name ="Devant1";
+				wDevant2.gameObject.name ="Devant2";
+
+				wGauche.next = wDevant1; 
+				wDevant1.next = wDroite;
+				wDroite.next = wDevant2;
+				wDevant2.next = wGauche; 
+
+				wGauche.lookDir = (wGauche.transform.position - v).normalized; 
+				wDroite.lookDir = (wDroite.transform.position - v).normalized; 
+				wDevant1.lookDir = (wDevant1.transform.position - v).normalized; 
+				wDevant2.lookDir = (wDevant2.transform.position - v).normalized; 
+				
+				Enemy e = g.GetComponent<Enemy>();
+				e.target = wDevant1; 
+				Vector3 temp = (wDevant1.transform.position - v).normalized;
+				temp *= 0.3f; 
+				g.transform.position = v + temp;
+				//}	
+
+			}
 		}
 
 		public void QuadrilateralizationSpace()

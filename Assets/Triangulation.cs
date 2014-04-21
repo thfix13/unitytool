@@ -13,12 +13,14 @@ public class Triangulation : MonoBehaviour
 	// Use this for initialization
 
 	public List<Triangle> triangles = new List<Triangle>(); 
+	public List<Line> lines = new List<Line>(); 
 
 	public bool drawTriangles = false; 
 	public bool drawRoadMap = false; 
 
 	void OnDrawGizmosSelected() 
 	{
+		return; 
 		//Debug.Log(colours.Count);
 		//Debug.Log(points.Count);
 		var i = 0;
@@ -27,7 +29,7 @@ public class Triangulation : MonoBehaviour
 
 			Gizmos.color = colours[i];
 			//Gizmos.color = Color.red;
-			Gizmos.DrawSphere (v, 0.3f);
+			Gizmos.DrawSphere (v, 0.25f);
 			i++; 
 		}
 
@@ -37,21 +39,45 @@ public class Triangulation : MonoBehaviour
 	public void Update()
 	{
 
+		//return; 
+		//points.Clear(); 
+		//colours.Clear();  
 
+		foreach(Line l in lines)
+		{
+			l.DrawLine(Color.red); 
+		}
 
 		foreach(Triangle tt in triangles)
 		{
 			//triangulation.points.Add(tt.GetCenterTriangle());
 			//triangulation.colours.Add(Color.cyan); 
 			if(drawTriangles)
-				tt.DrawDebug(); 
-			
+			{	
+
+				tt.DrawDebug();
+				foreach(Vector3 v in tt.getVertexMiddle())
+				{
+				//	points.Add(v);
+				}
+
+				foreach(Color v in tt.colourVertex)
+				{
+				//	colours.Add(v);
+				}
+			}
 
 			if(drawRoadMap)
 			{
 				Line[] ll = tt.GetSharedLines(); 
 			
-				if(ll.Length > 2)
+
+				if(ll.Length == 1)
+				{
+					Debug.DrawLine(ll[0].MidPoint(), tt.GetCenterTriangle(),Color.red);
+
+				}
+				else if(ll.Length > 2)
 				{
 					for(int i = 0; i<ll.Length; i++)
 					{

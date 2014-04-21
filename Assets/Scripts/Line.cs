@@ -6,13 +6,15 @@ public class Line
 {
 
 	public Vector3[] vertex = new Vector3[2];
-
+	public Color[] colours = new Color[2]; 
 
 
 	public Line(Vector3 v1, Vector3 v2)
 	{
 		vertex[0] = v1; 
 		vertex[1] = v2; 
+		colours[0] = Color.cyan;
+		colours[1] = Color.cyan; 
 	}
 
 	public  bool Equals(Line l)
@@ -31,6 +33,13 @@ public class Line
 		return new Vector3( (vertex[0].x + vertex[1].x)/2,
 		                   (vertex[0].y + vertex[1].y)/2,
 		                   (vertex[0].z + vertex[1].z)/2);
+	}
+
+	public Vector3 GetOther(Vector3 v)
+	{
+		if(vertex[0]==v)
+			return vertex[1];
+		return vertex[0];
 	}
 
 	public void DrawLine(Color c)

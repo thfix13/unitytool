@@ -37,6 +37,8 @@ public class Quadrilater
 		vertex[1]=v2; 
 		vertex[2]=v3;
 		vertex[3]=v4; 
+
+		SetLine(); 
 	}
 
 	public Quadrilater(Line l1, Line l2,Line l3, Line l4)
@@ -50,6 +52,25 @@ public class Quadrilater
 	}
 
 	//
+
+	public Line[] GetLine(Vector3 v)
+	{
+		SetLine(); 
+		List<Line> toReturn = new List<Line>();
+		foreach(Line l in lines)
+		{
+			l.DrawLine(Color.red);	
+
+			foreach(Vector3 vLine in l.vertex)
+			{
+				if(vLine == v)
+				{
+					toReturn.Add(l);
+				}
+			}
+		}
+		return toReturn.ToArray(); 
+	}
 
 	public void SetVoisins(List<Quadrilater> geos)
 	{

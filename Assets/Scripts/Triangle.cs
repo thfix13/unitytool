@@ -23,7 +23,11 @@ public class Triangle
 	{
 		vertex[0]=v1; 
 		vertex[1]=v2; 
-		vertex[2]=v3; 
+		vertex[2]=v3;
+
+		colourVertex[0] = Color.cyan;
+		colourVertex[1] = Color.cyan;
+		colourVertex[2] = Color.cyan;
 	}
 	public Triangle(Vector3 v1,int i, Vector3 v2,int j,Vector3 v3,int k)
 	{
@@ -34,6 +38,10 @@ public class Triangle
 		refPoints[0] = i; 
 		refPoints[1] = j; 
 		refPoints[2] = k; 
+
+		colourVertex[0] = Color.cyan;
+		colourVertex[1] = Color.cyan;
+		colourVertex[2] = Color.cyan;
 
 	}
 
@@ -52,11 +60,20 @@ public class Triangle
 		//Add get lines method. 
 		foreach(Line l in getLines())
 		{
-			Debug.DrawLine(l.vertex[0],l.vertex[1],c); 
+			Vector3 t1 = l.vertex[0] + ((GetCenterTriangle() - l.vertex[0]).normalized * 0.1f) ; 
+			Vector3 t2 = l.vertex[1] + ((GetCenterTriangle() - l.vertex[1]).normalized * 0.1f) ; 
+			Debug.DrawLine(t1,t2,c); 
 		}
 
 	}
-
+	public Vector3[] getVertexMiddle()
+	{
+		Vector3[] toReturn = new Vector3[3];
+		toReturn[0] = vertex[0] + ((GetCenterTriangle() - vertex[0]).normalized * 0.1f) ; 
+		toReturn[1] = vertex[1] + ((GetCenterTriangle() - vertex[1]).normalized * 0.1f) ; 
+		toReturn[2] = vertex[2] + ((GetCenterTriangle() - vertex[2]).normalized * 0.1f) ; 
+		return toReturn; 
+	}
 	public Vector3 GetCenterTriangle()
 	{
 		return new Vector3( (vertex[0].x + vertex[1].x + vertex[2].x ) / 3,
@@ -67,56 +84,80 @@ public class Triangle
 	{
 		//data.points.AddRange(this.vertex);
 
-		data.colours[refPoints[0]]=(Color.blue);
-		data.colours[refPoints[1]]=(Color.red);
-		data.colours[refPoints[2]]=(Color.green);
+		this.colourVertex[0]=Color.blue;
+		this.colourVertex[1]=Color.red;
+		this.colourVertex[2]=Color.green;
 
 		
 
 
 		foreach(Triangle t in voisins)
 		{
-			t.SetColour2(); 
-			 
+
+			//Debug.DrawLine(this.GetCenterTriangle(),t.GetCenterTriangle(),Color.blue);
+
+			t.SetColour(this); 
 		}
 
 	}
 
-	public void SetColour2()
+	public void SetColour(Triangle ttt)
 	{
+		if(colourVertex[0] != Color.cyan ||
+		   colourVertex[1] != Color.cyan ||
+		   colourVertex[2] != Color.cyan )
+			return;
 
-		//Find the point with no colour
-		int point = -1; 
-		int sum = 0; 
-		foreach(int i in refPoints)
-		{
-			if(data.colours[i] == Color.cyan)
+		//Get the colour to put
+		int indexSum = 0;
+		int sum = 0;  
+
+		for(int i = 0; i<ttt.vertex.Length; i++)
+	    {
+
+			for(int j = 0; j<vertex.Length; j++)
 			{
-				point = i;
+				
+				if(ttt.vertex[i].Equals(vertex[j]))
+				{
 
+					this.colourVertex[j] = ttt.colourVertex[i];
+
+					//Debug.Log(ttt.colourVertex[i]);
+
+					indexSum += j; 
+
+					if(this.colourVertex[j] == Color.red)
+						sum+=1; 
+					else if(this.colourVertex[j] == Color.blue)
+						sum+=2; 
+					else if(this.colourVertex[j] == Color.green)
+						sum+=3; 
+				}
 			}
-			else if(data.colours[i] == Color.blue)
-				sum +=1; 
-			else if(data.colours[i] == Color.red)
-				sum +=2; 
-			else if(data.colours[i] == Color.green)
-				sum +=3; 
-
 		}
-		if(point == -1 || sum == 6)
-			return; 
-		//Add missing colour
-		if(6-sum == 1)
-			data.colours[point] = Color.blue;
-		if(6-sum == 2)
-			data.colours[point] = Color.red;
-		if(6-sum == 3)
-			data.colours[point] = Color.green;
+
+		//Debug.Log(indexSum); 
+
+		if(6 - sum == 1)
+			this.colourVertex[ (3 - indexSum)] = Color.red;
+		else if(6 - sum == 2)
+			this.colourVertex[3 - indexSum] = Color.blue;
+		else if(6 - sum == 3)
+			this.colourVertex[3 - indexSum] = Color.green;
+
+
+		//return;
+
+
 
 		foreach(Triangle t in voisins)
 		{
-			t.SetColour2();  
+			if(t == ttt)
+				continue; 
+			t.SetColour(this); 
 		}
+
 	}
 	public void PrintRefPosition()
 	{
@@ -153,6 +194,46 @@ public class Triangle
 		return Line.Zero; 
 
 	}
+
+	public Line ShareEdged(Triangle t, List<Line> toSkip)
+	{
+		if(this.Equals(t))
+			return Line.Zero; 
+		
+		Line[] l1 = getLines(); 
+		Line[] l2 = t.getLines(); 
+		
+		for(int i = 0; i<3; i++)
+		{
+			bool toSkipLine = false; 
+			foreach(Line l in toSkip)
+			{
+				if(l.Equals(l1[i]))
+					toSkipLine = true;
+			}
+			if(toSkipLine)
+				continue; 
+			for(int j = 0; j<3;j++)
+			{
+				if(l1[i].Equals(l2[j]))
+				{
+					if(! voisins.Contains(t) && this != t)
+						voisins.Add(t); 
+					
+					//Debug.DrawLine(this.GetCenterTriangle(),l1[i].MidPoint(),Color.cyan);
+					
+					return l1[i]; 
+				}
+			}
+		}
+		
+		
+		
+		return Line.Zero; 
+		
+	}
+
+
 	public bool Equals(Triangle t)
 	{
 		return GetCenterTriangle().Equals(t.GetCenterTriangle());
