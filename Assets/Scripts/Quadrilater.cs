@@ -211,7 +211,30 @@ public class Quadrilater
 		}
 		return t; 
 	}
+	public bool Collide(Vector3 v)
+	{
+		//Check if the points are within 
+		float maxx = -100000, minx = 1000000, maxy=-10000000, miny=10000000; 
+		foreach(Vector3 v1 in GetPoint())
+		{
+			if(v1.x>maxx)
+				maxx = v1.x;
+			if(v1.x<minx)
+				minx = v1.x; 
+			if(v1.z>maxy)
+				maxy = v1.z;
+			if(v1.z<miny)
+				miny = v1.z; 
+			
+		}
+		//points
+		if(v.x > minx + 0.1 && v.x < maxx - 0.1 && 
+		   v.z > miny + 0.1 && v.z < maxy - 0.1)
+			return true; 
+		
 
+		return false; 
+	}
 	public bool Collide(Quadrilater q)
 	{
 
@@ -357,6 +380,8 @@ public class Quadrilater
 		return toReturn; 
 
 	}
+
+
 
 	public Line GetClosestLine(Quadrilater q, List<Quadrilater> geos)
 	{

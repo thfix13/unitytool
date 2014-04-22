@@ -1040,7 +1040,9 @@ namespace EditorArea {
 				DestroyImmediate(g);
 			}	
 			    
-		    triangulation.lines.Clear(); 
+		    
+
+
 			foreach(Vector3 v in posGuard)
 			{
 				GameObject g = Instantiate(guard,v,Quaternion.identity) as GameObject;	
@@ -1060,7 +1062,6 @@ namespace EditorArea {
 						foreach(Line ll in lView)
 						{
 
-							triangulation.lines.Add(ll);
 							way = Instantiate(waypoint,ll.GetOther(v),
 								Quaternion.identity) as GameObject;
 							way.transform.parent = wayHolder.transform;
@@ -1123,7 +1124,37 @@ namespace EditorArea {
 				e.target = wDevant1; 
 				Vector3 temp = (wDevant1.transform.position - v).normalized;
 				temp *= 0.3f; 
+
 				g.transform.position = v + temp;
+
+				for(int i = 0; i<1000;i++)
+				{
+					bool free = true; 
+					foreach(Quadrilater q in geos)
+					{
+						if(q == geos[0])
+							continue; 
+						if(q.Collide(g.transform.position))
+							free = false; 
+						if(!free)
+							break;
+					}
+
+					if(free)
+						break; 
+
+					//Try a new position at random.
+
+					temp = new Vector3(UnityEngine.Random.Range(-1f,1f),0, UnityEngine.Random.Range(-1f,1f));
+					temp.Normalize(); 
+					temp *= 0.3f; 
+
+					g.transform.position = v + temp;
+					
+				}
+				
+
+
 				//}	
 
 			}
