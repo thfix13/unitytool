@@ -38,7 +38,7 @@ public class Enemy : MonoBehaviour
 		Quaternion outRot;
 		Waypoint outWay;
 		
-		EnemyMover.Solve (gameObject.GetHashCode (), dummyPosition, dummyRotation, moveSpeed, rotationSpeed, Time.deltaTime, dummyTarget, 0.25f, out outPos, out outRot, out outWay);
+		EnemyMover.Solve (gameObject.GetHashCode (), dummyPosition, dummyRotation, moveSpeed, rotationSpeed, Time.deltaTime, dummyTarget, 0.05f, out outPos, out outRot, out outWay);
 		
 		transform.position = outPos;
 		transform.rotation = outRot;
@@ -74,7 +74,7 @@ public class Enemy : MonoBehaviour
 		Quaternion outRot;
 		Waypoint outWay;
 		
-		EnemyMover.Solve (gameObject.GetHashCode (), dummyPosition, dummyRotation, moveSpeed, rotationSpeed, time, dummyTarget, 0.25f, out outPos, out outRot, out outWay);
+		EnemyMover.Solve (gameObject.GetHashCode (), dummyPosition, dummyRotation, moveSpeed, rotationSpeed, time, dummyTarget, 0.05f, out outPos, out outRot, out outWay);
 		
 		dummyPosition = outPos;
 		dummyRotation = outRot;
@@ -113,7 +113,7 @@ public class Enemy : MonoBehaviour
 		Quaternion outRot;
 		Waypoint outWay;	
 		
-		EnemyMover.Solve (gameObject.GetHashCode (), dummyPosition, dummyRotation, moveSpeed, rotationSpeed, time, dummyTarget, 0.25f, out outPos, out outRot, out outWay);
+		EnemyMover.Solve (gameObject.GetHashCode (), dummyPosition, dummyRotation, moveSpeed, rotationSpeed, time, dummyTarget, 0.05f, out outPos, out outRot, out outWay);
 		
 		dummyPosition = outPos;
 		dummyRotation = outRot;
