@@ -18,7 +18,7 @@ public class PCG : MonoBehaviour
 
 	// Forming a path from startIndex to endIndex
 	public static List<Enemy> listOfEnemies = new List<Enemy> ();
-	public static List<int> path = new List<int> ();
+	public static List<List<int>> templistOfPath = new List<List<int>> ();
 	public static List<List<int>> listOfPath = new List<List<int>> ();
 	public static List<List<Waypoint>> listOfSequence = new List<List<Waypoint>> ();
 	public static List<List<GameObject>> listOfWaypoints = new List<List<GameObject>> ();
@@ -638,14 +638,15 @@ public class PCG : MonoBehaviour
 				endIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
 			}
 			// Retrieve a path from startIndex to endIndex
-//			List<int> path = new List<int> ();
-//			listOfPath.Add (path);
-//			FindPath (startIndex, endIndex, i);
-//			path.Add (endIndex);
-//			foreach (int idx in path) {
-//				Debug.Log (idx);
-//			}
-			listOfPath.Add (PCG.FindShortestPath (startIndex, endIndex));
+			foreach (GraphNode g in sBoundary.finalGraphNodesList) {
+				g.isVisited = false;
+			}
+			List<int> path = new List<int> ();
+			listOfPath.Add (path);
+			List<int> tempPath = new List<int> ();
+			templistOfPath.Add (tempPath);
+			FindPath (startIndex, endIndex, i);
+//			listOfPath.Add (PCG.FindShortestPath (startIndex, endIndex));
 			
 			Vector3 initialPos = sBoundary.finalGraphNodesList.ElementAt (startIndex).Pos (floor);
 			GameObject enemy = GameObject.Instantiate (enemyPrefab, initialPos, Quaternion.identity) as GameObject;
@@ -1095,21 +1096,22 @@ public class PCG : MonoBehaviour
 	// Find path using depth-first-search
 	private static void FindPath (int currentIndex, int endIndex, int guardIndex)
 	{
-		foreach (GraphNode g in sBoundary.finalGraphNodesList) {
-			g.isVisited = false;
-		}
 		sBoundary.finalGraphNodesList.ElementAt (currentIndex).isVisited = true;
-
+		templistOfPath.ElementAt(guardIndex).Add (currentIndex);
 		if (currentIndex == endIndex) {
+			for (int i = 0; i < templistOfPath.ElementAt (guardIndex).Count; i++) {
+				listOfPath.ElementAt (guardIndex).Add (templistOfPath.ElementAt (guardIndex).ElementAt (i));	
+			}
 			return;
 		}
-		listOfPath.ElementAt(guardIndex).Add (currentIndex);
+		
 		foreach (GraphNode gn in sBoundary.finalGraphNodesList.ElementAt (currentIndex).neighbors) {
 			if (gn.neighbors.Count != 0 && gn.isVisited == false) {
 				FindPath (sBoundary.finalGraphNodesList.IndexOf (gn), endIndex, guardIndex);
-				return;
 			}
 		}
+		templistOfPath.ElementAt (guardIndex).Remove (currentIndex);
+		return;
 	}
 	
 	// Find shortest path with minimum nodes using breadth-first-search
