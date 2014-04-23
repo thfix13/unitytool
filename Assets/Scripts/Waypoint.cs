@@ -117,8 +117,13 @@ public class Waypoint : MonoBehaviour
 				}
 			}
 		}
-		if (debug)
+		if (debug) {
+			Gizmos.color = Color.red;
 			Gizmos.DrawSphere (transform.position, 0.1f);
+			if (next) {
+				Gizmos.DrawLine ( transform.position, next.transform.position);
+			}
+		}
 	}
 
 	private Vector3 CalculateBezierPoint (float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)

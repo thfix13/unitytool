@@ -628,10 +628,6 @@ public class PCG : MonoBehaviour
 		enemyPrefab = enmPrefab;
 		waypointPrefab = wpPrefab;
 		
-		foreach (GraphNode g in sBoundary.finalGraphNodesList) {
-			g.isVisited = false;
-		}
-		
 		for (int i = 0; i < numOfGuards; i++) {
 			int startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
 			while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0) {
@@ -641,16 +637,15 @@ public class PCG : MonoBehaviour
 			while (sBoundary.finalGraphNodesList.ElementAt (endIndex).neighbors.Count == 0 || endIndex == startIndex) {
 				endIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
 			}
-			
 			// Retrieve a path from startIndex to endIndex
-			List<int> path = new List<int> ();
-			listOfPath.Add (path);
-			FindPath (startIndex, endIndex, i);
-			path.Add (endIndex);
+//			List<int> path = new List<int> ();
+//			listOfPath.Add (path);
+//			FindPath (startIndex, endIndex, i);
+//			path.Add (endIndex);
 //			foreach (int idx in path) {
 //				Debug.Log (idx);
 //			}
-//			listOfPath.Add (PCG.FindShortestPath (startIndex, endIndex));
+			listOfPath.Add (PCG.FindShortestPath (startIndex, endIndex));
 			
 			Vector3 initialPos = sBoundary.finalGraphNodesList.ElementAt (startIndex).Pos (floor);
 			GameObject enemy = GameObject.Instantiate (enemyPrefab, initialPos, Quaternion.identity) as GameObject;
@@ -677,42 +672,37 @@ public class PCG : MonoBehaviour
 				for (int cnt = 0; cnt < listOfWaypoints.ElementAt (size).Count; cnt++) {
 					tempWaypoints.Add (listOfWaypoints.ElementAt (size).ElementAt (cnt));	
 				}
-				
+				//
 				foreach (GameObject currentWaypoint in listOfWaypoints.ElementAt (size)) {
 					if (currentWaypoint.GetComponent ("WaitingWaypoint") == null && currentWaypoint.GetComponent ("RotationWaypoint") == null) {
-						int r1 = UnityEngine.Random.Range (0, 1);
+						int r1 = UnityEngine.Random.Range (0, 2);
 						// 50% possibility of changing a waypoint into a waiting waypoint or rotation waypoint
 						if (r1 == 0) {
-							
 							int r2 = UnityEngine.Random.Range (0, 3);
 							// Waiting
 							if (r2 == 0) {
 								int index = tempWaypoints.IndexOf (currentWaypoint);
 								tempSequence.RemoveAt (index);
-								GameObject wp1 = GameObject.Instantiate (waypointPrefab, tempWaypoints.ElementAt (index).transform.position, Quaternion.identity) as GameObject;
-								GameObject wp2 = GameObject.Instantiate (waypointPrefab, tempWaypoints.ElementAt (index).transform.position, Quaternion.identity) as GameObject;
+								GameObject wp = GameObject.Instantiate (waypointPrefab, tempWaypoints.ElementAt (index).transform.position, Quaternion.identity) as GameObject;
 								GameObject wwp = currentWaypoint;
 								wwp.AddComponent ("WaitingWaypoint");
 								DestroyImmediate (wwp.GetComponent ("Waypoint"));
-								Waypoint wpScript1;
-								Waypoint wpScript2;
+								Waypoint wpScript;
 								WaitingWaypoint wwpScript;
-								wpScript1 = wp1.GetComponent ("Waypoint") as Waypoint;
-								wpScript2 = wp2.GetComponent ("Waypoint") as Waypoint;
+								wpScript = wp.GetComponent ("Waypoint") as Waypoint;
 								wwpScript = wwp.GetComponent ("Waypoint") as WaitingWaypoint;
-								wpScript1.next = wwpScript;
-								wwpScript.next = wpScript2;
+								wpScript.next = wwpScript;
 								wwpScript.waitingTime = 3.0f;
 								tempSequence.Insert (index, wwpScript);
 								if (index < tempSequence.Count - 1) {
-									wpScript2.next =  tempSequence.ElementAt (index + 1);
+									wwpScript.next =  tempSequence.ElementAt (index + 1);
 								} else {
-									wpScript2.next = tempSequence.ElementAt (0);	
+									wwpScript.next = tempSequence.First ();
 								}
 								if (index > 0) {
-									tempSequence.ElementAt (index - 1).next = wpScript1;	
+									tempSequence.ElementAt (index - 1).next = wpScript;	
 								} else {
-									tempSequence.Last ().next = wpScript1;	
+									tempSequence.Last ().next = wpScript;	
 								}
 							} 
 							// Swiping
@@ -1101,29 +1091,38 @@ public class PCG : MonoBehaviour
 			}
 		}
 	}
-	
-	private static void FindPath (int currentIndex, int endIndex, int i)
+
+	// Find path using depth-first-search
+	private static void FindPath (int currentIndex, int endIndex, int guardIndex)
 	{
+		foreach (GraphNode g in sBoundary.finalGraphNodesList) {
+			g.isVisited = false;
+		}
 		sBoundary.finalGraphNodesList.ElementAt (currentIndex).isVisited = true;
+
 		if (currentIndex == endIndex) {
 			return;
 		}
-		listOfPath.ElementAt(i).Add (currentIndex);
+		listOfPath.ElementAt(guardIndex).Add (currentIndex);
 		foreach (GraphNode gn in sBoundary.finalGraphNodesList.ElementAt (currentIndex).neighbors) {
 			if (gn.neighbors.Count != 0 && gn.isVisited == false) {
-				FindPath (sBoundary.finalGraphNodesList.IndexOf (gn), endIndex, i);
+				FindPath (sBoundary.finalGraphNodesList.IndexOf (gn), endIndex, guardIndex);
 				return;
 			}
 		}
 	}
 	
-	// Find shortest path with minimum nodes
+	// Find shortest path with minimum nodes using breadth-first-search
 	private static List<int> FindShortestPath (int startIndex, int endIndex)
 	{
 		Queue<int> queue = new Queue<int> ();
 		List<int> shortestpath = new List<int> ();
 		int tempIndex = -1;
-		
+
+		foreach (GraphNode g in sBoundary.finalGraphNodesList) {
+			g.isVisited = false;
+		}
+
 		queue.Enqueue (startIndex);
 		sBoundary.finalGraphNodesList.ElementAt (startIndex).isVisited = true;
 		tempIndex = queue.Dequeue ();
@@ -1149,7 +1148,9 @@ public class PCG : MonoBehaviour
 			tempgn = tempgn.prev;
 		}
 		shortestpath.Insert (0, startIndex);
-		
+	
+		queue.Clear ();
+
 		return shortestpath;
 	}
 	
