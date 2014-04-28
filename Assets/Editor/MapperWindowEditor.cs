@@ -16,7 +16,7 @@ public class MapperWindowEditor : EditorWindow
 	public static List<Node> mostDanger = null, shortest = null, lengthiest = null, fastest = null, longest = null;
 	// Parameters
 	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 75, ticksBehind = 0, numOfEnemies = 0, numOfRegionsForEnemies = 0, numOfCameras = 0, numOfRegionsForCameras = 0, iterations2 = 5, iterations3 = 5, noeB = 0, nocB = 0, noreB = 0, norcB = 0, numOfGuards = 0, iterations4 = 3;
-	public static int pLine = 50, pDot =50, pSplit = 50, pZigZag = 50, pPause = 33, pSwipe = 33, pFullRotate = 34;
+	public static int pLine = 50, pDot = 50, pSplit = 50, pZigZag = 50, pPause = 33, pSwipe = 33, pFullRotate = 34;
 	public static bool drawMap = true, drawMoveMap = false, drawMoveUnits = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = false, 
 				drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawBoundaries = false, drawRoadmaps = false, drawRoadmaps2 = false, drawRoadmaps3 = false, drawGraph = false, drawGraph2 = false,
 				smoothPath = true, drawShortestPath = false, drawLongestPath = false, drawLengthiestPath = false, drawFastestPath = false, drawMostDangerousPath = false, drawFoVOnly = true, seeByTime = false, seeByLength = false, seeByDanger = false, seeByLoS = false, seeByDanger3 = false, seeByLoS3 = false, seeByDanger3Norm = false, seeByLoS3Norm = false, seeByCrazy = false, seeByVelocity = false;
@@ -1117,7 +1117,7 @@ public class MapperWindowEditor : EditorWindow
 			setShortcutFoldout = EditorGUILayout.Foldout (true, "Generate Graph with One-Click");
 		} else {
 			setShortcutFoldout = EditorGUILayout.Foldout (setShortcutFoldout, "Generate Graph with One-Click");
-    	}
+		}
 
 		if (setShortcutFoldout) {
 			if (GUILayout.Button ("Generate Graph")) {
@@ -1135,24 +1135,28 @@ public class MapperWindowEditor : EditorWindow
 					}
 					PCG.InitializeSkeleton (obs);
 				}
+				
 				PCG.sBoundary.identifyObstacleContours (floor);
 				drawer.sBoundaryGrid = PCG.sBoundary.obs;
+				
 				PCG.sBoundary.boundaryContoursFlooding (floor);
 				PCG.sBoundary.extractRoadmaps (floor);
 				drawer.roadmapNodesList = PCG.sBoundary.roadmapNodesList;
+				
 				PCG.sBoundary.selectSuperNodes ();
 				PCG.sBoundary.initializeGraph ();
 				drawer.graphNodesList = PCG.sBoundary.finalGraphNodesList;
+				
 				PCG.sBoundary.cleanUp (floor);
+				
+				behaviorOpEnables = true;
 				shortcutClicked = true;
-      		}
+			}
 			drawGraph2 = EditorGUILayout.Toggle ("Draw Graph", drawGraph2);
 		}
 
 		GUI.enabled = randomOpEnables;
 		if (GUILayout.Button ("Clear Graph")) {
-			fullMap = null;
-			drawer.fullMap = fullMap;
 			obs = null;
 			PCG.sBoundary.obs = null;
 			PCG.sBoundary.boundaryIndex = 0;
@@ -1163,6 +1167,7 @@ public class MapperWindowEditor : EditorWindow
 			PCG.sBoundary.roadmapDictionary.Clear ();
 			PCG.sBoundary.roadmapNodesList.Clear ();
 			drawer.sBoundaryGrid = PCG.sBoundary.obs;
+			behaviorOpEnables = false;
 		}
 
 		GUI.enabled = true;
@@ -1198,106 +1203,7 @@ public class MapperWindowEditor : EditorWindow
 			}
 		}
 		
-		if (default7 == true) {
-			default7 = false;
-			setEnemiesFoldout2 = EditorGUILayout.Foldout (true, "Set Guards");
-		} else {
-			setEnemiesFoldout2 = EditorGUILayout.Foldout (setEnemiesFoldout2, "Set Guards");
-		}
-		
 		GUI.enabled = behaviorOpEnables;
-		
-		if (setEnemiesFoldout2) {
-			enemyPrefab = (GameObject)EditorGUILayout.ObjectField ("Enemy Prefab", enemyPrefab, typeof(GameObject), false);
-			numOfEnemies = EditorGUILayout.IntField ("Number of enemies", numOfEnemies);
-			numOfCameras = EditorGUILayout.IntField ("Number of cameras", numOfCameras);	
-
-			// ----------------------------------Mixed Guards-----------------------------------//
-			if (GUILayout.Button ("Populate Guards")) {
-				// Clear up enemies and their paths in the scene
-				PCG.ClearUpObjects (enemypathObjects);
-				PCG.numOfEnemies = numOfEnemies;
-				PCG.numOfCameras = numOfCameras;
-				
-				// Populate guards in the graph
-				enemypathObjects = PCG.PopulateGuardsInGraph (enemyPrefab, waypointPrefab, floor).ToArray ();
-				StorePositions ();
-			}
-		}
-		
-		GUI.enabled = true;
-		if (GUILayout.Button ("Reset")) {
-			PCG.ClearUpObjects (enemypathObjects);
-			fullMap = null;
-			drawer.fullMap = fullMap;
-			simulated = false;
-			foreach (GameObject p in playerObjects) {
-				DestroyImmediate (p);
-			}
-			players.Clear ();
-			playing = false;
-			ResetAI ();
-			obs = null;
-			PCG.vEnemy.obs = null;
-			drawer.eVoronoiGrid = PCG.vEnemy.obs;
-			PCG.vCamera.obs = null;
-			drawer.cVoronoiGrid = PCG.vCamera.obs;
-
-			numOfEnemies = 0;
-			numOfCameras = 0;
-			numOfRegionsForEnemies = 0;
-			numOfRegionsForCameras = 0;
-			setPathOpEnables = false;
-			setRotationOpEnables = false;
-			//randomOpEnables = false;
-			
-			boundariesFloodingOpEnables = false;
-			extractRoadmapOpEnables = false;
-			initializeGraphOpEnables = false;
-			mergeOpEnables = false;
-			behaviorOpEnables = false;
-		}
-		
-		GUI.enabled = true;
-		
-		EditorGUILayout.LabelField ("");
-		if (default8 == true) {
-			default8 = false;
-			setRhythmsFoldout = EditorGUILayout.Foldout (true, "Set Rhythms");
-		} else {
-			setRhythmsFoldout = EditorGUILayout.Foldout (setRhythmsFoldout, "Set Rhythms");
-		}
-		
-		if (setRhythmsFoldout) {
-			enemyPrefab = (GameObject)EditorGUILayout.ObjectField ("Enemy Prefab", enemyPrefab, typeof(GameObject), false);
-			numOfGuards = EditorGUILayout.IntField ("Number of guards", numOfGuards);
-			
-			if (GUILayout.Button ("Populate Guards")) {
-				PCG.ClearUpObjects (enemypathObjects);
-				// numofene?
-				PCG.numOfGuards = numOfGuards;
-				PCG.PopulateGuardsWithRhythms (enemyPrefab, waypointPrefab, floor);
-				// Run all the finite state machine instances assigned to each guard
-				FSMController.RunFSM (timeSamples);
-			}
-			
-			if (GUILayout.Button ("Prepare for Simulation")) {
-				StorePositionsOverRhythm ();
-				fullMap = mapper.PrecomputeMapsOverRhythm (floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind);
-				drawer.fullMap = fullMap;
-				float maxSeenGrid;
-				drawer.seenNeverSeen = Analyzer.ComputeSeenValuesGrid (fullMap, out maxSeenGrid);
-				drawer.seenNeverSeenMax = maxSeenGrid;
-				drawer.tileSize = SpaceState.TileSize;
-				drawer.zero.Set (floor.collider.bounds.min.x, floor.collider.bounds.min.z);
-				
-				ResetAI ();
-			}
-			
-			EditorGUILayout.LabelField ("");
-			EditorGUILayout.LabelField ("Rythm Indicator");
-			
-		}
 
 		if (default9 == true) {
 			default9 = false;
@@ -1332,9 +1238,135 @@ public class MapperWindowEditor : EditorWindow
 				PCG.ClearUpObjects (enemypathObjects);
 				// numofene?
 				PCG.numOfGuards = numOfGuards;
-				PCG.PopulateGuardsWithBehaviours (enemyPrefab, waypointPrefab, floor, iterations4, pLine, pDot, pSplit, pZigZag, pPause, pSwipe, pFullRotate);
+				enemypathObjects = PCG.PopulateGuardsWithBehaviours (enemyPrefab, waypointPrefab, floor, iterations4, pLine, pDot, pSplit, pZigZag, pPause, pSwipe, pFullRotate).ToArray ();
 				StorePositions ();
 			}
+			
+			if (GUILayout.Button ("Reset")) {
+				
+				PCG.listOfEnemies.Clear ();
+				PCG.templistOfPath.Clear ();
+				PCG.listOfPath.Clear ();
+				PCG.listOfSequence.Clear ();
+				PCG.listOfWaypoints.Clear ();
+				PCG.ClearUpObjects (enemypathObjects);
+			}
+		}
+		
+		#endregion
+		
+		#region Flows and Cuts
+	
+		EditorGUILayout.LabelField ("");
+		EditorGUILayout.LabelField ("12. Flows and Cuts");
+		
+		GUI.enabled = behaviorOpEnables;
+
+		if (default7 == true) {
+			default7 = false;
+			setEnemiesFoldout2 = EditorGUILayout.Foldout (true, "Set Guards");
+		} else {
+			setEnemiesFoldout2 = EditorGUILayout.Foldout (setEnemiesFoldout2, "Set Guards");
+		}
+		
+		if (setEnemiesFoldout2) {
+			enemyPrefab = (GameObject)EditorGUILayout.ObjectField ("Enemy Prefab", enemyPrefab, typeof(GameObject), false);
+			numOfEnemies = EditorGUILayout.IntField ("Number of enemies", numOfEnemies);
+			numOfCameras = EditorGUILayout.IntField ("Number of cameras", numOfCameras);	
+
+			// ----------------------------------Mixed Guards-----------------------------------//
+			if (GUILayout.Button ("Populate Guards")) {
+				// Clear up enemies and their paths in the scene
+				PCG.ClearUpObjects (enemypathObjects);
+				PCG.numOfEnemies = numOfEnemies;
+				PCG.numOfCameras = numOfCameras;
+				
+				// Populate guards in the graph
+				enemypathObjects = PCG.PopulateGuardsInGraph (enemyPrefab, waypointPrefab, floor).ToArray ();
+				StorePositions ();
+			}
+		}
+		
+		GUI.enabled = true;
+		
+		if (GUILayout.Button ("Reset")) {
+			PCG.ClearUpObjects (enemypathObjects);
+			fullMap = null;
+			drawer.fullMap = fullMap;
+			simulated = false;
+			foreach (GameObject p in playerObjects) {
+				DestroyImmediate (p);
+			}
+			players.Clear ();
+			playing = false;
+			ResetAI ();
+			obs = null;
+			PCG.vEnemy.obs = null;
+			drawer.eVoronoiGrid = PCG.vEnemy.obs;
+			PCG.vCamera.obs = null;
+			drawer.cVoronoiGrid = PCG.vCamera.obs;
+
+			numOfEnemies = 0;
+			numOfCameras = 0;
+			numOfRegionsForEnemies = 0;
+			numOfRegionsForCameras = 0;
+			setPathOpEnables = false;
+			setRotationOpEnables = false;
+			//randomOpEnables = false;
+			
+			boundariesFloodingOpEnables = false;
+			extractRoadmapOpEnables = false;
+			initializeGraphOpEnables = false;
+			mergeOpEnables = false;
+			behaviorOpEnables = false;
+		}
+		
+		GUI.enabled = true;
+		
+		#endregion
+		
+		#region Rhythm
+		
+		EditorGUILayout.LabelField ("");
+		EditorGUILayout.LabelField ("13. Rhythm");
+		
+		GUI.enabled = behaviorOpEnables;
+		
+		if (default8 == true) {
+			default8 = false;
+			setRhythmsFoldout = EditorGUILayout.Foldout (true, "Set Rhythms");
+		} else {
+			setRhythmsFoldout = EditorGUILayout.Foldout (setRhythmsFoldout, "Set Rhythms");
+		}
+		
+		if (setRhythmsFoldout) {
+			enemyPrefab = (GameObject)EditorGUILayout.ObjectField ("Enemy Prefab", enemyPrefab, typeof(GameObject), false);
+			numOfGuards = EditorGUILayout.IntField ("Number of guards", numOfGuards);
+			
+			if (GUILayout.Button ("Populate Guards")) {
+				PCG.ClearUpObjects (enemypathObjects);
+				// numofene?
+				PCG.numOfGuards = numOfGuards;
+				PCG.PopulateGuardsWithRhythms (enemyPrefab, waypointPrefab, floor);
+				// Run all the finite state machine instances assigned to each guard
+				FSMController.RunFSM (timeSamples);
+			}
+			
+			if (GUILayout.Button ("Prepare for Simulation")) {
+				StorePositionsOverRhythm ();
+				fullMap = mapper.PrecomputeMapsOverRhythm (floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind);
+				drawer.fullMap = fullMap;
+				float maxSeenGrid;
+				drawer.seenNeverSeen = Analyzer.ComputeSeenValuesGrid (fullMap, out maxSeenGrid);
+				drawer.seenNeverSeenMax = maxSeenGrid;
+				drawer.tileSize = SpaceState.TileSize;
+				drawer.zero.Set (floor.collider.bounds.min.x, floor.collider.bounds.min.z);
+				
+				ResetAI ();
+			}
+			
+//			EditorGUILayout.LabelField ("");
+//			EditorGUILayout.LabelField ("Rythm Indicator");
 		}
 		
 		#endregion

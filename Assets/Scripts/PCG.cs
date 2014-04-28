@@ -623,7 +623,7 @@ public class PCG : MonoBehaviour
 		}
 	}
 
-	public static void PopulateGuardsWithBehaviours (GameObject enmPrefab, GameObject wpPrefab, GameObject floor, int iterations, int pLine, int pDot, int pSplit, int pZigZag, int pPause, int pSwipe, int pFullRotate)
+	public static List<GameObject> PopulateGuardsWithBehaviours (GameObject enmPrefab, GameObject wpPrefab, GameObject floor, int iterations, int pLine, int pDot, int pSplit, int pZigZag, int pPause, int pSwipe, int pFullRotate)
 	{
 		enemyPrefab = enmPrefab;
 		waypointPrefab = wpPrefab;
@@ -908,6 +908,18 @@ public class PCG : MonoBehaviour
 		for (int i = 0; i < listOfEnemies.Count; i++) {
 			listOfEnemies.ElementAt (i).target = listOfSequence.ElementAt (i).ElementAt (0);
 		}
+		
+		var enemies = GameObject.FindGameObjectsWithTag ("Enemy").OrderBy (go => go.transform.position.x).ToArray ();
+		foreach (GameObject g in enemies) {
+			oos.Add (g);
+		}
+		
+		var waypoints = GameObject.FindGameObjectsWithTag ("Waypoint").ToArray ();
+		foreach (GameObject w in waypoints) {
+			oos.Add (w);
+		}
+		
+		return oos;
 	}
 	
 	public static void DestroyVoronoiCentreForEnemies ()
