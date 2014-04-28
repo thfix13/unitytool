@@ -623,7 +623,7 @@ public class PCG : MonoBehaviour
 		}
 	}
 
-	public static void PopulateGuardsWithBehaviours (GameObject enmPrefab, GameObject wpPrefab, GameObject floor, int iterations)
+	public static void PopulateGuardsWithBehaviours (GameObject enmPrefab, GameObject wpPrefab, GameObject floor, int iterations, int pLine, int pDot, int pSplit, int pZigZag, int pPause, int pSwipe, int pFullRotate)
 	{
 		enemyPrefab = enmPrefab;
 		waypointPrefab = wpPrefab;
@@ -676,12 +676,12 @@ public class PCG : MonoBehaviour
 				//
 				foreach (GameObject currentWaypoint in listOfWaypoints.ElementAt (size)) {
 					if (currentWaypoint.GetComponent ("WaitingWaypoint") == null && currentWaypoint.GetComponent ("RotationWaypoint") == null) {
-						int r1 = UnityEngine.Random.Range (0, 2);
-						// 50% possibility of changing a waypoint into a waiting waypoint or rotation waypoint
-						if (r1 == 0) {
-							int r2 = UnityEngine.Random.Range (0, 3);
+						int r1 = UnityEngine.Random.Range (0, 100);
+						// The possibility of changing a waypoint into a waiting waypoint or rotation waypoint
+						if (r1 < pDot) {
+							int r2 = UnityEngine.Random.Range (0, 100);
 							// Waiting
-							if (r2 == 0) {
+							if (r2 < pPause) {
 								int index = tempWaypoints.IndexOf (currentWaypoint);
 								tempSequence.RemoveAt (index);
 								GameObject wp = GameObject.Instantiate (waypointPrefab, tempWaypoints.ElementAt (index).transform.position, Quaternion.identity) as GameObject;
@@ -707,7 +707,7 @@ public class PCG : MonoBehaviour
 								}
 							} 
 							// Swiping
-							else if (r2 == 1) {
+							else if (r2 >= pPause && r2 < (pPause + pSwipe)) {
 								int index = tempWaypoints.IndexOf (currentWaypoint);
 								tempSequence.RemoveAt (index);
 								Vector3 startVec = tempWaypoints.ElementAt (index).transform.position;
@@ -768,7 +768,7 @@ public class PCG : MonoBehaviour
 								tempSequence.Insert (index, rwpScript1);
 							} 
 							// Rotating
-							else if (r2 == 2) {
+							else if (r2 >= pPause + pSwipe && r2 < 100) {
 								int index = tempWaypoints.IndexOf (currentWaypoint);
 								tempSequence.RemoveAt (index);
 								Vector3 startVec = tempWaypoints.ElementAt (index).transform.position;
@@ -844,12 +844,12 @@ public class PCG : MonoBehaviour
 					
 					if (tempWaypoints.IndexOf (currentWaypoint) != tempWaypoints.Count - 1) {
 						if (currentWaypoint.transform.position != tempWaypoints.ElementAt (tempWaypoints.IndexOf(currentWaypoint) + 1).transform.position) {
-							int r3 = UnityEngine.Random.Range (0, 2);
+							int r3 = UnityEngine.Random.Range (0, 100);
 							// 50% possibility of adding a new waypoint or doing forwarding-returning-forwarding
-							if (r3 == 0) {
-								int r4 = UnityEngine.Random.Range (0, 2);
+							if (r3 < pLine) {
+								int r4 = UnityEngine.Random.Range (0, 100);
 								// Separating
-								if (r4 == 0) {
+								if (r4 < pSplit) {
 									int index = tempWaypoints.IndexOf (currentWaypoint);
 									// No separating if this is the last node
 									if (index != tempWaypoints.Count - 1) {
@@ -868,7 +868,7 @@ public class PCG : MonoBehaviour
 									}
 								}
 								// Returning and Forwarding
-								else if (r4 == 1) {
+								else if (r4 >= pSplit) {
 									int index = tempWaypoints.IndexOf (currentWaypoint);
 									// No returning and forwarding if this is the last node
 									if (index != tempWaypoints.Count - 1) {

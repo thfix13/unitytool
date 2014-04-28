@@ -977,7 +977,7 @@ public class Skeletonization
 	{
 		// Creating a new list of graph node and a list of key nodes
 		List<GraphNode> tempList = new List<GraphNode> ();
-		List<int> keyNodesIndexList = new List<int> ();
+//		List<int> keyNodesIndexList = new List<int> ();
 		
 		foreach (GraphNode gn in finalGraphNodesList) {
 			GraphNode newGraphNode = new GraphNode (gn.x1, gn.y1, gn.x2, gn.y2);
@@ -1037,117 +1037,117 @@ public class Skeletonization
 		return; 
 
 
-		GraphNode prevNode = tempList.ElementAt (0), curNode = tempList.ElementAt (0);
-		float prevPosX = 0.0f, prevPosY = 0.0f, curPosX = 0.0f, curPosY = 0.0f;
-		int nodeIndex = -1, prevIndex = 0, tailIndex = 0;
-		
-		while (nodeIndex < tempList.Count - 2) {
-			nodeIndex ++;
-			// Calculate positions
-			if (prevNode.x1 == prevNode.x2 && prevNode.y2 - prevNode.y1 == 1) {
-				prevPosX = SpaceState.TileSize.x * prevNode.x1 + SpaceState.TileSize.x / 2.0f + floor.collider.bounds.min.x;
-				prevPosY = SpaceState.TileSize.y * prevNode.y1 + SpaceState.TileSize.y + floor.collider.bounds.min.z;
-			}
-			if (prevNode.y1 == prevNode.y2 && prevNode.x2 - prevNode.x1 == 1) {
-				prevPosX = SpaceState.TileSize.x * prevNode.x2 + floor.collider.bounds.min.x;
-				prevPosY = SpaceState.TileSize.y * prevNode.y1 + SpaceState.TileSize.y / 2.0f + floor.collider.bounds.min.z;
-			}
-			if (curNode.x1 == curNode.x2 && curNode.y2 - curNode.y1 == 1) {
-				curPosX = SpaceState.TileSize.x * curNode.x1 + SpaceState.TileSize.x / 2.0f + floor.collider.bounds.min.x;
-				curPosY = SpaceState.TileSize.y * curNode.y1 + SpaceState.TileSize.y + floor.collider.bounds.min.z;
-			}
-			if (curNode.y1 == curNode.y2 && curNode.x2 - curNode.x1 == 1) {
-				curPosX = SpaceState.TileSize.x * curNode.x2 + floor.collider.bounds.min.x;
-				curPosY = SpaceState.TileSize.y * curNode.y1 + SpaceState.TileSize.y / 2.0f + floor.collider.bounds.min.z;
-			}
-			if (finalGraphNodesList.ElementAt (nodeIndex).isTail && nodeIndex != 0) {
-				Debug.Log ("Hey! I am here!");
-				Debug.Log ("x1: " + finalGraphNodesList.ElementAt (nodeIndex).x1 + " ,y1: " + finalGraphNodesList.ElementAt (nodeIndex).y1);
-				tailIndex = nodeIndex;
-				prevIndex = tempList.IndexOf (prevNode);
-				if (prevIndex + 1 < nodeIndex) {
-					for (int id = prevIndex + 1; id < nodeIndex; id ++) {
-						finalGraphNodesList.ElementAt (id).neighbors.Clear ();
-					}
-					finalGraphNodesList.ElementAt (prevIndex).neighbors.Remove (finalGraphNodesList.ElementAt(prevIndex + 1));
-					finalGraphNodesList.ElementAt (nodeIndex).neighbors.Remove (finalGraphNodesList.ElementAt (nodeIndex - 1));
-					finalGraphNodesList.ElementAt (prevIndex).neighbors.Add (finalGraphNodesList.ElementAt (nodeIndex));
-					finalGraphNodesList.ElementAt (nodeIndex).neighbors.Add (finalGraphNodesList.ElementAt (prevIndex));					
-				}
-				prevIndex = keyNodesIndexList.Last ();
-				keyNodesIndexList.Remove (keyNodesIndexList.Last ());
-				prevNode = tempList.ElementAt (prevIndex);
-				curNode = tempList.ElementAt (nodeIndex + 1);
-			} else {
-				if (curNode.x1 != prevNode.x1 || curNode.y1 != prevNode.y1 || curNode.x2 != prevNode.x2 || curNode.y2 != prevNode.y2) {
-					Vector3 v1 = new Vector3 (prevPosX, 0f, prevPosY);
-					Vector3 v2 = new Vector3 (curPosX, 0f, curPosY);
-					Vector3 dir = new Vector3 (v2.x - v1.x, v2.y - v1.y, v2.z - v1.z);
-					float dist = Vector3.Distance (v1, v2);
-					// blocked
-			 		if (Physics.Raycast (v1, dir, dist)) {
-						if (finalGraphNodesList.ElementAt (nodeIndex).neighbors.Count == 3) {
-							// Put it into key nodes list
-							if (!keyNodesIndexList.Contains (nodeIndex)) {
-								keyNodesIndexList.Add (nodeIndex);
-							}
-							prevIndex = tempList.IndexOf (prevNode);
-							prevNode = tempList.ElementAt (nodeIndex);
-							curNode = tempList.ElementAt (nodeIndex + 1);
-							int lastIndex = tailIndex > (prevIndex + 1) ? tailIndex : (prevIndex + 1);
-							if (lastIndex < nodeIndex - 1) {
-								for (int id = lastIndex; id < nodeIndex - 1; id ++) {
-									finalGraphNodesList.ElementAt (id).neighbors.Clear ();
-								}
-								finalGraphNodesList.ElementAt (prevIndex).neighbors.Remove (finalGraphNodesList.ElementAt(prevIndex + 1));
-								finalGraphNodesList.ElementAt (nodeIndex - 1).neighbors.Remove (finalGraphNodesList.ElementAt (nodeIndex - 2));
-								finalGraphNodesList.ElementAt (prevIndex).neighbors.Add (finalGraphNodesList.ElementAt (nodeIndex - 1));
-								finalGraphNodesList.ElementAt (nodeIndex - 1).neighbors.Add (finalGraphNodesList.ElementAt (prevIndex));
-							}
-						} else {
-							prevIndex = tempList.IndexOf (prevNode);
-							prevNode = tempList.ElementAt (nodeIndex - 1);
-							curNode = tempList.ElementAt (nodeIndex);
-							// Delete indice between prevIndex and nodeIndex - 1
-							int lastIndex = tailIndex > (prevIndex + 1) ? tailIndex : (prevIndex + 1);
-							if (lastIndex < nodeIndex - 1) {
-								for (int id = lastIndex; id < nodeIndex - 1; id ++) {
-									finalGraphNodesList.ElementAt (id).neighbors.Clear ();
-								}
-								finalGraphNodesList.ElementAt (prevIndex).neighbors.Remove (finalGraphNodesList.ElementAt(prevIndex + 1));
-								finalGraphNodesList.ElementAt (nodeIndex - 1).neighbors.Remove (finalGraphNodesList.ElementAt (nodeIndex - 2));
-								finalGraphNodesList.ElementAt (prevIndex).neighbors.Add (finalGraphNodesList.ElementAt (nodeIndex - 1));
-								finalGraphNodesList.ElementAt (nodeIndex - 1).neighbors.Add (finalGraphNodesList.ElementAt (prevIndex));
-							}
-							nodeIndex --;
-						}
-					} else {
-						curNode = tempList.ElementAt (nodeIndex + 1);
-						if (finalGraphNodesList.ElementAt (nodeIndex).neighbors.Count == 3) {
-							// Put it into key nodes list
-							if (!keyNodesIndexList.Contains (nodeIndex)) {
-								keyNodesIndexList.Add (nodeIndex);
-							}
-							prevIndex = tempList.IndexOf (prevNode);
-							prevNode = tempList.ElementAt (nodeIndex);
-							curNode = tempList.ElementAt (nodeIndex + 1);
-							int lastIndex = tailIndex > (prevIndex + 1) ? tailIndex : (prevIndex + 1);
-							if (lastIndex < nodeIndex) {
-								for (int id = lastIndex; id < nodeIndex; id ++) {
-									finalGraphNodesList.ElementAt (id).neighbors.Clear ();
-								}
-								finalGraphNodesList.ElementAt (prevIndex).neighbors.Remove (finalGraphNodesList.ElementAt(prevIndex + 1));
-								finalGraphNodesList.ElementAt (nodeIndex).neighbors.Remove (finalGraphNodesList.ElementAt (nodeIndex - 1));
-								finalGraphNodesList.ElementAt (prevIndex).neighbors.Add (finalGraphNodesList.ElementAt (nodeIndex));
-								finalGraphNodesList.ElementAt (nodeIndex).neighbors.Add (finalGraphNodesList.ElementAt (prevIndex));
-							}
-						} 
-					}
-				} else {
-					curNode = tempList.ElementAt (nodeIndex + 1);
-				}
-			}
-		}
+//		GraphNode prevNode = tempList.ElementAt (0), curNode = tempList.ElementAt (0);
+//		float prevPosX = 0.0f, prevPosY = 0.0f, curPosX = 0.0f, curPosY = 0.0f;
+//		int nodeIndex = -1, prevIndex = 0, tailIndex = 0;
+//		
+//		while (nodeIndex < tempList.Count - 2) {
+//			nodeIndex ++;
+//			// Calculate positions
+//			if (prevNode.x1 == prevNode.x2 && prevNode.y2 - prevNode.y1 == 1) {
+//				prevPosX = SpaceState.TileSize.x * prevNode.x1 + SpaceState.TileSize.x / 2.0f + floor.collider.bounds.min.x;
+//				prevPosY = SpaceState.TileSize.y * prevNode.y1 + SpaceState.TileSize.y + floor.collider.bounds.min.z;
+//			}
+//			if (prevNode.y1 == prevNode.y2 && prevNode.x2 - prevNode.x1 == 1) {
+//				prevPosX = SpaceState.TileSize.x * prevNode.x2 + floor.collider.bounds.min.x;
+//				prevPosY = SpaceState.TileSize.y * prevNode.y1 + SpaceState.TileSize.y / 2.0f + floor.collider.bounds.min.z;
+//			}
+//			if (curNode.x1 == curNode.x2 && curNode.y2 - curNode.y1 == 1) {
+//				curPosX = SpaceState.TileSize.x * curNode.x1 + SpaceState.TileSize.x / 2.0f + floor.collider.bounds.min.x;
+//				curPosY = SpaceState.TileSize.y * curNode.y1 + SpaceState.TileSize.y + floor.collider.bounds.min.z;
+//			}
+//			if (curNode.y1 == curNode.y2 && curNode.x2 - curNode.x1 == 1) {
+//				curPosX = SpaceState.TileSize.x * curNode.x2 + floor.collider.bounds.min.x;
+//				curPosY = SpaceState.TileSize.y * curNode.y1 + SpaceState.TileSize.y / 2.0f + floor.collider.bounds.min.z;
+//			}
+//			if (finalGraphNodesList.ElementAt (nodeIndex).isTail && nodeIndex != 0) {
+//				Debug.Log ("Hey! I am here!");
+//				Debug.Log ("x1: " + finalGraphNodesList.ElementAt (nodeIndex).x1 + " ,y1: " + finalGraphNodesList.ElementAt (nodeIndex).y1);
+//				tailIndex = nodeIndex;
+//				prevIndex = tempList.IndexOf (prevNode);
+//				if (prevIndex + 1 < nodeIndex) {
+//					for (int id = prevIndex + 1; id < nodeIndex; id ++) {
+//						finalGraphNodesList.ElementAt (id).neighbors.Clear ();
+//					}
+//					finalGraphNodesList.ElementAt (prevIndex).neighbors.Remove (finalGraphNodesList.ElementAt(prevIndex + 1));
+//					finalGraphNodesList.ElementAt (nodeIndex).neighbors.Remove (finalGraphNodesList.ElementAt (nodeIndex - 1));
+//					finalGraphNodesList.ElementAt (prevIndex).neighbors.Add (finalGraphNodesList.ElementAt (nodeIndex));
+//					finalGraphNodesList.ElementAt (nodeIndex).neighbors.Add (finalGraphNodesList.ElementAt (prevIndex));					
+//				}
+//				prevIndex = keyNodesIndexList.Last ();
+//				keyNodesIndexList.Remove (keyNodesIndexList.Last ());
+//				prevNode = tempList.ElementAt (prevIndex);
+//				curNode = tempList.ElementAt (nodeIndex + 1);
+//			} else {
+//				if (curNode.x1 != prevNode.x1 || curNode.y1 != prevNode.y1 || curNode.x2 != prevNode.x2 || curNode.y2 != prevNode.y2) {
+//					Vector3 v1 = new Vector3 (prevPosX, 0f, prevPosY);
+//					Vector3 v2 = new Vector3 (curPosX, 0f, curPosY);
+//					Vector3 dir = new Vector3 (v2.x - v1.x, v2.y - v1.y, v2.z - v1.z);
+//					float dist = Vector3.Distance (v1, v2);
+//					// blocked
+//			 		if (Physics.Raycast (v1, dir, dist)) {
+//						if (finalGraphNodesList.ElementAt (nodeIndex).neighbors.Count == 3) {
+//							// Put it into key nodes list
+//							if (!keyNodesIndexList.Contains (nodeIndex)) {
+//								keyNodesIndexList.Add (nodeIndex);
+//							}
+//							prevIndex = tempList.IndexOf (prevNode);
+//							prevNode = tempList.ElementAt (nodeIndex);
+//							curNode = tempList.ElementAt (nodeIndex + 1);
+//							int lastIndex = tailIndex > (prevIndex + 1) ? tailIndex : (prevIndex + 1);
+//							if (lastIndex < nodeIndex - 1) {
+//								for (int id = lastIndex; id < nodeIndex - 1; id ++) {
+//									finalGraphNodesList.ElementAt (id).neighbors.Clear ();
+//								}
+//								finalGraphNodesList.ElementAt (prevIndex).neighbors.Remove (finalGraphNodesList.ElementAt(prevIndex + 1));
+//								finalGraphNodesList.ElementAt (nodeIndex - 1).neighbors.Remove (finalGraphNodesList.ElementAt (nodeIndex - 2));
+//								finalGraphNodesList.ElementAt (prevIndex).neighbors.Add (finalGraphNodesList.ElementAt (nodeIndex - 1));
+//								finalGraphNodesList.ElementAt (nodeIndex - 1).neighbors.Add (finalGraphNodesList.ElementAt (prevIndex));
+//							}
+//						} else {
+//							prevIndex = tempList.IndexOf (prevNode);
+//							prevNode = tempList.ElementAt (nodeIndex - 1);
+//							curNode = tempList.ElementAt (nodeIndex);
+//							// Delete indice between prevIndex and nodeIndex - 1
+//							int lastIndex = tailIndex > (prevIndex + 1) ? tailIndex : (prevIndex + 1);
+//							if (lastIndex < nodeIndex - 1) {
+//								for (int id = lastIndex; id < nodeIndex - 1; id ++) {
+//									finalGraphNodesList.ElementAt (id).neighbors.Clear ();
+//								}
+//								finalGraphNodesList.ElementAt (prevIndex).neighbors.Remove (finalGraphNodesList.ElementAt(prevIndex + 1));
+//								finalGraphNodesList.ElementAt (nodeIndex - 1).neighbors.Remove (finalGraphNodesList.ElementAt (nodeIndex - 2));
+//								finalGraphNodesList.ElementAt (prevIndex).neighbors.Add (finalGraphNodesList.ElementAt (nodeIndex - 1));
+//								finalGraphNodesList.ElementAt (nodeIndex - 1).neighbors.Add (finalGraphNodesList.ElementAt (prevIndex));
+//							}
+//							nodeIndex --;
+//						}
+//					} else {
+//						curNode = tempList.ElementAt (nodeIndex + 1);
+//						if (finalGraphNodesList.ElementAt (nodeIndex).neighbors.Count == 3) {
+//							// Put it into key nodes list
+//							if (!keyNodesIndexList.Contains (nodeIndex)) {
+//								keyNodesIndexList.Add (nodeIndex);
+//							}
+//							prevIndex = tempList.IndexOf (prevNode);
+//							prevNode = tempList.ElementAt (nodeIndex);
+//							curNode = tempList.ElementAt (nodeIndex + 1);
+//							int lastIndex = tailIndex > (prevIndex + 1) ? tailIndex : (prevIndex + 1);
+//							if (lastIndex < nodeIndex) {
+//								for (int id = lastIndex; id < nodeIndex; id ++) {
+//									finalGraphNodesList.ElementAt (id).neighbors.Clear ();
+//								}
+//								finalGraphNodesList.ElementAt (prevIndex).neighbors.Remove (finalGraphNodesList.ElementAt(prevIndex + 1));
+//								finalGraphNodesList.ElementAt (nodeIndex).neighbors.Remove (finalGraphNodesList.ElementAt (nodeIndex - 1));
+//								finalGraphNodesList.ElementAt (prevIndex).neighbors.Add (finalGraphNodesList.ElementAt (nodeIndex));
+//								finalGraphNodesList.ElementAt (nodeIndex).neighbors.Add (finalGraphNodesList.ElementAt (prevIndex));
+//							}
+//						} 
+//					}
+//				} else {
+//					curNode = tempList.ElementAt (nodeIndex + 1);
+//				}
+//			}
+//		}
 	}
 	
 	public void boundaryPointsFlooding (GameObject floor)
