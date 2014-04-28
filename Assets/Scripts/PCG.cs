@@ -627,34 +627,58 @@ public class PCG : MonoBehaviour
 	{
 		enemyPrefab = enmPrefab;
 		waypointPrefab = wpPrefab;
+		bool notSeen = true;
 		
 		for (int i = 0; i < numOfGuards; i++) {
-			int startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
-			while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0) {
-				startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
-			}
-			int endIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
-			while (sBoundary.finalGraphNodesList.ElementAt (endIndex).neighbors.Count == 0 || endIndex == startIndex) {
-				endIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
-			}
-			// Retrieve a path from startIndex to endIndex
-			foreach (GraphNode g in sBoundary.finalGraphNodesList) {
-				g.isVisited = false;
-			}
-			List<int> path = new List<int> ();
-			listOfPath.Add (path);
-			List<int> tempPath = new List<int> ();
-			templistOfPath.Add (tempPath);
-			FindPath (startIndex, endIndex, i);
-//			listOfPath.Add (PCG.FindShortestPath (startIndex, endIndex));
 			
-			Vector3 initialPos = sBoundary.finalGraphNodesList.ElementAt (startIndex).Pos (floor);
-			GameObject enemy = GameObject.Instantiate (enemyPrefab, initialPos, Quaternion.identity) as GameObject;
+			while (!notSeen) {
+				int startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
+				while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0) {
+					startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
+				}
+				int endIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
+				while (sBoundary.finalGraphNodesList.ElementAt (endIndex).neighbors.Count == 0 || endIndex == startIndex) {
+					endIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
+				}
+				// Retrieve a path from startIndex to endIndex
+				foreach (GraphNode g in sBoundary.finalGraphNodesList) {
+					g.isVisited = false;
+				}
+				List<int> path = new List<int> ();
+				listOfPath.Add (path);
+				List<int> tempPath = new List<int> ();
+				templistOfPath.Add (tempPath);
+				FindPath (startIndex, endIndex, i);
+	//			listOfPath.Add (PCG.FindShortestPath (startIndex, endIndex));
+				
+				Vector3 initialPos = sBoundary.finalGraphNodesList.ElementAt (startIndex).Pos (floor);
+				Vector3 aimingPos = sBoundary.finalGraphNodesList.ElementAt (tempPath.ElementAt (1)).Pos (floor);
+				Vector3 initialDir = aimingPos - initialPos;
+				Vector3 startPos = GameObject.FindGameObjectWithTag ("Start").transform.position;
+				Vector3 dir = startPos - initialPos;
+				if (Vector3.Angle (dir, initialDir) > 30.0f) {
+					notSeen = true;
+				} else {
+					if (!Physics.Raycast (initialPos, dir, Vector3.Distance (startPos, initialPos))) {
+						notSeen = true;
+					} else {
+						notSeen = false;
+					}
+				}
+				
+				listOfPath.Remove (path);
+				templistOfPath.Clear ();
+			}		
+			
+			Vector3 initialPos1 = sBoundary.finalGraphNodesList.ElementAt (startIndex).Pos (floor);
+			GameObject enemy = GameObject.Instantiate (enemyPrefab, initialPos1, Quaternion.identity) as GameObject;
 			Enemy enemyScript;
 			enemyScript = enemy.GetComponent ("Enemy") as Enemy;
 			enemyScript.moveSpeed = 0.5f;
 			enemyScript.rotationSpeed = 10;
 			listOfEnemies.Add (enemyScript);
+			
+			notSeen = true;
 		}
 		
 		// Initialize the sequence

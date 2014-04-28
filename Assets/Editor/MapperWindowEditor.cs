@@ -1253,6 +1253,8 @@ public class MapperWindowEditor : EditorWindow
 			}
 		}
 		
+		GUI.enabled = true;
+		
 		#endregion
 		
 		#region Flows and Cuts
