@@ -1215,7 +1215,7 @@ public class MapperWindowEditor : EditorWindow
 		if (setMultipleBehavioursFoldout) {
 			enemyPrefab = (GameObject)EditorGUILayout.ObjectField ("Enemy Prefab", enemyPrefab, typeof(GameObject), false);
 			numOfGuards = EditorGUILayout.IntField ("Number of guards", numOfGuards);
-			iterations4 = EditorGUILayout.IntSlider ("Iterations", iterations4, 1, 10);
+			iterations4 = EditorGUILayout.IntSlider ("Iterations", iterations4, 0, 10);
 
 			if (default12 == true) {
 				default12 = false;
@@ -1236,14 +1236,13 @@ public class MapperWindowEditor : EditorWindow
 			
 			if (GUILayout.Button ("Populate Guards")) {
 				PCG.ClearUpObjects (enemypathObjects);
-				// numofene?
 				PCG.numOfGuards = numOfGuards;
 				enemypathObjects = PCG.PopulateGuardsWithBehaviours (enemyPrefab, waypointPrefab, floor, iterations4, pLine, pDot, pSplit, pZigZag, pPause, pSwipe, pFullRotate).ToArray ();
 				StorePositions ();
 			}
 			
-			if (GUILayout.Button ("Reset")) {
-				
+			if (GUILayout.Button ("Clear Behaviours")) {
+				PCG.numOfGuards = 0;
 				PCG.listOfEnemies.Clear ();
 				PCG.templistOfPath.Clear ();
 				PCG.listOfPath.Clear ();
@@ -1254,6 +1253,64 @@ public class MapperWindowEditor : EditorWindow
 		}
 		
 		GUI.enabled = true;
+
+		if (GUILayout.Button ("Reset")) {
+			PCG.ClearUpObjects (enemypathObjects);
+			fullMap = null;
+			drawer.fullMap = fullMap;
+			simulated = false;
+			foreach (GameObject p in playerObjects) {
+				DestroyImmediate (p);
+			}
+			players.Clear ();
+			playing = false;
+			ResetAI ();
+			obs = null;
+			PCG.vEnemy.obs = null;
+			drawer.eVoronoiGrid = PCG.vEnemy.obs;
+			PCG.vCamera.obs = null;
+			drawer.cVoronoiGrid = PCG.vCamera.obs;
+			
+			numOfEnemies = 0;
+			numOfCameras = 0;
+			numOfRegionsForEnemies = 0;
+			numOfRegionsForCameras = 0;
+			setPathOpEnables = false;
+			setRotationOpEnables = false;
+			//randomOpEnables = false;
+			
+			boundariesFloodingOpEnables = false;
+			extractRoadmapOpEnables = false;
+			initializeGraphOpEnables = false;
+			mergeOpEnables = false;
+
+			PCG.sBoundary.obs = null;
+			PCG.sBoundary.boundaryIndex = 0;
+			PCG.sBoundary.boundaryContoursList.Clear ();
+			PCG.sBoundary.freeCells.Clear ();
+			PCG.sBoundary.graphNodesList.Clear ();
+			PCG.sBoundary.finalGraphNodesList.Clear ();
+			PCG.sBoundary.roadmapDictionary.Clear ();
+			PCG.sBoundary.roadmapNodesList.Clear ();
+			drawer.sBoundaryGrid = PCG.sBoundary.obs;
+			drawer.roadmapNodesList.Clear ();
+			drawer.graphNodesList.Clear ();
+
+
+			PCG.numOfGuards = 0;
+			PCG.listOfEnemies.Clear ();
+			PCG.templistOfPath.Clear ();
+			PCG.listOfPath.Clear ();
+			PCG.listOfSequence.Clear ();
+			PCG.listOfWaypoints.Clear ();
+
+			behaviorOpEnables = false;
+			randomOpEnables = false;
+			shortcutClicked = false;
+			moreStepsClicked = false;
+			shortcutBtnEnables = false;
+			moreStepsBtnEnables = false;
+		}
 		
 		#endregion
 		

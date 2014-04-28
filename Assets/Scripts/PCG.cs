@@ -627,10 +627,12 @@ public class PCG : MonoBehaviour
 	{
 		enemyPrefab = enmPrefab;
 		waypointPrefab = wpPrefab;
-		bool notSeen = true;
+		bool notSeen = false;
 		
 		for (int i = 0; i < numOfGuards; i++) {
-			
+
+			Vector3 finalInitialPos = new Vector3 (0.0f, 0.0f, 0.0f);
+
 			while (!notSeen) {
 				int startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
 				while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0) {
@@ -640,6 +642,7 @@ public class PCG : MonoBehaviour
 				while (sBoundary.finalGraphNodesList.ElementAt (endIndex).neighbors.Count == 0 || endIndex == startIndex) {
 					endIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
 				}
+
 				// Retrieve a path from startIndex to endIndex
 				foreach (GraphNode g in sBoundary.finalGraphNodesList) {
 					g.isVisited = false;
@@ -649,10 +652,11 @@ public class PCG : MonoBehaviour
 				List<int> tempPath = new List<int> ();
 				templistOfPath.Add (tempPath);
 				FindPath (startIndex, endIndex, i);
-	//			listOfPath.Add (PCG.FindShortestPath (startIndex, endIndex));
-				
+				// listOfPath.Add (PCG.FindShortestPath (startIndex, endIndex));
+
+				// Make sure that the starting point is not in the range of initial FOV
 				Vector3 initialPos = sBoundary.finalGraphNodesList.ElementAt (startIndex).Pos (floor);
-				Vector3 aimingPos = sBoundary.finalGraphNodesList.ElementAt (tempPath.ElementAt (1)).Pos (floor);
+				Vector3 aimingPos = sBoundary.finalGraphNodesList.ElementAt (listOfPath.ElementAt (i).ElementAt (1)).Pos (floor);
 				Vector3 initialDir = aimingPos - initialPos;
 				Vector3 startPos = GameObject.FindGameObjectWithTag ("Start").transform.position;
 				Vector3 dir = startPos - initialPos;
@@ -665,25 +669,27 @@ public class PCG : MonoBehaviour
 						notSeen = false;
 					}
 				}
-				
-				listOfPath.Remove (path);
-				templistOfPath.Clear ();
+				if (!notSeen) {
+					listOfPath.Remove (path);
+					templistOfPath.Remove (tempPath);
+				} else {
+					finalInitialPos = initialPos;
+				}
 			}		
 			
-			Vector3 initialPos1 = sBoundary.finalGraphNodesList.ElementAt (startIndex).Pos (floor);
-			GameObject enemy = GameObject.Instantiate (enemyPrefab, initialPos1, Quaternion.identity) as GameObject;
+			GameObject enemy = GameObject.Instantiate (enemyPrefab, finalInitialPos, Quaternion.identity) as GameObject;
 			Enemy enemyScript;
 			enemyScript = enemy.GetComponent ("Enemy") as Enemy;
 			enemyScript.moveSpeed = 0.5f;
 			enemyScript.rotationSpeed = 10;
 			listOfEnemies.Add (enemyScript);
 			
-			notSeen = true;
+			notSeen = false;
 		}
 		
 		// Initialize the sequence
 		InitializeSequence (floor);
-		
+
 		// Procedurally increment of behaviours
 		for (int iter = 0; iter < iterations; iter++) {
 			// Foreach guard
@@ -931,6 +937,7 @@ public class PCG : MonoBehaviour
 			
 		for (int i = 0; i < listOfEnemies.Count; i++) {
 			listOfEnemies.ElementAt (i).target = listOfSequence.ElementAt (i).ElementAt (0);
+			listOfEnemies.ElementAt (i).transform.LookAt (listOfSequence.ElementAt (i).ElementAt (1).gameObject.transform.position);
 		}
 		
 		var enemies = GameObject.FindGameObjectsWithTag ("Enemy").OrderBy (go => go.transform.position.x).ToArray ();
