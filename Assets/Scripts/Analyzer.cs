@@ -496,7 +496,77 @@ namespace Extra {
 			
 			return heatMap;
 		}
+
+		public static int[,] ComputeDeathHeatMap (List<Path> paths, int sizeX, int sizeY, out int maxN) {
+			maxN = -1;
+			int[,] heatMap = new int[sizeX, sizeY];
+			
+			foreach (Path path in paths) {
+				Node death = path.points[path.points.Count-1];
+
+				// Paint adjacent nodes
+				for (int x = death.x -2; x >= 0 && x <= death.x + 2 && x < sizeX; x++)
+					for (int y = death.y -2; y >= 0 && y <= death.y + 2 && y < sizeY; y++) {
+						int dx = Math.Abs(death.x - x);
+						int dy = Math.Abs(death.y - y);
+						heatMap[x,y] += (5 - dx - dy);
+					}
+
+				// Main node
+				heatMap[death.x, death.y] += 10;
+			}
+
+			// Get maxN
+			for (int x = 0; x < sizeX; x++) {
+				for (int y = 0; y < sizeY; y++) {
+					if (maxN < heatMap [x, y])
+						maxN = heatMap [x, y];
+				}
+			}
+			
+			return heatMap;
+		}
+
 		
+		public static int[][,] Compute3dDeathHeatMap (List<Path> paths, int sizeX, int sizeY, int sizeT, out int[] maxN) {
+			maxN = new int[sizeT];
+			int[][,] heatMap = new int[sizeT][,];
+			for (int t = 0; t < sizeT; t++)
+				heatMap[t] = new int[sizeX,sizeY];
+			
+			foreach (Path path in paths) {
+				Node death = path.points[path.points.Count-1];
+				
+				// Paint adjacent nodes
+				for (int t = death.t -2; t >= 0 && t <= death.t + 2 && t < sizeT; t++){
+					for (int x = death.x -2; x >= 0 && x <= death.x + 2 && x < sizeX; x++){
+						for (int y = death.y -2; y >= 0 && y <= death.y + 2 && y < sizeY; y++) {
+							int dx = Math.Abs(death.x - x);
+							int dy = Math.Abs(death.y - y);
+							int dt = Math.Abs(death.t - t);
+							heatMap[t][x,y] += (7 - dx - dy - dt);
+						}
+					}
+				}
+				
+				// Main node
+				heatMap[death.t][death.x, death.y] += 15;
+			}
+			
+			// Get maxN
+			for (int t = 0; t < sizeT; t++) {
+				for (int x = 0; x < sizeX; x++) {
+					for (int y = 0; y < sizeY; y++) {
+						if (maxN[t] < heatMap [t][x, y])
+							maxN[t] = heatMap [t][x, y];
+					}
+				}
+			}
+			
+			return heatMap;
+		}
+
+
 		public static int[,] Compute2DHeatMap (List<Path> paths, int sizeX, int sizeY, out int maxN) {
 			maxN = -1;
 			int[,] heatMap = new int[sizeX, sizeY];
@@ -606,6 +676,35 @@ namespace Extra {
 			}
 			
 			return heatMap;
+		}
+
+		public static int[,] Compute2DCombatHeatMap (List<Path> paths, List<Path> deaths, int sizeX, int sizeY, out int maxN) {
+			List<Path> all = new List<Path>(paths);
+			all.AddRange(deaths);
+
+			int[,] map = new int[sizeX,sizeY];
+			maxN = 0;
+			foreach (Path path in all) {
+				foreach (Node n in path.points) {
+					if (n.fighting != null && n.fighting.Count > 0) {
+
+						// Paint adjacent nodes
+						for (int x = n.x -2; x >= 0 && x <= n.x + 2 && x < sizeX; x++){
+							for (int y = n.y -2; y >= 0 && y <= n.y + 2 && y < sizeY; y++) {
+								int dx = Math.Abs(n.x - x);
+								int dy = Math.Abs(n.y - y);
+								map[x,y] += (5 - dx - dy);
+							}
+						}
+
+
+						map[n.x,n.y] += 10;
+						maxN = Mathf.Max(map[n.x, n.y], maxN);
+					}
+				}
+			}
+
+			return map;
 		}
 	}
 }

@@ -15,16 +15,18 @@ namespace EditorArea {
 	public class MapperWindowEditor : EditorWindow {
 
 		// Data holders
-		public static Cell[][][] fullMap;
-		public static List<Path> paths = new List<Path> ();
+		private static Cell[][][] fullMap, original;
+		public static List<Path> paths = new List<Path> (), deaths = new List<Path>();
 
 		// Parameters with default values
-		public static int timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 60, ticksBehind = 0;
-		private static bool drawMap = true, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = true, smoothPath = true, drawFoVOnly = false;
-		private static float stepSize = 1 / 10f, crazySeconds = 5f;
+		public static int timeSamples = 2000, attemps = 25000, iterations = 1, gridSize = 60, ticksBehind = 0;
+		private static bool drawMap = true, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = false, drawFoVOnly = false, drawCombatLines = false;
+		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10;
+		private static int randomSeed = -1;
 
 		// Computed parameters
-		private static int[,] heatMap;
+		private static int[,] heatMap, deathHeatMap, combatHeatMap;
+		private static int[][,] heatMap3d, deathHeatMap3d;
 		private static GameObject start = null, end = null, floor = null, playerPrefab = null;
 		private static Dictionary<Path, bool> toggleStatus = new Dictionary<Path, bool> ();
 		private static Dictionary<Path, GameObject> players = new Dictionary<Path, GameObject> ();
@@ -35,11 +37,13 @@ namespace EditorArea {
 		// Helping stuff
 		private static Vector2 scrollPos = new Vector2 ();
 		private static GameObject playerNode;
+		private List<Tuple<Vector3, string>> textDraw = new List<Tuple<Vector3, string>>();
 		private int lastTime = timeSlice;
 		private long stepInTicks = 0L, playTime = 0L;
 		private static bool simulated = false, playing = false;
 		private Mapper mapper;
 		private RRTKDTree rrt = new RRTKDTree ();
+		private RRTKDTreeCombat combat = new RRTKDTreeCombat ();
 		private MapperEditorDrawer drawer;
 		private DateTime previous = DateTime.Now;
 		private long accL = 0L;
@@ -89,6 +93,13 @@ namespace EditorArea {
 			
 			floor = (GameObject)EditorGUILayout.ObjectField ("Floor", floor, typeof(GameObject), true);
 			gridSize = EditorGUILayout.IntSlider ("Grid size", gridSize, 10, 300);
+
+			if (GUILayout.Button ((MapperEditor.editGrid ? "Finish Editing" : "Edit Grid"))) {
+				if (floor != null) {
+					MapperEditor.editGrid = !MapperEditor.editGrid;
+					Selection.activeGameObject = mapper.gameObject;
+				}
+			}
 	
 			EditorGUILayout.LabelField ("");
 			
@@ -99,7 +110,8 @@ namespace EditorArea {
 			#region 2. Units
 			
 			EditorGUILayout.LabelField ("2. Units");
-			
+
+			playerDPS = EditorGUILayout.Slider("Player DPS", playerDPS, 0.1f, 100f);
 			if (GUILayout.Button ("Store Positions")) {
 				StorePositions ();
 			}
@@ -160,11 +172,11 @@ namespace EditorArea {
 					}
 				}
 				
-				fullMap = mapper.PrecomputeMaps (SpaceState.Editor, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind, baseMap);
-				
-				drawer.fullMap = fullMap;
+				original = mapper.PrecomputeMaps (SpaceState.Editor, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind, baseMap);
+
+				drawer.fullMap = original;
 				float maxSeenGrid;
-				drawer.seenNeverSeen = Analyzer.ComputeSeenValuesGrid (fullMap, out maxSeenGrid);
+				drawer.seenNeverSeen = Analyzer.ComputeSeenValuesGrid (original, out maxSeenGrid);
 				drawer.seenNeverSeenMax = maxSeenGrid;
 				drawer.tileSize = SpaceState.Editor.tileSize;
 				drawer.zero.Set (floor.collider.bounds.min.x, floor.collider.bounds.min.z);
@@ -187,10 +199,43 @@ namespace EditorArea {
 			attemps = EditorGUILayout.IntSlider ("Attempts", attemps, 1000, 100000);
 			iterations = EditorGUILayout.IntSlider ("Iterations", iterations, 1, 1500);
 			smoothPath = EditorGUILayout.Toggle ("Smooth path", smoothPath);
-			
-			if (GUILayout.Button ("Compute Path")) {
-				float speed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
+			randomSeed = EditorGUILayout.IntSlider("Random Seed", randomSeed, -1, 10000);
+
+			if (GUILayout.Button ("(WIP) Compute 3D A* Path")) {
+				float playerSpeed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
+				float playerMaxHp = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().maxHp;
 				
+				//Check the start and the end and get them from the editor. 
+				if (start == null) {
+					start = GameObject.Find ("Start");
+				}
+				if (end == null) {
+					end = GameObject.Find ("End");	
+				}
+
+				startX = (int)((start.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
+				startY = (int)((start.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
+				endX = (int)((end.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
+				endY = (int)((end.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
+
+				paths.Clear ();
+				deaths.Clear ();
+				ClearPathsRepresentation ();
+				arrangedByCrazy = arrangedByDanger = arrangedByDanger3 = arrangedByDanger3Norm = arrangedByLength = arrangedByLoS = arrangedByLoS3 = arrangedByLoS3Norm = arrangedByTime = arrangedByVelocity = null;
+
+				Exploration.DavAStar3d astar3d = new DavAStar3d();
+				List<Node> nodes = astar3d.Compute(startX, startY, endX, endY, original, playerSpeed);
+
+				if (nodes.Count > 0) {
+					paths.Add (new Path (nodes));
+					toggleStatus.Add (paths.Last (), true);
+					paths.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
+				}
+			}
+
+			if (GUILayout.Button ("Compute Path")) {
+				float playerSpeed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
+				float playerMaxHp = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().maxHp;
 				
 				//Check the start and the end and get them from the editor. 
 				if (start == null) {
@@ -201,48 +246,137 @@ namespace EditorArea {
 				}
 				
 				paths.Clear ();
+				deaths.Clear ();
 				ClearPathsRepresentation ();
 				arrangedByCrazy = arrangedByDanger = arrangedByDanger3 = arrangedByDanger3Norm = arrangedByLength = arrangedByLoS = arrangedByLoS3 = arrangedByLoS3Norm = arrangedByTime = arrangedByVelocity = null;
-				
+
+				// Prepare start and end position
 				startX = (int)((start.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
 				startY = (int)((start.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
 				endX = (int)((end.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
 				endY = (int)((end.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
-				
-				rrt.min = floor.collider.bounds.min;
-				rrt.tileSizeX = SpaceState.Editor.tileSize.x;
-				rrt.tileSizeZ = SpaceState.Editor.tileSize.y;
-				rrt.enemies = SpaceState.Editor.enemies;
-				
+
+				GameObject[] hps = GameObject.FindGameObjectsWithTag("HealthPack");
+				HealthPack[] packs = new HealthPack[hps.Length];
+				for (int i = 0; i < hps.Length; i++) {
+					packs[i] = hps[i].GetComponent<HealthPack>();
+					packs[i].posX = (int)((packs[i].transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
+					packs[i].posZ = (int)((packs[i].transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
+				}
+
+				// Update the parameters on the RRT class
+				combat.min = floor.collider.bounds.min;
+				combat.tileSizeX = SpaceState.Editor.tileSize.x;
+				combat.tileSizeZ = SpaceState.Editor.tileSize.y;
+				combat.enemies = SpaceState.Editor.enemies;
+				combat.packs = packs;
+
+				if (randomSeed != -1)
+					UnityEngine.Random.seed = randomSeed;
+				else {
+					DateTime now = DateTime.Now;
+					UnityEngine.Random.seed = now.Millisecond + now.Second + now.Minute + now.Hour + now.Day + now.Month+ now.Year;
+				}
+
 				List<Node> nodes = null;
 				for (int it = 0; it < iterations; it++) {
-					nodes = rrt.Compute (startX, startY, endX, endY, attemps, speed, fullMap, smoothPath);
-					if (nodes.Count > 0) {
-						paths.Add (new Path (nodes));
-						toggleStatus.Add (paths.Last (), true);
-						paths.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
+
+					// Make a copy of the original map
+					fullMap = new Cell[original.Length][][];
+					for (int t = 0; t < original.Length; t++) {
+						fullMap[t] = new Cell[original[0].Length][];
+						for (int x = 0; x < original[0].Length; x++) {
+							fullMap[t][x] = new Cell[original[0][0].Length];
+							for (int y = 0; y < original[0][0].Length; y++)
+								fullMap[t][x][y] = original[t][x][y].Copy();
+						}
+					}
+					
+					// Use the copied map so the RRT can modify it
+					foreach (Enemy e in SpaceState.Editor.enemies) {
+						for (int t = 0; t < original.Length; t++)
+							for (int x = 0; x < original[0].Length; x++)
+								for (int y = 0; y < original[0][0].Length; y++)
+									if (e.seenCells[t][x][y] != null)
+										e.seenCells[t][x][y] = fullMap[t][x][y];
+
+						// TODO: Need to make a backup of the enemies positions, rotations and forwards
+						
+					}
+					// We have this try/catch block here to account for the issue that we don't solve when we find a path when t is near the limit
+					try {
+						nodes = combat.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
+						// Did we found a path?
+						if (nodes.Count > 0) {
+							paths.Add (new Path (nodes));
+							toggleStatus.Add (paths.Last (), true);
+							paths.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
+						}
+						// Grab the death list
+						foreach (List<Node> deathNodes in combat.deathPaths) {
+							deaths.Add(new Path(deathNodes));
+						}
+					} catch (Exception e) {
+						Debug.LogWarning("Skip errored calculated path");
+						// This can happen in two different cases:
+						// In line 376 by having a duplicate node being picked (coincidence picking the EndNode as visiting but the check is later on)
+						// We also cant just bring the check earlier since there's data to be copied (really really rare cases)
+						// The other case is yet unkown, but it's a conicidence by trying to insert a node in the tree that already exists (really rare cases)
 					}
 				}
-				
-				Debug.Log ("Paths found: " + paths.Count);
-				
-				ComputeHeatMap (paths);
+				// Set the map to be drawn
+				drawer.fullMap = fullMap;
+				ComputeHeatMap (paths, deaths);
+
+				// Compute the summary about the paths and print it
+				String summary = "Summary:\n";
+				summary += "Successful paths found: " + paths.Count;
+				summary += "\nDead paths: " + deaths.Count;
+
+				// How many paths killed how many enemies
+				Dictionary<int, int> map = new Dictionary<int, int>();
+				for (int i = 0; i <= SpaceState.Editor.enemies.Length; i++)
+					map.Add(i, 0);
+				foreach (Path p in paths) {
+					int killed = 0;
+					foreach (Node n in p.points)
+						if (n.died != null)
+							killed++;
+
+					if (map.ContainsKey(killed))
+						map[killed]++;
+					else
+						map.Add(killed, 1);
+				}
+
+				foreach (int k in map.Keys) {
+					summary += "\n" + map[k] + " paths killed " + k + " enemies";
+				}
+
+				Debug.Log(summary);
 			}
 			
 			if (GUILayout.Button ("(DEBUG) Export Paths")) {
-				PathBulk.SavePathsToFile ("pathtest.xml", paths);
+				List<Path> all = new List<Path>();
+				all.AddRange(paths);
+				all.AddRange(deaths);
+				PathBulk.SavePathsToFile ("pathtest.xml", all);
 			}
 			
 			if (GUILayout.Button ("(DEBUG) Import Paths")) {
 				paths.Clear ();
 				ClearPathsRepresentation ();
-				paths.AddRange (PathBulk.LoadPathsFromFile ("pathtest.xml"));
-				foreach (Path p in paths) {
-					p.name = "Imported " + (++imported);
-					p.color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
-					toggleStatus.Add (p, true);
+				List<Path> pathsImported = PathBulk.LoadPathsFromFile ("pathtest.xml");
+				foreach (Path p in pathsImported) {
+					if (p.points.Last().playerhp <= 0) {
+						deaths.Add(p);
+					} else {
+						p.name = "Imported " + (++imported);
+						p.color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
+						toggleStatus.Add (p, true);
+					}
 				}
-				ComputeHeatMap (paths);
+				ComputeHeatMap (paths, deaths);
 				SetupArrangedPaths (paths);
 			}
 			
@@ -261,14 +395,37 @@ namespace EditorArea {
 			drawNeverSeen = EditorGUILayout.Toggle ("- Draw safe places", drawNeverSeen);
 			drawFoVOnly = EditorGUILayout.Toggle ("- Draw only fields of view", drawFoVOnly);
 			drawHeatMap = EditorGUILayout.Toggle ("- Draw heat map", drawHeatMap);
+			drawCombatHeatMap = EditorGUILayout.Toggle ("-> Draw combat heat map", drawCombatHeatMap);
 			drawHeatMap3d = EditorGUILayout.Toggle ("-> Draw heat map 3d", drawHeatMap3d);
+			drawDeathHeatMap = EditorGUILayout.Toggle ("-> Draw death heat map", drawDeathHeatMap);
+			drawDeathHeatMap3d = EditorGUILayout.Toggle ("--> Draw 3d death heat map", drawDeathHeatMap3d);
 			drawPath = EditorGUILayout.Toggle ("Draw path", drawPath);
+			drawCombatLines = EditorGUILayout.Toggle ("Draw combat lines", drawCombatLines);
 			
 			if (drawer != null) {
-				if (drawHeatMap3d)
-					drawer.heatMap = null;
-				else
-					drawer.heatMap = heatMap;
+				drawer.heatMap = null;
+				drawer.heatMap3d = null;
+				drawer.deathHeatMap = null;
+				drawer.deathHeatMap3d = null;
+				drawer.combatHeatMap = null;
+
+				if (drawHeatMap) {
+					if (drawCombatHeatMap)
+						drawer.combatHeatMap = combatHeatMap;
+
+					else if (drawHeatMap3d)
+						drawer.heatMap3d = heatMap3d;
+
+					else if (drawDeathHeatMap) {
+						if (drawDeathHeatMap3d)
+							drawer.deathHeatMap3d = deathHeatMap3d;
+						else
+							drawer.deathHeatMap = deathHeatMap;
+					}
+
+					else
+						drawer.heatMap = heatMap;
+				}
 			}
 			
 			EditorGUILayout.LabelField ("");
@@ -312,9 +469,9 @@ namespace EditorArea {
 				Analyzer.ComputePathsTimeValues (paths);
 				Analyzer.ComputePathsLengthValues (paths);
 				Analyzer.ComputePathsVelocityValues (paths);
-				Analyzer.ComputePathsLoSValues (paths, SpaceState.Editor.enemies, floor.collider.bounds.min, SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y, fullMap, drawer.seenNeverSeen, drawer.seenNeverSeenMax);
-				Analyzer.ComputePathsDangerValues (paths, SpaceState.Editor.enemies, floor.collider.bounds.min, SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y, fullMap, drawer.seenNeverSeen, drawer.seenNeverSeenMax);
-				Analyzer.ComputeCrazyness (paths, fullMap, Mathf.FloorToInt (crazySeconds / stepSize));
+				Analyzer.ComputePathsLoSValues (paths, SpaceState.Editor.enemies, floor.collider.bounds.min, SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y, original, drawer.seenNeverSeen, drawer.seenNeverSeenMax);
+				Analyzer.ComputePathsDangerValues (paths, SpaceState.Editor.enemies, floor.collider.bounds.min, SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y, original, drawer.seenNeverSeen, drawer.seenNeverSeenMax);
+				Analyzer.ComputeCrazyness (paths, original, Mathf.FloorToInt (crazySeconds / stepSize));
 				Analyzer.ComputePathsVelocityValues (paths);
 				
 				SetupArrangedPaths (paths);
@@ -482,13 +639,6 @@ namespace EditorArea {
 			
 			// ----------------------------------
 			
-			if (GUILayout.Button ("(WIP) " + (MapperEditor.editGrid ? "Finish Editing" : "Edit Grid"))) {
-				if (floor != null) {
-					MapperEditor.editGrid = !MapperEditor.editGrid;
-					Selection.activeGameObject = mapper.gameObject;
-				}
-			}
-			
 			#region Temp Player setup
 			
 			if (playerNode == null) {
@@ -534,19 +684,23 @@ namespace EditorArea {
 				drawer.drawFoVOnly = drawFoVOnly;
 				drawer.drawNeverSeen = drawNeverSeen;
 				drawer.drawPath = drawPath;
+				drawer.drawCombatLines = drawCombatLines;
 				drawer.paths = toggleStatus;
+				drawer.textDraw = textDraw;
 				
 			}
 			
-			if (fullMap != null && lastTime != timeSlice) {
+			if (original != null && lastTime != timeSlice) {
 				lastTime = timeSlice;
 				UpdatePositions (timeSlice, mapper);
 			}
 			
 			SceneView.RepaintAll ();
+
 		}
 			
 		public void Update () {
+			textDraw.Clear();
 			if (playing) {
 				long l = DateTime.Now.Ticks - previous.Ticks;
 				playTime += l;
@@ -577,6 +731,9 @@ namespace EditorArea {
 				GameObject.DestroyImmediate (obj);
 				
 			players.Clear ();
+
+			GameObject.DestroyImmediate(GameObject.Find("TempPlayerNode"));
+
 			Resources.UnloadUnusedAssets ();
 		}
 		
@@ -622,16 +779,23 @@ namespace EditorArea {
 			arrangedByVelocity.Sort (new Analyzer.VelocityComparer ());
 		}
 		
-		private void ComputeHeatMap (List<Path> paths) {
+		private void ComputeHeatMap (List<Path> paths, List<Path> deaths = null) {
 			heatMap = Analyzer.Compute2DHeatMap (paths, gridSize, gridSize, out maxHeatMap);
-				
 			drawer.heatMapMax = maxHeatMap;
 			drawer.heatMap = heatMap;
-				
-			int[] maxHeatMap3d;
-			drawer.heatMap3d = Analyzer.Compute3DHeatMap (paths, gridSize, gridSize, timeSamples, out maxHeatMap3d);
 
+			deathHeatMap = Analyzer.ComputeDeathHeatMap (deaths, gridSize, gridSize, out maxHeatMap);
+			drawer.deathHeatMapMax = maxHeatMap;
+
+			int[] maxHeatMap3d;
+			heatMap3d = Analyzer.Compute3DHeatMap (paths, gridSize, gridSize, timeSamples, out maxHeatMap3d);
 			drawer.heatMapMax3d = maxHeatMap3d;
+
+			deathHeatMap3d = Analyzer.Compute3dDeathHeatMap(deaths, gridSize, gridSize, timeSamples, out maxHeatMap3d);
+			drawer.deathHeatMapMax3d = maxHeatMap3d;
+
+			combatHeatMap = Analyzer.Compute2DCombatHeatMap(paths, deaths, gridSize, gridSize, out maxHeatMap);
+			drawer.combatHeatMap2dMax = maxHeatMap;
 
 			drawer.rrtMap = rrt.explored;
 			drawer.tileSize.Set (SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y);
@@ -982,7 +1146,7 @@ namespace EditorArea {
 				SpaceState.Editor.enemies [i].transform.position = pos;
 				SpaceState.Editor.enemies [i].transform.rotation = rot;
 			}
-			
+
 			foreach (KeyValuePair<Path, GameObject> each in players) {
 				bool used = false;
 				toggleStatus.TryGetValue (each.Key, out used);
@@ -1006,6 +1170,7 @@ namespace EditorArea {
 						pos.y = 0f;
 
 						each.Value.transform.position = pos;
+						textDraw.Add(Tuple.New<Vector3, string>(new Vector3(pos.x, pos.y + 1f, pos.z), "H:" + p.playerhp));
 					}
 				}
 			}
