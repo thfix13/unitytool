@@ -43,8 +43,6 @@ public class EnemyMover
 			outWaypoint = waypoint;
 			outRotation = rotation;
 		} else {
-			
-			//if (waypoint.next != null) {
 			if (Dist (position, waypoint.transform.position) <= collisionRadius) {
 				Solve (id, position, rotation, moveSpeed, rotationSpeed, tpf, waypoint.next, collisionRadius, out outPosition, out outRotation, out outWaypoint);
 				return;
