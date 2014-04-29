@@ -20,7 +20,7 @@ namespace EditorArea {
 
 		// Parameters with default values
 		public static int timeSamples = 2000, attemps = 25000, iterations = 1, gridSize = 60, ticksBehind = 0;
-		private static bool drawMap = true, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = false, drawFoVOnly = false, drawCombatLines = false;
+		private static bool drawMap = true, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = false, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false;
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10;
 		private static int randomSeed = -1;
 
@@ -42,8 +42,8 @@ namespace EditorArea {
 		private long stepInTicks = 0L, playTime = 0L;
 		private static bool simulated = false, playing = false;
 		private Mapper mapper;
-		private RRTKDTree rrt = new RRTKDTree ();
-		private RRTKDTreeCombat combat = new RRTKDTreeCombat ();
+		private RRTKDTreeCombat rrt = new RRTKDTreeCombat ();
+		private RRTKDTree oldRrt = new RRTKDTree ();
 		private MapperEditorDrawer drawer;
 		private DateTime previous = DateTime.Now;
 		private long accL = 0L;
@@ -198,12 +198,12 @@ namespace EditorArea {
 			end = (GameObject)EditorGUILayout.ObjectField ("End", end, typeof(GameObject), true);
 			attemps = EditorGUILayout.IntSlider ("Attempts", attemps, 1000, 100000);
 			iterations = EditorGUILayout.IntSlider ("Iterations", iterations, 1, 1500);
-			smoothPath = EditorGUILayout.Toggle ("Smooth path", smoothPath);
 			randomSeed = EditorGUILayout.IntSlider("Random Seed", randomSeed, -1, 10000);
+			smoothPath = EditorGUILayout.Toggle ("Smooth path", smoothPath);
+			simulateCombat = EditorGUILayout.Toggle ("Simulate combat", simulateCombat);
 
 			if (GUILayout.Button ("(WIP) Compute 3D A* Path")) {
 				float playerSpeed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
-				float playerMaxHp = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().maxHp;
 				
 				//Check the start and the end and get them from the editor. 
 				if (start == null) {
@@ -265,11 +265,12 @@ namespace EditorArea {
 				}
 
 				// Update the parameters on the RRT class
-				combat.min = floor.collider.bounds.min;
-				combat.tileSizeX = SpaceState.Editor.tileSize.x;
-				combat.tileSizeZ = SpaceState.Editor.tileSize.y;
-				combat.enemies = SpaceState.Editor.enemies;
-				combat.packs = packs;
+				rrt.min = floor.collider.bounds.min;
+				rrt.tileSizeX = SpaceState.Editor.tileSize.x;
+				rrt.tileSizeZ = SpaceState.Editor.tileSize.y;
+				rrt.enemies = SpaceState.Editor.enemies;
+				rrt.packs = packs;
+				rrt.simulateCombat = simulateCombat;
 
 				if (randomSeed != -1)
 					UnityEngine.Random.seed = randomSeed;
@@ -305,7 +306,7 @@ namespace EditorArea {
 					}
 					// We have this try/catch block here to account for the issue that we don't solve when we find a path when t is near the limit
 					try {
-						nodes = combat.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
+						nodes = rrt.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
 						// Did we found a path?
 						if (nodes.Count > 0) {
 							paths.Add (new Path (nodes));
@@ -313,11 +314,12 @@ namespace EditorArea {
 							paths.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
 						}
 						// Grab the death list
-						foreach (List<Node> deathNodes in combat.deathPaths) {
+						foreach (List<Node> deathNodes in rrt.deathPaths) {
 							deaths.Add(new Path(deathNodes));
 						}
 					} catch (Exception e) {
 						Debug.LogWarning("Skip errored calculated path");
+						Debug.LogException(e);
 						// This can happen in two different cases:
 						// In line 376 by having a duplicate node being picked (coincidence picking the EndNode as visiting but the check is later on)
 						// We also cant just bring the check earlier since there's data to be copied (really really rare cases)
@@ -797,7 +799,6 @@ namespace EditorArea {
 			combatHeatMap = Analyzer.Compute2DCombatHeatMap(paths, deaths, gridSize, gridSize, out maxHeatMap);
 			drawer.combatHeatMap2dMax = maxHeatMap;
 
-			drawer.rrtMap = rrt.explored;
 			drawer.tileSize.Set (SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y);
 		}
 
@@ -935,8 +936,8 @@ namespace EditorArea {
 						Result single = new Result ();
 									
 						DateTime before = System.DateTime.Now;
-						path = rrt.Compute (startX, startY, endX, endY, rrtattemps, speed, fullMap, false);
-						rrt.tree = null;
+						path = oldRrt.Compute (startX, startY, endX, endY, rrtattemps, speed, fullMap, false);
+						oldRrt.tree = null;
 						DateTime after = System.DateTime.Now;
 						TimeSpan delta = after - before;
 									
@@ -1004,7 +1005,7 @@ namespace EditorArea {
 						Result single = new Result ();
 							
 						DateTime before = System.DateTime.Now;
-						path = rrt.Compute (startX, startY, endX, endY, rrtattemps, speed, fullMap, false);
+						path = oldRrt.Compute (startX, startY, endX, endY, rrtattemps, speed, fullMap, false);
 						DateTime after = System.DateTime.Now;
 						TimeSpan delta = after - before;
 							
@@ -1070,7 +1071,7 @@ namespace EditorArea {
 						Result single = new Result ();
 							
 						DateTime before = System.DateTime.Now;
-						path = rrt.Compute (startX, startY, endX, endY, rrtattemps, speed, fullMap, false);
+						path = oldRrt.Compute (startX, startY, endX, endY, rrtattemps, speed, fullMap, false);
 						DateTime after = System.DateTime.Now;
 						TimeSpan delta = after - before;
 							

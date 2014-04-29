@@ -33,7 +33,7 @@ namespace Extra {
 				} 
 			}
 
-			return !n3.cell.IsWalkable () || CheckCollision (n1, n3, provider, state, noisy, deep + 1) || CheckCollision (n2, n3, provider, state, noisy, deep + 1);
+			return !(n3.cell.safe || !(n3.cell.blocked || n3.cell.seen)) || CheckCollision (n1, n3, provider, state, noisy, deep + 1) || CheckCollision (n2, n3, provider, state, noisy, deep + 1);
 
 		}
 

@@ -20,20 +20,14 @@ namespace Exploration {
 		public HealthPack[] packs;
 		public Vector3 min;
 		public float tileSizeX, tileSizeZ;
+		public bool simulateCombat;
 		
 		// Gets the node at specified position from the NodeMap, or create the Node based on the Cell position for that Node
 		public Node GetNode (int t, int x, int y) {
 			object o = tree.search (new double[] {x, t, y});
-			if (o == null) {
-				Node n = new Node ();
+			if (o == null)
+				o = NewNode(t,x,y);
 
-				n.x = x;
-				n.y = y;
-				n.t = t;
-				n.enemyhp = new Dictionary<Enemy, float> ();
-				n.cell = nodeMatrix [t] [x] [y];
-				o = n;
-			}
 			return (Node)o;
 		}
 
@@ -48,6 +42,8 @@ namespace Exploration {
 			n.y = y;
 			n.t = t;
 			n.enemyhp = new Dictionary<Enemy, float> ();
+			n.fighting = new List<Enemy>();
+			n.picked = new List<HealthPack>();
 			n.cell = nodeMatrix [t] [x] [y];
 			return n;
 		}
@@ -63,8 +59,6 @@ namespace Exploration {
 			start.visited = true; 
 			start.parent = null;
 			start.playerhp = playerMaxHp;
-			start.enemyhp = new Dictionary<Enemy, float> ();
-			start.picked = new List<HealthPack>();
 			foreach (Enemy e in enemies) {
 				start.enemyhp.Add (e, e.maxHealth);
 			}
@@ -103,7 +97,7 @@ namespace Exploration {
 				//Distribution.Pair p = rd.NextRandom();
 				//int rx = p.x, ry = p.y;
 				nodeVisiting = GetNode (rt, rx, ry);
-				if (nodeVisiting.visited || !nodeVisiting.cell.IsWalkable ()) {
+				if (nodeVisiting.visited || nodeVisiting.cell.blocked) {
 					i--;
 					continue;
 				}
@@ -141,7 +135,7 @@ namespace Exploration {
 				Node hit = dda.Los3D (nodeMatrix, nodeTheClosestTo, nodeVisiting, seenList.ToArray ());
 
 				if (hit != null) {
-					if (hit.cell.blocked) // Collision with obstacle, ignore
+					if (hit.cell.blocked || (!simulateCombat && hit.cell.seen && !hit.cell.safe)) // Collision with obstacle, ignore. If we don't simulate combat, ignore collision with enemy
 						continue;
 					else {
 						// Which enemy has seen me?
@@ -182,9 +176,8 @@ namespace Exploration {
 							dyingAt.Add (death);
 
 							// And proccess the other stuff
-							firstFight.fighting = new List<Enemy> ();
+							copy (nodeTheClosestTo, firstFight);
 							firstFight.fighting.Add (toFight);
-							copy (nodeTheClosestTo.enemyhp, firstFight.enemyhp);
 
 							// Navigation node
 							Node lastNode = firstFight;
@@ -203,10 +196,8 @@ namespace Exploration {
 								Node startingFight = NewNode (joined.Second, hit.x, hit.y);
 
 								// Add to fighting list
-								startingFight.fighting = new List<Enemy> ();
-								startingFight.fighting.AddRange (lastNode.fighting);
+								copy (lastNode, startingFight);
 								startingFight.fighting.Add (joined.First);
-								copy (lastNode.enemyhp, startingFight.enemyhp);
 
 								// Correct parenting
 								startingFight.parent = lastNode;
@@ -252,10 +243,8 @@ namespace Exploration {
 								if (!didDie) {
 									// The guy didn't die between, that means he's farthest away than lastNode
 									Node adding = NewNode (dead.Second, hit.x, hit.y);
-									adding.fighting = new List<Enemy> ();
-									adding.fighting.AddRange (lastNode.fighting);
+									copy (lastNode, adding);
 									adding.fighting.Remove (dead.First);
-									copy (lastNode.enemyhp, adding.enemyhp);
 									adding.enemyhp [dead.First] = 0;
 									adding.died = dead.First;
 									adding.parent = lastNode;
@@ -298,12 +287,10 @@ namespace Exploration {
 							nodeVisiting.parent = toAdd;
 							toAdd.parent = nodeTheClosestTo;
 
-							toAdd.playerhp = nodeTheClosestTo.playerhp;
-							toAdd.fighting = new List<Enemy> ();
+							copy (nodeTheClosestTo, toAdd);
 							toAdd.fighting.Add (toFight);
-							copy (nodeTheClosestTo.enemyhp, toAdd.enemyhp);
 
-							copy (nodeTheClosestTo.enemyhp, nodeVisiting.enemyhp);
+							copy (nodeTheClosestTo, nodeVisiting);
 							nodeVisiting.playerhp = toAdd.playerhp - timef * toFight.dps * stepSize;
 							nodeVisiting.enemyhp [toFight] = 0;
 							nodeVisiting.died = toFight;
@@ -312,25 +299,10 @@ namespace Exploration {
 				} else {
 					// Nobody has seen me
 					nodeVisiting.parent = nodeTheClosestTo;
-					nodeVisiting.playerhp = nodeTheClosestTo.playerhp;
-					copy (nodeTheClosestTo.enemyhp, nodeVisiting.enemyhp);
+					copy (nodeTheClosestTo, nodeVisiting);
 				}
 
 				try {
-					// Pass along all HealthPack information
-					Node travel = nodeVisiting;
-					Node dest = nodeTheClosestTo;
-					while (dest != nodeVisiting) {
-						while (travel.parent != dest)
-							travel = travel.parent;
-
-						travel.picked = new List<HealthPack>();
-						travel.picked.AddRange(travel.parent.picked);
-
-						dest = travel;
-						travel = nodeVisiting;
-					}
-
 					tree.insert (nodeVisiting.GetArray (), nodeVisiting);
 				} catch (KeyDuplicateException) {
 				}
@@ -373,15 +345,14 @@ namespace Exploration {
 						// To simplify things, only connect if player isn't seen or collides with an obstacle
 						if (hit == null) {
 							endNode.parent = nodeVisiting;
-							copy (endNode.parent.enemyhp, endNode.enemyhp);
-							endNode.playerhp = endNode.parent.playerhp;
+							copy (endNode.parent, endNode);
 							List<Node> done = ReturnPath (endNode, smooth);
 							//UpdateNodeMatrix (done);
 							return done;
 						}
 					}
 
-					if (nodeVisiting.playerhp < 100)
+					if (nodeVisiting.playerhp < playerMaxHp)
 						// Health pack solving
 						foreach (HealthPack pack in packs) {
 							if (!nodeVisiting.picked.Contains(pack)) {
@@ -411,11 +382,9 @@ namespace Exploration {
 									// To simplify things, only connect if player isn't seen or collides with an obstacle
 									if (hit == null) {
 										packNode.parent = nodeVisiting;
-										packNode.picked = new List<HealthPack>();
-										packNode.picked.AddRange(nodeVisiting.picked);
+										copy (packNode.parent, packNode);
 										packNode.picked.Add(pack);
-										copy (packNode.parent.enemyhp, packNode.enemyhp);
-										packNode.playerhp = 100;
+										packNode.playerhp = playerMaxHp;
 										try {
 											tree.insert(packNode.GetArray(), packNode);
 										} catch (KeyDuplicateException) {
@@ -439,17 +408,16 @@ namespace Exploration {
 			return new List<Node> ();
 		}
 
-		private Vector3 GridToWorldCoords (int x, int y) {
-			Vector3 coord = new Vector3 ();
-			coord.x = (x * tileSizeX) - min.x;
-			coord.y = 0f;
-			coord.z = (y * tileSizeZ) - min.z;
-			return coord;
-		}
+		private void copy(Node from, Node to) {
+			to.playerhp = from.playerhp;
 
-		private void copy (Dictionary<Enemy, float> source, Dictionary<Enemy, float> dest) {
 			foreach (Enemy e in enemies)
-				dest.Add (e, source [e]);
+				to.enemyhp.Add (e, from.enemyhp[e]);
+
+			to.fighting.AddRange(from.fighting);
+
+			to.picked.AddRange(from.picked);
+
 		}
 		
 		// Returns the computed path by the RRT, and smooth it if that's the case
