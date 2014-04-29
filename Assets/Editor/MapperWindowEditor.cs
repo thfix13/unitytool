@@ -1429,7 +1429,206 @@ public class MapperWindowEditor : EditorWindow
 		}
 		
 		#endregion
+
+		#region BatchComputingForBehaviours
 		
+		EditorGUILayout.LabelField ("");
+		EditorGUILayout.LabelField ("14. Batch Computing For Behaviours");
+		
+		GUI.enabled = false;
+		noeB = EditorGUILayout.IntField ("Number of enemies", noeB);
+		nocB = EditorGUILayout.IntField ("Number of cameras", nocB);
+		noreB = noeB != 0 ? 2 * noeB - 1 : 0;
+		norcB = nocB != 0 ? 2 * nocB - 1 : 0;
+		
+		if (GUILayout.Button ("Batch Computation For Behaviours")) {
+			
+			//			for (nocB = 0; nocB <= 10; nocB++) {
+			//				for (noeB = 0; noeB <= 10; noeB++) {
+			
+			
+			for (int batchIter = 0; batchIter < 50; batchIter ++) {
+				// Create moving enemies and rotational cameras
+				PCG.ClearUpEnemies (enemyObjects);
+				PCG.ClearUpPaths (pathObjects);
+				
+				if (obs == null) { 
+					obs = mapper.ComputeObstacles ();
+					Cell[][] grid = MapperEditor.grid;
+					if (grid != null) {
+						for (int x = 0; x < obs.Length; x++) {
+							for (int y = 0; y < obs[x].Length; y++)
+								if (grid [x] [y] != null)
+									obs [x] [y] = grid [x] [y];
+						}
+					}
+					PCG.Initialize (enemyPrefab, waypointPrefab, obs);
+				} else {
+					PCG.ResetEnemiesObs ();	
+				}
+				
+				PCG.numOfEnemies = noeB;
+				PCG.numOfRegionsForEnemies = noreB;
+				// Populate region centres as enemies
+				enemyObjects = PCG.PopulateEnemies (floor).ToArray ();
+				
+				// Hide all region centres
+				foreach (GameObject enemyObject in enemyObjects) {
+					Enemy enemyScript;
+					enemyScript = enemyObject.GetComponent ("Enemy") as Enemy;
+					enemyScript.LineForFOV = new Color (1.0f, 1.0f, 1.0f, 0.0f);
+					enemyObject.renderer.enabled = false;
+				}
+				
+				// Calculate different voronoi regions and visualization is ready
+				// PCG.vEnemy.calculateVoronoiRegions (floor, PCG.numOfEnemies, PCG.numOfRegionsForEnemies, enemyObjects);
+				PCG.vEnemy.calculateVoronoiRegionsUsingFlooding (floor, PCG.numOfEnemies, PCG.numOfRegionsForEnemies, enemyObjects);
+				//drawer.eVoronoiGrid = PCG.vEnemy.obs;
+				
+				// Select [numOfEnemies] regions with maximum area
+				int[] maxAreaIndexArrayForEnemies = PCG.vEnemy.selectMaximumRegions ();
+				
+				// Show region centres with [numOfEnemies] regions with maximum area
+				for (int i = 0; i < noeB; i++) {
+					Enemy enemyRestoredScript;
+					enemyRestoredScript = enemyObjects.ElementAt (maxAreaIndexArrayForEnemies [i]).GetComponent ("Enemy") as Enemy;
+					enemyRestoredScript.LineForFOV = new Color (1.0f, 0.3f, 0.0f, 1.0f);
+					enemyObjects.ElementAt (maxAreaIndexArrayForEnemies [i]).renderer.enabled = true;
+					
+				}
+				
+				PCG.maxAreaIndexHolderE = maxAreaIndexArrayForEnemies;
+				
+				int batchIter2 = 20;
+				pathObjects = PCG.PathInVoronoiRegion (floor, PCG.vEnemy.obs, batchIter2).ToArray ();
+				PCG.DestroyVoronoiCentreForEnemies ();
+				
+				PCG.ClearUpCameras (cameraObjects);
+				PCG.ClearUpAngles (angleObjects);
+				PCG.numOfCameras = nocB;
+				PCG.numOfRegionsForCameras = norcB;
+				
+				if (obs == null) { 
+					obs = mapper.ComputeObstacles ();
+					Cell[][] grid = MapperEditor.grid;
+					if (grid != null) {
+						for (int x = 0; x < obs.Length; x++) {
+							for (int y = 0; y < obs[x].Length; y++)
+								if (grid [x] [y] != null)
+									obs [x] [y] = grid [x] [y];
+						}
+					}
+					PCG.Initialize (enemyPrefab, waypointPrefab, obs);
+				} else {
+					PCG.ResetCamerasObs ();	
+				}
+				
+				cameraObjects = PCG.PopulateCameras (floor).ToArray ();
+				
+				// Hide all region centres
+				foreach (GameObject cameraObject in cameraObjects) {
+					Enemy cameraScript;
+					cameraScript = cameraObject.GetComponent ("Enemy") as Enemy;
+					cameraScript.LineForFOV = new Color (1.0f, 1.0f, 1.0f, 0.0f);
+					cameraScript.renderer.enabled = false;
+				}
+				
+				// Calculate different voronoi regions and visualization is ready
+				// PCG.vCamera.calculateVoronoiRegions (floor, PCG.vCamera.obs, PCG.numOfCameras, PCG.numOfRegionsForCameras, cameraObjects);
+				PCG.vCamera.calculateVoronoiRegionsUsingFlooding (floor, PCG.numOfCameras, PCG.numOfRegionsForCameras, cameraObjects);
+				PCG.vCamera.calculateBoundaries (floor);
+				//drawer.cVoronoiGrid = PCG.vCamera.obs;
+				
+				// Select [numOfCameras] regions with maximum area
+				int[] maxAreaIndexArrayForCameras = PCG.vCamera.selectMaximumRegions ();
+				
+				// Show region centres with [numOfCameras] regions with maximum area
+				for (int i = 0; i < nocB; i++) {
+					Enemy cameraRestoredScript;
+					cameraRestoredScript = cameraObjects.ElementAt (maxAreaIndexArrayForCameras [i]).GetComponent ("Enemy") as Enemy;
+					cameraRestoredScript.LineForFOV = new Color (1.0f, 0.3f, 0.0f, 1.0f);
+					cameraObjects.ElementAt (maxAreaIndexArrayForCameras [i]).renderer.enabled = true;
+					cameraObjects.ElementAt (maxAreaIndexArrayForCameras [i]).renderer.sharedMaterial.color = new Color (0.7f, 0.3f, 0.2f, 1.0f);
+					cameraRestoredScript.rotationSpeed = 50;
+					cameraRestoredScript.moveSpeed = 1;
+				}
+				
+				PCG.maxAreaIndexHolderC = maxAreaIndexArrayForCameras;
+				int batchIter3 = 20;
+				angleObjects = PCG.RotationInVoronoiRegion (floor, PCG.vCamera.obs, batchIter3).ToArray ();
+				PCG.DestroyVoronoiCentreForCameras ();
+				
+				// Store positions all together
+				StorePositions ();
+				// Precompute maps again
+				fullMap = mapper.PrecomputeMaps (floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind);
+				ResetAI ();
+				// Compute paths
+				float speed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
+				//Check the start and the end and get them from the editor. 
+				if (start == null) {
+					start = GameObject.Find ("Start");
+				}
+				if (end == null) {
+					end = GameObject.Find ("End");	
+				}
+				
+				paths.Clear ();
+				//toggleStatus.Clear ();
+				arrangedByCrazy = arrangedByDanger = arrangedByDanger3 = arrangedByDanger3Norm = arrangedByLength = arrangedByLoS = arrangedByLoS3 = arrangedByLoS3Norm = arrangedByTime = arrangedByVelocity = null;
+				
+				startX = (int)((start.transform.position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x);
+				startY = (int)((start.transform.position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y);
+				endX = (int)((end.transform.position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x);
+				endY = (int)((end.transform.position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y);
+				
+				rrt.min = floor.collider.bounds.min;
+				rrt.tileSizeX = SpaceState.TileSize.x;
+				rrt.tileSizeZ = SpaceState.TileSize.y;
+				rrt.enemies = SpaceState.Enemies;
+				
+				List<Node> nodes = null;
+				iterations = 20;
+				for (int it = 0; it < iterations; it++) {
+					nodes = rrt.Compute (startX, startY, endX, endY, attemps, speed, fullMap, smoothPath);
+					if (nodes.Count > 0) {
+						paths.Add (new Path (nodes));
+						//toggleStatus.Add (paths.Last (), true);
+						//paths.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
+					}
+				}
+				//heatMap = Analyzer.Compute2DHeatMap (paths, gridSize, gridSize, out maxHeatMap);
+				
+				//Debug.Log ("Paths found: " + paths.Count);
+				Debug.Log ("Ratio: " + (float)paths.Count / iterations);
+				ratios.Add ((float)paths.Count / iterations);
+				//drawer.heatMapMax = maxHeatMap;
+				//drawer.heatMap = heatMap;
+				
+				//int[] maxHeatMap3d;
+				//drawer.heatMap3d = Analyzer.Compute3DHeatMap (paths, gridSize, gridSize, timeSamples, out maxHeatMap3d);
+				//drawer.heatMapMax3d = maxHeatMap3d;
+				
+				//drawer.rrtMap = rrt.explored;
+				//drawer.tileSize.Set (SpaceState.TileSize.x, SpaceState.TileSize.y);
+				shortest = fastest = longest = lengthiest = mostDanger = null;
+			} // end of for
+			
+			int ratioCnt = 0;
+			float sumRatio = 0.0f, averageRatio = 0.0f;
+			foreach (float r in ratios) {
+				sumRatio += r;
+				ratioCnt ++;
+			}
+			averageRatio = sumRatio / ratioCnt;
+			Debug.Log ("Moving Enemies: " + noeB + ", Rotational Cameras: " + nocB + " is: " + averageRatio);
+			//				}
+			//			}
+		}
+		GUI.enabled = true;
+		
+		#endregion
+
 		foreach (KeyValuePair<Path, bool> p in toggleStatus) {
 			if (p.Value) {
 				if (!players.ContainsKey (p.Key)) {
