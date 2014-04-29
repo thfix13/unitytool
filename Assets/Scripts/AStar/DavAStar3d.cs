@@ -37,7 +37,7 @@ namespace Exploration {
 					if (xx <= n.x + 3 && xx >= 0 && xx < matrix.Length && yy <= n.y + 3 && yy >= 0 && yy < matrix [0].Length) {
 						Node c = matrix [n.t + time] [xx] [yy];
 						//if (!((Cell)c.cell).blocked) {
-						if ((c.cell).IsWalkable ()) {
+						if (c.cell.safe || !(c.cell.seen || c.cell.blocked)) {
 							adj.Add (c);
 						}
 					}

@@ -10,7 +10,6 @@ namespace EditorArea {
 
 		public Cell[][][] fullMap;
 		public float[][] seenNeverSeen;
-		public List<Node> rrtMap;
 		public Dictionary<Path, bool> paths = new Dictionary<Path, bool> ();
 		public int[,] heatMap, deathHeatMap, combatHeatMap;
 		public int[][,] heatMap3d, deathHeatMap3d;

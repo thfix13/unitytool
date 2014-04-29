@@ -87,7 +87,7 @@ namespace Exploration {
 				int ry = Random.Range (0, nodeMatrix [rt] [rx].Length);
 				//int rx = p.x, ry = p.y;
 				nodeVisiting = GetNode (rt, rx, ry);
-				if (nodeVisiting.visited || !nodeVisiting.cell.IsWalkable ()) {
+				if (nodeVisiting.visited || nodeVisiting.cell.blocked) {
 					i--;
 					continue;
 				}
@@ -109,7 +109,7 @@ namespace Exploration {
 				}
 				
 				// And we have line of sight
-				if (!nodeVisiting.cell.IsWalkable () || Extra.Collision.CheckCollision (nodeVisiting, nodeTheClosestTo, this, SpaceState.Editor, true))
+				if ((nodeVisiting.cell.seen && !nodeVisiting.cell.safe) || Extra.Collision.CheckCollision (nodeVisiting, nodeTheClosestTo, this, SpaceState.Editor, true))
 					continue;
 				
 				try {
