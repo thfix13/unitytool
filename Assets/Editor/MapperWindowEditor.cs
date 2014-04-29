@@ -618,8 +618,7 @@ namespace EditorArea {
 		{
 			//data holder
 			Triangulation triangulation = GameObject.Find("Triangulation").GetComponent<Triangulation>(); 
-			triangulation.points.Clear();
-			triangulation.colours.Clear(); 
+			triangulation.Clear(); 
 			
 			if (floor == null) {
 				floor = (GameObject)GameObject.Find ("Floor");
@@ -797,10 +796,10 @@ namespace EditorArea {
 
 
 
-			//foreach(Line l in linesLinking)
-			//{
-			//	l.DrawLine(Color.red); 
-			//}
+			foreach(Line l in linesLinking)
+			{
+				triangulation.linesMinSpanTree.Add(l); 
+			}
 
 			//Triangulate
 			for (int i = 0; i < geos.Count; i++)

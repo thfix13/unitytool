@@ -15,9 +15,21 @@ public class Triangulation : MonoBehaviour
 	public List<Triangle> triangles = new List<Triangle>(); 
 	public List<Line> lines = new List<Line>(); 
 
+	public List<Line> linesMinSpanTree = new List<Line>(); 
+
 	public bool drawTriangles = false; 
 	public bool drawRoadMap = false; 
+	public bool drawMinSpanTree = false;
 
+
+	public void Clear()
+	{
+		linesMinSpanTree.Clear(); 
+		triangles.Clear(); 
+		lines.Clear(); 
+		points.Clear(); 
+		colours.Clear();
+	}
 	void OnDrawGizmosSelected() 
 	{
 		return; 
@@ -43,9 +55,14 @@ public class Triangulation : MonoBehaviour
 		//points.Clear(); 
 		//colours.Clear();  
 
-		foreach(Line l in lines)
+		
+
+		if(drawMinSpanTree)
 		{
-			l.DrawLine(Color.red); 
+			foreach(Line l in linesMinSpanTree)
+			{
+				l.DrawLine(Color.blue); 
+			}
 		}
 
 		foreach(Triangle tt in triangles)
