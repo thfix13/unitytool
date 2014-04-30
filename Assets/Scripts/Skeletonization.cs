@@ -44,7 +44,7 @@ public class Skeletonization
 				}
 			}	
 		}
-	}
+	} 
 	
 	private void depthFirstSearchForObstacles (int i, int j, int boundaryIndex) 
 	{
@@ -58,8 +58,9 @@ public class Skeletonization
 			
 			obs [i] [j].obsVisited = true;	
 			
-			if(i > 0 && j > 0 && i < imax && j < jmax && (!obs [i - 1] [j].blocked || !obs [i + 1] [j].blocked || !obs [i] [j + 1].blocked || !obs [i] [j - 1].blocked
-				|| !obs [i - 1] [j + 1].blocked || !obs [i + 1] [j + 1].blocked || !obs [i + 1] [j - 1].blocked || !obs [i - 1] [j - 1].blocked)) {
+			if( (i > 0 && j > 0 && i < imax && j < jmax) && (!obs [i - 1] [j].blocked || !obs [i + 1] [j].blocked || !obs [i] [j + 1].blocked || !obs [i] [j - 1].blocked
+				|| !obs [i - 1] [j + 1].blocked || !obs [i + 1] [j + 1].blocked || !obs [i + 1] [j - 1].blocked || !obs [i - 1] [j - 1].blocked)) 
+			{
 				obs [i] [j].obstacleBelongTo = boundaryIndex;
 				
 				if (boundaryContoursList.Count != boundaryIndex) {

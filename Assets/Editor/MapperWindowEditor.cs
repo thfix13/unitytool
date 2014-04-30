@@ -16,7 +16,7 @@ public class MapperWindowEditor : EditorWindow
 	public static List<Node> mostDanger = null, shortest = null, lengthiest = null, fastest = null, longest = null;
 	// Parameters
 	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 75, ticksBehind = 0, numOfEnemies = 0, numOfRegionsForEnemies = 0, numOfCameras = 0, numOfRegionsForCameras = 0, iterations2 = 5, iterations3 = 5, noeB = 0, nocB = 0, noreB = 0, norcB = 0, numOfGuards = 0, iterations4 = 3, nogB = 0, noiB = 0;
-	public static int pLine = 50, pDot = 50, pSplit = 50, pZigZag = 50, pPause = 33, pSwipe = 33, pFullRotate = 34;
+	public static int pLine = 50, pDot = 50, pSplit = 50, pZigZag = 50, pPause = 25, pSwipe = 25, pFullRotate = 25, pNinety = 25;
 	public static bool drawMap = true, drawMoveMap = false, drawMoveUnits = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = false, 
 				drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawBoundaries = false, drawRoadmaps = false, drawRoadmaps2 = false, drawRoadmaps3 = false, drawGraph = false, drawGraph2 = false,
 				smoothPath = true, drawShortestPath = false, drawLongestPath = false, drawLengthiestPath = false, drawFastestPath = false, drawMostDangerousPath = false, drawFoVOnly = true, seeByTime = false, seeByLength = false, seeByDanger = false, seeByLoS = false, seeByDanger3 = false, seeByLoS3 = false, seeByDanger3Norm = false, seeByLoS3Norm = false, seeByCrazy = false, seeByVelocity = false;
@@ -1218,9 +1218,10 @@ public class MapperWindowEditor : EditorWindow
 				pDot = EditorGUILayout.IntSlider ("P2", pDot, 0, 100);
 				pSplit = EditorGUILayout.IntSlider ("P3", 100 - pZigZag, 0, 100);
 				pZigZag = EditorGUILayout.IntSlider ("P4", 100 - pSplit, 0, 100);
-				pPause = EditorGUILayout.IntSlider ("P5", 100 - pSwipe - pFullRotate, 0, 100);
-				pSwipe = EditorGUILayout.IntSlider ("P6", 100 - pPause - pFullRotate, 0, 100);
-				pFullRotate = EditorGUILayout.IntSlider ("P6", 100 - pPause - pSwipe, 0, 100);
+				pPause = EditorGUILayout.IntSlider ("P5", 100 - pSwipe - pFullRotate - pNinety, 0, 100);
+				pSwipe = EditorGUILayout.IntSlider ("P6", 100 - pPause - pFullRotate - pNinety, 0, 100);
+				pFullRotate = EditorGUILayout.IntSlider ("P6", 100 - pPause - pSwipe - pNinety, 0, 100);
+				pNinety = EditorGUILayout.IntSlider ("P7", 100 - pPause - pSwipe - pFullRotate, 0, 100);
 			}
 
 			// Populate guards with multiple behaviours along their routes
@@ -1228,7 +1229,7 @@ public class MapperWindowEditor : EditorWindow
 				PCG.ClearBehaviours ();
 				PCG.ClearUpObjects (enemypathObjects);
 				PCG.numOfGuards = numOfGuards;
-				enemypathObjects = PCG.PopulateGuardsWithBehaviours (enemyPrefab, waypointPrefab, floor, iterations4, pLine, pDot, pSplit, pZigZag, pPause, pSwipe, pFullRotate).ToArray ();
+				enemypathObjects = PCG.PopulateGuardsWithBehaviours (enemyPrefab, waypointPrefab, floor, iterations4, pLine, pDot, pSplit, pZigZag, pPause, pSwipe, pFullRotate, pNinety).ToArray ();
 				StorePositions ();
 			}
 			
@@ -1432,7 +1433,8 @@ public class MapperWindowEditor : EditorWindow
 				}
 				PCG.InitializeSkeleton (obs);
 			}
-			
+
+
 			PCG.sBoundary.identifyObstacleContours (floor);			
 			PCG.sBoundary.boundaryContoursFlooding (floor);
 			PCG.sBoundary.extractRoadmaps (floor);			
@@ -1453,7 +1455,7 @@ public class MapperWindowEditor : EditorWindow
 					PCG.numOfGuards = nogB;
 					PCG.ClearUpObjects (enemypathObjects);
 					
-					enemypathObjects = PCG.PopulateGuardsWithBehaviours (enemyPrefab, waypointPrefab, floor, noiB, pLine, pDot, pSplit, pZigZag, pPause, pSwipe, pFullRotate).ToArray ();
+					enemypathObjects = PCG.PopulateGuardsWithBehaviours (enemyPrefab, waypointPrefab, floor, noiB, pLine, pDot, pSplit, pZigZag, pPause, pSwipe, pFullRotate, pNinety).ToArray ();
 					StorePositions ();
 					
 					// Precompute maps again
