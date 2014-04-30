@@ -7,20 +7,31 @@ using KDTreeDLL;
 using Common;
 using Objects;
 using Extra;
+using RRTController;
 
 namespace Exploration {
 
 	public class RRTKDTreeCombat : NodeProvider {
-		private Cell[][][] nodeMatrix;
-		private float angle;
-		private KDTree tree;
+
+		// Resulting data
 		public List<List<Node>> deathPaths;
-		// Only do noisy calculations if enemies is different from null
+
+		// Exported data
+		public Cell[][][] nodeMatrix;
+		public Node end;
+		public DDA dda;
+
+		// Internal data
+		private KDTree tree;
+
+		// Data that must be set by the caller
 		public Enemy[] enemies;
 		public HealthPack[] packs;
 		public Vector3 min;
 		public float tileSizeX, tileSizeZ;
 		public bool simulateCombat;
+		public float stepSize, playerMaxHp, playerSpeed, playerDps;
+		public List<Controller> controllers = new List<Controller>();
 		
 		// Gets the node at specified position from the NodeMap, or create the Node based on the Cell position for that Node
 		public Node GetNode (int t, int x, int y) {
@@ -35,7 +46,7 @@ namespace Exploration {
 		// This is mainly to create the connections between nodes that shouldn't be added to the tree
 		// Like the nodes with combat in then
 		// This avoids crashing exceptions collisions while retrieving nodes
-		private Node NewNode (int t, int x, int y) {
+		public Node NewNode (int t, int x, int y) {
 			Node n = new Node ();
 			
 			n.x = x;
@@ -48,31 +59,28 @@ namespace Exploration {
 			return n;
 		}
 	
-		public List<Node> Compute (int startX, int startY, int endX, int endY, int attemps, float stepSize, float playerMaxHp, float playerSpeed, float playerDps, Cell[][][] matrix, bool smooth = false) {
+		public List<Node> Compute (int startX, int startY, int endX, int endY, int attemps, bool smooth = false) {
 			// Initialization
 			tree = new KDTree (3);
 			deathPaths = new List<List<Node>> ();
-			nodeMatrix = matrix;
-			
+
+			// TODO Nodes can hold generic Map<String, Object> information insetad of having a bunch of hard coded variables to allow dynamic content to be added
+
 			//Start and ending node
 			Node start = GetNode (0, startX, startY);
 			start.visited = true; 
 			start.parent = null;
-			start.playerhp = playerMaxHp;
-			foreach (Enemy e in enemies) {
-				start.enemyhp.Add (e, e.maxHealth);
-			}
 
 			// Prepare start and end node
-			Node end = GetNode (0, endX, endY);
+			end = GetNode (0, endX, endY);
 			tree.insert (start.GetArray (), start);
+
+			foreach (Controller c in controllers)
+				c.onStart(start, this);
 			
 			// Prepare the variables		
 			Node nodeVisiting = null;
 			Node nodeTheClosestTo = null;
-			
-			float tan = playerSpeed / 1;
-			angle = 90f - Mathf.Atan (tan) * Mathf.Rad2Deg;
 			
 			/*Distribution algorithm
 			 * List<Distribution.Pair> pairs = new List<Distribution.Pair> ();
@@ -86,7 +94,7 @@ namespace Exploration {
 			
 			Distribution rd = new Distribution(matrix[0].Length, pairs.ToArray());*/
 			 
-			DDA dda = new DDA (tileSizeX, tileSizeZ, nodeMatrix [0].Length, nodeMatrix [0] [0].Length);
+			dda = new DDA (tileSizeX, tileSizeZ, nodeMatrix [0].Length, nodeMatrix [0] [0].Length);
 			//RRT algo
 			for (int i = 0; i <= attemps; i++) {
 
@@ -97,209 +105,45 @@ namespace Exploration {
 				//Distribution.Pair p = rd.NextRandom();
 				//int rx = p.x, ry = p.y;
 				nodeVisiting = GetNode (rt, rx, ry);
-				if (nodeVisiting.visited || nodeVisiting.cell.blocked) {
+				if (nodeVisiting.visited) {
 					i--;
 					continue;
 				}
-				
+
 				nodeTheClosestTo = (Node)tree.nearest (new double[] {rx, rt, ry});
-				
-				// Skip downwards movement
-				if (nodeTheClosestTo.t > nodeVisiting.t)
-					continue;
 
-				// Skip if player is dead
-				if (nodeTheClosestTo.playerhp <= 0)
-					continue;
+				bool skip = false;
+				foreach (Controller c in controllers)
+					skip = skip || !c.afterSample(nodeTheClosestTo, nodeVisiting, this);
+				if (skip) continue;
 
-				// Only add if we are going in ANGLE degrees or higher
-				Vector3 p1 = nodeVisiting.GetVector3 ();
-				Vector3 p2 = nodeTheClosestTo.GetVector3 ();
-				Vector3 pd = p1 - p2;
-				if (Vector3.Angle (pd, new Vector3 (pd.x, 0f, pd.z)) < angle) {
-					continue;
-				}
-				
-				// And we have line of sight
-				if (nodeVisiting.cell.blocked) {
-					continue;
+				List<Cell[][][]> seenList = new List<Cell[][][]>();
+
+				foreach (Controller c in controllers) {
+					List<Cell[][][]> returned = c.beforeLineOfSight(nodeTheClosestTo, nodeVisiting, this);
+					if (returned != null)
+						seenList.AddRange(returned);
 				}
 
-				// Check for all alive enemies
-				List<Cell[][][]> seenList = new List<Cell[][][]> ();
-				foreach (Enemy e in enemies) {
-					if (nodeTheClosestTo.enemyhp [e] > 0)
-						seenList.Add (e.seenCells);
-				}
+				// TODO Cells that are 'blocked' should be inside the Basic controller instead of being hard coded inside the DDA.Los3D
 
 				Node hit = dda.Los3D (nodeMatrix, nodeTheClosestTo, nodeVisiting, seenList.ToArray ());
 
-				if (hit != null) {
-					if (hit.cell.blocked || (!simulateCombat && hit.cell.seen && !hit.cell.safe)) // Collision with obstacle, ignore. If we don't simulate combat, ignore collision with enemy
-						continue;
-					else {
-						// Which enemy has seen me?
-						Enemy toFight = null;
-						foreach (Enemy e in enemies) {
-							if (e.seenCells [hit.t] [hit.x] [hit.y] != null && nodeTheClosestTo.enemyhp [e] > 0)
-								toFight = e;
-						}
+				foreach (Controller c in controllers)
+					skip = skip || !c.validateLineOfSight(nodeTheClosestTo, nodeVisiting, hit, this);
+				if (skip) continue;
 
-						// Solve the time
-						float timef = nodeTheClosestTo.enemyhp [toFight] / (playerDps * stepSize);
-						int timeT = Mathf.CeilToInt (timef);
+				// Make sure everything works if no nodes are replaced below
+				copy (nodeTheClosestTo, nodeVisiting);
+				nodeVisiting.parent = nodeTheClosestTo;
 
-						// Search for more enemies
-						List<object> more = new List<object> ();
-						foreach (Enemy e2 in enemies) {
-							if (toFight != e2)
-								for (int t = hit.t; t < hit.t + timeT; t++)
-									if (e2.seenCells [t] [hit.x] [hit.y] != null && nodeTheClosestTo.enemyhp [e2] > 0) {
-										Tuple<Enemy, int> whenSeen = new Tuple<Enemy, int> (e2, t);
-										more.Add (whenSeen);
-										break; // Skip this enemy
-									}
-						}
+				foreach (Controller c in controllers) {
+					Node returned = c.beforeConnect(nodeTheClosestTo, nodeVisiting, hit, this);
 
-						// Did another enemy saw the player while he was fighting?
-						if (more.Count > 0) {
+					// TODO if multiple controllers changes the node at the same time, things may explode, since 'hit' will be invalid!
 
-							// Who dies when
-							List<object> dyingAt = new List<object> ();
-
-							// First, save when the first fight starts
-							Node firstFight = NewNode (hit.t, hit.x, hit.y);
-							firstFight.parent = nodeTheClosestTo;
-
-							// Then when the first guy dies
-							Tuple<Enemy, int> death = new Tuple<Enemy, int> (toFight, firstFight.t + timeT);
-							dyingAt.Add (death);
-
-							// And proccess the other stuff
-							copy (nodeTheClosestTo, firstFight);
-							firstFight.fighting.Add (toFight);
-
-							// Navigation node
-							Node lastNode = firstFight;
-
-							// Solve for all enemies joining the fight
-							foreach (object o in more) {
-								Tuple<Enemy, int> joined = (Tuple<Enemy, int>)o;						
-
-								// Calculate dying time
-								timef = timef + lastNode.enemyhp [joined.First] / (playerDps * stepSize);
-								timeT = Mathf.CeilToInt (timef);
-								death = new Tuple<Enemy, int> (joined.First, timeT + hit.t);
-								dyingAt.Add (death);
-
-								// Create the node structure
-								Node startingFight = NewNode (joined.Second, hit.x, hit.y);
-
-								// Add to fighting list
-								copy (lastNode, startingFight);
-								startingFight.fighting.Add (joined.First);
-
-								// Correct parenting
-								startingFight.parent = lastNode;
-								lastNode = startingFight;
-							}
-
-							// Solve for all deaths
-							foreach (object o in dyingAt) {
-
-								Tuple<Enemy, int> dead = (Tuple<Enemy, int>)o;
-								Node travel = lastNode;
-								bool didDie = false;
-								while (!didDie && travel.parent != null) {
-
-									// Does this guy dies between two nodes?
-									if (dead.Second > travel.parent.t && dead.Second < travel.t) {
-
-										// Add the node
-										Node adding = NewNode (dead.Second + hit.t, hit.x, hit.y);
-										adding.fighting = new List<Enemy> ();
-										adding.fighting.AddRange (travel.parent.fighting);
-
-										// And remove the dead people
-										adding.fighting.Remove (dead.First);
-										adding.died = dead.First;
-
-										Node remove = lastNode;
-
-										// Including from nodes deeper in the tree
-										while (remove != travel.parent) {
-											remove.fighting.Remove (dead.First);
-											remove = remove.parent;
-										}
-
-										// Reparent the nodes
-										adding.parent = travel.parent;
-										travel.parent = adding;
-										didDie = true;
-									}
-
-									travel = travel.parent;
-								}
-								if (!didDie) {
-									// The guy didn't die between, that means he's farthest away than lastNode
-									Node adding = NewNode (dead.Second, hit.x, hit.y);
-									copy (lastNode, adding);
-									adding.fighting.Remove (dead.First);
-									adding.enemyhp [dead.First] = 0;
-									adding.died = dead.First;
-									adding.parent = lastNode;
-
-									// This is the new lastNode
-									lastNode = adding;
-								}
-							}
-
-							// Grab the first node with fighting
-							Node first = lastNode;
-							while (first.parent != nodeTheClosestTo)
-								first = first.parent;
-
-							while (first != lastNode) {
-
-								Node navigate = lastNode;
-								// And grab the node just after the first
-								while (navigate.parent != first)
-									navigate = navigate.parent;
-
-								// Copy the damage already applied
-								navigate.playerhp = first.playerhp;
-
-								// And deal more damage
-								foreach (Enemy dmgDealer in first.fighting)
-									navigate.playerhp -= (navigate.t - first.t) * dmgDealer.dps * stepSize;
-
-								// Goto next node
-								first = navigate;
-
-							}
-							// Make the tree structure
-							nodeVisiting = lastNode;
-						} else {
-							// Only one enemy has seen me
-							Node toAdd = NewNode (hit.t, hit.x, hit.y);
-							nodeVisiting = NewNode (hit.t + timeT, hit.x, hit.y);
-							
-							nodeVisiting.parent = toAdd;
-							toAdd.parent = nodeTheClosestTo;
-
-							copy (nodeTheClosestTo, toAdd);
-							toAdd.fighting.Add (toFight);
-
-							copy (nodeTheClosestTo, nodeVisiting);
-							nodeVisiting.playerhp = toAdd.playerhp - timef * toFight.dps * stepSize;
-							nodeVisiting.enemyhp [toFight] = 0;
-							nodeVisiting.died = toFight;
-						}
-					}
-				} else {
-					// Nobody has seen me
-					nodeVisiting.parent = nodeTheClosestTo;
-					copy (nodeTheClosestTo, nodeVisiting);
+					if (returned != null)
+						nodeVisiting = returned;
 				}
 
 				try {
@@ -310,7 +154,7 @@ namespace Exploration {
 				nodeVisiting.visited = true;
 
 				// Add the path to the death paths list
-				if (nodeVisiting.playerhp <= 0) {
+				if (simulateCombat && nodeVisiting.playerhp <= 0) {
 					Node playerDeath = nodeVisiting;
 					while (playerDeath.parent.playerhp <= 0)
 						playerDeath = playerDeath.parent;
@@ -318,97 +162,40 @@ namespace Exploration {
 					deathPaths.Add (ReturnPath (playerDeath, smooth));
 				}
 
-				// Attemp to connect to the end node
-				if (nodeVisiting.playerhp > 0) {
-					// Compute minimum time to reach the end node
-					p1 = nodeVisiting.GetVector3 ();
-					p2 = end.GetVector3 ();
-					p2.y = p1.y;
-					float dist = Vector3.Distance (p1, p2);
-					
-					float t = dist * Mathf.Tan (angle);
-					pd = p2;
-					pd.y += t;
-					
-					if (pd.y <= nodeMatrix.GetLength (0)) {
-						Node endNode = GetNode ((int)pd.y, (int)pd.x, (int)pd.z);
-						// Try connecting
-
-						seenList = new List<Cell[][][]> ();
-						foreach (Enemy e in enemies) {
-							if (nodeTheClosestTo.enemyhp [e] > 0)
-								seenList.Add (e.seenCells);
-						}
-						
-						hit = dda.Los3D (nodeMatrix, nodeVisiting, endNode, seenList.ToArray ());
-
-						// To simplify things, only connect if player isn't seen or collides with an obstacle
-						if (hit == null) {
-							endNode.parent = nodeVisiting;
-							copy (endNode.parent, endNode);
-							List<Node> done = ReturnPath (endNode, smooth);
-							//UpdateNodeMatrix (done);
-							return done;
-						}
-					}
-
-					if (nodeVisiting.playerhp < playerMaxHp)
-						// Health pack solving
-						foreach (HealthPack pack in packs) {
-							if (!nodeVisiting.picked.Contains(pack)) {
-								// Compute minimum time to reach the pack
-								p1 = nodeVisiting.GetVector3 ();
-								p2 = new Vector3(pack.posX, p1.y, pack.posZ);
-								dist = Vector3.Distance (p1, p2);
-
-								t = dist * Mathf.Tan (angle);
-								pd = p2;
-								pd.y += t;
-
-								if (pd.y <= nodeMatrix.GetLength (0)) {
-									// TODO If the node is already on the Tree, things may break!
-									// but we need to add it to the tree and retrieve from it to make it a possible path!
-									Node packNode = GetNode ((int)pd.y, (int)pd.x, (int)pd.z);
-
-									// Try connecting
-									seenList = new List<Cell[][][]> ();
-									foreach (Enemy e in enemies) {
-										if (nodeVisiting.enemyhp [e] > 0)
-											seenList.Add (e.seenCells);
-									}
-									
-									hit = dda.Los3D (nodeMatrix, nodeVisiting, packNode, seenList.ToArray ());
-									
-									// To simplify things, only connect if player isn't seen or collides with an obstacle
-									if (hit == null) {
-										packNode.parent = nodeVisiting;
-										copy (packNode.parent, packNode);
-										packNode.picked.Add(pack);
-										packNode.playerhp = playerMaxHp;
-										try {
-											tree.insert(packNode.GetArray(), packNode);
-										} catch (KeyDuplicateException) {
-										}
-									}
-								}
-							}
-						}
-				}
-					
 				//Might be adding the neighboor as a the goal
 				if (nodeVisiting.x == end.x & nodeVisiting.y == end.y) {
 					//Debug.Log ("Done2");
 					List<Node> done = ReturnPath (nodeVisiting, smooth);
 					//UpdateNodeMatrix (done);
 					return done;
-						
+					
+				}
+
+				foreach (Controller c in controllers) {
+					Node returned = c.afterConnect(nodeTheClosestTo, nodeVisiting, this);
+					
+					// TODO if multiple controllers changes the node at the same time, things may explode, since 'hit' will be invalid!
+					
+					if (returned != null) {
+						// Check if we ended the computation
+						if (returned.x == end.x && returned.y == end.y)
+							return ReturnPath(returned, smooth);
+
+						// Add the new node to the tree
+						try {
+							tree.insert(returned.GetArray(), returned);
+						} catch (KeyDuplicateException) {
+						}
+					}
 				}
 			}
 					
 			return new List<Node> ();
 		}
 
-		private void copy(Node from, Node to) {
+		public void copy(Node from, Node to) {
+			// TODO create an onCopy so that controllers can pass along their information
+
 			to.playerhp = from.playerhp;
 
 			foreach (Enemy e in enemies)

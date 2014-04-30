@@ -62,6 +62,8 @@ namespace Extra {
 			foreach (Path path in paths) {
 				if (!(pathMap.ContainsKey (path))) {
 					pathMap.Add (path, new float[Enum.GetValues (typeof(Analyzer.Heuristic)).Length][]);
+
+					path.time = path.length2d = path.length3d = path.danger = path.los = path.los3 = path.danger3Norm = path.los3Norm = path.crazy = path.velocity = 0;
 				}
 				
 				foreach (Heuristic metric in values)

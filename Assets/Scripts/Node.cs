@@ -70,5 +70,26 @@ namespace Common {
 				throw new ArgumentException ();
 			}
 		}
+
+		/// <summary>
+		/// Warning: this is a light clone, so objects references are still the same from the source object.
+		/// </summary>
+		public Node Copy () {
+			Node copy = new Node ();
+			copy.cell = this.cell;
+			copy.x = this.x;
+			copy.y = this.y;
+			copy.t = this.t;
+			copy.playerhp = this.playerhp;
+			copy.enemyhp = this.enemyhp;
+			copy.fighting = this.fighting;
+			copy.died = this.died;
+			copy.parent = this.parent;
+			copy.cell = this.cell;
+			copy.visited = this.visited;
+			copy.accSpeed = this.accSpeed;
+			copy.picked = this.picked;
+			return copy;
+		}
 	}
 }

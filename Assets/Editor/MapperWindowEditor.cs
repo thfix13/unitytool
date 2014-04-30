@@ -19,7 +19,7 @@ namespace EditorArea {
 		public static List<Path> paths = new List<Path> (), deaths = new List<Path>();
 
 		// Parameters with default values
-		public static int timeSamples = 2000, attemps = 25000, iterations = 1, gridSize = 60, ticksBehind = 0;
+		public static int timeSamples = 2000, attemps = 25000, iterations = 1, gridSize = 60, ticksBehind = 0, crazyLimit;
 		private static bool drawMap = true, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = false, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false;
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10;
 		private static int randomSeed = -1;
@@ -202,6 +202,8 @@ namespace EditorArea {
 			smoothPath = EditorGUILayout.Toggle ("Smooth path", smoothPath);
 			simulateCombat = EditorGUILayout.Toggle ("Simulate combat", simulateCombat);
 
+			crazyLimit = EditorGUILayout.IntSlider ("- Crazy limit", crazyLimit, 0, 1000000);
+
 			if (GUILayout.Button ("(WIP) Compute 3D A* Path")) {
 				float playerSpeed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
 				
@@ -271,12 +273,18 @@ namespace EditorArea {
 				rrt.enemies = SpaceState.Editor.enemies;
 				rrt.packs = packs;
 				rrt.simulateCombat = simulateCombat;
+				rrt.stepSize = stepSize;
+				rrt.playerMaxHp = playerMaxHp;
+				rrt.playerSpeed = playerSpeed;
+				rrt.playerDps = playerDPS;
 
+				int seed = randomSeed;
 				if (randomSeed != -1)
 					UnityEngine.Random.seed = randomSeed;
 				else {
 					DateTime now = DateTime.Now;
-					UnityEngine.Random.seed = now.Millisecond + now.Second + now.Minute + now.Hour + now.Day + now.Month+ now.Year;
+					seed = now.Millisecond + now.Second + now.Minute + now.Hour + now.Day + now.Month+ now.Year;
+					UnityEngine.Random.seed = seed;
 				}
 
 				List<Node> nodes = null;
@@ -304,9 +312,17 @@ namespace EditorArea {
 						// TODO: Need to make a backup of the enemies positions, rotations and forwards
 						
 					}
+
+					rrt.nodeMatrix = fullMap;
+					rrt.controllers.Clear();
+					rrt.controllers.Add(new RRTController.Basic());
+					rrt.controllers.Add(new RRTController.Combat());
+					rrt.controllers.Add(new RRTController.Health());
+					rrt.controllers.Add(new RRTController.Crazyness((int) (crazySeconds / stepSize), crazyLimit));
+
 					// We have this try/catch block here to account for the issue that we don't solve when we find a path when t is near the limit
 					try {
-						nodes = rrt.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
+						nodes = rrt.Compute (startX, startY, endX, endY, attemps, smoothPath);
 						// Did we found a path?
 						if (nodes.Count > 0) {
 							paths.Add (new Path (nodes));
@@ -332,7 +348,8 @@ namespace EditorArea {
 
 				// Compute the summary about the paths and print it
 				String summary = "Summary:\n";
-				summary += "Successful paths found: " + paths.Count;
+				summary += "Seed used:" + seed;
+				summary += "\nSuccessful paths found: " + paths.Count;
 				summary += "\nDead paths: " + deaths.Count;
 
 				// How many paths killed how many enemies
