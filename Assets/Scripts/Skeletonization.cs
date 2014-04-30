@@ -1149,6 +1149,23 @@ public class Skeletonization
 //			}
 //		}
 	}
+
+	public void clearGraph () {
+		obs = null;
+
+		boundaryIndex = 0;
+		boundaryContoursList.Clear ();
+		freeCells.Clear ();
+
+		graphNodesList.Clear ();
+		finalGraphNodesList.Clear ();
+
+		roadmapDictionary.Clear ();
+		roadmapNodesList.Clear ();
+
+		graphNodesList.Clear ();
+		finalGraphNodesList.Clear ();
+	}
 	
 	public void boundaryPointsFlooding (GameObject floor)
 	{

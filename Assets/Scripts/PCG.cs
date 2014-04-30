@@ -635,9 +635,24 @@ public class PCG : MonoBehaviour
 
 			while (!notSeen) {
 				int startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
-				while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0) {
-					startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
+
+				// Non-duplicated starting index
+				bool isDuplicated = false;
+				for (int k = 0; k < i; k++) {
+					if (startIndex == listOfPath.ElementAt (k).First ()) {
+						isDuplicated = true;
+					}
 				}
+				while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0 || isDuplicated) {
+					startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
+					for (int k = 0; k < i; k++) {
+						if (startIndex == listOfPath.ElementAt (k).First ()) {
+							isDuplicated = true;
+						}
+					}
+				}
+
+				// Ending index
 				int endIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
 				while (sBoundary.finalGraphNodesList.ElementAt (endIndex).neighbors.Count == 0 || endIndex == startIndex) {
 					endIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
@@ -1031,6 +1046,16 @@ public class PCG : MonoBehaviour
 			}
 		}
 		PCG.oos.Clear ();
+	}
+
+	public static void ClearBehaviours ()
+	{
+		numOfGuards = 0;
+		listOfEnemies.Clear ();
+		templistOfPath.Clear ();
+		listOfPath.Clear ();
+		listOfSequence.Clear ();
+		listOfWaypoints.Clear ();
 	}
 	
 	// Calculate range

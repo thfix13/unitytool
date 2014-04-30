@@ -21,7 +21,7 @@ public class MapperWindowEditor : EditorWindow
 				drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawBoundaries = false, drawRoadmaps = false, drawRoadmaps2 = false, drawRoadmaps3 = false, drawGraph = false, drawGraph2 = false,
 				smoothPath = true, drawShortestPath = false, drawLongestPath = false, drawLengthiestPath = false, drawFastestPath = false, drawMostDangerousPath = false, drawFoVOnly = true, seeByTime = false, seeByLength = false, seeByDanger = false, seeByLoS = false, seeByDanger3 = false, seeByLoS3 = false, seeByDanger3Norm = false, seeByLoS3Norm = false, seeByCrazy = false, seeByVelocity = false;
 	public static bool randomOpEnables = false, setPathOpEnables = false, setRotationOpEnables = false, boundariesFloodingOpEnables = false, extractRoadmapOpEnables = false, initializeGraphOpEnables = false, mergeOpEnables = false, moreStepsBtnEnables = false, shortcutBtnEnables = false, behaviorOpEnables = false;
-	public static bool setEnemiesFoldout = false, setCameraFoldout = false, queryeVoronoiDiagramFoldout = false, querycVoronoiDiagramFoldout = false, computePathFoldout = false, setEnemiesFoldout2 = false, setGraphFoldout = false, setShortcutFoldout = false, setRhythmsFoldout = false, setMultipleBehavioursFoldout = false, setPossibilitiesFoldout = false, default1 = true, default2 = true, default3 = true, default4 = true, default5 = true, default6 = true, default7 = true, default8 = true, default9 = true, default10 = false, default11 = true, default12 = false;
+	public static bool setEnemiesFoldout = false, setCameraFoldout = false, queryeVoronoiDiagramFoldout = false, querycVoronoiDiagramFoldout = false, computePathFoldout = false, setEnemiesFoldout2 = false, setGraphFoldout = false, setShortcutFoldout = false, setRhythmsFoldout = false, setMultipleBehavioursFoldout = false, setPossibilitiesFoldout = false, default1 = true, default2 = true, default3 = true, default4 = true, default5 = true, default6 = true, default7 = false, default8 = true, default9 = true, default10 = false, default11 = true, default12 = true;
 	public static bool moreStepsClicked = false, shortcutClicked = false;
 	public static float stepSize = 1 / 10f, crazySeconds = 5f;
 	public static int[,] heatMap;
@@ -767,15 +767,18 @@ public class MapperWindowEditor : EditorWindow
 			PCG.ClearUpPaths (pathObjects);
 			PCG.ClearUpCameras (cameraObjects);
 			PCG.ClearUpAngles (angleObjects);
+
 			fullMap = null;
 			drawer.fullMap = fullMap;
 			simulated = false;
+
 			foreach (GameObject p in playerObjects) {
 				DestroyImmediate (p);
 			}
 			players.Clear ();
 			playing = false;
 			ResetAI ();
+
 			obs = null;
 			PCG.vEnemy.obs = null;
 			drawer.eVoronoiGrid = PCG.vEnemy.obs;
@@ -786,6 +789,7 @@ public class MapperWindowEditor : EditorWindow
 			numOfCameras = 0;
 			numOfRegionsForEnemies = 0;
 			numOfRegionsForCameras = 0;
+
 			setPathOpEnables = false;
 			setRotationOpEnables = false;
 		}
@@ -1009,9 +1013,11 @@ public class MapperWindowEditor : EditorWindow
 			shortcutBtnEnables = false;
 		}
     
+		// Build the graph step by step
 		GUI.enabled = moreStepsBtnEnables;
-		if (default10 == true) {
-			default10 = false;
+
+		if (default7 == true) {
+			default7 = false;
 			setGraphFoldout = EditorGUILayout.Foldout (true, "Generate Graph in Steps");
 		} else {
 			setGraphFoldout = EditorGUILayout.Foldout (setGraphFoldout, "Generate Graph in Steps");
@@ -1036,23 +1042,26 @@ public class MapperWindowEditor : EditorWindow
 				}
 				PCG.sBoundary.identifyObstacleContours (floor);
 				drawer.sBoundaryGrid = PCG.sBoundary.obs;
+
 				boundariesFloodingOpEnables = true;
 				moreStepsClicked = true;
 			}
-			
+
 			drawBoundaries = EditorGUILayout.Toggle ("Draw Boundaries", drawBoundaries);
 
 			// Flooding from boundaries
 			GUI.enabled = boundariesFloodingOpEnables;
+
 			if (GUILayout.Button ("Boundaries Flooding")) {
 				PCG.sBoundary.boundaryContoursFlooding (floor);
 				extractRoadmapOpEnables = true;
 			}
-			
+
 			drawRoadmaps2 = EditorGUILayout.Toggle ("Draw Roadmaps", drawRoadmaps2);
 
 			// Extract the roadmap
 			GUI.enabled = extractRoadmapOpEnables;
+
 			if (GUILayout.Button ("Extract Roadmaps")) {
 				PCG.sBoundary.extractRoadmaps (floor);
 				drawer.roadmapNodesList = PCG.sBoundary.roadmapNodesList;
@@ -1094,6 +1103,7 @@ public class MapperWindowEditor : EditorWindow
 
 			// Build graph
 			GUI.enabled = initializeGraphOpEnables;
+
 			if (GUILayout.Button ("Initialize Graph")) {
 				PCG.sBoundary.initializeGraph ();
 				drawer.graphNodesList = PCG.sBoundary.finalGraphNodesList;
@@ -1110,10 +1120,11 @@ public class MapperWindowEditor : EditorWindow
 			drawGraph = EditorGUILayout.Toggle ("Draw Graph", drawGraph);
 		}
 
+		// Build the graph in One-click
 		GUI.enabled = shortcutBtnEnables;
 
-		if (default11 == true) {
-			default11 = false;
+		if (default8 == true) {
+			default8 = false;
 			setShortcutFoldout = EditorGUILayout.Foldout (true, "Generate Graph with One-Click");
 		} else {
 			setShortcutFoldout = EditorGUILayout.Foldout (setShortcutFoldout, "Generate Graph with One-Click");
@@ -1152,20 +1163,15 @@ public class MapperWindowEditor : EditorWindow
 				behaviorOpEnables = true;
 				shortcutClicked = true;
 			}
+
 			drawGraph2 = EditorGUILayout.Toggle ("Draw Graph", drawGraph2);
 		}
 
 		GUI.enabled = randomOpEnables;
+
 		if (GUILayout.Button ("Clear Graph")) {
 			obs = null;
-			PCG.sBoundary.obs = null;
-			PCG.sBoundary.boundaryIndex = 0;
-			PCG.sBoundary.boundaryContoursList.Clear ();
-			PCG.sBoundary.freeCells.Clear ();
-			PCG.sBoundary.graphNodesList.Clear ();
-			PCG.sBoundary.finalGraphNodesList.Clear ();
-			PCG.sBoundary.roadmapDictionary.Clear ();
-			PCG.sBoundary.roadmapNodesList.Clear ();
+			PCG.sBoundary.clearGraph ();
 			drawer.sBoundaryGrid = PCG.sBoundary.obs;
 			behaviorOpEnables = false;
 		}
@@ -1178,31 +1184,7 @@ public class MapperWindowEditor : EditorWindow
 		
 		EditorGUILayout.LabelField ("");
 		EditorGUILayout.LabelField ("11. Behaviours");
-		
-		if (waypointPrefab == null) {
-			waypointPrefab = Resources.Load ("Waypoint") as GameObject;
-			if (waypointPrefab != null) {
-				Debug.Log ("Loading waypoint prefab from resources folder successfully!");
-			} else {
-				waypointPrefab = GameObject.FindGameObjectWithTag ("Waypoint");
-				if (waypointPrefab != null) {
-					Debug.Log ("Loading waypoint prefab from scene successfully!");
-				}
-			}
-		}
-		
-		if (enemyPrefab == null) {
-			enemyPrefab = Resources.Load ("Enemy") as GameObject;
-			if (enemyPrefab != null) {
-				Debug.Log ("Loading enemy prefab from resources folder successfully!");	
-			} else {
-				enemyPrefab = GameObject.FindGameObjectWithTag ("Enemy");
-				if (enemyPrefab != null) {
-					Debug.Log ("Loading enemy prefab from scene successfully!");	
-				}
-			}
-		}
-		
+
 		GUI.enabled = behaviorOpEnables;
 
 		if (default9 == true) {
@@ -1217,13 +1199,14 @@ public class MapperWindowEditor : EditorWindow
 			numOfGuards = EditorGUILayout.IntField ("Number of guards", numOfGuards);
 			iterations4 = EditorGUILayout.IntSlider ("Iterations", iterations4, 0, 10);
 
-			if (default12 == true) {
-				default12 = false;
+			if (default10 == true) {
+				default10 = false;
 				setPossibilitiesFoldout = EditorGUILayout.Foldout (true, "Possibility Controller");
 			} else {
 				setPossibilitiesFoldout = EditorGUILayout.Foldout (setPossibilitiesFoldout, "Possibility Controller");
 			}
 
+			// Possibility controller
 			if (setPossibilitiesFoldout) {
 				pLine = EditorGUILayout.IntSlider ("P1", pLine, 0, 100);
 				pDot = EditorGUILayout.IntSlider ("P2", pDot, 0, 100);
@@ -1233,8 +1216,10 @@ public class MapperWindowEditor : EditorWindow
 				pSwipe = EditorGUILayout.IntSlider ("P6", 100 - pPause - pFullRotate, 0, 100);
 				pFullRotate = EditorGUILayout.IntSlider ("P6", 100 - pPause - pSwipe, 0, 100);
 			}
-			
+
+			// Populate guards with multiple behaviours along their routes
 			if (GUILayout.Button ("Populate Guards")) {
+				PCG.ClearBehaviours ();
 				PCG.ClearUpObjects (enemypathObjects);
 				PCG.numOfGuards = numOfGuards;
 				enemypathObjects = PCG.PopulateGuardsWithBehaviours (enemyPrefab, waypointPrefab, floor, iterations4, pLine, pDot, pSplit, pZigZag, pPause, pSwipe, pFullRotate).ToArray ();
@@ -1242,12 +1227,7 @@ public class MapperWindowEditor : EditorWindow
 			}
 			
 			if (GUILayout.Button ("Clear Behaviours")) {
-				PCG.numOfGuards = 0;
-				PCG.listOfEnemies.Clear ();
-				PCG.templistOfPath.Clear ();
-				PCG.listOfPath.Clear ();
-				PCG.listOfSequence.Clear ();
-				PCG.listOfWaypoints.Clear ();
+				PCG.ClearBehaviours ();
 				PCG.ClearUpObjects (enemypathObjects);
 			}
 		}
@@ -1256,15 +1236,18 @@ public class MapperWindowEditor : EditorWindow
 
 		if (GUILayout.Button ("Reset")) {
 			PCG.ClearUpObjects (enemypathObjects);
+
 			fullMap = null;
 			drawer.fullMap = fullMap;
 			simulated = false;
+
 			foreach (GameObject p in playerObjects) {
 				DestroyImmediate (p);
 			}
 			players.Clear ();
 			playing = false;
 			ResetAI ();
+
 			obs = null;
 			PCG.vEnemy.obs = null;
 			drawer.eVoronoiGrid = PCG.vEnemy.obs;
@@ -1277,32 +1260,18 @@ public class MapperWindowEditor : EditorWindow
 			numOfRegionsForCameras = 0;
 			setPathOpEnables = false;
 			setRotationOpEnables = false;
-			//randomOpEnables = false;
-			
+
 			boundariesFloodingOpEnables = false;
 			extractRoadmapOpEnables = false;
 			initializeGraphOpEnables = false;
 			mergeOpEnables = false;
 
-			PCG.sBoundary.obs = null;
-			PCG.sBoundary.boundaryIndex = 0;
-			PCG.sBoundary.boundaryContoursList.Clear ();
-			PCG.sBoundary.freeCells.Clear ();
-			PCG.sBoundary.graphNodesList.Clear ();
-			PCG.sBoundary.finalGraphNodesList.Clear ();
-			PCG.sBoundary.roadmapDictionary.Clear ();
-			PCG.sBoundary.roadmapNodesList.Clear ();
+			PCG.sBoundary.clearGraph ();
 			drawer.sBoundaryGrid = PCG.sBoundary.obs;
 			drawer.roadmapNodesList.Clear ();
 			drawer.graphNodesList.Clear ();
 
-
-			PCG.numOfGuards = 0;
-			PCG.listOfEnemies.Clear ();
-			PCG.templistOfPath.Clear ();
-			PCG.listOfPath.Clear ();
-			PCG.listOfSequence.Clear ();
-			PCG.listOfWaypoints.Clear ();
+			PCG.ClearBehaviours ();
 
 			behaviorOpEnables = false;
 			randomOpEnables = false;
@@ -1321,8 +1290,8 @@ public class MapperWindowEditor : EditorWindow
 		
 		GUI.enabled = behaviorOpEnables;
 
-		if (default7 == true) {
-			default7 = false;
+		if (default12 == true) {
+			default12 = false;
 			setEnemiesFoldout2 = EditorGUILayout.Foldout (true, "Set Guards");
 		} else {
 			setEnemiesFoldout2 = EditorGUILayout.Foldout (setEnemiesFoldout2, "Set Guards");
@@ -1391,8 +1360,8 @@ public class MapperWindowEditor : EditorWindow
 		
 		GUI.enabled = behaviorOpEnables;
 		
-		if (default8 == true) {
-			default8 = false;
+		if (default11 == true) {
+			default11 = false;
 			setRhythmsFoldout = EditorGUILayout.Foldout (true, "Set Rhythms");
 		} else {
 			setRhythmsFoldout = EditorGUILayout.Foldout (setRhythmsFoldout, "Set Rhythms");
@@ -1468,7 +1437,8 @@ public class MapperWindowEditor : EditorWindow
 			BResultsRoot root = new BResultsRoot ();
 			BResultBatch job = new BResultBatch ();
 			root.everything.Add (job);
-			
+
+			// Guards number varying batch test
 			using (FileStream stream = new FileStream ("guardsvary" + nogB + ".xml", FileMode.Create)) {
 				// For each test we want 50 trials
 				for (int batchIter = 0; batchIter < 50; batchIter ++) {					
