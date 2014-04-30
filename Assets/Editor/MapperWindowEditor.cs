@@ -1174,6 +1174,12 @@ public class MapperWindowEditor : EditorWindow
 			PCG.sBoundary.clearGraph ();
 			drawer.sBoundaryGrid = PCG.sBoundary.obs;
 			behaviorOpEnables = false;
+			shortcutClicked = false;
+			moreStepsClicked = false;
+			boundariesFloodingOpEnables = false;
+			extractRoadmapOpEnables = false;
+			initializeGraphOpEnables = false;
+			mergeOpEnables = false;
 		}
 
 		GUI.enabled = true;
@@ -1443,15 +1449,11 @@ public class MapperWindowEditor : EditorWindow
 				// For each test we want 50 trials
 				for (int batchIter = 0; batchIter < 50; batchIter ++) {					
 					// Clear up
+					PCG.ClearBehaviours ();
 					PCG.numOfGuards = nogB;
-					PCG.listOfEnemies.Clear ();
-					PCG.templistOfPath.Clear ();
-					PCG.listOfPath.Clear ();
-					PCG.listOfSequence.Clear ();
-					PCG.listOfWaypoints.Clear ();
 					PCG.ClearUpObjects (enemypathObjects);
 					
-					enemypathObjects = PCG.PopulateGuardsWithBehaviours (enemyPrefab, waypointPrefab, floor, iterations4, pLine, pDot, pSplit, pZigZag, pPause, pSwipe, pFullRotate).ToArray ();
+					enemypathObjects = PCG.PopulateGuardsWithBehaviours (enemyPrefab, waypointPrefab, floor, noiB, pLine, pDot, pSplit, pZigZag, pPause, pSwipe, pFullRotate).ToArray ();
 					StorePositions ();
 					
 					// Precompute maps again
