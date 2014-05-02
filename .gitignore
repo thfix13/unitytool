@@ -10,7 +10,7 @@
 *.svg
 
 ProjectSettings/GraphicsSettings.asset
-
+ProjectSettings/ProjectSettings.asset
 pathresults.xml
 
 SvgToPdf.py
