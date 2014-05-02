@@ -189,7 +189,7 @@ namespace EditorArea {
 			#endregion
 			
 			// ----------------------------------
-			
+			EditorGUILayout.LabelField ("4.1 Path4444");
 			#region 4. Path
 			
 			EditorGUILayout.LabelField ("4. Path");
