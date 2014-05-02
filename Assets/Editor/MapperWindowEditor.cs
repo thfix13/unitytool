@@ -20,7 +20,7 @@ namespace EditorArea {
 
 		// Parameters with default values
 		public static int timeSamples = 2000, attemps = 25000, iterations = 1, gridSize = 60, ticksBehind = 0;
-		private static bool drawMap = true, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = false, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false;
+		private static bool drawMap = true, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = false, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false, visualize3d = false;
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10;
 		private static int randomSeed = -1;
 
@@ -189,7 +189,6 @@ namespace EditorArea {
 			#endregion
 			
 			// ----------------------------------
-			EditorGUILayout.LabelField ("4.1 Path4444");
 			#region 4. Path
 			
 			EditorGUILayout.LabelField ("4. Path");
@@ -449,6 +448,10 @@ namespace EditorArea {
 			#region 6. Paths
 			
 			EditorGUILayout.LabelField ("6. Paths");
+			
+			EditorGUILayout.LabelField ("");
+			
+			visualize3d = (EditorGUILayout.Toggle("Visualize Spatiotemporal state space", visualize3d));
 			
 			EditorGUILayout.LabelField ("");
 			

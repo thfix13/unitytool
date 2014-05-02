@@ -1,10 +1,10 @@
 using System;
 using UnityEngine;
+
 using Objects;
 
 namespace Extra {
 	public class EnemyMover {
-		
 		public static void Solve (int id, Vector3 position, Quaternion rotation, float moveSpeed, float rotationSpeed, float tpf, Waypoint waypoint, float collisionRadius, out Vector3 outPosition, out Quaternion outRotation, out Waypoint outWaypoint) {
 			if (waypoint is RotationWaypoint) {
 				

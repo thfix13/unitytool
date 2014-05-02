@@ -4,11 +4,12 @@ using System.Collections.Generic;
 using Extra;
 using System;
 using Common;
+using Objects;
 
 namespace Objects {
 	public class Enemy : MonoBehaviour {
 		
-		public Waypoint target;
+		public Objects.Waypoint target;
 		public float moveSpeed;
 		public float rotationSpeed;
 		public float fovAngle = 33;
