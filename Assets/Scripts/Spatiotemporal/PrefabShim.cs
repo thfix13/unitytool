@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/**
+ * For activating inactive components at instantiation of prefab. 
+*/
 [ExecuteInEditMode]
 public class PrefabShim : MonoBehaviour {
 	void Start ()

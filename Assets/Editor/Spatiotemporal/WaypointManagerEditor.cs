@@ -2,6 +2,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+using Spatiotemporal;
+
 [CustomEditor(typeof(WaypointManager))]
 public class WaypointManagerEditor : Editor {
 	// Custom Editors are only called when the object is selected.

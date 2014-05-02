@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
+using Spatiotemporal;
+
 [CustomEditor(typeof(StealthFov))]
 public class StealthFovEditor : Editor {
 	private StealthFov f;

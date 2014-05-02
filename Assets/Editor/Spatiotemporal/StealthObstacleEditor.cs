@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
+using Spatiotemporal;
+
 [CustomEditor(typeof(StealthObstacle))]
 public class StealthObstacleEditor : Editor {
 	private StealthObstacle o;

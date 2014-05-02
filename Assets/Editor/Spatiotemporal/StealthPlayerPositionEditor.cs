@@ -1,7 +1,8 @@
-﻿
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 using System.Collections;
+
+using Spatiotemporal;
 
 [CustomEditor(typeof(StealthPlayerPosition))]
 public class StealthPlayerPositionEditor : Editor {

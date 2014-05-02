@@ -10,6 +10,7 @@ using Exploration;
 using Path = Common.Path;
 using Extra;
 using Objects;
+using Spatiotemporal;
 
 namespace EditorArea {
 	public class MapperWindowEditor : EditorWindow {
@@ -42,6 +43,7 @@ namespace EditorArea {
 		private long stepInTicks = 0L, playTime = 0L;
 		private static bool simulated = false, playing = false;
 		private Mapper mapper;
+		private Map map;
 		private RRTKDTreeCombat rrt = new RRTKDTreeCombat ();
 		private RRTKDTree oldRrt = new RRTKDTree ();
 		private MapperEditorDrawer drawer;

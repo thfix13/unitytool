@@ -2,6 +2,8 @@
 using UnityEditor;
 using System.Collections;
 
+using Spatiotemporal;
+
 [CustomEditor(typeof(StealthCamera))]
 public class StealthCameraEditor : Editor {
 	private StealthCamera c;

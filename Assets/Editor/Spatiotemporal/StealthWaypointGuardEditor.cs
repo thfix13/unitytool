@@ -2,6 +2,8 @@
 using UnityEditor;
 using System.Collections.Generic;
 
+using Spatiotemporal;
+
 [CustomEditor(typeof(StealthWaypointGuard))]
 public class StealthWaypointGuardEditor : Editor {
 	private StealthWaypointGuard g;

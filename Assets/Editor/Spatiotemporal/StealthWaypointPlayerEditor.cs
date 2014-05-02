@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
+using Spatiotemporal;
+
 [CustomEditor(typeof(StealthWaypointPlayer))]
 public class StealthWaypointPlayerEditor : Editor {
 	private StealthWaypointPlayer p;

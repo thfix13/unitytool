@@ -2,6 +2,8 @@
 using UnityEditor;
 using System.Collections;
 
+using Spatiotemporal;
+
 [CustomEditor(typeof(StealthGuardPosition))]
 public class StealthGuardPositionEditor : Editor {
 	private StealthGuardPosition gp;

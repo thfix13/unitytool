@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
+using Spatiotemporal;
+
 [CustomEditor(typeof(StealthCoordPlayer))]
 public class StealthCoordPlayerEditor : Editor {
 	private StealthCoordPlayer p;

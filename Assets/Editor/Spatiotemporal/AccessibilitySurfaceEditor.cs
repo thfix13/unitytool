@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
+using Spatiotemporal;
+
 [CustomEditor(typeof(AccessibilitySurface))]
 public class AccessibilitySurfaceEditor : Editor {
 	private AccessibilitySurface s;

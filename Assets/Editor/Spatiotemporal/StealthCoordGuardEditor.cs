@@ -2,6 +2,8 @@
 using UnityEditor;
 using System.Collections.Generic;
 
+using Spatiotemporal;
+
 [CustomEditor(typeof(StealthCoordGuard))]
 public class StealthCoordGuardEditor : Editor {
 	private StealthCoordGuard g;

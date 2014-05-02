@@ -2,6 +2,7 @@ using UnityEditor;
 using UnityEngine;
 
 using Objects;
+using Spatiotemporal;
 
 [CustomEditor(typeof(Waypoint), true)]
 public class WaypointEditor : Editor {
