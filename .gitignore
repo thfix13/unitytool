@@ -9,6 +9,9 @@
 
 *.svg
 
+ProjectSettings/Physics2DSettings.asset
+pathtest.xml
+
 ProjectSettings/GraphicsSettings.asset
 ProjectSettings/ProjectSettings.asset
 pathresults.xml
