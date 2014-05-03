@@ -8,7 +8,7 @@ public class Quadrilater
 
 	public Vector3[] vertex = new Vector3[4];
 	public Line[] lines = new Line[4];
-	public PolygonCollider2D collider = new PolygonCollider2D(); 
+	// public PolygonCollider2D collider = new PolygonCollider2D(); 
 
 
 	public Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),

@@ -11,8 +11,10 @@ using Path = Common.Path;
 using Extra;
 using Objects;
 
-namespace EditorArea {
-	public class MapperWindowEditor : EditorWindow {
+namespace EditorArea
+{
+	public class MapperWindowEditor : EditorWindow
+	{
 
 		// Data holders
 		public static Cell[][][] fullMap;
@@ -45,13 +47,15 @@ namespace EditorArea {
 		private long accL = 0L;
 		
 		[MenuItem("Window/Mapper")]
-		static void Init () {
+		static void Init ()
+		{
 			MapperWindowEditor window = (MapperWindowEditor)EditorWindow.GetWindow (typeof(MapperWindowEditor));
 			window.title = "Mapper";
 			window.ShowTab ();
 		}
 		
-		void OnGUI () {
+		void OnGUI ()
+		{
 			#region Pre-Init
 			
 			// Wait for the floor to be set and initialize the drawer and the mapper
@@ -295,40 +299,38 @@ namespace EditorArea {
 			
 			EditorGUILayout.LabelField (""); 
 
-			if (GUILayout.Button ("Triangulate Space")) 
-			{
-				TriangulationSpace(); 
+			if (GUILayout.Button ("Triangulate Space")) {
+				TriangulationSpace (); 
 			}
 
-			if (GUILayout.Button ("Quadrilateralization Space")) 
-			{
-				QuadrilateralizationSpace(); 
+			if (GUILayout.Button ("Quadrilateralization Space")) {
+				QuadrilateralizationSpace (); 
 			}
 
-			if (GUILayout.Button ("Reduce the space")) 
-			{
-				ReduceSpace(); 
+			if (GUILayout.Button ("Reduce the space")) {
+				ReduceSpace (); 
 			}
-			if(GUILayout.Button("Clear Enemies"))
-			{
+			if (GUILayout.Button ("Clear Enemies")) {
 
-				GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
-				GameObject[] waypoints = GameObject.FindGameObjectsWithTag("Waypoint");
+				GameObject[] enemies = GameObject.FindGameObjectsWithTag ("Enemy");
+				GameObject[] waypoints = GameObject.FindGameObjectsWithTag ("Waypoint");
 
 				//Clear the enemies
 
-				if(enemies != null)
-				{	
+				if (enemies != null) {	
 				    
-				    foreach (GameObject g in enemies) {
-						DestroyImmediate(g);
+					foreach (GameObject g in enemies) {
+						DestroyImmediate (g);
 					}
 					
 				}
-				foreach (GameObject g in waypoints) 
-		    	{
-					DestroyImmediate(g);
+				foreach (GameObject g in waypoints) {
+					DestroyImmediate (g);
 				}	
+			}
+			
+			if (GUILayout.Button ("Batch Computing")) {
+				//..
 			}
 			#endregion
 
@@ -591,7 +593,8 @@ namespace EditorArea {
 			SceneView.RepaintAll ();
 		}
 			
-		public void Update () {
+		public void Update ()
+		{
 			if (playing) {
 				long l = DateTime.Now.Ticks - previous.Ticks;
 				playTime += l;
@@ -614,11 +617,12 @@ namespace EditorArea {
 				
 			previous = DateTime.Now;
 		}
-		public void ReduceSpace()
+
+		public void ReduceSpace ()
 		{
 			//data holder
-			Triangulation triangulation = GameObject.Find("Triangulation").GetComponent<Triangulation>(); 
-			triangulation.Clear(); 
+			Triangulation triangulation = GameObject.Find ("Triangulation").GetComponent<Triangulation> (); 
+			triangulation.Clear (); 
 			
 			if (floor == null) {
 				floor = (GameObject)GameObject.Find ("Floor");
@@ -647,65 +651,62 @@ namespace EditorArea {
 			obstacles = mapper.ComputeObstacles ();
 			
 			//First geometry is the outer one
-			List<Quadrilater> geos = new List<Quadrilater>();
+			List<Quadrilater> geos = new List<Quadrilater> ();
 			
 			
 			//Floor
 			Vector3[] f = new Vector3[4];
-			MeshFilter mesh = (MeshFilter)(floor.GetComponent("MeshFilter")) ;
+			MeshFilter mesh = (MeshFilter)(floor.GetComponent ("MeshFilter"));
 			Vector3[] t = mesh.sharedMesh.vertices; 
 			
-			Quadrilater tempGeometry = new Quadrilater(); 
+			Quadrilater tempGeometry = new Quadrilater (); 
 			
 			
-			tempGeometry.vertex[0] = mesh.transform.TransformPoint(t[0]);
-			tempGeometry.vertex[2] = mesh.transform.TransformPoint(t[120]);
-			tempGeometry.vertex[1] = mesh.transform.TransformPoint(t[110]);
-			tempGeometry.vertex[3] = mesh.transform.TransformPoint(t[10]);
+			tempGeometry.vertex [0] = mesh.transform.TransformPoint (t [0]);
+			tempGeometry.vertex [2] = mesh.transform.TransformPoint (t [120]);
+			tempGeometry.vertex [1] = mesh.transform.TransformPoint (t [110]);
+			tempGeometry.vertex [3] = mesh.transform.TransformPoint (t [10]);
 			
-			tempGeometry.vertex[0].y = 1; 
-			tempGeometry.vertex[1].y = 1; 
-			tempGeometry.vertex[2].y = 1; 
-			tempGeometry.vertex[3].y = 1; 
+			tempGeometry.vertex [0].y = 1; 
+			tempGeometry.vertex [1].y = 1; 
+			tempGeometry.vertex [2].y = 1; 
+			tempGeometry.vertex [3].y = 1; 
 			
-			tempGeometry.SetLine(); 
+			tempGeometry.SetLine (); 
 			
-			geos.Add(tempGeometry); 
+			geos.Add (tempGeometry); 
 			
-			GameObject[] obs = GameObject.FindGameObjectsWithTag("Obs");
+			GameObject[] obs = GameObject.FindGameObjectsWithTag ("Obs");
 			
-			foreach(GameObject o in obs)
-			{
-				mesh = (MeshFilter)(o.GetComponent("MeshFilter")) ;
+			foreach (GameObject o in obs) {
+				mesh = (MeshFilter)(o.GetComponent ("MeshFilter"));
 				t = mesh.sharedMesh.vertices; 
 				
-				tempGeometry = new Quadrilater(); 
+				tempGeometry = new Quadrilater (); 
 				
-				tempGeometry.vertex[0] = mesh.transform.TransformPoint(t[6]);
-				tempGeometry.vertex[1] = mesh.transform.TransformPoint(t[8]);
-				tempGeometry.vertex[3] = mesh.transform.TransformPoint(t[7]);
-				tempGeometry.vertex[2] = mesh.transform.TransformPoint(t[9]);
+				tempGeometry.vertex [0] = mesh.transform.TransformPoint (t [6]);
+				tempGeometry.vertex [1] = mesh.transform.TransformPoint (t [8]);
+				tempGeometry.vertex [3] = mesh.transform.TransformPoint (t [7]);
+				tempGeometry.vertex [2] = mesh.transform.TransformPoint (t [9]);
 				
-				tempGeometry.vertex[0].y = 1; 
-				tempGeometry.vertex[2].y = 1; 
-				tempGeometry.vertex[1].y = 1; 
-				tempGeometry.vertex[3].y = 1; 
+				tempGeometry.vertex [0].y = 1; 
+				tempGeometry.vertex [2].y = 1; 
+				tempGeometry.vertex [1].y = 1; 
+				tempGeometry.vertex [3].y = 1; 
 				
-				tempGeometry.SetLine(); 
-				geos.Add(tempGeometry); 
+				tempGeometry.SetLine (); 
+				geos.Add (tempGeometry); 
 			}
 
 
 			//lines are defined by all the points in  obs
-			List<Line> lines = new List<Line>(); 
-			foreach(Quadrilater g in geos)
-			{
-				for(int i = 0; i< g.vertex.Length; i+=1)
-				{
-					if(i<g.vertex.Length -1)
-						lines.Add(new Line(g.vertex[i],g.vertex[i+1]));
+			List<Line> lines = new List<Line> (); 
+			foreach (Quadrilater g in geos) {
+				for (int i = 0; i< g.vertex.Length; i+=1) {
+					if (i < g.vertex.Length - 1)
+						lines.Add (new Line (g.vertex [i], g.vertex [i + 1]));
 					else 	       
-						lines.Add(new Line(g.vertex[0],g.vertex[i]));
+						lines.Add (new Line (g.vertex [0], g.vertex [i]));
 					//triangulation.points.Add(g.vertex[i]);	      
 					//triangulation.colours.Add(Color.cyan);	      
 				}
@@ -716,20 +717,18 @@ namespace EditorArea {
 
 
 			
-			List<Quadrilater> covered = new List<Quadrilater>(); 
-			List<Line> linesLinking = new List<Line>(); 
+			List<Quadrilater> covered = new List<Quadrilater> (); 
+			List<Line> linesLinking = new List<Line> (); 
 
-			List<Quadrilater> toCheck = new List<Quadrilater>(); 
+			List<Quadrilater> toCheck = new List<Quadrilater> (); 
 
-			for(int i = 1; i<geos.Count;i++)
-			{
-				toCheck.Add(geos[i]);
+			for (int i = 1; i<geos.Count; i++) {
+				toCheck.Add (geos [i]);
 			}
 
 
-			foreach(Quadrilater q in toCheck)
-			{
-				q.SetVoisins(toCheck);
+			foreach (Quadrilater q in toCheck) {
+				q.SetVoisins (toCheck);
 				//q.DrawVoisin(); 
 			}
 
@@ -739,101 +738,82 @@ namespace EditorArea {
 			//Minimum spanning tree.
 
 
-			Quadrilater start = geos[0].findClosestQuad(geos[0].vertex[0],toCheck,new List<Quadrilater>());
-			linesLinking.Add(geos[0].GetClosestLine(start,toCheck));
+			Quadrilater start = geos [0].findClosestQuad (geos [0].vertex [0], toCheck, new List<Quadrilater> ());
+			linesLinking.Add (geos [0].GetClosestLine (start, toCheck));
 
 			start.visited = true;
 
-			List<Quadrilater> toCheckNode = new List<Quadrilater>(); 
-			toCheckNode.Add(start); 
+			List<Quadrilater> toCheckNode = new List<Quadrilater> (); 
+			toCheckNode.Add (start); 
 
 
 
-			Line LinetoAdd = start.voisinsLine[0];
+			Line LinetoAdd = start.voisinsLine [0];
 
-			while(LinetoAdd != null)
-			{
+			while (LinetoAdd != null) {
 				LinetoAdd = null; 
-				Quadrilater qToAdd =null; 
+				Quadrilater qToAdd = null; 
 
 				//Check all 
-				foreach(Quadrilater q in toCheckNode)
-				{
+				foreach (Quadrilater q in toCheckNode) {
 					
-					for(int i = 0; i<q.voisins.Count;i++)
-				    {
-						if(! q.voisins[i].visited)
-						{
-							if(LinetoAdd != null)
-							{
+					for (int i = 0; i<q.voisins.Count; i++) {
+						if (! q.voisins [i].visited) {
+							if (LinetoAdd != null) {
 								//get the shortest line
-								if(LinetoAdd.Magnitude()>=q.voisinsLine[i].Magnitude())
-								{
-									LinetoAdd = q.voisinsLine[i];
-									qToAdd = q.voisins[i]; 
+								if (LinetoAdd.Magnitude () >= q.voisinsLine [i].Magnitude ()) {
+									LinetoAdd = q.voisinsLine [i];
+									qToAdd = q.voisins [i]; 
 									 
 								}
+							} else {
+								qToAdd = q.voisins [i]; 
+								LinetoAdd = q.voisinsLine [i];
 							}
-							else 
-							{
-								qToAdd = q.voisins[i]; 
-								LinetoAdd = q.voisinsLine[i];
-							}
-						}
-						else
-						{
+						} else {
 							continue; 
 						}
 					}
 				}
-				if(LinetoAdd!= null)
-				{
+				if (LinetoAdd != null) {
 					linesLinking.Add (LinetoAdd); 
 					qToAdd.visited = true; 
-					toCheckNode.Add(qToAdd); 
+					toCheckNode.Add (qToAdd); 
 				}
 			}
 
 
 
-			foreach(Line l in linesLinking)
-			{
-				triangulation.linesMinSpanTree.Add(l); 
+			foreach (Line l in linesLinking) {
+				triangulation.linesMinSpanTree.Add (l); 
 			}
 
 			//Triangulate
-			for (int i = 0; i < geos.Count; i++)
-			{
+			for (int i = 0; i < geos.Count; i++) {
 				
-				for(int j = i+1; j < geos.Count; j++)
-				{
+				for (int j = i+1; j < geos.Count; j++) {
 					
-					for(int w = 0; w<geos[i].vertex.Length; w++)
-					{
+					for (int w = 0; w<geos[i].vertex.Length; w++) {
 						
-						for(int z = 0; z<geos[j].vertex.Length; z++)
-						{
+						for (int z = 0; z<geos[j].vertex.Length; z++) {
 							
-							List<Line> toAdd = new List<Line>(); 
+							List<Line> toAdd = new List<Line> (); 
 							
 							Boolean foundBreak = false; 
 							
-							foreach (Line l in lines)
-							{
+							foreach (Line l in lines) {
 								
-								if( LineIntersection(geos[i].vertex[w], geos[j].vertex[z],
-								                     l.vertex[0],l.vertex[1]))
-								{
+								if (LineIntersection (geos [i].vertex [w], geos [j].vertex [z],
+								                     l.vertex [0], l.vertex [1])) {
 									
 									foundBreak = true; 
 									break; 
 								}								
 								
 							}
-							if(!foundBreak)
-							{	
+							if (!foundBreak) {	
 								//Debug.DrawLine(geos[i].vertex[w], geos[j].vertex[z], Color.blue);
-								lines.Add(new Line(geos[i].vertex[w], geos[j].vertex[z])); 		
+								lines.Add (new Line (geos [i].vertex [w], geos [j].vertex [z])); 		
 							}	
 						}
 					}
@@ -841,54 +821,44 @@ namespace EditorArea {
 			}
 			
 			//Find the centers 
-			List<Triangle> triangles = new List<Triangle>(); 
+			List<Triangle> triangles = new List<Triangle> (); 
 			//Well why be efficient when you can be not efficient
-			foreach (Line l in lines)
-			{
-				Vector3 v1 = l.vertex[0]; 
-				Vector3 v2 = l.vertex[1];
-				foreach (Line l2 in lines)
-				{
+			foreach (Line l in lines) {
+				Vector3 v1 = l.vertex [0]; 
+				Vector3 v2 = l.vertex [1];
+				foreach (Line l2 in lines) {
 					if (l == l2)
 						continue;
 					Vector3 v3 = Vector3.zero; 
 					
 					
-					if (l2.vertex[0].Equals(v2))
-					{
-						v3 = l2.vertex[1];
+					if (l2.vertex [0].Equals (v2)) {
+						v3 = l2.vertex [1];
 						//have to check if closes
-					}
-					else if (l2.vertex[1].Equals(v2))
-					{
-						v3 = l2.vertex[0];
+					} else if (l2.vertex [1].Equals (v2)) {
+						v3 = l2.vertex [0];
 					}
 					
-					if(v3 != Vector3.zero)
-					{
-						foreach (Line l3 in lines)
-						{
-							if(l3 == l2 || l3 == l)
+					if (v3 != Vector3.zero) {
+						foreach (Line l3 in lines) {
+							if (l3 == l2 || l3 == l)
 								continue; 
-							if( (l3.vertex[0].Equals(v1) && l3.vertex[1].Equals(v3))
-							   || (l3.vertex[1].Equals(v1) && l3.vertex[0].Equals(v3)))
-							{
+							if ((l3.vertex [0].Equals (v1) && l3.vertex [1].Equals (v3))
+							   || (l3.vertex [1].Equals (v1) && l3.vertex [0].Equals (v3))) {
 								//Debug.DrawLine(v1,v2,Color.red); 
 								//Debug.DrawLine(v2,v3,Color.red); 
 								//Debug.DrawLine(v3,v1,Color.red); 
 								
 								//Add the traingle
-								Triangle toAddTriangle = new Triangle(
-									v1,triangulation.points.IndexOf(v1),
-									v2,triangulation.points.IndexOf(v2),
-									v3,triangulation.points.IndexOf(v3));
+								Triangle toAddTriangle = new Triangle (
+									v1, triangulation.points.IndexOf (v1),
+									v2, triangulation.points.IndexOf (v2),
+									v3, triangulation.points.IndexOf (v3));
 								
 								
 								Boolean isAlready = false; 
-								foreach(Triangle tt in triangles)
-								{
-									if (tt.Equals(toAddTriangle))
-									{
+								foreach (Triangle tt in triangles) {
+									if (tt.Equals (toAddTriangle)) {
 										//Debug.Log(toAddTriangle.refPoints[0]+", "+
 										//          toAddTriangle.refPoints[1]+", "+
 										//          toAddTriangle.refPoints[2]+", "); 
@@ -897,9 +867,8 @@ namespace EditorArea {
 									}
 									
 								}
-								if(!isAlready)
-								{
-									triangles.Add(toAddTriangle);
+								if (!isAlready) {
+									triangles.Add (toAddTriangle);
 								}
 								
 							}
@@ -911,59 +880,52 @@ namespace EditorArea {
 			
 			//Find shared edge and triangle structure
 			
-			foreach(Triangle tt in triangles)
-			{
-				foreach(Triangle ttt in triangles)
-				{
-					if(tt == ttt)
+			foreach (Triangle tt in triangles) {
+				foreach (Triangle ttt in triangles) {
+					if (tt == ttt)
 						continue; 
-					tt.ShareEdged(ttt,linesLinking);
+					tt.ShareEdged (ttt, linesLinking);
 					
 				}
 				
 			}
 
-			triangles[0].SetColour();
+			triangles [0].SetColour ();
 
 			//Count Where to put guards 
-			List<Vector3> points = new List<Vector3>(); 
-			List<Color> coloursPoints = new List<Color>(); 
+			List<Vector3> points = new List<Vector3> (); 
+			List<Color> coloursPoints = new List<Color> (); 
 
 			int[] count = new int[3];
 			//0 red, 1 blue, 2 green
 
-			foreach(Triangle tt in triangles)
-			{
+			foreach (Triangle tt in triangles) {
 				//foreach(Vector3 v in tt.vertex)
-				for(int j = 0; j<tt.vertex.Length;j++)
-				{
+				for (int j = 0; j<tt.vertex.Length; j++) {
 					bool vectorToAdd = true;
 
-					for(int i = 0; i<points.Count;i++)
-				    {
-						if(points[i] == tt.vertex[j] && coloursPoints[i] == tt.colourVertex[j])
+					for (int i = 0; i<points.Count; i++) {
+						if (points [i] == tt.vertex [j] && coloursPoints [i] == tt.colourVertex [j])
 							vectorToAdd = false; 
 
 					
 					}
 
-					if(vectorToAdd)
-					{
-						points.Add(tt.vertex[j]); 
-						coloursPoints.Add(tt.colourVertex[j]); 
+					if (vectorToAdd) {
+						points.Add (tt.vertex [j]); 
+						coloursPoints.Add (tt.colourVertex [j]); 
 					}
 
 				}
 			}
 
-			foreach(Color c in coloursPoints)
-			{
-				if(c == Color.red)
-					count[0]++; 
-				else if(c == Color.blue)
-					count[1]++; 
+			foreach (Color c in coloursPoints) {
+				if (c == Color.red)
+					count [0]++;
+				else if (c == Color.blue)
+					count [1]++;
 				else
-					count[2]++; 
+					count [2]++; 
 					
 			}
 			//Debug.Log(count[0]); 
@@ -975,28 +937,24 @@ namespace EditorArea {
 			Color cGuard = Color.cyan; 
 			int lowest = 100000000; 
 
-			for(int i = 0;i<count.Length;i++)
-			{
-				if(count[i]<lowest)
-				{
-					if(i == 0)
+			for (int i = 0; i<count.Length; i++) {
+				if (count [i] < lowest) {
+					if (i == 0)
 						cGuard = Color.red;
-					else if(i == 1)
+					else if (i == 1)
 						cGuard = Color.blue;
 					else
 						cGuard = Color.green;
-					lowest = count[i];
+					lowest = count [i];
 				}
 			}
 
-			List<Vector3> posGuard = new List<Vector3>(); 
+			List<Vector3> posGuard = new List<Vector3> (); 
 
-			for(int i = 0;i<coloursPoints.Count;i++)
-			{
-				if (coloursPoints[i] == cGuard)
-				{
-					triangulation.AddPoint(points[i]);
-					posGuard.Add(points[i]);
+			for (int i = 0; i<coloursPoints.Count; i++) {
+				if (coloursPoints [i] == cGuard) {
+					triangulation.AddPoint (points [i]);
+					posGuard.Add (points [i]);
 				}
 			}
 
@@ -1004,90 +962,82 @@ namespace EditorArea {
 
 
 			//Put the cameras
-			GameObject guard = GameObject.Find("Enemy") as GameObject;
-			GameObject waypoint = GameObject.Find("Waypoint");
+			GameObject guard = GameObject.Find ("Enemy") as GameObject;
+			GameObject waypoint = GameObject.Find ("Waypoint");
 			
 			//find enemies and clear them
 			//put them in a place holder
 
-			GameObject holder = GameObject.Find("Enemies");
-			GameObject wayHolder = GameObject.Find("Waypoints");
+			GameObject holder = GameObject.Find ("Enemies");
+			GameObject wayHolder = GameObject.Find ("Waypoints");
 			//Clear the enemies
 
-			if(holder == null)
-			{	
-			 	holder = new GameObject(); 
+			if (holder == null) {	
+				holder = new GameObject (); 
 				holder.name = "Enemies";
 			}
-			if(wayHolder == null)
-			{	
-			 	wayHolder = new GameObject(); 
+			if (wayHolder == null) {	
+				wayHolder = new GameObject (); 
 				wayHolder.name = "Waypoints";
 			}    
 			//Clearing the place for new enemies
-			GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
-			GameObject[] waypoints = GameObject.FindGameObjectsWithTag("Waypoint");
+			GameObject[] enemies = GameObject.FindGameObjectsWithTag ("Enemy");
+			GameObject[] waypoints = GameObject.FindGameObjectsWithTag ("Waypoint");
 
 			//Clear the enemies
 
-		    foreach (GameObject g in enemies) 
-		    {
-				DestroyImmediate(g);
+			foreach (GameObject g in enemies) {
+				DestroyImmediate (g);
 			}
-			foreach (GameObject g in waypoints) 
-		    {
-				DestroyImmediate(g);
+			foreach (GameObject g in waypoints) {
+				DestroyImmediate (g);
 			}	
 			    
 		    
 
 
-			foreach(Vector3 v in posGuard)
-			{
-				GameObject g = Instantiate(guard,v,Quaternion.identity) as GameObject;	
+			foreach (Vector3 v in posGuard) {
+				GameObject g = Instantiate (guard, v, Quaternion.identity) as GameObject;	
 				g.transform.parent = holder.transform; 
 				g.tag = "Enemy";
 				
-				List<GameObject>ways = new List<GameObject>(); 
+				List<GameObject> ways = new List<GameObject> (); 
 				
 				//Set orientation
 				//Find obstacle linked to. 
-				foreach(Quadrilater q in geos)
-				{
-					Line[] lView = q.GetLine(v);  
+				foreach (Quadrilater q in geos) {
+					Line[] lView = q.GetLine (v);  
 					GameObject way = null; 
-					if(lView.Length>0 )
-					{
-						foreach(Line ll in lView)
-						{
+					if (lView.Length > 0) {
+						foreach (Line ll in lView) {
 
-							way = Instantiate(waypoint,ll.GetOther(v),
+							way = Instantiate (waypoint, ll.GetOther (v),
 								Quaternion.identity) as GameObject;
 							way.transform.parent = wayHolder.transform;
 							way.tag = "Waypoint";
 							//ll.DrawLine(Color.red); 
-							ways.Add(way);
+							ways.Add (way);
 						}
-						Vector3 center = q.GetCenterQuad();
+						Vector3 center = q.GetCenterQuad ();
 						Vector3 toAdd = (center - v).normalized;
 
-						if(geos[0] == q)
+						if (geos [0] == q)
 							toAdd = (v - center).normalized;							
 
-						way = Instantiate(waypoint,v - (toAdd ),
+						way = Instantiate (waypoint, v - (toAdd),
 							Quaternion.identity) as GameObject;
 						way.transform.parent = wayHolder.transform;
 						way.tag = "Waypoint";
 
-						ways.Add(way);
+						ways.Add (way);
 
-						way = Instantiate(waypoint,v - (toAdd ),
+						way = Instantiate (waypoint, v - (toAdd),
 							Quaternion.identity) as GameObject;
 						
 						way.transform.parent = wayHolder.transform;
 						way.tag = "Waypoint";
 
-						ways.Add(way);
+						ways.Add (way);
 
 						//Connect the waypoints
 						break;
@@ -1098,16 +1048,16 @@ namespace EditorArea {
 				//{
 				
 
-				RotationWaypoint wGauche = ways[0].GetComponent<RotationWaypoint>();
-				RotationWaypoint wDroite = ways[1].GetComponent<RotationWaypoint>();
+				RotationWaypoint wGauche = ways [0].GetComponent<RotationWaypoint> ();
+				RotationWaypoint wDroite = ways [1].GetComponent<RotationWaypoint> ();
 
-				RotationWaypoint wDevant1 = ways[2].GetComponent<RotationWaypoint>();
-				RotationWaypoint wDevant2 = ways[3].GetComponent<RotationWaypoint>();
+				RotationWaypoint wDevant1 = ways [2].GetComponent<RotationWaypoint> ();
+				RotationWaypoint wDevant2 = ways [3].GetComponent<RotationWaypoint> ();
 
-				wGauche.gameObject.name ="Gauche";
-				wDroite.gameObject.name ="Droite";
-				wDevant1.gameObject.name ="Devant1";
-				wDevant2.gameObject.name ="Devant2";
+				wGauche.gameObject.name = "Gauche";
+				wDroite.gameObject.name = "Droite";
+				wDevant1.gameObject.name = "Devant1";
+				wDevant2.gameObject.name = "Devant2";
 
 				wGauche.next = wDevant1; 
 				wDevant1.next = wDroite;
@@ -1119,33 +1069,31 @@ namespace EditorArea {
 				wDevant1.lookDir = (wDevant1.transform.position - v).normalized; 
 				wDevant2.lookDir = (wDevant2.transform.position - v).normalized; 
 				
-				Enemy e = g.GetComponent<Enemy>();
+				Enemy e = g.GetComponent<Enemy> ();
 				e.target = wDevant1; 
 				Vector3 temp = (wDevant1.transform.position - v).normalized;
 				temp *= 0.3f; 
 
 				g.transform.position = v + temp;
 
-				for(int i = 0; i<1000;i++)
-				{
+				for (int i = 0; i<1000; i++) {
 					bool free = true; 
-					foreach(Quadrilater q in geos)
-					{
-						if(q == geos[0])
+					foreach (Quadrilater q in geos) {
+						if (q == geos [0])
 							continue; 
-						if(q.Collide(g.transform.position))
+						if (q.Collide (g.transform.position))
 							free = false; 
-						if(!free)
+						if (!free)
 							break;
 					}
 
-					if(free)
+					if (free)
 						break; 
 
 					//Try a new position at random.
 
-					temp = new Vector3(UnityEngine.Random.Range(-1f,1f),0, UnityEngine.Random.Range(-1f,1f));
-					temp.Normalize(); 
+					temp = new Vector3 (UnityEngine.Random.Range (-1f, 1f), 0, UnityEngine.Random.Range (-1f, 1f));
+					temp.Normalize (); 
 					temp *= 0.3f; 
 
 					g.transform.position = v + temp;
@@ -1159,12 +1107,12 @@ namespace EditorArea {
 			}
 		}
 
-		public void QuadrilateralizationSpace()
+		public void QuadrilateralizationSpace ()
 		{
 			//data holder
-			Triangulation triangulation = GameObject.Find("Triangulation").GetComponent<Triangulation>(); 
-			triangulation.points.Clear();
-			triangulation.colours.Clear(); 
+			Triangulation triangulation = GameObject.Find ("Triangulation").GetComponent<Triangulation> (); 
+			triangulation.points.Clear ();
+			triangulation.colours.Clear (); 
 
 			if (floor == null) {
 				floor = (GameObject)GameObject.Find ("Floor");
@@ -1193,63 +1141,60 @@ namespace EditorArea {
 			obstacles = mapper.ComputeObstacles ();
 			
 			//First geometry is the outer one
-			List<Quadrilater> geos = new List<Quadrilater>();
+			List<Quadrilater> geos = new List<Quadrilater> ();
 			
 			
 			//Floor
 			Vector3[] f = new Vector3[4];
-			MeshFilter mesh = (MeshFilter)(floor.GetComponent("MeshFilter")) ;
+			MeshFilter mesh = (MeshFilter)(floor.GetComponent ("MeshFilter"));
 			Vector3[] t = mesh.sharedMesh.vertices; 
 			
-			Quadrilater tempGeometry = new Quadrilater(); 
+			Quadrilater tempGeometry = new Quadrilater (); 
 			
 			
-			tempGeometry.vertex[0] = mesh.transform.TransformPoint(t[0]);
-			tempGeometry.vertex[2] = mesh.transform.TransformPoint(t[120]);
-			tempGeometry.vertex[1] = mesh.transform.TransformPoint(t[110]);
-			tempGeometry.vertex[3] = mesh.transform.TransformPoint(t[10]);
+			tempGeometry.vertex [0] = mesh.transform.TransformPoint (t [0]);
+			tempGeometry.vertex [2] = mesh.transform.TransformPoint (t [120]);
+			tempGeometry.vertex [1] = mesh.transform.TransformPoint (t [110]);
+			tempGeometry.vertex [3] = mesh.transform.TransformPoint (t [10]);
 			
-			tempGeometry.vertex[0].y = 1; 
-			tempGeometry.vertex[1].y = 1; 
-			tempGeometry.vertex[2].y = 1; 
-			tempGeometry.vertex[3].y = 1; 
+			tempGeometry.vertex [0].y = 1; 
+			tempGeometry.vertex [1].y = 1; 
+			tempGeometry.vertex [2].y = 1; 
+			tempGeometry.vertex [3].y = 1; 
 			
-			tempGeometry.SetLine(); 
+			tempGeometry.SetLine (); 
 
-			geos.Add(tempGeometry); 
+			geos.Add (tempGeometry); 
 
-			GameObject[] obs = GameObject.FindGameObjectsWithTag("Obs");
+			GameObject[] obs = GameObject.FindGameObjectsWithTag ("Obs");
 
-			foreach(GameObject o in obs)
-			{
-				mesh = (MeshFilter)(o.GetComponent("MeshFilter")) ;
+			foreach (GameObject o in obs) {
+				mesh = (MeshFilter)(o.GetComponent ("MeshFilter"));
 				t = mesh.sharedMesh.vertices; 
 				
-				tempGeometry = new Quadrilater(); 
+				tempGeometry = new Quadrilater (); 
 				
-				tempGeometry.vertex[0] = mesh.transform.TransformPoint(t[6]);
-				tempGeometry.vertex[1] = mesh.transform.TransformPoint(t[8]);
-				tempGeometry.vertex[3] = mesh.transform.TransformPoint(t[7]);
-				tempGeometry.vertex[2] = mesh.transform.TransformPoint(t[9]);
+				tempGeometry.vertex [0] = mesh.transform.TransformPoint (t [6]);
+				tempGeometry.vertex [1] = mesh.transform.TransformPoint (t [8]);
+				tempGeometry.vertex [3] = mesh.transform.TransformPoint (t [7]);
+				tempGeometry.vertex [2] = mesh.transform.TransformPoint (t [9]);
 				
-				tempGeometry.vertex[0].y = 1; 
-				tempGeometry.vertex[2].y = 1; 
-				tempGeometry.vertex[1].y = 1; 
-				tempGeometry.vertex[3].y = 1; 
+				tempGeometry.vertex [0].y = 1; 
+				tempGeometry.vertex [2].y = 1; 
+				tempGeometry.vertex [1].y = 1; 
+				tempGeometry.vertex [3].y = 1; 
 				
-				tempGeometry.SetLine(); 
-				geos.Add(tempGeometry); 
+				tempGeometry.SetLine (); 
+				geos.Add (tempGeometry); 
 			}
 			//lines are defined by all the points in  obs
-			List<Line> lines = new List<Line>(); 
-			foreach(Quadrilater g in geos)
-			{
-				for(int i = 0; i< g.vertex.Length; i+=1)
-				{
-					if(i<g.vertex.Length -1)
-						lines.Add(new Line(g.vertex[i],g.vertex[i+1]));
+			List<Line> lines = new List<Line> (); 
+			foreach (Quadrilater g in geos) {
+				for (int i = 0; i< g.vertex.Length; i+=1) {
+					if (i < g.vertex.Length - 1)
+						lines.Add (new Line (g.vertex [i], g.vertex [i + 1]));
 					else 	       
-						lines.Add(new Line(g.vertex[0],g.vertex[i]));
+						lines.Add (new Line (g.vertex [0], g.vertex [i]));
 					//triangulation.points.Add(g.vertex[i]);	      
 					//triangulation.colours.Add(Color.cyan);	      
 				}
@@ -1259,78 +1204,71 @@ namespace EditorArea {
 
 			 
 
-			List<Quadrilater> candidates = getQuadrilater(lines,geos.ToArray()); 
+			List<Quadrilater> candidates = getQuadrilater (lines, geos.ToArray ()); 
 
-			foreach(Quadrilater q in candidates)
-			{
-				triangulation.AddPoint(q.GetCenterQuad(),q.c); 
-				q.DrawDebug(); 
+			foreach (Quadrilater q in candidates) {
+				triangulation.AddPoint (q.GetCenterQuad (), q.c); 
+				q.DrawDebug (); 
 			}
 
-			Debug.Log(candidates.Count); 
+			Debug.Log (candidates.Count); 
 		}
 
-
-		public List<Quadrilater> getQuadrilater(List<Line> lines,Quadrilater[] geos)
+		public List<Quadrilater> getQuadrilater (List<Line> lines, Quadrilater[] geos)
 		{
-			List<Quadrilater> candidates = new List<Quadrilater>(); 
+			List<Quadrilater> candidates = new List<Quadrilater> (); 
 			
 			//Starting line
 
 
 
-			List<Line> linesUpdated = new List<Line>();
+			List<Line> linesUpdated = new List<Line> ();
 
 			//foreach(Line l in lines)
 			//	linesUpdated.Add(l); 
 
-			foreach(Line l in lines)
+			foreach (Line l in lines) {
 			//for(int i = 0; i<linesUpdated.Count;i++)
-			{
 				//Line l = linesUpdated[i];
 				//Otherside line
-				Quadrilater toAddQuad = null ; 
+				Quadrilater toAddQuad = null; 
 				Line l1 = null;
 				Line l2 = null; 
 
 				//foreach(Line ll in linesUpdated)
-				foreach(Line ll in lines)
-				{
-					if(ll.ShareVertex(l) || l == ll)
+				foreach (Line ll in lines) {
+					if (ll.ShareVertex (l) || l == ll)
 						continue; 
 					
-					l1 = new Line(l.vertex[0],ll.vertex[0]);
-					l2 = new Line(l.vertex[1],ll.vertex[1]); 
+					l1 = new Line (l.vertex [0], ll.vertex [0]);
+					l2 = new Line (l.vertex [1], ll.vertex [1]); 
 					
 					//Cannot cross
-					if(l1.LineIntersection(l2))
-					{
-						l1 = new Line(l.vertex[1],ll.vertex[0]);
-						l2 = new Line(l.vertex[0],ll.vertex[1]);
+					if (l1.LineIntersection (l2)) {
+						l1 = new Line (l.vertex [1], ll.vertex [0]);
+						l2 = new Line (l.vertex [0], ll.vertex [1]);
 					}
-					var r1 = new Line(l1.vertex[0],l2.vertex[1]);
-					var r2 = new Line(l1.vertex[1],l2.vertex[0]); 
+					var r1 = new Line (l1.vertex [0], l2.vertex [1]);
+					var r2 = new Line (l1.vertex [1], l2.vertex [0]); 
 					
-					if(!r1.LineIntersection(r2))
+					if (!r1.LineIntersection (r2))
 						continue; 
 					
 					
 					//cannot be a duplicate
 					bool duplicate = false; 
 
-					foreach(Line lCheck in lines)
-					{	
+					foreach (Line lCheck in lines) {	
 						
-						if(lCheck == l || ll == lCheck ) 
+						if (lCheck == l || ll == lCheck) 
 							continue; 
 						//lCheck.DrawLine(Color.green);
 						
-						if( l1 == lCheck || l2 == lCheck ||
-						    lCheck.LineIntersection(l1) || lCheck.LineIntersection(l2) 
+						if (l1 == lCheck || l2 == lCheck ||
+						    lCheck.LineIntersection (l1) || lCheck.LineIntersection (l2) 
 						    ||
-							lCheck.LineIntersection(r1) || lCheck.LineIntersection(r2) 
-						   )	
-						{
+							lCheck.LineIntersection (r1) || lCheck.LineIntersection (r2) 
+						   ) {
 							
 							duplicate = true; 
 							break; 
@@ -1339,75 +1277,64 @@ namespace EditorArea {
 
 					
 					
-					if(duplicate)
+					if (duplicate)
 						continue; 
 					
-					Quadrilater tQuad = new Quadrilater(l,ll,l1,l2); 
+					Quadrilater tQuad = new Quadrilater (l, ll, l1, l2); 
 
 					//tQuad.DrawDebug(); 	
 
-					foreach(Quadrilater q in candidates)
-					{
-						foreach(Line lQ in q.lines)
-						{
-							if(lQ.LineIntersection(l2) || lQ.LineIntersection(l1))
-							{
+					foreach (Quadrilater q in candidates) {
+						foreach (Line lQ in q.lines) {
+							if (lQ.LineIntersection (l2) || lQ.LineIntersection (l1)) {
 								duplicate = true; 
 								break; 
 							}
 						}
 					}
 					
-					if(duplicate)
+					if (duplicate)
 						continue; 
 					
 					
 					
-					foreach(Quadrilater q in candidates)
-					{
-						if(q.Collide(tQuad) || q.Equals(tQuad))
-						{	
+					foreach (Quadrilater q in candidates) {
+						if (q.Collide (tQuad) || q.Equals (tQuad)) {	
 							duplicate = true;
 							break; 
 						}
 
 					}
 
-					foreach(Quadrilater q in geos)
-					{
-						if(q.Equals(tQuad))
-						{	
+					foreach (Quadrilater q in geos) {
+						if (q.Equals (tQuad)) {	
 							duplicate = true;
 							break; 
 						}
 						
 					}
-					if(duplicate)
+					if (duplicate)
 						continue; 
 
 					//tQuad.DrawDebug();
 
-					if(toAddQuad != null)
-					{
-						if(tQuad.GetLength() < toAddQuad.GetLength())
-						{
+					if (toAddQuad != null) {
+						if (tQuad.GetLength () < toAddQuad.GetLength ()) {
 							toAddQuad = tQuad; 
 						}
-					}
-					else
+					} else
 						toAddQuad = tQuad; 
 
 					
 
 					//break;
 				}
-				if(toAddQuad!=null && !candidates.Contains(toAddQuad) && ! geos.Contains(toAddQuad))
-				{ 
+				if (toAddQuad != null && !candidates.Contains (toAddQuad) && ! geos.Contains (toAddQuad)) { 
 
-					candidates.Add(toAddQuad);
-					candidates[candidates.Count-1].DrawDebug(); 
-					linesUpdated.Add(l1); 
-					linesUpdated.Add(l2); 
+					candidates.Add (toAddQuad);
+					candidates [candidates.Count - 1].DrawDebug (); 
+					linesUpdated.Add (l1); 
+					linesUpdated.Add (l2); 
 				}
 
 
@@ -1417,7 +1344,7 @@ namespace EditorArea {
 			return candidates;
 		}
 
-		public void TriangulationSpace()
+		public void TriangulationSpace ()
 		{
 			//Compute one step of the discritzation
 			//Find this is the view
@@ -1449,81 +1376,77 @@ namespace EditorArea {
 			obstacles = mapper.ComputeObstacles ();
 
 			//First geometry is the outer one
-			List<Geometry> geos = new List<Geometry>();
+			List<Geometry> geos = new List<Geometry> ();
 
 
 			//Floor
 			Vector3[] f = new Vector3[4];
-			MeshFilter mesh = (MeshFilter)(floor.GetComponent("MeshFilter")) ;
+			MeshFilter mesh = (MeshFilter)(floor.GetComponent ("MeshFilter"));
 			Vector3[] t = mesh.sharedMesh.vertices; 
 
-			Geometry tempGeometry = new Geometry(); 
+			Geometry tempGeometry = new Geometry (); 
 
 
-			tempGeometry.vertex[0] = mesh.transform.TransformPoint(t[0]);
-			tempGeometry.vertex[2] = mesh.transform.TransformPoint(t[120]);
-			tempGeometry.vertex[1] = mesh.transform.TransformPoint(t[110]);
-			tempGeometry.vertex[3] = mesh.transform.TransformPoint(t[10]);
+			tempGeometry.vertex [0] = mesh.transform.TransformPoint (t [0]);
+			tempGeometry.vertex [2] = mesh.transform.TransformPoint (t [120]);
+			tempGeometry.vertex [1] = mesh.transform.TransformPoint (t [110]);
+			tempGeometry.vertex [3] = mesh.transform.TransformPoint (t [10]);
 
-			tempGeometry.vertex[0].y = 1; 
-			tempGeometry.vertex[1].y = 1; 
-			tempGeometry.vertex[2].y = 1; 
-			tempGeometry.vertex[3].y = 1; 
+			tempGeometry.vertex [0].y = 1; 
+			tempGeometry.vertex [1].y = 1; 
+			tempGeometry.vertex [2].y = 1; 
+			tempGeometry.vertex [3].y = 1; 
 
 			
-			geos.Add(tempGeometry);
+			geos.Add (tempGeometry);
 
 
 
-			GameObject[] obs = GameObject.FindGameObjectsWithTag("Obs");
+			GameObject[] obs = GameObject.FindGameObjectsWithTag ("Obs");
 
 			//data holder
-			Triangulation triangulation = GameObject.Find("Triangulation").GetComponent<Triangulation>(); 
-			triangulation.points.Clear();
-			triangulation.colours.Clear(); 
+			Triangulation triangulation = GameObject.Find ("Triangulation").GetComponent<Triangulation> (); 
+			triangulation.points.Clear ();
+			triangulation.colours.Clear (); 
 
 			//Only one geometry for now
 			
-			foreach(GameObject o in obs)
-			{
-				mesh = (MeshFilter)(o.GetComponent("MeshFilter")) ;
+			foreach (GameObject o in obs) {
+				mesh = (MeshFilter)(o.GetComponent ("MeshFilter"));
 				t = mesh.sharedMesh.vertices; 
 				
-				tempGeometry = new Geometry(); 
+				tempGeometry = new Geometry (); 
 				
-				tempGeometry.vertex[0] = mesh.transform.TransformPoint(t[6]);
-				tempGeometry.vertex[1] = mesh.transform.TransformPoint(t[8]);
-				tempGeometry.vertex[3] = mesh.transform.TransformPoint(t[7]);
-				tempGeometry.vertex[2] = mesh.transform.TransformPoint(t[9]);
+				tempGeometry.vertex [0] = mesh.transform.TransformPoint (t [6]);
+				tempGeometry.vertex [1] = mesh.transform.TransformPoint (t [8]);
+				tempGeometry.vertex [3] = mesh.transform.TransformPoint (t [7]);
+				tempGeometry.vertex [2] = mesh.transform.TransformPoint (t [9]);
 
-				tempGeometry.vertex[0].y = 1; 
-				tempGeometry.vertex[2].y = 1; 
-				tempGeometry.vertex[1].y = 1; 
-				tempGeometry.vertex[3].y = 1; 
+				tempGeometry.vertex [0].y = 1; 
+				tempGeometry.vertex [2].y = 1; 
+				tempGeometry.vertex [1].y = 1; 
+				tempGeometry.vertex [3].y = 1; 
 				
 				
-				geos.Add(tempGeometry); 
+				geos.Add (tempGeometry); 
 
 			}
 
 			//lines are defined by all the points in  obs
-			List<Line> lines = new List<Line>(); 
-			foreach(Geometry g in geos)
-			{
-				for(int i = 0; i< g.vertex.Length; i+=1)
-			    {
-					if(i<g.vertex.Length -1)
-						lines.Add(new Line(g.vertex[i],g.vertex[i+1]));
+			List<Line> lines = new List<Line> (); 
+			foreach (Geometry g in geos) {
+				for (int i = 0; i< g.vertex.Length; i+=1) {
+					if (i < g.vertex.Length - 1)
+						lines.Add (new Line (g.vertex [i], g.vertex [i + 1]));
 					else 	       
-						lines.Add(new Line(g.vertex[0],g.vertex[i]));
+						lines.Add (new Line (g.vertex [0], g.vertex [i]));
 					//triangulation.points.Add(g.vertex[i]);	      
 					//triangulation.colours.Add(Color.cyan);	      
 				}
 
 			}
 
-			foreach (Line l in lines)
-			{
+			foreach (Line l in lines) {
 				//Debug.DrawLine(l.vertex[0],l.vertex[1],Color.blue);
 				
 			}
@@ -1531,38 +1454,31 @@ namespace EditorArea {
 
 			//Compare each point to every point 
 
-			for (int i = 0; i < geos.Count; i++)
-			{
+			for (int i = 0; i < geos.Count; i++) {
 
-				for(int j = i+1; j < geos.Count; j++)
-				{
+				for (int j = i+1; j < geos.Count; j++) {
 
-					for(int w = 0; w<geos[i].vertex.Length; w++)
-					{
+					for (int w = 0; w<geos[i].vertex.Length; w++) {
 
-						for(int z = 0; z<geos[j].vertex.Length; z++)
-						{
+						for (int z = 0; z<geos[j].vertex.Length; z++) {
 													
-							List<Line> toAdd = new List<Line>(); 
+							List<Line> toAdd = new List<Line> (); 
 
 							Boolean foundBreak = false; 
 
-							foreach (Line l in lines)
-							{
+							foreach (Line l in lines) {
 
-								if( LineIntersection(geos[i].vertex[w], geos[j].vertex[z],
-								                           l.vertex[0],l.vertex[1]))
-								{
+								if (LineIntersection (geos [i].vertex [w], geos [j].vertex [z],
+								                           l.vertex [0], l.vertex [1])) {
 									 
 									foundBreak = true; 
 									break; 
 								}								
 								   
 							}
-							if(!foundBreak)
-							{	
+							if (!foundBreak) {	
 								//Debug.DrawLine(geos[i].vertex[w], geos[j].vertex[z], Color.blue);
-								lines.Add(new Line(geos[i].vertex[w], geos[j].vertex[z])); 		
+								lines.Add (new Line (geos [i].vertex [w], geos [j].vertex [z])); 		
 							}	
 						}
 					}
@@ -1570,54 +1486,44 @@ namespace EditorArea {
 			}
 
 			//Find the centers 
-			List<Triangle> triangles = new List<Triangle>(); 
+			List<Triangle> triangles = new List<Triangle> (); 
 			//Well why be efficient when you can be not efficient
-			foreach (Line l in lines)
-			{
-				Vector3 v1 = l.vertex[0]; 
-				Vector3 v2 = l.vertex[1];
-				foreach (Line l2 in lines)
-				{
+			foreach (Line l in lines) {
+				Vector3 v1 = l.vertex [0]; 
+				Vector3 v2 = l.vertex [1];
+				foreach (Line l2 in lines) {
 					if (l == l2)
 						continue;
 					Vector3 v3 = Vector3.zero; 
 
 
-					if (l2.vertex[0].Equals(v2))
-					{
-						v3 = l2.vertex[1];
+					if (l2.vertex [0].Equals (v2)) {
+						v3 = l2.vertex [1];
 						//have to check if closes
-					}
-					else if (l2.vertex[1].Equals(v2))
-					{
-						v3 = l2.vertex[0];
+					} else if (l2.vertex [1].Equals (v2)) {
+						v3 = l2.vertex [0];
 					}
 
-					if(v3 != Vector3.zero)
-					{
-						foreach (Line l3 in lines)
-						{
-							if(l3 == l2 || l3 == l)
+					if (v3 != Vector3.zero) {
+						foreach (Line l3 in lines) {
+							if (l3 == l2 || l3 == l)
 								continue; 
-							if( (l3.vertex[0].Equals(v1) && l3.vertex[1].Equals(v3))
-							   || (l3.vertex[1].Equals(v1) && l3.vertex[0].Equals(v3)))
-							{
+							if ((l3.vertex [0].Equals (v1) && l3.vertex [1].Equals (v3))
+							   || (l3.vertex [1].Equals (v1) && l3.vertex [0].Equals (v3))) {
 								//Debug.DrawLine(v1,v2,Color.red); 
 								//Debug.DrawLine(v2,v3,Color.red); 
 								//Debug.DrawLine(v3,v1,Color.red); 
 
 								//Add the traingle
-								Triangle toAddTriangle = new Triangle(
-									v1,triangulation.points.IndexOf(v1),
-									v2,triangulation.points.IndexOf(v2),
-									v3,triangulation.points.IndexOf(v3));
+								Triangle toAddTriangle = new Triangle (
+									v1, triangulation.points.IndexOf (v1),
+									v2, triangulation.points.IndexOf (v2),
+									v3, triangulation.points.IndexOf (v3));
 								                                       
 
 								Boolean isAlready = false; 
-								foreach(Triangle tt in triangles)
-								{
-									if (tt.Equals(toAddTriangle))
-									{
+								foreach (Triangle tt in triangles) {
+									if (tt.Equals (toAddTriangle)) {
 										//Debug.Log(toAddTriangle.refPoints[0]+", "+
 										//          toAddTriangle.refPoints[1]+", "+
 										//          toAddTriangle.refPoints[2]+", "); 
@@ -1626,9 +1532,8 @@ namespace EditorArea {
 									}
 
 								}
-								if(!isAlready)
-								{
-									triangles.Add(toAddTriangle);
+								if (!isAlready) {
+									triangles.Add (toAddTriangle);
 								}
 									
 							}
@@ -1640,13 +1545,11 @@ namespace EditorArea {
 
 			//Find shared edge and triangle structure
 
-			foreach(Triangle tt in triangles)
-			{
-				foreach(Triangle ttt in triangles)
-				{
-					if(tt == ttt)
+			foreach (Triangle tt in triangles) {
+				foreach (Triangle ttt in triangles) {
+					if (tt == ttt)
 						continue; 
-					tt.ShareEdged(ttt);
+					tt.ShareEdged (ttt);
 					
 				}
 
@@ -1658,37 +1561,39 @@ namespace EditorArea {
 
 		}
 
-		private Boolean LineIntersect(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
+		private Boolean LineIntersect (Vector3 a, Vector3 b, Vector3 c, Vector3 d)
 		{
 			//Debug.Log(a); 
 			//Debug.Log(b); 
 			//Debug.Log(c); 
 			//Debug.Log(d); 
 
-			Vector2 u = new Vector2(b.x,b.z) - new Vector2(a.x,a.z);
-			Vector2 p0 = new Vector2(a.x,a.z); Vector2 p1 = new Vector2(b.x,b.z); 
+			Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
+			Vector2 p0 = new Vector2 (a.x, a.z);
+			Vector2 p1 = new Vector2 (b.x, b.z); 
 
-			Vector2 v = new Vector2(d.x,d.z) - new Vector2(c.x,c.z);
-			Vector2 q0 = new Vector2(c.x,c.z); Vector2 q1 = new Vector2(d.x,d.z);
+			Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
+			Vector2 q0 = new Vector2 (c.x, c.z);
+			Vector2 q1 = new Vector2 (d.x, d.z);
 
-			Vector2 w = new Vector2(a.x,a.z) - new Vector2(d.x,d.z);
+			Vector2 w = new Vector2 (a.x, a.z) - new Vector2 (d.x, d.z);
 
 
 			//if (u.x * v.y - u.y*v.y == 0)
 			//	return true;
 
-			double s = (v.y* w.x - v.x*w.y) / (v.x*u.y - v.y*u.x);
-			double t = (u.x*w.y-u.y*w.x) / (u.x*v.y- u.y*v.x); 
+			double s = (v.y * w.x - v.x * w.y) / (v.x * u.y - v.y * u.x);
+			double t = (u.x * w.y - u.y * w.x) / (u.x * v.y - u.y * v.x); 
 			//Debug.Log(s); 
 			//Debug.Log(t); 
 
-			if ( (s>0 && s< 1) && (t>0 && t< 1) )
+			if ((s > 0 && s < 1) && (t > 0 && t < 1))
 				return true;
 
 			return false; 
 		}
 
-		private Boolean LineIntersection(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
+		private Boolean LineIntersection (Vector3 a, Vector3 b, Vector3 c, Vector3 d)
 		{
 
 
@@ -1698,14 +1603,14 @@ namespace EditorArea {
 			//if the same lines
 
 			//When share a point use the other algo
-			if(a.Equals(c) || a.Equals(d) || b.Equals(c) || b.Equals(d))
-				return LineIntersect(a,b,c,d); 
+			if (a.Equals (c) || a.Equals (d) || b.Equals (c) || b.Equals (d))
+				return LineIntersect (a, b, c, d); 
 
 
 
 
-			return CounterClockWise(a,c,d) != CounterClockWise(b,c,d) && 
-				CounterClockWise(a,b,c) != CounterClockWise(a,b,d);
+			return CounterClockWise (a, c, d) != CounterClockWise (b, c, d) && 
+				CounterClockWise (a, b, c) != CounterClockWise (a, b, d);
 
 			//if( CounterClockWise(a,c,d) == CounterClockWise(b,c,d))
 			//	return false;
@@ -1717,7 +1622,7 @@ namespace EditorArea {
 
 		}
 
-		private Boolean CounterClockWise(Vector3 v1,Vector3 v2,Vector3 v3)
+		private Boolean CounterClockWise (Vector3 v1, Vector3 v2, Vector3 v3)
 		{
 			//v1 = a,b
 			//v2 = c,d
@@ -1727,14 +1632,14 @@ namespace EditorArea {
 			float c = v2.x, d = v2.z;  
 			float e = v3.x, f = v3.z;  
 
-			if((f-b)*(c-a)> (d-b)*(e-a))
+			if ((f - b) * (c - a) > (d - b) * (e - a))
 				return true;
 			else
 				return false; 
 		}
 
-
-		private void ClearPathsRepresentation () {
+		private void ClearPathsRepresentation ()
+		{
 			toggleStatus.Clear ();
 			
 			foreach (GameObject obj in players.Values)
@@ -1744,7 +1649,8 @@ namespace EditorArea {
 			Resources.UnloadUnusedAssets ();
 		}
 		
-		private void SetupArrangedPaths (List<Path> paths) {
+		private void SetupArrangedPaths (List<Path> paths)
+		{
 			arrangedByTime = new List<Path> ();
 			arrangedByTime.AddRange (paths);
 			arrangedByTime.Sort (new Analyzer.TimeComparer ());
@@ -1786,7 +1692,8 @@ namespace EditorArea {
 			arrangedByVelocity.Sort (new Analyzer.VelocityComparer ());
 		}
 		
-		private void ComputeHeatMap (List<Path> paths) {
+		private void ComputeHeatMap (List<Path> paths)
+		{
 			heatMap = Analyzer.Compute2DHeatMap (paths, gridSize, gridSize, out maxHeatMap);
 				
 			drawer.heatMapMax = maxHeatMap;
@@ -1801,7 +1708,8 @@ namespace EditorArea {
 			drawer.tileSize.Set (SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y);
 		}
 
-		private void ComputeClusters () {
+		private void ComputeClusters ()
+		{
 			if (MapperEditor.grid != null) {
 				Dictionary<int, List<Path>> clusterMap = new Dictionary<int, List<Path>> ();
 				foreach (Path currentPath in paths) {
@@ -1896,7 +1804,8 @@ namespace EditorArea {
 			}
 		}
 	
-		private void BatchComputing () {
+		private void BatchComputing ()
+		{
 			ResultsRoot root = new ResultsRoot ();
 				
 			float speed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
@@ -2107,7 +2016,8 @@ namespace EditorArea {
 		}
 		
 		// Resets the AI back to it's original position
-		private void ResetAI () {
+		private void ResetAI ()
+		{
 			GameObject[] objs = GameObject.FindGameObjectsWithTag ("AI") as GameObject[];
 			foreach (GameObject ob in objs)
 				ob.GetComponent<Player> ().ResetSimulation ();
@@ -2122,7 +2032,8 @@ namespace EditorArea {
 		}
 		
 		// Updates everyone's position to the current timeslice
-		private void UpdatePositions (int t, Mapper mapper, float diff = 0f) {
+		private void UpdatePositions (int t, Mapper mapper, float diff = 0f)
+		{
 			for (int i = 0; i < SpaceState.Editor.enemies.Length; i++) {
 				if (SpaceState.Editor.enemies [i] == null)
 					continue;
@@ -2175,7 +2086,8 @@ namespace EditorArea {
 			}
 		}
 		
-		private void StorePositions () {
+		private void StorePositions ()
+		{
 			GameObject[] objs = GameObject.FindGameObjectsWithTag ("Enemy") as GameObject[];
 			for (int i = 0; i < objs.Length; i++) {
 				objs [i].GetComponent<Enemy> ().SetInitialPosition ();
