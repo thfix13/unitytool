@@ -45,6 +45,7 @@ namespace EditorArea
 		private MapperEditorDrawer drawer;
 		private DateTime previous = DateTime.Now;
 		private long accL = 0L;
+		private List<double> ratios = new List<double> ();
 		
 		[MenuItem("Window/Mapper")]
 		static void Init ()
@@ -331,6 +332,110 @@ namespace EditorArea
 			
 			if (GUILayout.Button ("Batch Computing")) {
 				//..
+				TResultRoot root = new TResultRoot ();
+				using (FileStream stream = new FileStream ("triangulation.xml", FileMode.Create)) {
+					for (float fovAngle = 1.0f; fovAngle <= 30.0f; fovAngle += 1.0f) {
+						for (float fovDistance = 1.0f; fovDistance <= 10.0f; fovDistance += 0.5f) {
+							TResultBatch batch = new TResultBatch ();
+							batch.fovAngle = fovAngle;
+							batch.fovDistance = fovDistance;
+							for (int trials = 1; trials <= 50; trials++) {
+								TResult result = new TResult ();
+								ReduceSpace ();
+								GameObject[] enemies = GameObject.FindGameObjectsWithTag ("Enemy");
+								GameObject[] waypoints = GameObject.FindGameObjectsWithTag ("Waypoint");
+								foreach (GameObject e in enemies) {
+									Enemy eSc = e.GetComponent<Enemy> () as Enemy;
+									eSc.fovAngle = fovAngle;
+									eSc.fovDistance = fovDistance;
+								}
+								
+								StorePositions ();
+								
+								Cell[][] baseMap = null;
+								if (MapperEditor.grid != null) {
+									Cell[][] obstacles = mapper.ComputeObstacles ();
+									baseMap = new Cell[gridSize][];
+									for (int x = 0; x < gridSize; x++) {
+										baseMap [x] = new Cell[gridSize];
+										for (int y = 0; y < gridSize; y++) {
+											baseMap [x] [y] = MapperEditor.grid [x] [y] == null ? obstacles [x] [y] : MapperEditor.grid [x] [y];
+										}
+									}
+								}
+								
+								// Precompute maps again
+								fullMap = mapper.PrecomputeMaps (SpaceState.Editor, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind, baseMap);
+								ResetAI ();
+									
+								// Compute paths
+								float speed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
+									
+								//Check the start and the end and get them from the editor. 
+								if (start == null) {
+									start = GameObject.Find ("Start");
+								}
+								if (end == null) {
+									end = GameObject.Find ("End");	
+								}
+									
+								paths.Clear ();
+								ClearPathsRepresentation ();
+								arrangedByCrazy = arrangedByDanger = arrangedByDanger3 = arrangedByDanger3Norm = arrangedByLength = arrangedByLoS = arrangedByLoS3 = arrangedByLoS3Norm = arrangedByTime = arrangedByVelocity = null;
+									
+								startX = (int)((start.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
+								startY = (int)((start.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
+								endX = (int)((end.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
+								endY = (int)((end.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
+									
+								rrt.min = floor.collider.bounds.min;
+								rrt.tileSizeX = SpaceState.Editor.tileSize.x;
+								rrt.tileSizeZ = SpaceState.Editor.tileSize.y;
+								rrt.enemies = SpaceState.Editor.enemies;
+									
+								List<Node> nodes = null;
+								iterations = 50;
+								for (int it = 0; it < iterations; it++) {
+									nodes = rrt.Compute (startX, startY, endX, endY, attemps, speed, fullMap, smoothPath);
+									if (nodes.Count > 0) {
+										paths.Add (new Path (nodes));
+									}
+								}
+								result.ratio = (float)paths.Count / iterations;
+								batch.results.Add (result);
+								ratios.Add ((float)paths.Count / iterations);
+								
+								// shortest = fastest = longest = lengthiest = mostDanger = null;
+								if (enemies != null) {	
+									foreach (GameObject e in enemies) {
+										DestroyImmediate (e);
+									}
+					
+								}
+								foreach (GameObject w in waypoints) {
+									DestroyImmediate (w);
+								}
+							}
+							
+							int ratioCnt = 0;
+							float sumRatio = 0.0f, averageRatio = 0.0f;
+							foreach (float r in ratios) {
+								sumRatio += r;
+								ratioCnt ++;
+							}
+							averageRatio = sumRatio / ratioCnt;
+							batch.averageRatio = averageRatio;
+							root.everything.Add (batch);
+						}
+					}
+					XmlSerializer ser = new XmlSerializer (typeof(TResultRoot), new Type[] {
+									typeof(TResultBatch),
+									typeof(TResult)
+							});
+					ser.Serialize (stream, root);
+					stream.Flush ();
+					stream.Close ();
+				}
 			}
 			#endregion
 
@@ -1228,7 +1333,7 @@ namespace EditorArea
 			//	linesUpdated.Add(l); 
 
 			foreach (Line l in lines) {
-			//for(int i = 0; i<linesUpdated.Count;i++)
+				//for(int i = 0; i<linesUpdated.Count;i++)
 				//Line l = linesUpdated[i];
 				//Otherside line
 				Quadrilater toAddQuad = null; 
