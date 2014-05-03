@@ -7,7 +7,20 @@ namespace Spatiotemporal {
 	public class Map : MonoBehaviour {
 		public bool dirty = true;
 	
-		public Vector3 dimensions = new Vector3 (100.0f, 60.0f, 100.0f);
+		public Mapper master;
+		
+		public Vector3 dimensions {
+			get {
+				if (master != null) {
+					return master.transform.localScale * 10;
+				} else {
+					return Vector3.one;
+				}
+			}
+			set {
+				master.transform.localScale = value/10;
+			}
+		}
 		public float sub_ = 1;
 	
 		public float sizeX
@@ -16,7 +29,7 @@ namespace Spatiotemporal {
 			set {
 				if (dimensions.x != value) {
 					dirty = true;
-					dimensions.x = value;
+					dimensions = new Vector3(value, dimensions.y, dimensions.z);
 					Validate();
 				}
 			}
@@ -27,7 +40,7 @@ namespace Spatiotemporal {
 			set {
 				if (dimensions.y != value) {
 					dirty = true;
-					dimensions.y = value;
+					dimensions = new Vector3(dimensions.x, value, dimensions.z);
 					Validate();
 				}
 			}
@@ -38,7 +51,7 @@ namespace Spatiotemporal {
 			set {
 				if (dimensions.z != value) {
 					dirty = true;
-					dimensions.z = value;
+					dimensions = new Vector3(dimensions.x, dimensions.y,value);
 					Validate();
 				}
 			}
@@ -113,9 +126,7 @@ namespace Spatiotemporal {
 			y = timeLength < 1.0f ? 1.0f : timeLength;
 			z = sizeZ < 1.0f ? 1.0f : sizeZ;
 			
-			dimensions.x = x;
-			dimensions.y = y;
-			dimensions.z = z;
+			dimensions = new Vector3(x, y, z);
 			
 			if (sub_ < 0.1f) {
 				sub_ = 0.1f;
@@ -243,6 +254,8 @@ namespace Spatiotemporal {
 	
 		public void UpdateMesh()
 		{
+			if (mf.sharedMesh == null)
+				CreateMesh();
 			mf.sharedMesh.vertices = Vertices ();
 			
 			Mesh m = mf.sharedMesh;

@@ -14,6 +14,7 @@ public class MapEditor : Editor {
 
 	public override void OnInspectorGUI()
 	{
+		m.master = (Mapper)EditorGUILayout.ObjectField("Master", m.master, typeof(Mapper));
 		m.sizeX = EditorGUILayout.FloatField ("Size X:", m.sizeX);
 		m.timeLength = EditorGUILayout.FloatField ("Time length:", m.timeLength);
 		m.sizeZ = EditorGUILayout.FloatField ("Size Z:", m.sizeZ);

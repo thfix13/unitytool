@@ -453,7 +453,11 @@ namespace EditorArea {
 			
 			EditorGUILayout.LabelField ("");
 			
-			visualize3d = (EditorGUILayout.Toggle("Visualize Spatiotemporal state space", visualize3d));
+			if (visualize3d = (EditorGUILayout.Toggle("Visualize Spatiotemporal state space", visualize3d))) {
+				if (map == null) {
+					
+				}
+			}
 			
 			EditorGUILayout.LabelField ("");
 			
