@@ -10,8 +10,8 @@ public class BResultsRoot
 [Serializable]
 public class BResultBatch
 {
-//	public int numOfGuards = 0;
-//	public int numOfIterations = 0;
+	public int numOfGuards = 0;
+	public int numOfIterations = 0;
 //	public int numOfPaths = 0;
 //	public int rrtAttempts = 0;
 	public List<BResult> results = new List<BResult> ();

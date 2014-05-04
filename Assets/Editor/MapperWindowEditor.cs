@@ -15,7 +15,7 @@ public class MapperWindowEditor : EditorWindow
 	public static List<Path> paths = new List<Path> ();
 	public static List<Node> mostDanger = null, shortest = null, lengthiest = null, fastest = null, longest = null;
 	// Parameters
-	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 75, ticksBehind = 0, numOfEnemies = 0, numOfRegionsForEnemies = 0, numOfCameras = 0, numOfRegionsForCameras = 0, iterations2 = 5, iterations3 = 5, noeB = 0, nocB = 0, noreB = 0, norcB = 0, numOfGuards = 0, iterations4 = 3, nogB = 0, noiB = 0;
+	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 75, ticksBehind = 0, numOfEnemies = 0, numOfRegionsForEnemies = 0, numOfCameras = 0, numOfRegionsForCameras = 0, iterations2 = 5, iterations3 = 5, noeB = 0, nocB = 0, noreB = 0, norcB = 0, numOfGuards = 0, iterations4 = 3, nogB = 8, noiB = 3;
 	public static int pLine = 50, pDot = 50, pSplit = 50, pZigZag = 50, pPause = 25, pSwipe = 25, pFullRotate = 25, pNinety = 25;
 	public static bool drawMap = true, drawMoveMap = false, drawMoveUnits = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = false, 
 				drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawBoundaries = false, drawRoadmaps = false, drawRoadmaps2 = false, drawRoadmaps3 = false, drawGraph = false, drawGraph2 = false,
@@ -1443,82 +1443,90 @@ public class MapperWindowEditor : EditorWindow
 			PCG.sBoundary.cleanUp (floor);
 			
 			BResultsRoot root = new BResultsRoot ();
-			BResultBatch job = new BResultBatch ();
-			root.everything.Add (job);
+			using (FileStream stream = new FileStream ("Ratio with respect to Guards and Iterations.xml", FileMode.Create)) {
+				// Guards number varying from 1 to 8
+				for (int nog = 1; nog <= nogB; nog++) {
+					// Iterations number varying from 0 to 3
+					for (int noi = 0; noi <= noiB; noi++) {
+						BResultBatch job = new BResultBatch ();
+						job.numOfGuards = nog;
+						job.numOfIterations = noi;
+						// For each test we want 50 trials
+						for (int batchIter = 0; batchIter < 50; batchIter ++) {					
+							// Clear up
+							PCG.ClearBehaviours ();
+							PCG.numOfGuards = nogB;
+							PCG.ClearUpObjects (enemypathObjects);
+						
+							// Populate guards on the graph
+							enemypathObjects = PCG.PopulateGuardsWithBehavioursAndSaveToFile (enemyPrefab, waypointPrefab, floor, noiB, pLine, pDot, pSplit, pZigZag, pPause, pSwipe, pFullRotate, pNinety).ToArray ();
+							StorePositions ();
+					
+							// Precompute maps again
+							fullMap = mapper.PrecomputeMaps (floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind);
+							ResetAI ();
+					
+							// Compute paths
+							float speed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
+					
+							//Check the start and the end and get them from the editor. 
+							if (start == null) {
+								start = GameObject.Find ("Start");
+							}
+							if (end == null) {
+								end = GameObject.Find ("End");	
+							}
+					
+							paths.Clear ();
+							arrangedByCrazy = arrangedByDanger = arrangedByDanger3 = arrangedByDanger3Norm = arrangedByLength = arrangedByLoS = arrangedByLoS3 = arrangedByLoS3Norm = arrangedByTime = arrangedByVelocity = null;
+					
+							startX = (int)((start.transform.position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x);
+							startY = (int)((start.transform.position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y);
+							endX = (int)((end.transform.position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x);
+							endY = (int)((end.transform.position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y);
+					
+							rrt.min = floor.collider.bounds.min;
+							rrt.tileSizeX = SpaceState.TileSize.x;
+							rrt.tileSizeZ = SpaceState.TileSize.y;
+							rrt.enemies = SpaceState.Enemies;
+					
+							List<Node> nodes = null;
+							iterations = 50;
+							for (int it = 0; it < iterations; it++) {
+								nodes = rrt.Compute (startX, startY, endX, endY, attemps, speed, fullMap, smoothPath);
+								if (nodes.Count > 0) {
+									paths.Add (new Path (nodes));
+								}
+							}
+							BResult rs = new BResult ();
+							rs.ratio = (float)paths.Count / iterations;
+							job.results.Add (rs);
+							ratios.Add ((float)paths.Count / iterations);
 
-			// Guards number varying batch test
-			using (FileStream stream = new FileStream ("guardsvary" + nogB + ".xml", FileMode.Create)) {
-				// For each test we want 50 trials
-				for (int batchIter = 0; batchIter < 50; batchIter ++) {					
-					// Clear up
-					PCG.ClearBehaviours ();
-					PCG.numOfGuards = nogB;
-					PCG.ClearUpObjects (enemypathObjects);
-					
-					enemypathObjects = PCG.PopulateGuardsWithBehaviours (enemyPrefab, waypointPrefab, floor, noiB, pLine, pDot, pSplit, pZigZag, pPause, pSwipe, pFullRotate, pNinety).ToArray ();
-					StorePositions ();
-					
-					// Precompute maps again
-					fullMap = mapper.PrecomputeMaps (floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind);
-					ResetAI ();
-					
-					// Compute paths
-					float speed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
-					
-					//Check the start and the end and get them from the editor. 
-					if (start == null) {
-						start = GameObject.Find ("Start");
-					}
-					if (end == null) {
-						end = GameObject.Find ("End");	
-					}
-					
-					paths.Clear ();
-					arrangedByCrazy = arrangedByDanger = arrangedByDanger3 = arrangedByDanger3Norm = arrangedByLength = arrangedByLoS = arrangedByLoS3 = arrangedByLoS3Norm = arrangedByTime = arrangedByVelocity = null;
-					
-					startX = (int)((start.transform.position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x);
-					startY = (int)((start.transform.position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y);
-					endX = (int)((end.transform.position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x);
-					endY = (int)((end.transform.position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y);
-					
-					rrt.min = floor.collider.bounds.min;
-					rrt.tileSizeX = SpaceState.TileSize.x;
-					rrt.tileSizeZ = SpaceState.TileSize.y;
-					rrt.enemies = SpaceState.Enemies;
-					
-					List<Node> nodes = null;
-					iterations = 50;
-					for (int it = 0; it < iterations; it++) {
-						nodes = rrt.Compute (startX, startY, endX, endY, attemps, speed, fullMap, smoothPath);
-						if (nodes.Count > 0) {
-							paths.Add (new Path (nodes));
-						}
-					}
-					BResult rs = new BResult ();
-					rs.ratio = (float)paths.Count / iterations;
-					job.results.Add (rs);
-					ratios.Add ((float)paths.Count / iterations);
-
-					shortest = fastest = longest = lengthiest = mostDanger = null;
-				} // end of for
+							shortest = fastest = longest = lengthiest = mostDanger = null;
+						} // end of for
 				
-				int ratioCnt = 0;
-				float sumRatio = 0.0f, averageRatio = 0.0f;
-				foreach (float r in ratios) {
-					sumRatio += r;
-					ratioCnt ++;
+						int ratioCnt = 0;
+						float sumRatio = 0.0f, averageRatio = 0.0f;
+						foreach (float r in ratios) {
+							sumRatio += r;
+							ratioCnt ++;
+						}
+						averageRatio = sumRatio / ratioCnt;
+						job.averageRatio = averageRatio;
+						root.everything.Add (job);
+					}
 				}
-				averageRatio = sumRatio / ratioCnt;
-				job.averageRatio = averageRatio;
 				
 				XmlSerializer ser = new XmlSerializer (typeof(BResultsRoot), new Type[] {
 								typeof(BResultBatch),
 								typeof(BResult)
-						});
+				});
 				ser.Serialize (stream, root);
 				stream.Flush ();
 				stream.Close ();
-			}	
+			}
+
 		}
 		
 		GUI.enabled = true;
