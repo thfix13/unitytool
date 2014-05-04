@@ -1416,7 +1416,7 @@ public class MapperWindowEditor : EditorWindow
 		nogB = EditorGUILayout.IntField ("Number of guards", nogB);
 		noiB = EditorGUILayout.IntField ("Number of iterations", noiB);
 		
-		if (GUILayout.Button ("Batch Computation For Behaviours")) {
+		if (GUILayout.Button ("Batch Computation For Guards and Paths")) {
 			
 			// Retrieve the graph for testing level
 			if (obs == null) { 
@@ -1788,26 +1788,6 @@ public class MapperWindowEditor : EditorWindow
 		}
 			
 		//}
-	}
-	
-	void CalculateVoronoi ()
-	{
-		if (floor == null) {
-			floor = GameObject.FindGameObjectWithTag ("Floor");
-		}
-		
-		//Get all the point to calculate the voronoi
-		GameObject[] gos;
-		List<Vector2> pointsVoronoi = new List<Vector2> ();
-		gos = GameObject.FindGameObjectsWithTag ("Voronoi").OrderBy (go => go.transform.position.x).ToArray ();
-		
-		foreach (GameObject g in gos) {
-			pointsVoronoi.Add (new Vector2 (g.transform.position.x, g.transform.position.z));
-		}
-		
-		//Debug.DrawLine(gos[0].transform.position,gos[1].transform.position);
-		//Triangulator triangulator = new Triangulator();
-		//triangulator.CreateInfluencePolygon(pointsVoronoi.ToArray());
 	}
 	
 	public void Update ()

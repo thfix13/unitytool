@@ -38,29 +38,28 @@ public class Skeletonization
 					continue;	
 				}
 				boundaryIndex++;
-				depthFirstSearchForObstacles(i, j, boundaryIndex);
+				depthFirstSearchForObstacles (i, j, boundaryIndex);
 				if (boundaryContoursList.Count != boundaryIndex) {
 					boundaryIndex--;	
 				}
 			}	
 		}
-	} 
+	}
 	
-	private void depthFirstSearchForObstacles (int i, int j, int boundaryIndex) 
+	private void depthFirstSearchForObstacles (int i, int j, int boundaryIndex)
 	{
-		if (obs [i][j].obsVisited) {
+		if (obs [i] [j].obsVisited) {
 			return;	
 		}
 		
-		if ((obs [i][j].blocked == true || (obs [i] [j].blocked == false && (i == 0 || j == 0 
+		if ((obs [i] [j].blocked == true || (obs [i] [j].blocked == false && (i == 0 || j == 0 
 			|| i == imax
-			|| j == jmax))) && obs[i][j].obsVisited == false) {
+			|| j == jmax))) && obs [i] [j].obsVisited == false) {
 			
 			obs [i] [j].obsVisited = true;	
 			
-			if( (i > 0 && j > 0 && i < imax && j < jmax) && (!obs [i - 1] [j].blocked || !obs [i + 1] [j].blocked || !obs [i] [j + 1].blocked || !obs [i] [j - 1].blocked
-				|| !obs [i - 1] [j + 1].blocked || !obs [i + 1] [j + 1].blocked || !obs [i + 1] [j - 1].blocked || !obs [i - 1] [j - 1].blocked)) 
-			{
+			if ((i > 0 && j > 0 && i < imax && j < jmax) && (!obs [i - 1] [j].blocked || !obs [i + 1] [j].blocked || !obs [i] [j + 1].blocked || !obs [i] [j - 1].blocked
+				|| !obs [i - 1] [j + 1].blocked || !obs [i + 1] [j + 1].blocked || !obs [i + 1] [j - 1].blocked || !obs [i - 1] [j - 1].blocked)) {
 				obs [i] [j].obstacleBelongTo = boundaryIndex;
 				
 				if (boundaryContoursList.Count != boundaryIndex) {
@@ -91,7 +90,7 @@ public class Skeletonization
 				depthFirstSearchForObstacles (i + 1, j, boundaryIndex);
 				depthFirstSearchForObstacles (i, j - 1, boundaryIndex);
 			}
-			if (j == 0 && i > 0 && i < imax && (!obs [i - 1] [j].blocked || !obs [i + 1] [j].blocked || !obs [i][j+1].blocked)) {
+			if (j == 0 && i > 0 && i < imax && (!obs [i - 1] [j].blocked || !obs [i + 1] [j].blocked || !obs [i] [j + 1].blocked)) {
 				obs [i] [j].obstacleBelongTo = boundaryIndex;
 				if (boundaryContoursList.Count != boundaryIndex) {
 					List<Cell> boundary = new List<Cell> ();
@@ -105,7 +104,7 @@ public class Skeletonization
 				depthFirstSearchForObstacles (i + 1, j, boundaryIndex);
 			}
 			if (i == imax && j > 0 && j < jmax
-				&& (!obs [i -1] [j].blocked || !obs [i][j-1].blocked || !obs [i][j+1].blocked)) {
+				&& (!obs [i - 1] [j].blocked || !obs [i] [j - 1].blocked || !obs [i] [j + 1].blocked)) {
 				obs [i] [j].obstacleBelongTo = boundaryIndex;
 				if (boundaryContoursList.Count != boundaryIndex) {
 					List<Cell> boundary = new List<Cell> ();
@@ -119,7 +118,7 @@ public class Skeletonization
 				depthFirstSearchForObstacles (i, j - 1, boundaryIndex);	
 			}
 			if (j == jmax && i > 0 && i < imax
-				&& (!obs [i -1] [j].blocked || !obs [i][j-1].blocked || !obs [i + 1][j].blocked)) {
+				&& (!obs [i - 1] [j].blocked || !obs [i] [j - 1].blocked || !obs [i + 1] [j].blocked)) {
 				obs [i] [j].obstacleBelongTo = boundaryIndex;
 				if (boundaryContoursList.Count != boundaryIndex) {
 					List<Cell> boundary = new List<Cell> ();
@@ -181,10 +180,10 @@ public class Skeletonization
 			}
 			
 			// Not boundary but blocked
-			if (i >0 && j > 0 && i < imax && j < jmax 
+			if (i > 0 && j > 0 && i < imax && j < jmax 
 				&& obs [i - 1] [j].blocked && obs [i - 1] [j + 1].blocked && obs [i] [j + 1].blocked
 				&& obs [i + 1] [j + 1].blocked && obs [i + 1] [j].blocked && obs [i + 1] [j - 1].blocked
-				&& obs [i] [j - 1].blocked && obs [i - 1] [j - 1].blocked ) {
+				&& obs [i] [j - 1].blocked && obs [i - 1] [j - 1].blocked) {
 				obs [i] [j].obstacleBelongTo = 0;	
 			}
 			if (i == 0 && j > 0 && j < jmax
@@ -194,29 +193,29 @@ public class Skeletonization
 			}
 			if (j == 0 && i > 0 && i < imax
 				&& obs [i - 1] [j].blocked && obs [i - 1] [j + 1].blocked && obs [i] [j + 1].blocked
-				&& obs [i + 1] [j + 1].blocked && obs [i + 1] [j].blocked ) {
+				&& obs [i + 1] [j + 1].blocked && obs [i + 1] [j].blocked) {
 				obs [i] [j].obstacleBelongTo = 0;
 			}
 			if (i == imax && j > 0 && j < jmax
 				&& obs [i - 1] [j].blocked && obs [i - 1] [j + 1].blocked && obs [i] [j + 1].blocked
-				&& obs [i] [j - 1].blocked && obs [i - 1] [j - 1].blocked ) {
+				&& obs [i] [j - 1].blocked && obs [i - 1] [j - 1].blocked) {
 				obs [i] [j].obstacleBelongTo = 0;
 			}
 			if (j == jmax && i > 0 && i < imax
 				&& obs [i - 1] [j].blocked && obs [i + 1] [j].blocked && obs [i + 1] [j - 1].blocked
-				&& obs [i] [j - 1].blocked && obs [i - 1] [j - 1].blocked ) {
+				&& obs [i] [j - 1].blocked && obs [i - 1] [j - 1].blocked) {
 				obs [i] [j].obstacleBelongTo = 0;
 			}
-			if (i == 0 && j == 0 && obs [i] [j + 1].blocked && obs [i + 1] [j + 1].blocked && obs [i + 1] [j].blocked ) {
+			if (i == 0 && j == 0 && obs [i] [j + 1].blocked && obs [i + 1] [j + 1].blocked && obs [i + 1] [j].blocked) {
 				obs [i] [j].obstacleBelongTo = 0;
 			}
-			if (i == 0 && j == jmax && obs [i] [j - 1].blocked && obs [i + 1] [j - 1].blocked && obs [i] [j - 1].blocked ) {
+			if (i == 0 && j == jmax && obs [i] [j - 1].blocked && obs [i + 1] [j - 1].blocked && obs [i] [j - 1].blocked) {
 				obs [i] [j].obstacleBelongTo = 0;
 			}
-			if (i == imax && j == jmax && obs [i - 1] [j].blocked && obs [i - 1] [j - 1].blocked && obs [i] [j - 1].blocked ) {
+			if (i == imax && j == jmax && obs [i - 1] [j].blocked && obs [i - 1] [j - 1].blocked && obs [i] [j - 1].blocked) {
 				obs [i] [j].obstacleBelongTo = 0;
 			}
-			if (i == imax && j == 0 && obs [i - 1] [j].blocked && obs [i - 1] [j + 1].blocked && obs [i] [j + 1].blocked ) {
+			if (i == imax && j == 0 && obs [i - 1] [j].blocked && obs [i - 1] [j + 1].blocked && obs [i] [j + 1].blocked) {
 				obs [i] [j].obstacleBelongTo = 0;
 			}
 			
@@ -224,14 +223,14 @@ public class Skeletonization
 		return;
 	}
 	
-	public void boundaryContoursFlooding (GameObject floor) 
+	public void boundaryContoursFlooding (GameObject floor)
 	{
 		imax = (int)(floor.collider.bounds.size.x / SpaceState.TileSize.x);
 		jmax = (int)(floor.collider.bounds.size.z / SpaceState.TileSize.y);
 		
 		calculateFreeCells (floor);
 		while (freeCells.Count != 0) {
-		//for (int a = 0; a < 6; a++) {
+			//for (int a = 0; a < 6; a++) {
 			foreach (List<Cell> boundaryContour in boundaryContoursList) {
 				int numOfCells = boundaryContour.Count;
 				bool changedLT = false, changedRT = false, changedRB = false, changedLB = false;
@@ -320,7 +319,8 @@ public class Skeletonization
 							|| (obs [boundaryCell.i] [boundaryCell.j - 1].obstacleBelongTo != -1
 							&& obs [boundaryCell.i] [boundaryCell.j - 1].obstacleBelongTo != 0
 							&& obs [boundaryCell.i] [boundaryCell.j - 1].obstacleBelongTo != boundaryCell.obstacleBelongTo))) {
-							obs [boundaryCell.i - 1] [boundaryCell.j - 1].obstacleBelongTo = -1;;
+							obs [boundaryCell.i - 1] [boundaryCell.j - 1].obstacleBelongTo = -1;
+							;
 						}
 					}
 					boundaryContour.RemoveAt (0);
@@ -341,7 +341,7 @@ public class Skeletonization
 		}
 	}
 	
-	public void extractRoadmaps (GameObject floor) 
+	public void extractRoadmaps (GameObject floor)
 	{
 		imax = (int)(floor.collider.bounds.size.x / SpaceState.TileSize.x);
 		jmax = (int)(floor.collider.bounds.size.z / SpaceState.TileSize.y);
@@ -363,7 +363,7 @@ public class Skeletonization
 		}
 	}
 	
-	private void constructDictionary () 
+	private void constructDictionary ()
 	{
 		for (int i = 0; i < imax + 1; i++) {
 			for (int j = 0; j < jmax + 1; j++) {
@@ -524,7 +524,7 @@ public class Skeletonization
 	}
 	
 	// Ignore redundant nodes produced by Zig-zag 
-	private void recurseChildren (RoadmapNode currentRoadmapNode) 
+	private void recurseChildren (RoadmapNode currentRoadmapNode)
 	{
 		// |
 		if (currentRoadmapNode.y1 == currentRoadmapNode.y2 && currentRoadmapNode.x2 - currentRoadmapNode.x1 == 1) {
@@ -613,8 +613,7 @@ public class Skeletonization
 		return;
 	}
 	
-	
-	public void initializeGraph () 
+	public void initializeGraph ()
 	{
 		// Collect all graph nodes
 		foreach (RoadmapNode root in roadmapNodesList) {
@@ -732,12 +731,12 @@ public class Skeletonization
 		GraphNode gn = new GraphNode (prevGraphNode.x1, prevGraphNode.y1, prevGraphNode.x2, prevGraphNode.y2);
 		if (parentRoadmapNode.x1 != -1 && parentRoadmapNode.y1 != -1 && parentRoadmapNode.x2 != -1 && parentRoadmapNode.y2 != -1) {
 			if (currentRoadmapNode.isKept == true) {
-					gn.setIndice (currentRoadmapNode.x1, currentRoadmapNode.y1, currentRoadmapNode.x2, currentRoadmapNode.y2);
-					graphNodesList.Add (gn);
-					gn.neighbors.Add (prevGraphNode);
-					prevGraphNode.neighbors.Add (gn);
-					currentRoadmapNode.previous = gn;
-					gn.isVisited = true;
+				gn.setIndice (currentRoadmapNode.x1, currentRoadmapNode.y1, currentRoadmapNode.x2, currentRoadmapNode.y2);
+				graphNodesList.Add (gn);
+				gn.neighbors.Add (prevGraphNode);
+				prevGraphNode.neighbors.Add (gn);
+				currentRoadmapNode.previous = gn;
+				gn.isVisited = true;
 				
 				// Deal with corner cases leading to wrong previous graphnode
 				// -
@@ -806,10 +805,10 @@ public class Skeletonization
 						!= roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y2]
 						&& (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].parent != roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y2])) {
 //						|| roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.Contains (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y2]))) {
-						roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y2].previous = new GraphNode();
+						roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y2].previous = new GraphNode ();
 						roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y2 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y2].previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
 						gn.setIndice (currentRoadmapNode.x1 - 1, currentRoadmapNode.y2, currentRoadmapNode.x1, currentRoadmapNode.y2);					
-						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous = new GraphNode();
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous = new GraphNode ();
 						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
 					}
 					if (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].isKept == true
@@ -817,10 +816,10 @@ public class Skeletonization
 						!= roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2]
 						&& (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].parent != roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2])) {
 //						|| roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.Contains (roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2]))) {
-						roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].previous = new GraphNode();
+						roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].previous = new GraphNode ();
 						roadmapDictionary [currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
 						gn.setIndice (currentRoadmapNode.x2, currentRoadmapNode.y2, currentRoadmapNode.x2 + 1, currentRoadmapNode.y2);
-						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous = new GraphNode();
+						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous = new GraphNode ();
 						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);					
 					}
 					if (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].isKept == true
@@ -830,7 +829,7 @@ public class Skeletonization
 //						|| roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.Contains (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1]))) {
 						roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].previous = new GraphNode ();
 						roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1].previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);
-						gn.setIndice (currentRoadmapNode.x1 -1, currentRoadmapNode.y1, currentRoadmapNode.x1, currentRoadmapNode.y1);
+						gn.setIndice (currentRoadmapNode.x1 - 1, currentRoadmapNode.y1, currentRoadmapNode.x1, currentRoadmapNode.y1);
 						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous = new GraphNode ();
 						roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].children.ElementAt (0).previous.setIndice (gn.x1, gn.y1, gn.x2, gn.y2);										
 					}
@@ -946,7 +945,7 @@ public class Skeletonization
 			return;	
 		} else {
 			foreach (RoadmapNode rn in currentRoadmapNode.children) {
-				if ( rn.isVisited == true && rn.previous == null) {
+				if (rn.isVisited == true && rn.previous == null) {
 					if (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].previous != null) {
 						gn = roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2].previous;
 					}
@@ -991,40 +990,35 @@ public class Skeletonization
 		// GraphNode keyNode = new GraphNode (finalGraphNodesList.ElementAt (0).x1, finalGraphNodesList.ElementAt (0).y1, finalGraphNodesList.ElementAt (0).x2, finalGraphNodesList.ElementAt (0).y2);
 
 
-		foreach(GraphNode g in finalGraphNodesList)
-		{
+		foreach (GraphNode g in finalGraphNodesList) {
 			int layerMask = 1 << 8;
 			bool seen = true; 
 
-			while (seen)
-			{
+			while (seen) {
 				seen = false; 
 				List<GraphNode> temp = null; 
 				GraphNode[] t = new GraphNode[g.neighbors.Count]; 
-				g.neighbors.CopyTo(t);
-				temp = t.ToList();
+				g.neighbors.CopyTo (t);
+				temp = t.ToList ();
 
-				foreach(GraphNode n in g.neighbors)
-				{
-					if(n.neighbors.Count == 2)
-					{
-						GraphNode m = (g == n.neighbors[0]) ?  n.neighbors[1] : n.neighbors[0];
+				foreach (GraphNode n in g.neighbors) {
+					if (n.neighbors.Count == 2) {
+						GraphNode m = (g == n.neighbors [0]) ? n.neighbors [1] : n.neighbors [0];
 
 						//ray casting
-						Vector3 v1 = g.Pos(floor);
-						Vector3 v2 = m.Pos(floor);
-						Vector3 dir = v2-v1;
+						Vector3 v1 = g.Pos (floor);
+						Vector3 v2 = m.Pos (floor);
+						Vector3 dir = v2 - v1;
 						float dist = Vector3.Distance (v1, v2) + Mathf.Epsilon;
 						// not Collided
-						if (! Physics.Raycast (v1, dir, dist, layerMask)) 
-						{
+						if (! Physics.Raycast (v1, dir, dist, layerMask)) {
 							seen = true; 
 							//Changing neigbhoor for g
-							temp.Remove(n);
+							temp.Remove (n);
 							temp.Add (m); 
 							//changing neigbhors for m
-							m.neighbors.Remove(n); 
-							m.neighbors.Add(g); 
+							m.neighbors.Remove (n); 
+							m.neighbors.Add (g); 
 							n.neighbors.Clear (); 
 							break; 
 						}
@@ -1151,7 +1145,8 @@ public class Skeletonization
 //		}
 	}
 
-	public void clearGraph () {
+	public void clearGraph ()
+	{
 		obs = null;
 
 		boundaryIndex = 0;
@@ -1261,8 +1256,7 @@ public class Skeletonization
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i - 1] [j].blocked == false && obs [i + 1] [j].blocked == false
 			&& obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
-		    && obs [i] [j].visited == false && obs[i+1][j].node == false) 
-		{
+		    && obs [i] [j].visited == false && obs [i + 1] [j].node == false) {
 			// Create a new contour node and assign parent-child relations
 			ContourNode cn = new ContourNode (i, j);
 			cn.parent = parent;
@@ -1283,14 +1277,14 @@ public class Skeletonization
 			depthFirstSearch (i - 1, j - 1, cn);
 		}
 		//<-
-		else if (i > 0 && j > 0 && i < imax && j < jmax 
+		if (i > 0 && j > 0 && i < imax && j < jmax 
 			&& obs [i] [j].nearestVoronoiCentre == obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i - 1] [j].nearestVoronoiCentre 
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i - 1] [j].blocked == false && obs [i + 1] [j].blocked == false
 			&& obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
-		    && obs [i] [j].visited == false && obs[i-1][j].node == false) {
+		    && obs [i] [j].visited == false && obs [i - 1] [j].node == false) {
 			// Create a new contour node and assign parent-child relations
 			ContourNode cn = new ContourNode (i, j);
 			cn.parent = parent;
@@ -1310,14 +1304,14 @@ public class Skeletonization
 		}
 		//^
 		//|
-		else if (i > 0 && j > 0 && i < imax && j < jmax
+		if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i + 1] [j].nearestVoronoiCentre 
 			&& obs [i] [j].nearestVoronoiCentre != obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i - 1] [j].blocked == false && obs [i + 1] [j].blocked == false
 			&& obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
-		    && obs [i] [j].visited == false && obs[i][j+1].node == false) {
+		    && obs [i] [j].visited == false && obs [i] [j + 1].node == false) {
 			// Create a new contour node and assign parent-child relations
 			ContourNode cn = new ContourNode (i, j);
 			cn.parent = parent;
@@ -1337,14 +1331,14 @@ public class Skeletonization
 		}
 		// |
 		// _
-		else if (i > 0 && j > 0 && i < imax && j < jmax
+		if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i + 1] [j].nearestVoronoiCentre 
 			&& obs [i] [j].nearestVoronoiCentre != obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i - 1] [j].blocked == false && obs [i + 1] [j].blocked == false
 			&& obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
-		    && obs [i] [j].visited == false && obs[i][j-1].node == false) {
+		    && obs [i] [j].visited == false && obs [i] [j - 1].node == false) {
 			// Create a new contour node and assign parent-child relations
 			ContourNode cn = new ContourNode (i, j);
 			cn.parent = parent;
@@ -1366,13 +1360,13 @@ public class Skeletonization
 		//  r
 		// ccr 
 		//  c
-		else if (i > 0 && j > 0 && i < imax && j < jmax
+		if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
-		         && obs [i] [j].visited == false && ( ! obs[i+1][j].node || !obs[i][j+1].node  ) ) {
+		         && obs [i] [j].visited == false && (! obs [i + 1] [j].node || !obs [i] [j + 1].node)) {
 			// Create a new contour node and assign parent-child relations
 			ContourNode cn = new ContourNode (i, j);
 			cn.parent = parent;
@@ -1395,13 +1389,13 @@ public class Skeletonization
 		//  c
 		// ccr
 		//  r
-		else if (i > 0 && j > 0 && i < imax && j < jmax
+		if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
-		    && obs [i] [j].visited == false && (! obs[i][j-1].node || ! obs[i+1][j].node )) {
+		    && obs [i] [j].visited == false && (! obs [i] [j - 1].node || ! obs [i + 1] [j].node)) {
 			// Create a new contour node and assign parent-child relations
 			ContourNode cn = new ContourNode (i, j);
 			cn.parent = parent;
@@ -1424,13 +1418,13 @@ public class Skeletonization
 		// rcc
 		//  r
 
-		else if (i > 0 && j > 0 && i < imax && j < jmax
+		if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
-	        && obs [i] [j].visited == false && (! obs[i-1][j].node || ! obs[i][j-1].node )) {
+	        && obs [i] [j].visited == false && (! obs [i - 1] [j].node || ! obs [i] [j - 1].node)) {
 			// Create a new contour node and assign parent-child relations
 			ContourNode cn = new ContourNode (i, j);
 			cn.parent = parent;
@@ -1452,14 +1446,13 @@ public class Skeletonization
 		//  r
 		// rcc
 		//  c
-
-		else if (i > 0 && j > 0 && i < imax && j < jmax
+		if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
-	        && obs [i] [j].visited == false && (! obs[i-1][j].node || ! obs[i][j+1].node )) {
+	        && obs [i] [j].visited == false && (! obs [i - 1] [j].node || ! obs [i] [j + 1].node)) {
 			// Create a new contour node and assign parent-child relations
 			ContourNode cn = new ContourNode (i, j);
 			cn.parent = parent;
@@ -1481,14 +1474,14 @@ public class Skeletonization
 		//rccc
 		// c
 
-		else if (i > 0 && j > 0 && i < imax && j < jmax
+		if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i - 1] [j].nearestVoronoiCentre == obs [i - 2] [j].nearestVoronoiCentre
 			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
-	        && obs [i] [j].visited == false && ! obs[i-1][j].node ) {
+	        && obs [i] [j].visited == false && ! obs [i - 1] [j].node) {
 			// Create a new contour node and assign parent-child relations
 			ContourNode cn = new ContourNode (i, j);
 			cn.parent = parent;
@@ -1510,14 +1503,14 @@ public class Skeletonization
 		//  c
 		//cccr
 		//  c
-		else if (i > 0 && j > 0 && i < imax && j < jmax
+		if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i + 1] [j].nearestVoronoiCentre == obs [i + 2] [j].nearestVoronoiCentre
 			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
-	        && obs [i] [j].visited == false && ! obs[i+1][j].node) {
+	        && obs [i] [j].visited == false && ! obs [i + 1] [j].node) {
 			// Create a new contour node and assign parent-child relations
 			ContourNode cn = new ContourNode (i, j);
 			cn.parent = parent;
@@ -1540,14 +1533,14 @@ public class Skeletonization
 		//ccc
 		// r
 		// r
-		else if (i > 0 && j > 0 && i < imax && j < jmax
+		if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i] [j - 1].nearestVoronoiCentre == obs [i] [j - 2].nearestVoronoiCentre
 			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
-	        && obs [i] [j].visited == false && ! obs[i][j-1].node) {
+	        && obs [i] [j].visited == false && ! obs [i] [j - 1].node) {
 			// Create a new contour node and assign parent-child relations
 			ContourNode cn = new ContourNode (i, j);
 			cn.parent = parent;
@@ -1570,14 +1563,14 @@ public class Skeletonization
 		//ccc
 		// c
 		// c
-		else if (i > 0 && j > 0 && i < imax && j < jmax
+		if (i > 0 && j > 0 && i < imax && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre == obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre == obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j + 1].nearestVoronoiCentre
-			&& obs [i] [j -1].nearestVoronoiCentre == obs [i] [j - 2].nearestVoronoiCentre
+			&& obs [i] [j - 1].nearestVoronoiCentre == obs [i] [j - 2].nearestVoronoiCentre
 			&& obs [i + 1] [j].blocked == false && obs [i] [j - 1].blocked == false && obs [i] [j + 1].blocked == false
-	        && obs [i] [j].visited == false && ! obs[i][j+1].node) {
+	        && obs [i] [j].visited == false && ! obs [i] [j + 1].node) {
 			// Create a new contour node and assign parent-child relations
 			ContourNode cn = new ContourNode (i, j);
 			cn.parent = parent;
@@ -1595,9 +1588,7 @@ public class Skeletonization
 			depthFirstSearch (i - 1, j + 1, cn);
 			depthFirstSearch (i - 1, j - 1, cn);
 		}
-
-
-		else if (i == 0 && j > 0 && j < jmax
+		if (i == 0 && j > 0 && j < jmax
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j + 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j - 1].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i + 1] [j].nearestVoronoiCentre
@@ -1619,7 +1610,7 @@ public class Skeletonization
 			depthFirstSearch (i + 1, j - 1, cn);
 		}
 		//
-		else if (j == 0 && i > 0 && i < imax
+		if (j == 0 && i > 0 && i < imax
 			&& obs [i] [j].nearestVoronoiCentre != obs [i + 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i - 1] [j].nearestVoronoiCentre
 			&& obs [i] [j].nearestVoronoiCentre != obs [i] [j + 1].nearestVoronoiCentre
