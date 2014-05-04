@@ -9,6 +9,10 @@
 
 # Added manually
 
+##From Eugene branch
+Spatiotemporal/
+Spatiotemporal.meta
+
 *.xml
 *.svg
 *.pidb
