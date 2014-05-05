@@ -334,12 +334,12 @@ namespace EditorArea
 				//..
 				TResultRoot root = new TResultRoot ();
 				using (FileStream stream = new FileStream ("triangulation.xml", FileMode.Create)) {
-					for (float fovAngle = 1.0f; fovAngle <= 30.0f; fovAngle += 1.0f) {
-						for (float fovDistance = 1.0f; fovDistance <= 10.0f; fovDistance += 0.5f) {
+					for (float fovAngle = 1.0f; fovAngle <= 30.0f; fovAngle += 2.0f) {
+						for (float fovDistance = 1.0f; fovDistance <= 10.0f; fovDistance += 1.0f) {
 							TResultBatch batch = new TResultBatch ();
 							batch.fovAngle = fovAngle;
 							batch.fovDistance = fovDistance;
-							for (int trials = 1; trials <= 50; trials++) {
+							for (int trials = 1; trials <= 1; trials++) {
 								TResult result = new TResult ();
 								ReduceSpace ();
 								GameObject[] enemies = GameObject.FindGameObjectsWithTag ("Enemy");
@@ -394,7 +394,7 @@ namespace EditorArea
 								rrt.enemies = SpaceState.Editor.enemies;
 									
 								List<Node> nodes = null;
-								iterations = 50;
+								iterations = 10;
 								for (int it = 0; it < iterations; it++) {
 									nodes = rrt.Compute (startX, startY, endX, endY, attemps, speed, fullMap, smoothPath);
 									if (nodes.Count > 0) {
@@ -404,7 +404,10 @@ namespace EditorArea
 								result.ratio = (float)paths.Count / iterations;
 								batch.results.Add (result);
 								ratios.Add ((float)paths.Count / iterations);
-								
+
+								//List of float
+								//calculate the dist metric over the paths. 
+
 								// shortest = fastest = longest = lengthiest = mostDanger = null;
 								if (enemies != null) {	
 									foreach (GameObject e in enemies) {
@@ -435,6 +438,7 @@ namespace EditorArea
 					ser.Serialize (stream, root);
 					stream.Flush ();
 					stream.Close ();
+					Debug.Log("Done Computation"); 
 				}
 			}
 			#endregion
