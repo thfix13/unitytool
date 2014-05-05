@@ -14,6 +14,10 @@ namespace EditorArea {
 		// Caller must set these up
 		public Cell[][][] fullMap;
 		public int timeSlice;
+
+
+
+
 		public float seenNeverSeenMax;
 		public float[][] seenNeverSeen;
 		public Vector2 zero = new Vector2 (), tileSize = new Vector2 ();
