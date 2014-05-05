@@ -1,13 +1,11 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\PCG.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Editor\MapperWindowEditor.cs">
     <Files>
       <File FileName="Assets\Scripts\BResult.cs" Line="15" Column="17" />
-      <File FileName="Assets\Scripts\Result.cs" Line="1" Column="1" />
-      <File FileName="Assets\Editor\MapperEditorDrawer.cs" Line="1" Column="1" />
-      <File FileName="Assets\Editor\MapperWindowEditor.cs" Line="1602" Column="81" />
-      <File FileName="Assets\Scripts\PCG.cs" Line="1762" Column="54" />
-      <File FileName="Assets\Scripts\Skeletonization.cs" Line="1" Column="1" />
+      <File FileName="Assets\Editor\MapperWindowEditor.cs" Line="17" Column="15" />
+      <File FileName="Assets\Scripts\PCG.cs" Line="2096" Column="57" />
+      <File FileName="Assets\Scripts\KD Tree\KDTree.cs" Line="450" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

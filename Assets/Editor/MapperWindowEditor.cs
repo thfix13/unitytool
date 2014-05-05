@@ -1229,7 +1229,7 @@ public class MapperWindowEditor : EditorWindow
 				PCG.ClearBehaviours ();
 				PCG.ClearUpObjects (enemypathObjects);
 				PCG.numOfGuards = numOfGuards;
-				enemypathObjects = PCG.PopulateGuardsWithBehaviours (enemyPrefab, waypointPrefab, floor, iterations4, pLine, pDot, pSplit, pZigZag, pPause, pSwipe, pFullRotate, pNinety).ToArray ();
+				enemypathObjects = PCG.PopulateGuardsWithBehavioursAndSaveToFile (enemyPrefab, waypointPrefab, floor, iterations4, pLine, pDot, pSplit, pZigZag, pPause, pSwipe, pFullRotate, pNinety).ToArray ();
 				StorePositions ();
 			}
 			
@@ -1451,8 +1451,8 @@ public class MapperWindowEditor : EditorWindow
 						BResultBatch job = new BResultBatch ();
 						job.numOfGuards = nog;
 						job.numOfIterations = noi;
-						// For each test we want 50 trials
-						for (int batchIter = 0; batchIter < 50; batchIter ++) {					
+						// For each test we want 20 trials
+						for (int batchIter = 0; batchIter < 20; batchIter ++) {					
 							// Clear up
 							PCG.ClearBehaviours ();
 							PCG.numOfGuards = nogB;
