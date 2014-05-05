@@ -272,11 +272,13 @@ namespace EditorArea {
 				rrt.packs = packs;
 				rrt.simulateCombat = simulateCombat;
 
+				int seed = randomSeed;
 				if (randomSeed != -1)
 					UnityEngine.Random.seed = randomSeed;
 				else {
 					DateTime now = DateTime.Now;
-					UnityEngine.Random.seed = now.Millisecond + now.Second + now.Minute + now.Hour + now.Day + now.Month+ now.Year;
+					seed = now.Millisecond + now.Second + now.Minute + now.Hour + now.Day + now.Month+ now.Year;
+					UnityEngine.Random.seed = seed;
 				}
 
 				List<Node> nodes = null;
@@ -332,7 +334,8 @@ namespace EditorArea {
 
 				// Compute the summary about the paths and print it
 				String summary = "Summary:\n";
-				summary += "Successful paths found: " + paths.Count;
+				summary += "Seed used:" + seed;
+				summary += "\nSuccessful paths found: " + paths.Count;
 				summary += "\nDead paths: " + deaths.Count;
 
 				// How many paths killed how many enemies
