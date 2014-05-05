@@ -1538,7 +1538,7 @@ public class MapperWindowEditor : EditorWindow
 			BResultsRoot root = new BResultsRoot ();
 			using (FileStream stream = new FileStream ("Ratio with respect to single behaviour.xml", FileMode.Create)) {
 				// Iterations number varying from 0 to 3
-				for (int noi = 0; noi <= 4; noi++) {
+				for (int noi = 0; noi <= 2; noi++) {
 					BResultBatch job = new BResultBatch ();
 					// Add multiple parameters here
 					job.numOfIterations = noi;
