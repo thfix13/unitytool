@@ -334,12 +334,12 @@ namespace EditorArea
 				//..
 				TResultRoot root = new TResultRoot ();
 				using (FileStream stream = new FileStream ("triangulation.xml", FileMode.Create)) {
-					for (float fovAngle = 1.0f; fovAngle <= 30.0f; fovAngle += 1.0f) {
-						for (float fovDistance = 1.0f; fovDistance <= 10.0f; fovDistance += 0.5f) {
+					for (float fovAngle = 1.0f; fovAngle <= 30.0f; fovAngle += 10.0f) {
+						for (float fovDistance = 1.0f; fovDistance <= 10.0f; fovDistance += 5.0f) {
 							TResultBatch batch = new TResultBatch ();
 							batch.fovAngle = fovAngle;
 							batch.fovDistance = fovDistance;
-							for (int trials = 1; trials <= 50; trials++) {
+							for (int trials = 1; trials <= 2; trials++) {
 								TResult result = new TResult ();
 								ReduceSpace ();
 								GameObject[] enemies = GameObject.FindGameObjectsWithTag ("Enemy");
