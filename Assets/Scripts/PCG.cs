@@ -1082,6 +1082,7 @@ public class PCG : MonoBehaviour
 							isDuplicated = true;
 						}
 					}
+					isDuplicated = false;
 				}
 
 				// Ending index
@@ -1098,7 +1099,7 @@ public class PCG : MonoBehaviour
 				listOfPath.Add (path);
 				List<int> tempPath = new List<int> ();
 				templistOfPath.Add (tempPath);
-				FindPath (startIndex, endIndex, i);
+				bool success = FindPath (startIndex, endIndex, i);
 				// listOfPath.Add (PCG.FindShortestPath (startIndex, endIndex));
 
 				// Make sure that the starting point is not in the range of initial FOV
@@ -1470,8 +1471,14 @@ public class PCG : MonoBehaviour
 		enemyPrefab = enmPrefab;
 		waypointPrefab = wpPrefab;
 		
+		listOfEnemies.Clear ();
+		templistOfPath.Clear ();
+		listOfPath.Clear ();
+		listOfSequence.Clear ();
+		listOfWaypoints.Clear ();
+		
 		// Loaded paths from the file
-		LoadPathsFromFile (iterations);
+		LoadPathsFromFile ();
 		
 		for (int i = 0; i < numOfGuards; i++) {
 			// Retrieve the first index
@@ -1996,7 +2003,7 @@ public class PCG : MonoBehaviour
 
 	
 	// Find path using depth-first-search
-	private static void FindPath (int currentIndex, int endIndex, int guardIndex)
+	private static bool FindPath (int currentIndex, int endIndex, int guardIndex)
 	{
 		sBoundary.finalGraphNodesList.ElementAt (currentIndex).isVisited = true;
 		templistOfPath.ElementAt (guardIndex).Add (currentIndex);
@@ -2004,16 +2011,20 @@ public class PCG : MonoBehaviour
 			for (int i = 0; i < templistOfPath.ElementAt (guardIndex).Count; i++) {
 				listOfPath.ElementAt (guardIndex).Add (templistOfPath.ElementAt (guardIndex).ElementAt (i));	
 			}
-			return;
+			return true;
 		}
 		
 		foreach (GraphNode gn in sBoundary.finalGraphNodesList.ElementAt (currentIndex).neighbors) {
 			if (gn.neighbors.Count != 0 && gn.isVisited == false) {
-				FindPath (sBoundary.finalGraphNodesList.IndexOf (gn), endIndex, guardIndex);
+				bool flag = FindPath (sBoundary.finalGraphNodesList.IndexOf (gn), endIndex, guardIndex);
+				if (flag) {
+					return true;
+				}
 			}
 		}
+		sBoundary.finalGraphNodesList.ElementAt (currentIndex).isVisited = false;
 		templistOfPath.ElementAt (guardIndex).Remove (currentIndex);
-		return;
+		return false;
 	}
 	
 	// Find shortest path with minimum nodes using breadth-first-search
@@ -2108,22 +2119,21 @@ public class PCG : MonoBehaviour
 		}
 	}
 	
-	private static void LoadPathsFromFile (int iterations)
+	private static void LoadPathsFromFile ()
 	{
-		filepath = "_" + numOfGuards + "_guards_" + iterations + "_iterations_saved_path.txt";
+		filepath = "LongestPaths.txt";
 		string line = "";
-		int size = -1;
+		int size = 0;
 		using (StreamReader sr = new StreamReader(filepath)) {
-			while ((line = sr.ReadLine())!=null) {
-				if (!line.Equals ("")) {
-					string[] tokens = line.Split (' ');
-					int[] convertedIndice = Array.ConvertAll<string, int> (tokens, int.Parse);
-					foreach (int index in convertedIndice) {
-						listOfPath.ElementAt (size).Add (index);
-					}
-				} else {
-					size += 1;
+			while ((line = sr.ReadLine()) != null) {
+				List<int> path = new List<int> ();
+				listOfPath.Add (path);
+				string[] tokens = line.Split (' ');
+				int[] convertedIndice = Array.ConvertAll<string, int> (tokens, int.Parse);
+				foreach (int index in convertedIndice) {
+					listOfPath.ElementAt (size).Add (index);
 				}
+				size += 1;
 			}
 		}
 	}
