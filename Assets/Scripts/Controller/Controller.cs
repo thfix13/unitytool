@@ -43,7 +43,7 @@ namespace RRTController {
 		/// <summary>
 		/// After the node is connected, other actions may be taken to guarantee the best desired behaviour.
 		/// A new node may be returned to replace the 'to' node, but the 'from' node can't be modified.
-		/// The new returned node will be the one passed to the next instances of 'Controller's as the new 'to' node. The returned node will be added to the Tree.
+		/// The new returned node will be the one passed to the next instances of 'Controller's as the new 'to' node, the current 'to' node will be passed as the new 'from' node. The returned node will be added to the Tree.
 		/// Changes done on the 'from' node are not recommended.
 		/// </summary>
 		/// <returns>'null' if no new node should be returned, or an 'Node' instance to the node that should replace the 'to' node.</returns>

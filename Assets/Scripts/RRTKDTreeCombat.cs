@@ -65,6 +65,7 @@ namespace Exploration {
 			deathPaths = new List<List<Node>> ();
 
 			// TODO Nodes can hold generic Map<String, Object> information insetad of having a bunch of hard coded variables to allow dynamic content to be added
+			// This will need a typecast after each 'get' operation, which is an annoying behaviour.
 
 			//Start and ending node
 			Node start = GetNode (0, startX, startY);
@@ -125,7 +126,7 @@ namespace Exploration {
 						seenList.AddRange(returned);
 				}
 
-				// TODO Cells that are 'blocked' should be inside the Basic controller instead of being hard coded inside the DDA.Los3D
+				// TODO Cells that are 'blocked' can be inside the Basic controller instead of being hard coded inside the DDA.Los3D
 
 				Node hit = dda.Los3D (nodeMatrix, nodeTheClosestTo, nodeVisiting, seenList.ToArray ());
 
@@ -164,7 +165,6 @@ namespace Exploration {
 
 				//Might be adding the neighboor as a the goal
 				if (nodeVisiting.x == end.x & nodeVisiting.y == end.y) {
-					//Debug.Log ("Done2");
 					List<Node> done = ReturnPath (nodeVisiting, smooth);
 					//UpdateNodeMatrix (done);
 					return done;
@@ -174,8 +174,6 @@ namespace Exploration {
 				foreach (Controller c in controllers) {
 					Node returned = c.afterConnect(nodeTheClosestTo, nodeVisiting, this);
 					
-					// TODO if multiple controllers changes the node at the same time, things may explode, since 'hit' will be invalid!
-					
 					if (returned != null) {
 						// Check if we ended the computation
 						if (returned.x == end.x && returned.y == end.y)
@@ -183,6 +181,8 @@ namespace Exploration {
 
 						// Add the new node to the tree
 						try {
+							nodeTheClosestTo = nodeVisiting;
+							nodeVisiting = returned;
 							tree.insert(returned.GetArray(), returned);
 						} catch (KeyDuplicateException) {
 						}

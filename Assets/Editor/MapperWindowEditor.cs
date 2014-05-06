@@ -16,13 +16,13 @@ namespace EditorArea {
 
 		// Data holders
 		private static Cell[][][] fullMap, original;
-		public static List<Path> paths = new List<Path> (), deaths = new List<Path>();
+		private static List<Path> paths = new List<Path> (), deaths = new List<Path>();
 
 		// Parameters with default values
-		public static int timeSamples = 2000, attemps = 25000, iterations = 1, gridSize = 60, ticksBehind = 0, crazyLimit;
+		public static int gridSize = 60;
 		private static bool drawMap = true, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = false, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false;
-		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10;
-		private static int randomSeed = -1;
+		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10, dangerLimit = 0f, losLimit = 0f;
+		private static int randomSeed = -1, timeSamples = 1200, attemps = 25000, iterations = 1, ticksBehind = 0, crazyLimit = 0;
 
 		// Computed parameters
 		private static int[,] heatMap, deathHeatMap, combatHeatMap;
@@ -203,6 +203,8 @@ namespace EditorArea {
 			simulateCombat = EditorGUILayout.Toggle ("Simulate combat", simulateCombat);
 
 			crazyLimit = EditorGUILayout.IntSlider ("- Crazy limit", crazyLimit, 0, 1000000);
+			dangerLimit = EditorGUILayout.Slider ("- Danger limit", dangerLimit, 0, 1);
+			losLimit = EditorGUILayout.Slider ("- LineOfSight limit", losLimit, 0, 1);
 
 			if (GUILayout.Button ("(WIP) Compute 3D A* Path")) {
 				float playerSpeed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
@@ -318,7 +320,14 @@ namespace EditorArea {
 					rrt.controllers.Add(new RRTController.Basic());
 					rrt.controllers.Add(new RRTController.Combat());
 					rrt.controllers.Add(new RRTController.Health());
-					rrt.controllers.Add(new RRTController.Crazyness((int) (crazySeconds / stepSize), crazyLimit));
+
+					if (crazyLimit > 0)
+						rrt.controllers.Add(new RRTController.Crazyness((int) (crazySeconds / stepSize), crazyLimit));
+					if (losLimit > 0)
+						rrt.controllers.Add(new RRTController.LineOfSight(losLimit));
+					if (dangerLimit > 0)
+						rrt.controllers.Add(new RRTController.Danger(dangerLimit));
+
 
 					// We have this try/catch block here to account for the issue that we don't solve when we find a path when t is near the limit
 					try {

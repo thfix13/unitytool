@@ -174,7 +174,7 @@ namespace Extra {
 			}
 		}
 		
-		public static void ComputePathsLoSValues (List<Path> paths, Enemy[] enemies, Vector3 min, float tileSizeX, float tileSizeZ, Cell[][][] fullMap, float[][] dangerCells, float maxDanger) {
+		public static void ComputePathsLoSValues (List<Path> paths, Enemy[] enemies, Vector3 min, float tileSizeX, float tileSizeZ, Cell[][][] fullMap, float[][] dangerCells = null, float maxDanger = 1f) {
 			// Compute the y = ax + b equation for each FoV (i.e. enemy=)
 			float[][] formula = new float[enemies.Length][];
 			for (int i = 0; i < formula.Length; i++) {
@@ -270,7 +270,7 @@ namespace Extra {
 			}
 		}
 		
-		public static void ComputePathsDangerValues (List<Path> paths, Enemy[] enemies, Vector3 min, float tileSizeX, float tileSizeZ, Cell[][][] fullMap, float[][] dangerCells, float maxDanger) {
+		public static void ComputePathsDangerValues (List<Path> paths, Enemy[] enemies, Vector3 min, float tileSizeX, float tileSizeZ, Cell[][][] fullMap, float[][] dangerCells = null, float maxDanger = 1f) {
 			AStar astar = new AStar ();
 			foreach (Path currentPath in paths) {
 				if (currentPath.length3d == 0)
@@ -308,7 +308,9 @@ namespace Extra {
 
 								float ld = 1 / (l * l);
 								float ld3 = 1 / (l * l * l);
-								float ld3n = (1 / (l * l * l)) * (dangerCells [startX] [startY] / maxDanger);
+								float ld3n = 0;
+								if (dangerCells != null)
+									ld3n = (1 / (l * l * l)) * (dangerCells [startX] [startY] / maxDanger);
 								
 								currentPath.danger += ld;
 								currentPath.danger3 += ld3;
