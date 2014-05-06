@@ -155,7 +155,7 @@ namespace EditorArea
 				
 				Cell[][] baseMap = null;
 				if (MapperEditor.grid != null) {
-					Cell[][] obstacles = mapper.ComputeObstacles ();
+					Cell[][] obstacles = mapper.ComputeObstacles (); 
 					baseMap = new Cell[gridSize][];
 					for (int x = 0; x < gridSize; x++) {
 						baseMap [x] = new Cell[gridSize];
@@ -334,8 +334,8 @@ namespace EditorArea
 				//..
 				TResultRoot root = new TResultRoot ();
 				using (FileStream stream = new FileStream ("triangulation.xml", FileMode.Create)) {
-					for (float fovAngle = 1.0f; fovAngle <= 30.0f; fovAngle += 2.0f) {
-						for (float fovDistance = 1.0f; fovDistance <= 10.0f; fovDistance += 1.0f) {
+					for (float fovAngle = 1.0f; fovAngle <= 15.0f; fovAngle += 1.0f) {
+						for (float fovDistance = 1.0f; fovDistance <= 5.0f; fovDistance += 0.5f) {
 							TResultBatch batch = new TResultBatch ();
 							batch.fovAngle = fovAngle;
 							batch.fovDistance = fovDistance;
@@ -394,7 +394,7 @@ namespace EditorArea
 								rrt.enemies = SpaceState.Editor.enemies;
 									
 								List<Node> nodes = null;
-								iterations = 10;
+								iterations = 20;
 								for (int it = 0; it < iterations; it++) {
 									nodes = rrt.Compute (startX, startY, endX, endY, attemps, speed, fullMap, smoothPath);
 									if (nodes.Count > 0) {
