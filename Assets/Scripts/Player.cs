@@ -31,7 +31,8 @@ namespace Objects {
 			int mapX = (int)pos.x;
 			int mapY = (int)pos.y;
 
-			if (SpaceState.Running.fullMap != null) {
+			if (SpaceState.Running.fullMap != null) 
+			{
 				if (SpaceState.Running.fullMap [SpaceState.Running.timeSlice - 1] [mapX] [mapY].goal)
 					state = 1;
 				else if (SpaceState.Running.fullMap [SpaceState.Running.timeSlice - 1] [mapX] [mapY].seen)
