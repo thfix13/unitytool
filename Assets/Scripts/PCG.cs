@@ -658,20 +658,28 @@ public class PCG : MonoBehaviour
 
 			while (!notSeen) {
 				int startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
-
-				// Non-duplicated starting index
-				bool isDuplicated = false;
-				for (int k = 0; k < i; k++) {
-					if (startIndex == listOfPath.ElementAt (k).First ()) {
-						isDuplicated = true;
-					}
-				}
-				while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0 || isDuplicated) {
-					startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
+				
+				// Don't need to check duplication for the first node
+				if (i != 0) {
+					// Non-duplicated starting index
+					bool isDuplicated = false;
 					for (int k = 0; k < i; k++) {
 						if (startIndex == listOfPath.ElementAt (k).First ()) {
 							isDuplicated = true;
 						}
+					}
+					while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0 || isDuplicated) {
+						startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
+						for (int k = 0; k < i; k++) {
+							if (startIndex == listOfPath.ElementAt (k).First ()) {
+								isDuplicated = true;
+							}
+						}
+						isDuplicated = false;
+					}
+				} else {
+					while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0) {
+						startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);	
 					}
 				}
 
@@ -1067,22 +1075,29 @@ public class PCG : MonoBehaviour
 
 			while (!notSeen) {
 				int startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
-
-				// Non-duplicated starting index
-				bool isDuplicated = false;
-				for (int k = 0; k < i; k++) {
-					if (startIndex == listOfPath.ElementAt (k).First ()) {
-						isDuplicated = true;
-					}
-				}
-				while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0 || isDuplicated) {
-					startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
+				
+				// Don't need to check duplication for the first node
+				if (i != 0) {
+					// Non-duplicated starting index
+					bool isDuplicated = false;
 					for (int k = 0; k < i; k++) {
 						if (startIndex == listOfPath.ElementAt (k).First ()) {
 							isDuplicated = true;
 						}
 					}
-					isDuplicated = false;
+					while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0 || isDuplicated) {
+						startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
+						for (int k = 0; k < i; k++) {
+							if (startIndex == listOfPath.ElementAt (k).First ()) {
+								isDuplicated = true;
+							}
+						}
+						isDuplicated = false;
+					}
+				} else {
+					while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0) {
+						startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);	
+					}
 				}
 
 				// Ending index
