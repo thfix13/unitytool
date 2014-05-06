@@ -214,6 +214,7 @@ namespace Spatiotemporal {
 		} */
 		
 		public static Shape3 Occlude(Map map, Shape3 vision, Vector3 position, float viewDist) {
+			//TODO: This is slow and buggy
 			
 			Shape3 vision_ = new Shape3 ();
 			foreach (Edge3Abs e in vision) {
@@ -226,7 +227,8 @@ namespace Spatiotemporal {
 			IEnumerator visionIteratorLH = vision_.GetEnumerator ();
 	
 			foreach (StealthObstacle o in map.GetObstacles()) {
-				if (Mathf.Sqrt((o.position.x - center.x)*(o.position.x - center.x) + (o.position.z - center.z)*(o.position.z - center.z)) > viewDist +  o.dimensions.magnitude*0.5f) {
+				// Very broad phase
+				if (Vector3.Distance(o.position, new Vector3(position.x, 0, position.z)) > viewDist + Mathf.Sqrt(o.sizeX*o.sizeX+o.sizeZ*o.sizeZ)*0.5f) {
 					continue;
 				}
 				
@@ -264,7 +266,8 @@ namespace Spatiotemporal {
 							}
 						}
 					}
-					if (intersecting.a != intersecting.b) break;
+					if (intersecting.a != intersecting.b)
+						break;
 				}
 	
 				if (intersecting.a != intersecting.b) {
@@ -300,8 +303,8 @@ namespace Spatiotemporal {
 	
 						if (intersect)
 							break;
-						else
-							occludedMiddle.addVertex (se.b);
+						
+						occludedMiddle.addVertex (se.b);
 					}
 	
 					while (visionIteratorLH.MoveNext()) {

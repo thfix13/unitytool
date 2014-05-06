@@ -160,7 +160,7 @@ namespace Spatiotemporal {
 		{
 			Shape3 obsShape = new Shape3 ();
 	
-			obsShape.addVertex (rotationQ * new Vector3 (sizeX * 0.5f, viewpoint.y, sizeZ * 0.5f) + position);
+			obsShape.addVertex (rotationQ * new Vector3(sizeX * 0.5f, viewpoint.y, sizeZ * 0.5f) + position);
 			obsShape.addVertex (rotationQ * new Vector3(sizeX*0.5f, viewpoint.y, -sizeZ*0.5f) + position);
 			obsShape.addVertex (rotationQ * new Vector3(-sizeX*0.5f, viewpoint.y, -sizeZ*0.5f) + position);
 			obsShape.addVertex (rotationQ * new Vector3(-sizeX*0.5f, viewpoint.y, sizeZ*0.5f) + position);
@@ -172,33 +172,24 @@ namespace Spatiotemporal {
 			bool[] projectedEdge = new bool[4];
 			float farthest = 0;
 			int count = 0;
-			int i = 0, j;
+			int i = 0;
+			
+			bool inside = obsShape.PointInside(viewpoint);
+			
 			foreach (Edge3Abs e in obsShape) {
-				j = 0;
 				if ((e.a - viewpoint).magnitude > farthest)
 					farthest = (e.a - viewpoint).magnitude;
-	
-				// Segment between the viewpoint and midpoint of e
-				Edge3Abs d = new Edge3Abs(viewpoint, 0.5f * (e.a + e.b));
-	
-				foreach (Edge3Abs f in obsShape) {
-					if (j != i) {
-						if (!float.IsNaN(f.IntersectXZ(d).x)) {
-							projectedEdge[i] = true;
-							break;
-						} else {
-							projectedEdge[i] = false;
-						}
-					}
-					j++;
-				}
-				if (projectedEdge[i] == false) {
+				
+				projectedEdge[i] = !(inside || !(Vector3.Cross(e.a - viewpoint, e.GetDiff()).y > 0));
+				
+				if (!projectedEdge[i]) {
 					count++;
 					if (first == 13)
 						first = i;
 					if (first == (i + 1) % 4)
 						first = i;
 				}
+				
 				i++;
 			}
 	
@@ -217,7 +208,7 @@ namespace Spatiotemporal {
 				}
 			} else {
 	
-				for (j = first; j < 4 + first; j++) {
+				for (int j = first; j < 4 + first; j++) {
 					if (projectedEdge [j % 4]) {
 						// Should add an edge from unprojected to projected
 						if (!projectedEdge [((j - 1) % 4 + 4) % 4]) {

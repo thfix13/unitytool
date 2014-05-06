@@ -105,7 +105,7 @@ namespace Spatiotemporal {
 			for (int i = 0; i < numSub; i++) {
 				Gizmos.color = new Color (1.0f, 0.1f, 0.2f);
 				
-				Shape3 vision = FieldOfView.Vertices(viewDistance, fieldOfView, frontSegments, position + new Vector3(0, time, 0), rot + rotation);
+				Shape3 vision = StealthFov.Vertices(viewDistance, fieldOfView, frontSegments, position + new Vector3(0, time, 0), rot + rotation);
 				shLst.Add (StealthFov.Occlude(map, vision, position + new Vector3(0, time, 0), viewDistance));
 				
 				if (type == Type.Rotating) {

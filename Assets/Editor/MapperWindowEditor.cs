@@ -457,6 +457,10 @@ namespace EditorArea {
 				if (map == null) {
 					
 				}
+			} else {
+				if (map != null) {
+					
+				}
 			}
 			
 			EditorGUILayout.LabelField ("");
