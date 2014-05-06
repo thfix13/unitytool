@@ -43,8 +43,16 @@ public class PathSelector
 			for (int trialIndex = 0; trialIndex < trialList.Count; trialIndex++) {
 				int tempCnt = trialList.ElementAt (trialIndex).ElementAt (i).Count;
 				if (tempCnt > cnt) {
-					cnt = tempCnt;
-					whichTrial = trialIndex;
+					bool isDuplicated = false;
+					for (int j = 0; j < longestPaths.Count; j++) {
+						if (trialList.ElementAt (trialIndex).ElementAt (i).First () == longestPaths.ElementAt (j).First ()) {
+							isDuplicated = true;	
+						}
+					}
+					if (!isDuplicated) {
+						cnt = tempCnt;
+						whichTrial = trialIndex;
+					}
 				}
 			}
 			List<int> longestPath = new List<int> ();
