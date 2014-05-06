@@ -10,7 +10,6 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 	public GameObject floor, end;
 	public int gridSize = 60;
 	public float stepSize = 0.1f;
-	public int ticksBehind = 0;
 	public bool smoothPlayerPath = false;
 	//
 	private Mapper mapper;
@@ -26,6 +25,8 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 	// Use this for initialization
 	void Start () {
 		// First prepare the mapper class
+		if (floor == null)
+			floor = GameObject.Find ("Floor");
 		if (mapper == null && floor != null) {
 			mapper = floor.GetComponent<Mapper> ();
 			if (floor == null)
@@ -60,6 +61,14 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 			
 			SpaceState.Running.fullMap = fullMap;
 			SpaceState.Running.enemies = enemies;
+
+			GameObject tempPlayerNode = GameObject.Find("TempPlayerNode");
+			if (tempPlayerNode != null) {
+				while (tempPlayerNode.transform.childCount > 0)
+					GameObject.DestroyImmediate(tempPlayerNode.transform.GetChild(0).gameObject);
+				
+				GameObject.DestroyImmediate(tempPlayerNode);
+			}
 			
 			player = GameObject.FindGameObjectWithTag ("Player");
 			if (player == null)
