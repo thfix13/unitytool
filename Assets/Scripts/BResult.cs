@@ -22,4 +22,5 @@ public class BResultBatch
 public class BResult
 {
 	public double ratio = 0f;
+	public List<float> listOfDanger3 = new List<float> ();
 }

@@ -15,7 +15,7 @@ public class MapperWindowEditor : EditorWindow
 	public static List<Path> paths = new List<Path> ();
 	public static List<Node> mostDanger = null, shortest = null, lengthiest = null, fastest = null, longest = null;
 	// Parameters
-	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 75, ticksBehind = 0, numOfEnemies = 0, numOfRegionsForEnemies = 0, numOfCameras = 0, numOfRegionsForCameras = 0, iterations2 = 5, iterations3 = 5, noeB = 0, nocB = 0, noreB = 0, norcB = 0, numOfGuards = 0, iterations4 = 3, nogB = 2, noiB = 0;
+	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 75, ticksBehind = 0, numOfEnemies = 0, numOfRegionsForEnemies = 0, numOfCameras = 0, numOfRegionsForCameras = 0, iterations2 = 5, iterations3 = 5, noeB = 0, nocB = 0, noreB = 0, norcB = 0, numOfGuards = 0, iterations4 = 3, nogB = 8, noiB = 0;
 	public static int pLine = 50, pDot = 50, pSplit = 50, pZigZag = 50, pPause = 25, pSwipe = 25, pFullRotate = 25, pNinety = 25;
 	public static bool drawMap = true, drawMoveMap = false, drawMoveUnits = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = false, 
 				drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawBoundaries = false, drawRoadmaps = false, drawRoadmaps2 = false, drawRoadmaps3 = false, drawGraph = false, drawGraph2 = false,
@@ -1445,7 +1445,7 @@ public class MapperWindowEditor : EditorWindow
 			BResultsRoot root = new BResultsRoot ();
 			using (FileStream stream = new FileStream ("Ratio with respect to Guards and Iterations.xml", FileMode.Create)) {
 				// Guards number varying from 1 to 8
-				for (int nog = 2; nog <= nogB; nog++) {
+				for (int nog = 1; nog <= nogB; nog++) {
 					// Iterations number varying from 0 to 3
 					for (int noi = 0; noi <= noiB; noi++) {
 						BResultBatch job = new BResultBatch ();
@@ -1498,8 +1498,14 @@ public class MapperWindowEditor : EditorWindow
 									paths.Add (new Path (nodes));
 								}
 							}
+							
+							Analyzer.ComputePathsDangerValues (paths, SpaceState.Enemies, floor.collider.bounds.min, SpaceState.TileSize.x, SpaceState.TileSize.y, fullMap, drawer.seenNeverSeen, drawer.seenNeverSeenMax);
+							
 							BResult rs = new BResult ();
 							rs.ratio = (float)paths.Count / iterations;
+							foreach (Path path in paths) {
+								rs.listOfDanger3.Add (path.danger3);	
+							}
 							job.results.Add (rs);
 							ratios.Add ((float)paths.Count / iterations);
 

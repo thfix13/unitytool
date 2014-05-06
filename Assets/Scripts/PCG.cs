@@ -1114,7 +1114,7 @@ public class PCG : MonoBehaviour
 				listOfPath.Add (path);
 				List<int> tempPath = new List<int> ();
 				templistOfPath.Add (tempPath);
-				bool success = FindPath (startIndex, endIndex, i);
+				FindPath (startIndex, endIndex, i);
 				// listOfPath.Add (PCG.FindShortestPath (startIndex, endIndex));
 
 				// Make sure that the starting point is not in the range of initial FOV

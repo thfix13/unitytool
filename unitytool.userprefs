@@ -1,10 +1,11 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\PathSelector.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\BResult.cs">
     <Files>
-      <File FileName="Assets\Scripts\PCG.cs" Line="1" Column="1" />
-      <File FileName="Assets\Scripts\PathSelector.cs" Line="55" Column="7" />
-      <File FileName="Assets\Editor\MapperWindowEditor.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\PCG.cs" Line="1113" Column="9" />
+      <File FileName="Assets\Scripts\PathSelector.cs" Line="40" Column="16" />
+      <File FileName="Assets\Editor\MapperWindowEditor.cs" Line="1503" Column="8" />
+      <File FileName="Assets\Scripts\BResult.cs" Line="13" Column="24" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

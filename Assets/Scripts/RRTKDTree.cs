@@ -45,7 +45,7 @@ public class RRTKDTree
 	{
 		// Initialization
 		tree = new KDTree (3);
-		explored = new List<Node>();
+		explored = new List<Node> ();
 		nodeMatrix = matrix;
 		
 		//Start and ending node
@@ -56,7 +56,7 @@ public class RRTKDTree
 		// Prepare start and end node
 		Node end = GetNode (0, endX, endY);
 		tree.insert (start.GetArray (), start);
-		explored.Add(start);
+		explored.Add (start);
 		
 		// Prepare the variables		
 		Node nodeVisiting = null;
@@ -65,14 +65,14 @@ public class RRTKDTree
 		float tan = speed / 1;
 		angle = 90f - Mathf.Atan (tan) * Mathf.Rad2Deg;
 		
-		List<Distribution.Pair> pairs = new List<Distribution.Pair>();
+		List<Distribution.Pair> pairs = new List<Distribution.Pair> ();
 		
 		for (int x = 0; x < matrix[0].Length; x++) 
 			for (int y = 0; y < matrix[0].Length; y++) 
-				if (((Cell)matrix[0][x][y]).waypoint)
-					pairs.Add(new Distribution.Pair(x,y));
+				if (((Cell)matrix [0] [x] [y]).waypoint)
+					pairs.Add (new Distribution.Pair (x, y));
 		
-		pairs.Add(new Distribution.Pair(end.x, end.y));
+		pairs.Add (new Distribution.Pair (end.x, end.y));
 		
 		//Distribution rd = new Distribution(matrix[0].Length, pairs.ToArray());
 	
@@ -86,12 +86,12 @@ public class RRTKDTree
 			int ry = Random.Range (0, nodeMatrix [rt] [rx].Length);
 			//int rx = p.x, ry = p.y;
 			nodeVisiting = GetNode (rt, rx, ry);
-			if (nodeVisiting.visited || !nodeVisiting.cell.IsWalkable()) {
+			if (nodeVisiting.visited || !nodeVisiting.cell.IsWalkable ()) {
 				i--;
 				continue;
 			}
 			
-			explored.Add(nodeVisiting);
+			explored.Add (nodeVisiting);
 			
 			nodeTheClosestTo = (Node)tree.nearest (new double[] {rx, rt, ry});
 			
@@ -108,7 +108,7 @@ public class RRTKDTree
 			}
 			
 			// And we have line of sight
-			if (!nodeVisiting.cell.IsWalkable() || CheckCollision (nodeVisiting, nodeTheClosestTo))
+			if (!nodeVisiting.cell.IsWalkable () || CheckCollision (nodeVisiting, nodeTheClosestTo))
 				continue;
 			
 			try {
@@ -121,17 +121,17 @@ public class RRTKDTree
 			
 			// Attemp to connect to the end node
 			if (Random.Range (0, 1000) > 0) {
-				p1 = nodeVisiting.GetVector3();
-				p2 = end.GetVector3();
+				p1 = nodeVisiting.GetVector3 ();
+				p2 = end.GetVector3 ();
 				p2.y = p1.y;
-				float dist = Vector3.Distance(p1, p2);
+				float dist = Vector3.Distance (p1, p2);
 				
-				float t = dist * Mathf.Tan(angle);
+				float t = dist * Mathf.Tan (angle);
 				pd = p2;
 				pd.y += t;
 				
-				if (pd.y <= nodeMatrix.GetLength(0)) {
-					Node endNode = GetNode((int) pd.y, (int) pd.x, (int) pd.z);
+				if (pd.y <= nodeMatrix.GetLength (0)) {
+					Node endNode = GetNode ((int)pd.y, (int)pd.x, (int)pd.z);
 					if (!CheckCollision (nodeVisiting, endNode, 0)) {
 						//Debug.Log ("Done3");
 						endNode.parent = nodeVisiting;
@@ -164,7 +164,7 @@ public class RRTKDTree
 		// Noisy calculation
 		if (enemies != null && ((Cell)n3.cell).noisy) {
 			foreach (Enemy enemy in enemies) {
-				Vector3 dupe = enemy.positions[t];
+				Vector3 dupe = enemy.positions [t];
 				dupe.x = (dupe.x - min.x) / tileSizeX;
 				dupe.y = n3.t;
 				dupe.z = (dupe.z - min.z) / tileSizeZ;
@@ -175,7 +175,7 @@ public class RRTKDTree
 			} 
 		}
 		
-		return !n3.cell.IsWalkable() || CheckCollision (n1, n3, deep + 1) || CheckCollision (n2, n3, deep + 1);
+		return !n3.cell.IsWalkable () || CheckCollision (n1, n3, deep + 1) || CheckCollision (n2, n3, deep + 1);
 		
 	}
 	
@@ -183,7 +183,7 @@ public class RRTKDTree
 	private List<Node> ReturnPath (Node endNode, bool smooth)
 	{
 		Node n = endNode;
-		List<Node> points = new List<Node> ();
+		List<Node> points = new List<Node> (100);
 		
 		while (n != null) {
 			points.Add (n);
