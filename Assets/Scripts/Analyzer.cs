@@ -244,7 +244,9 @@ namespace Extra {
 								if (g == Mathf.Infinity) {
 									g = angle / Mathf.Pow ((pos2d - enemy2d).magnitude, 3);
 								}
-								float g3 = g * (dangerCells [(int)pos2d.x] [(int)pos2d.y] / maxDanger);
+								float g3 = 0;
+								if (dangerCells != null)
+									g3 = g * (dangerCells [(int)pos2d.x] [(int)pos2d.y] / maxDanger);
 								
 								// Increment the total metric
 								currentPath.los += f;
