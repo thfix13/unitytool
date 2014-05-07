@@ -10,6 +10,7 @@ using Exploration;
 using Path = Common.Path;
 using Extra;
 using Objects;
+using ClusteringSpace;
 
 namespace EditorArea {
 	public class MapperWindowEditor : EditorWindow {
@@ -23,6 +24,7 @@ namespace EditorArea {
 		private static bool drawMap = true, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = false, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false;
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10;
 		private static int randomSeed = -1;
+		private static int numClusters = 3;
 
 		// Computed parameters
 		private static int[,] heatMap, deathHeatMap, combatHeatMap;
@@ -380,6 +382,7 @@ namespace EditorArea {
 						p.color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
 						toggleStatus.Add (p, true);
 					}
+					paths.Add(p);
 				}
 				ComputeHeatMap (paths, deaths);
 				SetupArrangedPaths (paths);
@@ -639,6 +642,41 @@ namespace EditorArea {
 			
 			#endregion
 			
+			
+			#endregion
+			
+			#region 7. Clustering
+			
+			EditorGUILayout.LabelField ("");
+			EditorGUILayout.LabelField ("7. Clustering");
+			numClusters = EditorGUILayout.IntSlider ("Number of clusters", numClusters, 1, 6);
+			if (GUILayout.Button ("Cluster on path similarity"))
+			{
+				List<PathCollection> clusters = KMeans.DoKMeans(new PathCollection(paths), numClusters);
+				
+				Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black };
+				
+				paths.Clear ();
+				deaths.Clear ();
+			//	ClearPathsRepresentation ();
+				
+				for(int c = 0; c < clusters.Count; c ++)
+				{
+					Debug.Log("cluster " + c);
+					foreach(Path path in clusters[c])
+					{
+						String pathstr = "";
+						foreach(Node n in path.points)
+						{
+							pathstr += "(N x:"+n.x+", y:"+n.y+", t:"+n.t+")";
+						}
+						Debug.Log(pathstr);
+						
+						path.color = colors[c];
+						paths.Add(path);
+					}
+				}
+			}
 			
 			#endregion
 			
