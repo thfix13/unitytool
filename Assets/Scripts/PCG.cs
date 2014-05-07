@@ -1502,6 +1502,7 @@ public class PCG : MonoBehaviour
 		for (int i = 0; i < numOfGuards; i++) {
 			// Retrieve the first index
 			int startIndex = listOfPath.ElementAt (i).ElementAt (0);
+			Debug.Log (startIndex);
 			Vector3 finalInitialPos = sBoundary.finalGraphNodesList.ElementAt (startIndex).Pos (floor);	
 			
 			// Initiate an enemy instance

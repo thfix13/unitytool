@@ -1028,7 +1028,11 @@ public class Skeletonization
 				g.neighbors = temp; 
 			}
 		}
-		// finalGraphNodesList = tempList; 
+		
+		// For M.G.S only
+		finalGraphNodesList.ElementAt (28).neighbors.Remove (finalGraphNodesList.ElementAt (30));
+		finalGraphNodesList.ElementAt (30).neighbors.Remove (finalGraphNodesList.ElementAt (28));
+		
 		return; 
 
 
