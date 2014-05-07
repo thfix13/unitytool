@@ -666,16 +666,18 @@ public class PCG : MonoBehaviour
 					for (int k = 0; k < i; k++) {
 						if (startIndex == listOfPath.ElementAt (k).First ()) {
 							isDuplicated = true;
+							break;
 						}
 					}
 					while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0 || isDuplicated) {
+						isDuplicated = false;
 						startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
 						for (int k = 0; k < i; k++) {
 							if (startIndex == listOfPath.ElementAt (k).First ()) {
 								isDuplicated = true;
+								break;
 							}
 						}
-						isDuplicated = false;
 					}
 				} else {
 					while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0) {
@@ -1083,16 +1085,18 @@ public class PCG : MonoBehaviour
 					for (int k = 0; k < i; k++) {
 						if (startIndex == listOfPath.ElementAt (k).First ()) {
 							isDuplicated = true;
+							break;
 						}
 					}
 					while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0 || isDuplicated) {
+						isDuplicated = false;
 						startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
 						for (int k = 0; k < i; k++) {
 							if (startIndex == listOfPath.ElementAt (k).First ()) {
 								isDuplicated = true;
+								break;
 							}
 						}
-						isDuplicated = false;
 					}
 				} else {
 					while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0) {

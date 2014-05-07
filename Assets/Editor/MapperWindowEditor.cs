@@ -15,7 +15,7 @@ public class MapperWindowEditor : EditorWindow
 	public static List<Path> paths = new List<Path> ();
 	public static List<Node> mostDanger = null, shortest = null, lengthiest = null, fastest = null, longest = null;
 	// Parameters
-	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 75, ticksBehind = 0, numOfEnemies = 0, numOfRegionsForEnemies = 0, numOfCameras = 0, numOfRegionsForCameras = 0, iterations2 = 5, iterations3 = 5, noeB = 0, nocB = 0, noreB = 0, norcB = 0, numOfGuards = 0, iterations4 = 3, nogB = 8, noiB = 0;
+	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 75, ticksBehind = 0, numOfEnemies = 0, numOfRegionsForEnemies = 0, numOfCameras = 0, numOfRegionsForCameras = 0, iterations2 = 5, iterations3 = 5, noeB = 0, nocB = 0, noreB = 0, norcB = 0, numOfGuards = 0, iterations4 = 3, nogB = 4, noiB = 0;
 	public static int pLine = 50, pDot = 50, pSplit = 50, pZigZag = 50, pPause = 25, pSwipe = 25, pFullRotate = 25, pNinety = 25;
 	public static bool drawMap = true, drawMoveMap = false, drawMoveUnits = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = false, 
 				drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawBoundaries = false, drawRoadmaps = false, drawRoadmaps2 = false, drawRoadmaps3 = false, drawGraph = false, drawGraph2 = false,
@@ -1452,7 +1452,7 @@ public class MapperWindowEditor : EditorWindow
 						job.numOfGuards = nog;
 						job.numOfIterations = noi;
 						// For each test we want 20 trials
-						for (int batchIter = 0; batchIter < 20; batchIter ++) {					
+						for (int batchIter = 0; batchIter < 2; batchIter ++) {					
 							// Clear up
 							PCG.ClearBehaviours ();
 							PCG.numOfGuards = nog;
@@ -1491,7 +1491,7 @@ public class MapperWindowEditor : EditorWindow
 							rrt.enemies = SpaceState.Enemies;
 					
 							List<Node> nodes = null;
-							iterations = 50;
+							iterations = 2;
 							for (int it = 0; it < iterations; it++) {
 								nodes = rrt.Compute (startX, startY, endX, endY, attemps, speed, fullMap, smoothPath);
 								if (nodes.Count > 0) {
