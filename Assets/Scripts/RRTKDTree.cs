@@ -183,7 +183,7 @@ public class RRTKDTree
 	private List<Node> ReturnPath (Node endNode, bool smooth)
 	{
 		Node n = endNode;
-		List<Node> points = new List<Node> (100);
+		List<Node> points = new List<Node> (300);
 		
 		while (n != null) {
 			points.Add (n);

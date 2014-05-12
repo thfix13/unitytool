@@ -120,9 +120,9 @@ public class Waypoint : MonoBehaviour
 		if (debug) {
 			Gizmos.color = Color.red;
 			Gizmos.DrawSphere (transform.position, 0.1f);
-			if (next) {
-				Gizmos.DrawLine ( transform.position, next.transform.position);
-			}
+//			if (next) {
+//				Gizmos.DrawLine ( transform.position, next.transform.position);
+//			}
 		}
 	}
 

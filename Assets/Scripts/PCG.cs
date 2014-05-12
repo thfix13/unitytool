@@ -25,6 +25,7 @@ public class PCG : MonoBehaviour
 	public static List<List<int>> listOfPath = new List<List<int>> ();
 	public static List<List<Waypoint>> listOfSequence = new List<List<Waypoint>> ();
 	public static List<List<GameObject>> listOfWaypoints = new List<List<GameObject>> ();
+	public static List<float> listOfTime = new List<float> ();
 	
 	// File
 	private static string filepath = null;
@@ -1205,6 +1206,10 @@ public class PCG : MonoBehaviour
 								} else {
 									tempSequence.Last ().next = wpScript;	
 								}
+								float time = listOfTime.ElementAt (size) + 3.0f;
+								listOfTime.RemoveAt (size);
+								listOfTime.Insert (size, time);
+								
 							} 
 							// Swiping 180 degree
 							if (r2 >= pPause && r2 < pPause + pSwipe) {
@@ -1266,6 +1271,9 @@ public class PCG : MonoBehaviour
 								tempWaypoints.Insert (index, rwp1);
 								tempSequence.Insert (index, rwpScript2);
 								tempSequence.Insert (index, rwpScript1);
+								float time = listOfTime.ElementAt (size) + 36.0f;
+								listOfTime.RemoveAt (size);
+								listOfTime.Insert (size, time);
 							} 
 							// Fully rotating 360 degree
 							if (r2 >= pPause + pSwipe && r2 < pPause + pSwipe + pFullRotate) {
@@ -1338,6 +1346,9 @@ public class PCG : MonoBehaviour
 								tempSequence.Insert (index, rwpScript3);
 								tempSequence.Insert (index, rwpScript2);
 								tempSequence.Insert (index, rwpScript1);
+								float time = listOfTime.ElementAt (size) + 18.0f;
+								listOfTime.RemoveAt (size);
+								listOfTime.Insert (size, time);
 							} 
 							// Ninety-degree rotating
 							if (r2 >= pPause + pSwipe + pFullRotate && r2 < 100) {
@@ -1400,6 +1411,9 @@ public class PCG : MonoBehaviour
 								tempWaypoints.Insert (index, rwp1);
 								tempSequence.Insert (index, rwpScript2);
 								tempSequence.Insert (index, rwpScript1);
+								float time = listOfTime.ElementAt (size) + 9.0f;
+								listOfTime.RemoveAt (size);
+								listOfTime.Insert (size, time);
 							}
 						}							
 					}
@@ -1436,6 +1450,8 @@ public class PCG : MonoBehaviour
 									if (index != tempWaypoints.Count - 1) {
 										Vector3 startVec = tempWaypoints.ElementAt (index).transform.position;
 										Vector3 endVec = tempWaypoints.ElementAt (index + 1).transform.position;
+										float dist = Vector3.Distance (startVec, endVec);
+										float t = dist / 0.5f;
 										GameObject wp1 = GameObject.Instantiate (waypointPrefab, endVec, Quaternion.identity) as GameObject;
 										GameObject wp2 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
 										Waypoint wpScript1;
@@ -1449,6 +1465,9 @@ public class PCG : MonoBehaviour
 										tempSequence.Insert (index + 2, wpScript2);
 										tempWaypoints.Insert (index + 1, wp1);
 										tempWaypoints.Insert (index + 2, wp2);
+										float time = listOfTime.ElementAt (size) + 2 * t;
+										listOfTime.RemoveAt (size);
+										listOfTime.Insert (size, time);
 									}
 								}
 							}

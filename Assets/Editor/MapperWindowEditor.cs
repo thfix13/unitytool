@@ -15,7 +15,7 @@ public class MapperWindowEditor : EditorWindow
 	public static List<Path> paths = new List<Path> ();
 	public static List<Node> mostDanger = null, shortest = null, lengthiest = null, fastest = null, longest = null;
 	// Parameters
-	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 75, ticksBehind = 0, numOfEnemies = 0, numOfRegionsForEnemies = 0, numOfCameras = 0, numOfRegionsForCameras = 0, iterations2 = 5, iterations3 = 5, noeB = 0, nocB = 0, noreB = 0, norcB = 0, numOfGuards = 0, iterations4 = 3, nogB = 2, noiB = 4;
+	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 75, ticksBehind = 0, numOfEnemies = 0, numOfRegionsForEnemies = 0, numOfCameras = 0, numOfRegionsForCameras = 0, iterations2 = 5, iterations3 = 5, noeB = 0, nocB = 0, noreB = 0, norcB = 0, numOfGuards = 0, iterations4 = 3, nogB = 4, noiB = 4;
 	public static int pLine = 50, pDot = 50, pSplit = 50, pZigZag = 50, pPause = 25, pSwipe = 25, pFullRotate = 25, pNinety = 25;
 	public static bool drawMap = true, drawMoveMap = false, drawMoveUnits = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = false, 
 				drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawBoundaries = false, drawRoadmaps = false, drawRoadmaps2 = false, drawRoadmaps3 = false, drawGraph = false, drawGraph2 = false,
@@ -1445,21 +1445,21 @@ public class MapperWindowEditor : EditorWindow
 			BResultsRoot root = new BResultsRoot ();
 			using (FileStream stream = new FileStream ("Ratio with respect to Guards and Iterations.xml", FileMode.Create)) {
 				// Guards number varying from 1 to 8
-				for (int nog = 1; nog <= nogB; nog++) {
+				for (int nog = 4; nog <= nogB; nog++) {
 					// Iterations number varying from 0 to 3
-					for (int noi = 0; noi <= noiB; noi++) {
+					for (int noi = 4; noi <= 4; noi++) {
 						BResultBatch job = new BResultBatch ();
 						job.numOfGuards = nog;
 						job.numOfIterations = noi;
 						// For each test we want 20 trials
-						for (int batchIter = 0; batchIter < 30; batchIter ++) {					
+						for (int batchIter = 0; batchIter < 10; batchIter ++) {					
 							// Clear up
 							PCG.ClearBehaviours ();
 							PCG.numOfGuards = nog;
 							PCG.ClearUpObjects (enemypathObjects);
 						
 							// Populate guards on the graph
-							enemypathObjects = PCG.PopulateGuardsWithBehavioursAndSaveToFile (enemyPrefab, waypointPrefab, floor, noi, pLine, pDot, pSplit, pZigZag, pPause, pSwipe, pFullRotate, pNinety).ToArray ();
+							enemypathObjects = PCG.PopulateGuardsWithBehavioursAndSaveToFile (enemyPrefab, waypointPrefab, floor, noi, 100, 100, pSplit, pZigZag, 0, 100, 0, 0).ToArray ();
 							StorePositions ();
 					
 							// Precompute maps again
@@ -1491,7 +1491,7 @@ public class MapperWindowEditor : EditorWindow
 							rrt.enemies = SpaceState.Enemies;
 					
 							List<Node> nodes = null;
-							iterations = 1;
+							iterations = 15;
 							for (int it = 0; it < iterations; it++) {
 								nodes = rrt.Compute (startX, startY, endX, endY, attemps, speed, fullMap, smoothPath);
 								if (nodes.Count > 0) {
@@ -1544,7 +1544,7 @@ public class MapperWindowEditor : EditorWindow
 			BResultsRoot root = new BResultsRoot ();
 			using (FileStream stream = new FileStream ("Ratio with respect to single behaviour.xml", FileMode.Create)) {
 				// Iterations number varying from 0 to 4
-				for (int noi = 0; noi <= noiB; noi++) {
+				for (int noi = 5; noi <= noiB; noi++) {
 					BResultBatch job = new BResultBatch ();
 					// Add multiple parameters here
 					job.numOfIterations = noi;
