@@ -4,8 +4,8 @@ using UnityEditor;
 
 public class Waypoint : MonoBehaviour
 {
+	
 	public Waypoint next;
-	public Waypoint prev;
 	public Enemy center;
 	public int type = 0;
 	public static bool debug = true;
@@ -121,7 +121,7 @@ public class Waypoint : MonoBehaviour
 			Gizmos.color = Color.red;
 			Gizmos.DrawSphere (transform.position, 0.1f);
 			if (next) {
-				Gizmos.DrawLine (transform.position, next.transform.position);
+				Gizmos.DrawLine ( transform.position, next.transform.position);
 			}
 		}
 	}

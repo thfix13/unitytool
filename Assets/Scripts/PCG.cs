@@ -771,33 +771,17 @@ public class PCG : MonoBehaviour
 								wpScript = wp.GetComponent ("Waypoint") as Waypoint;
 								wwpScript = wwp.GetComponent ("Waypoint") as WaitingWaypoint;
 								wpScript.next = wwpScript;
-								wwpScript.prev = wpScript;
 								wwpScript.waitingTime = 3.0f;
 								tempSequence.Insert (index, wwpScript);
 								if (index < tempSequence.Count - 1) {
-									if (tempWaypoints.ElementAt (index + 1).GetComponent ("WaitingWaypoint") == null && tempWaypoints.ElementAt (index + 1).GetComponent ("RotationWaypoint") == null) {
-										wwpScript.next = tempSequence.ElementAt (index + 1);
-										tempSequence.ElementAt (index + 1).prev = wwpScript;
-									} else {
-										wwpScript.next = tempSequence.ElementAt (index + 1).prev;
-										tempSequence.ElementAt (index + 1).prev.prev = wwpScript;
-									}
+									wwpScript.next = tempSequence.ElementAt (index + 1);
 								} else {
-									if (tempWaypoints.First ().GetComponent ("WaitingWaypoint") == null && tempWaypoints.First ().GetComponent ("RotationWaypoint") == null) {
-										wwpScript.next = tempSequence.First ();
-										tempSequence.First ().prev = wwpScript;
-									} else {
-										wwpScript.next = tempSequence.First ().prev;
-										tempSequence.First ().prev.prev = wwpScript;
-									}
+									wwpScript.next = tempSequence.First ();
 								}
 								if (index > 0) {
 									tempSequence.ElementAt (index - 1).next = wpScript;	
-									wpScript.prev = tempSequence.ElementAt (index - 1);
-		
 								} else {
-									tempSequence.Last ().next = wpScript;
-									wpScript.prev = tempSequence.Last ();
+									tempSequence.Last ().next = wpScript;	
 								}
 							} 
 							// Swiping 180 degree
@@ -846,32 +830,15 @@ public class PCG : MonoBehaviour
 								wpScript.next = rwpScript1;
 								rwpScript1.next = rwpScript2;
 								rwpScript2.next = rwpScript3;
-								rwpScript3.prev = rwpScript2;
-								rwpScript2.prev = rwpScript1;
-								rwpScript1.prev = wpScript;
 								if (index < tempSequence.Count - 1) {
-									if (tempWaypoints.ElementAt (index + 1).GetComponent ("WaitingWaypoint") == null && tempWaypoints.ElementAt (index + 1).GetComponent ("RotationWaypoint") == null) {
-										rwpScript3.next = tempSequence.ElementAt (index + 1);
-										tempSequence.ElementAt (index + 1).prev = rwpScript3;
-									} else {
-										rwpScript3.next = tempSequence.ElementAt (index + 1).prev;
-										tempSequence.ElementAt (index + 1).prev.prev = rwpScript3;
-									}
+									rwpScript3.next = tempSequence.ElementAt (index + 1);
 								} else {
-									if (tempWaypoints.First ().GetComponent ("WaitingWaypoint") == null && tempWaypoints.First ().GetComponent ("RotationWaypoint") == null) {
-										rwpScript3.next = tempSequence.First ();
-										tempSequence.First ().prev = rwpScript3;
-									} else {
-										rwpScript3.next = tempSequence.First ().prev;
-										tempSequence.First ().prev.prev = rwpScript3;
-									}
+									rwpScript3.next = tempSequence.ElementAt (0);	
 								}
 								if (index > 0) {
 									tempSequence.ElementAt (index - 1).next = wpScript;	
-									wpScript.prev = tempSequence.ElementAt (index - 1);
 								} else {
-									tempSequence.Last ().next = wpScript;
-									wpScript.prev = tempSequence.Last ();
+									tempSequence.Last ().next = wpScript;	
 								}
 								tempWaypoints.Insert (index, rwp2);
 								tempWaypoints.Insert (index, rwp1);
@@ -931,34 +898,15 @@ public class PCG : MonoBehaviour
 								rwpScript2.next = rwpScript3;
 								rwpScript3.next = rwpScript4;
 								rwpScript4.next = rwpScript5;
-								rwpScript5.prev = rwpScript4;
-								rwpScript4.prev = rwpScript3;
-								rwpScript3.prev = rwpScript2;
-								rwpScript2.prev = rwpScript1;
-								rwpScript1.prev = wpScript;
 								if (index < tempSequence.Count - 1) {
-									if (tempWaypoints.ElementAt (index + 1).GetComponent ("WaitingWaypoint") == null && tempWaypoints.ElementAt (index + 1).GetComponent ("RotationWaypoint") == null) {
-										rwpScript5.next = tempSequence.ElementAt (index + 1);
-										tempSequence.ElementAt (index + 1).prev = rwpScript5;
-									} else {
-										rwpScript5.next = tempSequence.ElementAt (index + 1).prev;
-										tempSequence.ElementAt (index + 1).prev.prev = rwpScript5;
-									}
+									rwpScript5.next = tempSequence.ElementAt (index + 1);
 								} else {
-									if (tempWaypoints.First ().GetComponent ("WaitingWaypoint") == null && tempWaypoints.ElementAt (index + 1).GetComponent ("RotationWaypoint") == null) {
-										rwpScript5.next = tempSequence.First ();
-										tempSequence.First ().prev = rwpScript5;
-									} else {
-										rwpScript5.next = tempSequence.First ().prev;
-										tempSequence.First ().prev.prev = rwpScript5;
-									}
+									rwpScript5.next = tempSequence.ElementAt (0);	
 								}
 								if (index > 0) {
 									tempSequence.ElementAt (index - 1).next = wpScript;	
-									wpScript.prev = tempSequence.ElementAt (index - 1);
 								} else {
-									tempSequence.Last ().next = wpScript;
-									wpScript.prev = tempSequence.Last ();
+									tempSequence.Last ().next = wpScript;	
 								}
 								tempWaypoints.Insert (index, rwp4);
 								tempWaypoints.Insert (index, rwp3);
@@ -1016,32 +964,15 @@ public class PCG : MonoBehaviour
 								wpScript.next = rwpScript1;
 								rwpScript1.next = rwpScript2;
 								rwpScript2.next = rwpScript3;
-								rwpScript3.prev = rwpScript2;
-								rwpScript2.prev = rwpScript1;
-								rwpScript1.prev = wpScript;
 								if (index < tempSequence.Count - 1) {
-									if (tempWaypoints.ElementAt (index + 1).GetComponent ("WaitingWaypoint") == null && tempWaypoints.ElementAt (index + 1).GetComponent ("RotationWaypoint") == null) {
-										rwpScript3.next = tempSequence.ElementAt (index + 1);
-										tempSequence.ElementAt (index + 1).prev = rwpScript3;
-									} else {
-										rwpScript3.next = tempSequence.ElementAt (index + 1).prev;
-										tempSequence.ElementAt (index + 1).prev.prev = rwpScript3;
-									}
+									rwpScript3.next = tempSequence.ElementAt (index + 1);
 								} else {
-									if (tempWaypoints.First ().GetComponent ("WaitingWaypoint") == null && tempWaypoints.First ().GetComponent ("RotationWaypoint") == null) {
-										rwpScript3.next = tempSequence.First ();
-										tempSequence.First ().prev = rwpScript3;
-									} else {
-										rwpScript3.next = tempSequence.First ().prev;
-										tempSequence.First ().prev.prev = rwpScript3;
-									}
+									rwpScript3.next = tempSequence.ElementAt (0);	
 								}
 								if (index > 0) {
 									tempSequence.ElementAt (index - 1).next = wpScript;	
-									wpScript.prev = tempSequence.ElementAt (index - 1);
 								} else {
 									tempSequence.Last ().next = wpScript;	
-									wpScript.prev = tempSequence.Last ();
 								}
 								tempWaypoints.Insert (index, rwp2);
 								tempWaypoints.Insert (index, rwp1);
