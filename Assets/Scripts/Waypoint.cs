@@ -4,7 +4,7 @@ using UnityEditor;
 
 public class Waypoint : MonoBehaviour
 {
-	
+	public Waypoint prev;
 	public Waypoint next;
 	public Enemy center;
 	public int type = 0;
