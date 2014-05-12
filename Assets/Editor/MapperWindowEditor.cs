@@ -311,6 +311,9 @@ namespace EditorArea
 			if (GUILayout.Button ("Reduce the space")) {
 				ReduceSpace (); 
 			}
+			if (GUILayout.Button ("Reduce the space")) {
+				AddSphere (); 
+			}
 			if (GUILayout.Button ("Clear Enemies")) {
 
 				GameObject[] enemies = GameObject.FindGameObjectsWithTag ("Enemy");
@@ -1008,12 +1011,15 @@ namespace EditorArea
 			int[] count = new int[3];
 			//0 red, 1 blue, 2 green
 
-			foreach (Triangle tt in triangles) {
+			foreach (Triangle tt in triangles) 
+			{
 				//foreach(Vector3 v in tt.vertex)
-				for (int j = 0; j<tt.vertex.Length; j++) {
+				for (int j = 0; j<tt.vertex.Length; j++) 
+				{
 					bool vectorToAdd = true;
 
-					for (int i = 0; i<points.Count; i++) {
+					for (int i = 0; i<points.Count; i++) 
+					{
 						if (points [i] == tt.vertex [j] && coloursPoints [i] == tt.colourVertex [j])
 							vectorToAdd = false; 
 
@@ -1037,6 +1043,10 @@ namespace EditorArea
 					count [2]++; 
 					
 			}
+
+			triangulation.points = points; 
+			triangulation.colours = coloursPoints; 
+
 			//Debug.Log(count[0]); 
 			//Debug.Log(count[1]); 
 			//Debug.Log(count[2]); 
@@ -1667,6 +1677,31 @@ namespace EditorArea
 			triangulation.triangles = triangles; 
 
 
+
+		}
+
+		public void AddSphere()
+		{
+			Triangulation triangulation = GameObject.Find ("Triangulation").GetComponent<Triangulation> (); 
+
+			DestroyImmediate(GameObject.Find("Hello")); 
+
+			GameObject s = new GameObject(); 
+			s.name = "Hello";
+			foreach(Triangle t in triangulation.triangles)
+			{
+				//foreach(Vector3 v in t.vertex)
+				for(int i =0; i<3;i++)
+				{
+					Vector3 v = t.vertex[i];
+
+					GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+	        		sphere.transform.position = v;
+	        		sphere.transform.parent = s.transform;
+	        		sphere.renderer.material.color = t.colourVertex[i];  
+
+				}
+			}
 
 		}
 

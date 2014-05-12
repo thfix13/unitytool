@@ -33,8 +33,8 @@ public class Triangulation : MonoBehaviour
 	void OnDrawGizmosSelected() 
 	{
 		return; 
-		//Debug.Log(colours.Count);
-		//Debug.Log(points.Count);
+		// Debug.Log(colours.Count);
+		// Debug.Log(points.Count);
 		var i = 0;
 		foreach(Vector3 v in points)
 		{
@@ -52,8 +52,8 @@ public class Triangulation : MonoBehaviour
 	{
 
 		//return; 
-		//points.Clear(); 
-		//colours.Clear();  
+		points.Clear(); 
+		colours.Clear();  
 
 		
 
@@ -75,12 +75,12 @@ public class Triangulation : MonoBehaviour
 				tt.DrawDebug();
 				foreach(Vector3 v in tt.getVertexMiddle())
 				{
-				//	points.Add(v);
+					points.Add(v);
 				}
 
 				foreach(Color v in tt.colourVertex)
 				{
-				//	colours.Add(v);
+					colours.Add(v);
 				}
 			}
 
@@ -112,6 +112,7 @@ public class Triangulation : MonoBehaviour
 			}
 		}
 	}
+
 
 	public void AddPoint(Vector3 v)
 	{
