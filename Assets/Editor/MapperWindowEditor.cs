@@ -358,7 +358,7 @@ namespace EditorArea {
 					summary += "\n" + map[k] + " paths killed " + k + " enemies";
 				}
 
-				Debug.Log(summary);
+				// Debug.Log(summary);
 			}
 			
 			if (GUILayout.Button ("(DEBUG) Export Paths")) {
@@ -471,13 +471,13 @@ namespace EditorArea {
 				
 				// Analyze paths
 				Analyzer.PreparePaths (paths);
-				Analyzer.ComputePathsTimeValues (paths);
-				Analyzer.ComputePathsLengthValues (paths);
-				Analyzer.ComputePathsVelocityValues (paths);
-				Analyzer.ComputePathsLoSValues (paths, SpaceState.Editor.enemies, floor.collider.bounds.min, SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y, original, drawer.seenNeverSeen, drawer.seenNeverSeenMax);
+				//Analyzer.ComputePathsTimeValues (paths);
+				//Analyzer.ComputePathsLengthValues (paths);
+				//Analyzer.ComputePathsVelocityValues (paths);
+				//Analyzer.ComputePathsLoSValues (paths, SpaceState.Editor.enemies, floor.collider.bounds.min, SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y, original, drawer.seenNeverSeen, drawer.seenNeverSeenMax);
 				Analyzer.ComputePathsDangerValues (paths, SpaceState.Editor.enemies, floor.collider.bounds.min, SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y, original, drawer.seenNeverSeen, drawer.seenNeverSeenMax);
-				Analyzer.ComputeCrazyness (paths, original, Mathf.FloorToInt (crazySeconds / stepSize));
-				Analyzer.ComputePathsVelocityValues (paths);
+				//Analyzer.ComputeCrazyness (paths, original, Mathf.FloorToInt (crazySeconds / stepSize));
+				//Analyzer.ComputePathsVelocityValues (paths);
 				
 				SetupArrangedPaths (paths);
 			}
