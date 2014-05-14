@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Path = Common.Path;
+using Node = Common.Node;
 
 using UnityEngine;
 namespace ClusteringSpace
@@ -48,14 +49,14 @@ namespace ClusteringSpace
             UpdateCentroid();
         }
 
-        public Path RemovePath(int index)
+     /*   public Path RemovePath(int index)
         {
             Path removedPath = new Path(this[index].points);
             this.RemoveAt(index);
             UpdateCentroid();
 
             return (removedPath);
-        }
+        }*/
 
         public Path removePath(Path p)
         {
@@ -66,7 +67,7 @@ namespace ClusteringSpace
             return (removedPath);
         }
 
-        public Path GetPathNearestToCentroid()
+/*        public Path GetPathNearestToCentroid()
         {
             double minimumDistance = 0.0;
             int nearestPathIndex = -1;
@@ -93,7 +94,7 @@ namespace ClusteringSpace
             }
 
             return (this[nearestPathIndex]);
-        }
+        }*/
 
         #endregion
 
@@ -101,6 +102,9 @@ namespace ClusteringSpace
 
         public void UpdateCentroid()
         {
+	//		System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+	//		watch.Start();
+			
 		/*	double xSum = 0.0;
 			double ySum = 0.0;
 			
@@ -120,6 +124,34 @@ namespace ClusteringSpace
             Centroid.X = (xSum / (double)this.Count);
             Centroid.Y = (ySum / (double)this.Count);*/
 			
+	/*		int maxPathLength = 0;
+			foreach (Path p in this)
+			{
+				if (p.points.Count > maxPathLength)
+				{
+					maxPathLength = p.points.Count;
+				}
+			}
+			
+			Node[] nodes = new Node[maxPathLength];
+			for (int count = 0; count < maxPathLength; count ++)
+			{
+				nodes[count] = new Node();
+				nodes[count].x = nodes[count].y = 0;
+			}
+			foreach (Path p in this)
+			{
+				for (int count = 0; count < maxPathLength; count ++)
+				{
+					if (count < p.points.Count)
+					{ // has a node at that position
+						nodes[count].x += (p.points[count].x / maxPathLength);
+						nodes[count].y += (p.points[count].y / maxPathLength);
+					}
+				}
+			}
+			Centroid = new Path(new List<Node>(nodes));*/
+			
 			// TODO-find different way of computing centroid
 			
 			double pathTotalMinDist = 1000000;
@@ -131,7 +163,7 @@ namespace ClusteringSpace
 				{
 					if (i == j) continue;
 
-					Debug.Log("uc");
+		//			Debug.Log("uc");
 					currentPathTotalMinDist += KMeans.FindDistance(this[i], this[j]);
 				}
 				if (currentPathTotalMinDist < pathTotalMinDist)
@@ -142,12 +174,11 @@ namespace ClusteringSpace
 			}
 			
 			if (pIndex == -1) Debug.Log("-1");
-			else Debug.Log("NOT-1");
-//			foreach(Path p in this[pIndex])
-//			{
-				Centroid = new Path(this[pIndex].points);
-//			}
-			Debug.Log("c new path count: " + Centroid.points.Count);
+			
+			Centroid = new Path(this[pIndex].points);
+			
+//			watch.Stop();
+//			Debug.Log("UC elapsed time: " + watch.Elapsed);
         }
 
         #endregion

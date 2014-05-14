@@ -138,6 +138,7 @@ namespace EditorArea {
 				if (kv.Value) {
 					foreach (Node n in kv.Key.points) {
 						Gizmos.color = kv.Key.color;
+			//			Debug.Log("color: " + Gizmos.color);
 						if (n.parent != null) {
 							Gizmos.DrawLine (new Vector3
 							                 ((n.x * tileSize.x + zero.x),

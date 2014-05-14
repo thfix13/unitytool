@@ -4,10 +4,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
 using System.Linq;
 using System.Text;
 using Path = Common.Path;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace ClusteringSpace
 {
@@ -15,24 +18,30 @@ namespace ClusteringSpace
     {
         public static List<PathCollection> DoKMeans(PathCollection paths, int clusterCount)
         {
+			if (paths.Count == 0)
+			{
+				Debug.Log("No paths to cluster!");
+				return null;
+			}
             //divide paths into equal clusters
             List<PathCollection> allClusters = new List<PathCollection>();
             List<List<Path>> allGroups = ListUtility.SplitList<Path>(paths, clusterCount);
             foreach (List<Path> pathGroup in allGroups)
             {
                 PathCollection cluster = new PathCollection(pathGroup);
-//				foreach(Path p in pathGroup)
-//				{
-//					cluster.AddPath(p);
-//				}
-//                cluster.AddRange(pathGroup);
                 allClusters.Add(cluster);
             }
 
             //start k-means clustering
             int movements = 1;
+			int count = 0;
             while (movements > 0)
             {
+				count ++;
+				Stopwatch watch = new Stopwatch();
+				watch.Start();
+				
+				if (count > 1000) { Debug.Log("ERROR!"); return null; }
                 movements = 0;
 
                 foreach (PathCollection cluster in allClusters) //for all clusters
@@ -41,7 +50,11 @@ namespace ClusteringSpace
                     {
                         Path path = cluster[pathIndex];
 
+				//		Stopwatch watch = new Stopwatch();
+				//		watch.Start();
                         int nearestCluster = FindNearestCluster(allClusters, path);
+				//		watch.Stop();
+				//		Debug.Log("nearest cluster elapsed: " + watch.Elapsed);
                         if (nearestCluster != allClusters.IndexOf(cluster)) //if path has moved
                         {
                             if (cluster.Count > 1) //cluster shall have minimum one path
@@ -53,6 +66,9 @@ namespace ClusteringSpace
                         }
                     }
                 }
+				
+				watch.Stop();
+				Debug.Log("Iteration " + count + ", time elapsed: " + watch.Elapsed);
             }
 
             return (allClusters);
@@ -65,7 +81,7 @@ namespace ClusteringSpace
 
             for (int k = 0; k < allClusters.Count; k++) //find nearest cluster
             {
-				Debug.Log("FNC");
+	//			Debug.Log("FNC");
                 double distance = FindDistance(path, allClusters[k].Centroid);
                 if (k == 0)
                 {
@@ -88,10 +104,12 @@ namespace ClusteringSpace
 		// http://arxiv.org/abs/1306.5527
         public static double FindDistance(Path path1, Path path2)
         {
-				Debug.Log("FD");
-				if (path1.points == null) Debug.Log("P1NULL");
-				else if (path2.points == null) Debug.Log("P2NULL");
-			double[][] curveA = new double[path1.points.Count][];
+		//		Debug.Log("FD");
+		//		if (path1.points == null) Debug.Log("P1NULL");
+		//		else if (path2.points == null) Debug.Log("P2NULL");
+			
+			
+		/*	double[][] curveA = new double[path1.points.Count][];
 			double[][] curveB = new double[path2.points.Count][];
 			for (int i = 0; i < path1.points.Count; i ++)
 			{
@@ -103,7 +121,24 @@ namespace ClusteringSpace
 			}
 			
 			FrechetDistance frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(3));
+			return frechet.computeDistance(curveA,curveB);*/
+			
+			
+			double[][] curveA = new double[path1.points.Count][];
+			double[][] curveB = new double[path2.points.Count][];
+			for (int i = 0; i < path1.points.Count; i ++)
+			{
+				curveA[i] = new double[] { path1.points[i].x, path1.points[i].y };
+			}
+			for (int i = 0; i < path2.points.Count; i ++)
+			{
+				curveB[i] = new double[] { path2.points[i].x, path2.points[i].y };
+			}
+
+			FrechetDistance frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.epsApproximation2D(1.1));
 			return frechet.computeDistance(curveA,curveB);
+			
+	//		return AreaDist.computeDistance(path1, path2);
 			
        /*     double x1 = pt1.X, y1 = pt1.Y;
             double x2 = pt2.X, y2 = pt2.Y;

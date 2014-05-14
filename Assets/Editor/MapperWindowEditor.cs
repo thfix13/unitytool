@@ -21,10 +21,10 @@ namespace EditorArea {
 
 		// Parameters with default values
 		public static int timeSamples = 2000, attemps = 25000, iterations = 1, gridSize = 60, ticksBehind = 0;
-		private static bool drawMap = true, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = false, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false;
+		private static bool drawMap = false, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = true, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false;
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10;
 		private static int randomSeed = -1;
-		private static int numClusters = 3;
+		private static int numClusters = 4;
 
 		// Computed parameters
 		private static int[,] heatMap, deathHeatMap, combatHeatMap;
@@ -652,28 +652,33 @@ namespace EditorArea {
 			numClusters = EditorGUILayout.IntSlider ("Number of clusters", numClusters, 1, 6);
 			if (GUILayout.Button ("Cluster on path similarity"))
 			{
+				System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+				watch.Start();
 				List<PathCollection> clusters = KMeans.DoKMeans(new PathCollection(paths), numClusters);
+				watch.Stop();
+				Debug.Log("Total elapsed time: " + watch.Elapsed);
 				
 				Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black };
 				
 				paths.Clear ();
 				deaths.Clear ();
-			//	ClearPathsRepresentation ();
+				ClearPathsRepresentation ();
 				
 				for(int c = 0; c < clusters.Count; c ++)
 				{
-					Debug.Log("cluster " + c);
+	//				Debug.Log("cluster " + c);
 					foreach(Path path in clusters[c])
 					{
-						String pathstr = "";
+		/*				String pathstr = "";
 						foreach(Node n in path.points)
 						{
 							pathstr += "(N x:"+n.x+", y:"+n.y+", t:"+n.t+")";
 						}
 						Debug.Log(pathstr);
-						
+		*/				
 						path.color = colors[c];
 						paths.Add(path);
+						toggleStatus.Add (paths.Last (), true);
 					}
 				}
 			}
