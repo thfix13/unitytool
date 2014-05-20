@@ -11,7 +11,7 @@ public class Mapper : MonoBehaviour {
 	private float tileSizeX, tileSizeZ;
 	private int cellsX, cellsZ;
 	private float minX, minZ;
-
+	
 	// This computes the map that contains only the obstacles
 	public Cell[][] ComputeObstacles () {
 		Cell[][] baseMap = new Cell[cellsX][];
@@ -26,9 +26,11 @@ public class Mapper : MonoBehaviour {
 				pos.Set ((x + tileSizeX / 2 - cellsX / 2) * tileSizeX, 0f, (y + tileSizeZ / 2 - cellsZ / 2) * tileSizeZ);
 				c.blocked = Physics.CheckSphere (pos, (tileSizeX + tileSizeZ) / 4, 1 << layer);
 				baseMap [x] [y] = c;
+				baseMap [x] [y].i = x;
+				baseMap [x] [y].j = y;
 			}
 		}
-
+		
 		return baseMap;
 	}
 	
@@ -85,7 +87,7 @@ public class Mapper : MonoBehaviour {
 				e.forwards [counter] = e.GetSimulatedForward ();
 				e.rotations [counter] = e.GetSimulatedRotation ();
 			}
-				
+			
 			fullMap [counter] = ComputeMap (baseMap, enemies, cells);
 			
 			// Store the seen cells in the enemy class
@@ -95,17 +97,17 @@ public class Mapper : MonoBehaviour {
 				arr [i].Clear ();
 			}
 		}
-	
+		
 		// From the last time to the first, pick a cell and look back in time to see if it was seen previously
 		if (ticksBehind > 0)
 			for (int counter = timestamps-1; counter >= 0; counter--) 
 				for (int ticks = 1; ticks <= ticksBehind && counter - ticks > 0; ticks++) 
 					foreach (Enemy e in enemies)
 						foreach (Vector2 v in e.cells[counter - ticks])
-							if (fullMap [counter - ticks] [(int)v.x] [(int)v.y].seen) {
-								fullMap [counter] [(int)v.x] [(int)v.y].seen = true;
-							}
-
+						if (fullMap [counter - ticks] [(int)v.x] [(int)v.y].seen) {
+							fullMap [counter] [(int)v.x] [(int)v.y].seen = true;
+						}
+		
 		foreach (Enemy e in enemies)
 			e.ComputeSeenCells(fullMap);
 		
@@ -147,9 +149,9 @@ public class Mapper : MonoBehaviour {
 			
 			// if tileSizeX != tileSizeZ we can be in big trouble!
 			float dist = enemy.fovDistance / ((tileSizeX + tileSizeZ) / 2);
-
+			
 			DDA dda = new DDA(tileSizeX, tileSizeZ, cellsX, cellsZ);
-
+			
 			for (int x = 0; x < cellsX; x++) {
 				for (int y = 0; y < cellsZ; y++) {
 					
@@ -157,7 +159,7 @@ public class Mapper : MonoBehaviour {
 					// Don't skip cells seen by other enemies or we won't have the correct seenCells computed
 					if (im [x] [y].blocked || im [x] [y].safe)
 						continue;
-
+					
 					// This enemy haven't seen it yet
 					bool seen = false;
 					
@@ -172,18 +174,18 @@ public class Mapper : MonoBehaviour {
 							
 							// Is the target within our FoV?
 							if (Vector2.Distance (p, pos) < dist && Vector2.Angle (res, dir) < enemy.fovAngle) {
-
+								
 								// Check if target is seen by this enemy
 								seen = seen || dda.HasLOS(im, p, pos, res, x, y);
-
+								
 							}
 						}
 					}
-
+					
 					// If this enemy has seen it
 					if (seen)
 						cellsByEnemy [i].Add (new Vector2 (x, y));
-
+					
 					// Now take into account other enemies before modifying the cells value
 					im [x] [y].seen = im [x] [y].seen || seen;
 				}

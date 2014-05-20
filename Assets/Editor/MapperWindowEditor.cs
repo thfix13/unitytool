@@ -675,6 +675,48 @@ namespace EditorArea {
 					}
 				}
 			}
+
+			if (GUILayout.Button ("Generate Graph")) {
+				Cell[][] obs = null;
+				Skeletonization skl = new Skeletonization();
+				if (obs == null) { 
+					obs = mapper.ComputeObstacles ();
+					Cell[][] grid = MapperEditor.grid;
+					if (grid != null) {
+						for (int x = 0; x < obs.Length; x++) {
+							for (int y = 0; y < obs[x].Length; y++) {
+								if (grid [x] [y] != null) {
+									obs [x] [y] = grid [x] [y];	
+								}
+							}
+						}
+					}
+					skl.obs = new Cell[obs.Length][];
+					for (int x = 0; x <obs.Length; x++) {
+						skl.obs [x] = new Cell[obs [x].Length];
+					}
+					// Passing as value NOT as reference
+					for (int i = 0; i < obs.Length; i++) {
+						for (int j = 0; j < obs [i].Length; j++) {
+							skl.obs [i] [j] = obs [i] [j].Copy ();
+						}
+					}
+				}
+				
+				skl.identifyObstacleContours (floor);
+				//drawer.sBoundaryGrid = PCG.sBoundary.obs;
+				
+				skl.boundaryContoursFlooding (floor);
+				skl.extractRoadmaps (floor);
+				//drawer.roadmapNodesList = PCG.sBoundary.roadmapNodesList;
+				
+				skl.selectSuperNodes ();
+				skl.initializeGraph ();
+				//drawer.graphNodesList = PCG.sBoundary.finalGraphNodesList;
+				
+				skl.cleanUp (floor);
+			}
+
 			
 			#endregion
 			
