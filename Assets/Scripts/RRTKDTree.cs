@@ -87,7 +87,7 @@ namespace Exploration {
 				int ry = Random.Range (0, nodeMatrix [rt] [rx].Length);
 				//int rx = p.x, ry = p.y;
 				nodeVisiting = GetNode (rt, rx, ry);
-				if (nodeVisiting.visited || !nodeVisiting.cell.IsWalkable ()) {
+				if (nodeVisiting.visited || nodeVisiting.cell.blocked) {
 					i--;
 					continue;
 				}
@@ -109,7 +109,7 @@ namespace Exploration {
 				}
 				
 				// And we have line of sight
-				if (!nodeVisiting.cell.IsWalkable () || Library.CheckCollision (nodeVisiting, nodeTheClosestTo, this, SpaceState.Editor, true))
+				if ((nodeVisiting.cell.seen && !nodeVisiting.cell.safe) || Extra.Collision.CheckCollision (nodeVisiting, nodeTheClosestTo, this, SpaceState.Editor, true))
 					continue;
 				
 				try {
@@ -133,7 +133,7 @@ namespace Exploration {
 					
 					if (pd.y <= nodeMatrix.GetLength (0)) {
 						Node endNode = GetNode ((int)pd.y, (int)pd.x, (int)pd.z);
-						if (!Library.CheckCollision (nodeVisiting, endNode, this, SpaceState.Editor, true)) {
+						if (!Extra.Collision.CheckCollision (nodeVisiting, endNode, this, SpaceState.Editor, true)) {
 							//Debug.Log ("Done3");
 							endNode.parent = nodeVisiting;
 							return ReturnPath (endNode, smooth);
@@ -171,7 +171,7 @@ namespace Exploration {
 				Node final = null;
 				foreach (Node each in points) {
 					final = each;
-					while (Library.SmoothNode(final, this, SpaceState.Editor, true)) {
+					while (Extra.Collision.SmoothNode(final, this, SpaceState.Editor, true)) {
 					}
 				}
 				

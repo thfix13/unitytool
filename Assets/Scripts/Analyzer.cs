@@ -18,7 +18,7 @@ namespace Extra {
 			Los3 = 6,
 			Los3Norm = 7
 		}
-		// [Heuristic] [Time]
+		// This is to hold the time for each heuristic used so we can export/save this data later [Heuristic] [Time]
 		public static Dictionary<Path, float[][]> pathMap = new Dictionary<Path, float[][]> ();
 		
 		public static float[][] ComputeSeenValuesGrid (Cell[][][] fullMap, out float max) {
@@ -37,12 +37,6 @@ namespace Extra {
 			return metric;
 		}
 		
-		public static void Swap<T> (ref T x, ref T y) {
-			T tmp = y;
-			y = x;
-			x = tmp;
-		}
-		
 		private static float ComputeLength3D (List<Node> length) {
 			float total = 0f;
 			Node n = length [length.Count - 1];
@@ -53,7 +47,7 @@ namespace Extra {
 			return total;
 		}
 		
-		// This must be called before a single path analysis or a batch path analysis
+		// This must be called before a single path analysis or a batch path analysis if, and only if you want to export/save the time-per-heuristic
 		public static void PreparePaths (List<Path> paths) {
 			Heuristic[] values = (Heuristic[])Enum.GetValues (typeof(Analyzer.Heuristic));
 			
@@ -62,6 +56,8 @@ namespace Extra {
 			foreach (Path path in paths) {
 				if (!(pathMap.ContainsKey (path))) {
 					pathMap.Add (path, new float[Enum.GetValues (typeof(Analyzer.Heuristic)).Length][]);
+
+					path.ZeroValues();
 				}
 				
 				foreach (Heuristic metric in values)
@@ -166,8 +162,10 @@ namespace Extra {
 					v2.Normalize ();
 					float angle1 = Vector3.Angle (v1, Vector3.up);
 					float angle2 = Vector3.Angle (v2, Vector3.up);
-					pathMap [path] [(int)Heuristic.Velocity] [n.parent.t] = Mathf.Abs (angle2 - angle1);
-					path.velocity += pathMap [path] [(int)Heuristic.Velocity] [n.parent.t];
+					float result = Mathf.Abs (angle2 - angle1);
+					path.velocity += result;
+					if (pathMap.ContainsKey(path))
+						pathMap [path] [(int)Heuristic.Velocity] [n.parent.t] = Mathf.Abs (angle2 - angle1);
 					n = n.parent;
 				}
 				if (path.length3d == 0)
@@ -246,16 +244,19 @@ namespace Extra {
 								if (g == Mathf.Infinity) {
 									g = angle / Mathf.Pow ((pos2d - enemy2d).magnitude, 3);
 								}
-								
-								// Store in 'per-time' metric
-								pathMap [currentPath] [(int)Heuristic.Los] [par.t + t] = f;
-								pathMap [currentPath] [(int)Heuristic.Los3] [par.t + t] = g;
-								pathMap [currentPath] [(int)Heuristic.Los3Norm] [par.t + t] = g * (dangerCells [(int)pos2d.x] [(int)pos2d.y] / maxDanger);
+								float g3 = g * (dangerCells [(int)pos2d.x] [(int)pos2d.y] / maxDanger);
 								
 								// Increment the total metric
-								currentPath.los += pathMap [currentPath] [(int)Heuristic.Los] [par.t + t];
-								currentPath.los3 += pathMap [currentPath] [(int)Heuristic.Los3] [par.t + t];
-								currentPath.los3Norm += pathMap [currentPath] [(int)Heuristic.Los3Norm] [par.t + t];
+								currentPath.los += f;
+								currentPath.los3 += g;
+								currentPath.los3Norm += g3;
+
+								if (pathMap.ContainsKey(currentPath)) {
+									// Store in 'per-time' metric
+									pathMap [currentPath] [(int)Heuristic.Los] [par.t + t] = f;
+									pathMap [currentPath] [(int)Heuristic.Los3] [par.t + t] = g;
+									pathMap [currentPath] [(int)Heuristic.Los3Norm] [par.t + t] = g3;
+								}
 							}
 						}
 					}
@@ -304,14 +305,21 @@ namespace Extra {
 							List<Node> astarpath = astar.Compute (startX, startY, endX, endY, fullMap [par.t + t], true);
 							if (astarpath.Count > 0) {
 								float l = ComputeLength3D (astarpath);
+
+								float ld = 1 / (l * l);
+								float ld3 = 1 / (l * l * l);
+								float ld3n = (1 / (l * l * l)) * (dangerCells [startX] [startY] / maxDanger);
 								
-								pathMap [currentPath] [(int)Heuristic.Danger] [par.t + t] = 1 / (l * l);
-								pathMap [currentPath] [(int)Heuristic.Danger3] [par.t + t] = 1 / (l * l * l);
-								pathMap [currentPath] [(int)Heuristic.Danger3Norm] [par.t + t] = (1 / (l * l * l)) * (dangerCells [startX] [startY] / maxDanger);
-								
-								currentPath.danger += pathMap [currentPath] [(int)Heuristic.Danger] [par.t + t];
-								currentPath.danger3 += pathMap [currentPath] [(int)Heuristic.Danger3] [par.t + t];
-								currentPath.danger3Norm += pathMap [currentPath] [(int)Heuristic.Danger3Norm] [par.t + t];
+								currentPath.danger += ld;
+								currentPath.danger3 += ld3;
+								currentPath.danger3Norm += ld3n;
+
+								if (pathMap.ContainsKey(currentPath)) {
+									// Store in 'per-time' metric
+									pathMap [currentPath] [(int)Heuristic.Danger] [par.t + t] = ld;
+									pathMap [currentPath] [(int)Heuristic.Danger3] [par.t + t] = ld3;
+									pathMap [currentPath] [(int)Heuristic.Danger3Norm] [par.t + t] = ld3n;
+								}
 							}
 						}
 					}
@@ -363,9 +371,11 @@ namespace Extra {
 							}
 							
 						}
-						
-						pathMap [currentPath] [(int)Heuristic.Crazyness] [par.t + t] = tempCrazy;
-						currentPath.crazy += pathMap [currentPath] [(int)Heuristic.Crazyness] [par.t + t];
+
+						currentPath.crazy += tempCrazy;
+
+						if (pathMap.ContainsKey(currentPath))
+							pathMap [currentPath] [(int)Heuristic.Crazyness] [par.t + t] = tempCrazy;
 					}
 						
 					cur = par;
@@ -496,7 +506,77 @@ namespace Extra {
 			
 			return heatMap;
 		}
+
+		public static int[,] ComputeDeathHeatMap (List<Path> paths, int sizeX, int sizeY, out int maxN) {
+			maxN = -1;
+			int[,] heatMap = new int[sizeX, sizeY];
+			
+			foreach (Path path in paths) {
+				Node death = path.points[path.points.Count-1];
+
+				// Paint adjacent nodes
+				for (int x = death.x -2; x >= 0 && x <= death.x + 2 && x < sizeX; x++)
+					for (int y = death.y -2; y >= 0 && y <= death.y + 2 && y < sizeY; y++) {
+						int dx = Math.Abs(death.x - x);
+						int dy = Math.Abs(death.y - y);
+						heatMap[x,y] += (5 - dx - dy);
+					}
+
+				// Main node
+				heatMap[death.x, death.y] += 10;
+			}
+
+			// Get maxN
+			for (int x = 0; x < sizeX; x++) {
+				for (int y = 0; y < sizeY; y++) {
+					if (maxN < heatMap [x, y])
+						maxN = heatMap [x, y];
+				}
+			}
+			
+			return heatMap;
+		}
+
 		
+		public static int[][,] Compute3dDeathHeatMap (List<Path> paths, int sizeX, int sizeY, int sizeT, out int[] maxN) {
+			maxN = new int[sizeT];
+			int[][,] heatMap = new int[sizeT][,];
+			for (int t = 0; t < sizeT; t++)
+				heatMap[t] = new int[sizeX,sizeY];
+			
+			foreach (Path path in paths) {
+				Node death = path.points[path.points.Count-1];
+				
+				// Paint adjacent nodes
+				for (int t = death.t -2; t >= 0 && t <= death.t + 2 && t < sizeT; t++){
+					for (int x = death.x -2; x >= 0 && x <= death.x + 2 && x < sizeX; x++){
+						for (int y = death.y -2; y >= 0 && y <= death.y + 2 && y < sizeY; y++) {
+							int dx = Math.Abs(death.x - x);
+							int dy = Math.Abs(death.y - y);
+							int dt = Math.Abs(death.t - t);
+							heatMap[t][x,y] += (7 - dx - dy - dt);
+						}
+					}
+				}
+				
+				// Main node
+				heatMap[death.t][death.x, death.y] += 15;
+			}
+			
+			// Get maxN
+			for (int t = 0; t < sizeT; t++) {
+				for (int x = 0; x < sizeX; x++) {
+					for (int y = 0; y < sizeY; y++) {
+						if (maxN[t] < heatMap [t][x, y])
+							maxN[t] = heatMap [t][x, y];
+					}
+				}
+			}
+			
+			return heatMap;
+		}
+
+
 		public static int[,] Compute2DHeatMap (List<Path> paths, int sizeX, int sizeY, out int maxN) {
 			maxN = -1;
 			int[,] heatMap = new int[sizeX, sizeY];
@@ -606,6 +686,35 @@ namespace Extra {
 			}
 			
 			return heatMap;
+		}
+
+		public static int[,] Compute2DCombatHeatMap (List<Path> paths, List<Path> deaths, int sizeX, int sizeY, out int maxN) {
+			List<Path> all = new List<Path>(paths);
+			all.AddRange(deaths);
+
+			int[,] map = new int[sizeX,sizeY];
+			maxN = 0;
+			foreach (Path path in all) {
+				foreach (Node n in path.points) {
+					if (n.fighting != null && n.fighting.Count > 0) {
+
+						// Paint adjacent nodes
+						for (int x = n.x -2; x >= 0 && x <= n.x + 2 && x < sizeX; x++){
+							for (int y = n.y -2; y >= 0 && y <= n.y + 2 && y < sizeY; y++) {
+								int dx = Math.Abs(n.x - x);
+								int dy = Math.Abs(n.y - y);
+								map[x,y] += (5 - dx - dy);
+							}
+						}
+
+
+						map[n.x,n.y] += 10;
+						maxN = Mathf.Max(map[n.x, n.y], maxN);
+					}
+				}
+			}
+
+			return map;
 		}
 	}
 }

@@ -1,19 +1,32 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using System.Xml;
 using System.Xml.Serialization;
+using Objects;
 
 namespace Common {
 	[Serializable]
 	// Structure that holds the information used in the AStar cells
 		public class Node : Priority_Queue.PriorityQueueNode {
 		public int x, y, t;
+		public float playerhp;
+		[XmlIgnore]
+		public Dictionary<Enemy, float> enemyhp;
+		[XmlIgnore]
+		public List<Enemy> fighting;
+		[XmlIgnore]
+		public Enemy died;
 		[XmlIgnore]
 		public Node parent;
 		[XmlIgnore]
 		public Cell cell;
 		[XmlIgnore]
 		public bool visited = false;
+		[XmlIgnore]
+		public double accSpeed = 0.0d;
+		[XmlIgnore]
+		public List<HealthPack> picked;
 
 		public float DistanceFrom (Node n) {
 			Vector2 v1, v2;

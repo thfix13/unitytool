@@ -12,10 +12,6 @@ namespace Common {
 		public bool goal = false;
 		public short cluster = 0;
 		
-		public Boolean IsWalkable () {
-			return safe || (!(blocked || seen));
-		}
-		
 		public Cell Copy () {
 			Cell copy = new Cell ();
 			copy.blocked = this.blocked;
