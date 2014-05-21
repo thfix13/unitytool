@@ -715,6 +715,8 @@ namespace EditorArea {
 				//drawer.graphNodesList = PCG.sBoundary.finalGraphNodesList;
 				
 				skl.cleanUp (floor);
+
+				Debug.Log(skl.finalGraphNodesList.Count);
 			}
 
 			

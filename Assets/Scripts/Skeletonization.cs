@@ -1031,8 +1031,8 @@ public class Skeletonization
 		}
 		
 		// For M.G.S only
-		finalGraphNodesList.ElementAt (28).neighbors.Remove (finalGraphNodesList.ElementAt (30));
-		finalGraphNodesList.ElementAt (30).neighbors.Remove (finalGraphNodesList.ElementAt (28));
+		//finalGraphNodesList.ElementAt (28).neighbors.Remove (finalGraphNodesList.ElementAt (30));
+		//finalGraphNodesList.ElementAt (30).neighbors.Remove (finalGraphNodesList.ElementAt (28));
 		
 		return; 
 
