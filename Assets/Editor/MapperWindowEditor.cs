@@ -24,7 +24,7 @@ namespace EditorArea {
 		private static bool drawMap = false, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = true, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false;
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10;
 		private static int randomSeed = -1;
-		private static int numClusters = 4;
+		private static int numClusters = 5;
 
 		// Computed parameters
 		private static int[,] heatMap, deathHeatMap, combatHeatMap;
@@ -652,35 +652,73 @@ namespace EditorArea {
 			numClusters = EditorGUILayout.IntSlider ("Number of clusters", numClusters, 1, 6);
 			if (GUILayout.Button ("Cluster on path similarity"))
 			{
-				System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
-				watch.Start();
-				List<PathCollection> clusters = KMeans.DoKMeans(new PathCollection(paths), numClusters);
-				watch.Stop();
-				Debug.Log("Total elapsed time: " + watch.Elapsed);
-				
-				Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black };
-				
-				paths.Clear ();
-				deaths.Clear ();
-				ClearPathsRepresentation ();
-				
-				for(int c = 0; c < clusters.Count; c ++)
+				if (paths.Count < numClusters)
 				{
-	//				Debug.Log("cluster " + c);
-					foreach(Path path in clusters[c])
+					Debug.Log("You have less paths than you have desired clusters - either compute more paths or decrease cluster amount.");
+					return;
+				}
+
+				KMeans.clustTime = new System.Diagnostics.Stopwatch();
+				KMeans.distTime = new System.Diagnostics.Stopwatch();
+
+				if (paths.Count > 90)
+				{
+					List<PathCollection> clusters = KMeans.DoKMeans(new PathCollection(paths), paths.Count/10);
+				
+					List<Path> clusterCentroids = new List<Path>();
+					foreach(PathCollection pc in clusters)
 					{
-		/*				String pathstr = "";
-						foreach(Node n in path.points)
+						clusterCentroids.Add(pc.Centroid);
+					}
+				
+					List<PathCollection> newClusters = KMeans.DoKMeans(new PathCollection(clusterCentroids), numClusters);
+
+					Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black };
+				
+					paths.Clear ();
+					deaths.Clear ();
+					ClearPathsRepresentation ();
+
+					for (int c = 0; c < newClusters.Count; c ++)
+					{
+						for (int c2 = 0; c2 < clusters.Count; c2 ++)
 						{
-							pathstr += "(N x:"+n.x+", y:"+n.y+", t:"+n.t+")";
+							if (newClusters[c].Contains(clusters[c2].Centroid))
+							{ // then all paths of clusters[c2] list should be of the same color!
+								foreach (Path path in clusters[c2])
+								{
+									path.color = colors[c];
+									paths.Add(path);
+									toggleStatus.Add(paths.Last (), true);
+								}
+							}
 						}
-						Debug.Log(pathstr);
-		*/				
-						path.color = colors[c];
-						paths.Add(path);
-						toggleStatus.Add (paths.Last (), true);
 					}
 				}
+				else
+				{
+					List<PathCollection> clusters = KMeans.DoKMeans(new PathCollection(paths), numClusters);
+				
+					Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black };
+				
+					paths.Clear ();
+					deaths.Clear ();
+					ClearPathsRepresentation ();
+
+					for(int c = 0; c < clusters.Count; c ++)
+					{
+						foreach(Path path in clusters[c])
+						{
+							path.color = colors[c];
+							paths.Add(path);
+							toggleStatus.Add(paths.Last (), true);
+						}
+					}
+				}
+				
+				Debug.Log ("Clust elapsed time: " + KMeans.clustTime.Elapsed);
+				Debug.Log ("Dist elapsed time: " + KMeans.distTime.Elapsed);
+				Debug.Log ("Total: " + (KMeans.clustTime.Elapsed + KMeans.distTime.Elapsed));
 			}
 			
 			#endregion
@@ -772,7 +810,7 @@ namespace EditorArea {
 			previous = DateTime.Now;
 		}
 		
-		private void ClearPathsRepresentation () {
+		private static void ClearPathsRepresentation () {
 			toggleStatus.Clear ();
 			
 			foreach (GameObject obj in players.Values)
@@ -1234,5 +1272,57 @@ namespace EditorArea {
 			}
 		}
 		
+		public static void updatePaths(List<PathCollection> clusters)
+		{
+			// This function was supposed to update the path colors in the editor display while the clustering process
+			// was running, but it doesn't work. It does cause the Unity window to request window focus, though.
+			
+			Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black };
+			
+			paths.Clear ();
+			deaths.Clear ();
+			ClearPathsRepresentation ();
+			
+			for(int c = 0; c < clusters.Count; c ++)
+			{
+				foreach(Path path in clusters[c])
+				{
+					path.color = colors[c%6];
+					paths.Add(path);
+					toggleStatus.Add(paths.Last (), true);
+				}
+			}
+			
+			//Update();
+			Debug.Log("---");
+			MapperWindowEditor window = (MapperWindowEditor)EditorWindow.GetWindow (typeof(MapperWindowEditor));
+			EditorUtility.SetDirty (window);
+			window.Repaint();
+			window.Update();
+			window.OnGUI();
+			
+			window.drawer = floor.gameObject.GetComponent<MapperEditorDrawer> ();
+			
+				window.drawer.timeSlice = timeSlice;
+				window.drawer.drawHeatMap = drawHeatMap;
+				window.drawer.drawMap = drawMap;
+				window.drawer.drawFoVOnly = drawFoVOnly;
+				window.drawer.drawNeverSeen = drawNeverSeen;
+				window.drawer.drawPath = drawPath;
+				window.drawer.drawCombatLines = drawCombatLines;
+				window.drawer.paths = toggleStatus;
+				window.drawer.textDraw = window.textDraw;
+			
+			if (original != null && window.lastTime != timeSlice) {
+				window.lastTime = timeSlice;
+				window.UpdatePositions (timeSlice, window.mapper);
+			}
+			
+			
+			SceneView.RepaintAll ();
+			
+			MapperEditor.editGrid = true;
+			UnityEditorInternal.InternalEditorUtility.RepaintAllViews();
+		}
 	}
 }

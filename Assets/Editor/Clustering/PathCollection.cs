@@ -154,7 +154,7 @@ namespace ClusteringSpace
 			
 			// TODO-find different way of computing centroid
 			
-			double pathTotalMinDist = 1000000;
+			double pathTotalMinDist = double.PositiveInfinity;
 			int pIndex = -1;
 			for (int i = 0; i < this.Count; i ++)
 			{
@@ -168,12 +168,18 @@ namespace ClusteringSpace
 				}
 				if (currentPathTotalMinDist < pathTotalMinDist)
 				{
-					currentPathTotalMinDist = pathTotalMinDist;
+					//currentPathTotalMinDist = pathTotalMinDist;
+					pathTotalMinDist = currentPathTotalMinDist;
 					pIndex = i;
 				}
 			}
 			
-			if (pIndex == -1) Debug.Log("-1");
+			if (pIndex == -1)
+			{
+				Debug.Log("-1");
+				Centroid = null;
+				return;
+			}
 			
 			Centroid = new Path(this[pIndex].points);
 			

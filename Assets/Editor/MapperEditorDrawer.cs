@@ -6,6 +6,7 @@ using Extra;
 
 namespace EditorArea {
 	
+	[ExecuteInEditMode]
 	public class MapperEditorDrawer : MonoBehaviour {
 		
 		// Options

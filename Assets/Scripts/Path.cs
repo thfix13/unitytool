@@ -8,7 +8,7 @@ using Objects;
 using Extra;
 
 namespace Common {
-	public class Path {
+	public class Path : IEquatable<Path> {
 		public String name;
 		public Color color;
 		public List<Node> points;
@@ -29,6 +29,18 @@ namespace Common {
 		
 		public void ZeroValues () {
 			time = length2d = length3d = danger = los = danger3 = los3 = danger3Norm = los3Norm = crazy = velocity = 0f;
+		}
+		
+		public bool Equals(Path other)
+		{
+			if (points.Count != other.points.Count) return false;
+			
+			for (int i = 0; i < points.Count; i ++)
+			{
+				if (!points[i].equalTo(other.points[i])) return false;
+			}
+			
+			return true;
 		}
 	}
 	
