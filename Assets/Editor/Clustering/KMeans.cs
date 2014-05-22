@@ -19,15 +19,28 @@ namespace ClusteringSpace
     {
 		public static Stopwatch distTime = new Stopwatch();
 		public static Stopwatch clustTime = new Stopwatch();
-		static FrechetDistance frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(2));
-	//	static FrechetDistance frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.epsApproximation2D(1.1));
+		static FrechetDistance frechet;
         
-        public static List<PathCollection> DoKMeans(PathCollection paths, int clusterCount)
+		private static int distMetric = 0;
+		
+        public static List<PathCollection> DoKMeans(List<Path> paths, int clusterCount, int distMetric_)
         {
 			if (paths.Count == 0)
 			{
 				Debug.Log("No paths to cluster!");
 				return null;
+			}
+			
+			Debug.Log("Dist metric chosen: " + distMetric_);
+			
+			distMetric = distMetric_;
+			if (distMetric == 0)
+			{
+				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(2));
+			}
+			else if (distMetric == 1)
+			{
+				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.epsApproximation2D(1.1));
 			}
 			
 			clustTime.Start();
@@ -49,7 +62,7 @@ namespace ClusteringSpace
 				count ++;
 				MapperWindowEditor.updatePaths(allClusters);
 				
-	//			if (count > 200) { Debug.Log("Over 200 iterations"); return null; }
+				if (count > 200) { Debug.Log("Over 200 iterations"); clustTime.Stop(); return allClusters; }
                 movements = 0;
 
 //                foreach (PathCollection cluster in allClusters) //for all clusters
@@ -109,7 +122,6 @@ namespace ClusteringSpace
 		// based on paper by Buchin et al
 		// http://arxiv.org/abs/1306.5527
 		
-		
         public static double FindDistance(Path path1, Path path2)
         {
 			if (path1.points == null) { Debug.Log("P1NULL"); return -1; }
@@ -129,22 +141,28 @@ namespace ClusteringSpace
 				curveB[i] = new double[] { path2.points[i].x, path2.points[i].y };
 			}
 
-//			FrechetDistance frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.epsApproximation2D(1.1));
-			double result = frechet.computeDistance(curveA,curveB);
-		//	double result = HausdorffDist.computeDistance(path1, path2);
+			double result = 0.0;
+			
+			//public String[] distMetrics = new String[] { "Fréchet (L1)", "Fréchet (Euclidean)", "Hausdorff (Euclidean)" };
+			if (distMetric == 0 || distMetric == 1)
+			{
+				result = frechet.computeDistance(curveA,curveB);
+			}
+			else if (distMetric == 2)
+			{
+				result = HausdorffDist.computeDistance(path1, path2);
+			}
+			else
+			{
+				Debug.Log("Invalid distance metric ("+distMetric+")!");
+				return -1;
+			}
+		//	double result = AreaDist.computeDistance(path1, path2);
 			
 			distTime.Stop();
 			clustTime.Start();
+			
 			return result;
-			
-	//		return AreaDist.computeDistance(path1, path2);
-			
-       /*     double x1 = pt1.X, y1 = pt1.Y;
-            double x2 = pt2.X, y2 = pt2.Y;
-
-            //find euclidean distance
-            double distance = Math.Sqrt(Math.Pow(x2 - x1, 2.0) + Math.Pow(y2 - y1, 2.0));
-            return (distance);*/
         }
     }
 }

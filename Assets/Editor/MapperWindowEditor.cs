@@ -24,7 +24,13 @@ namespace EditorArea {
 		private static bool drawMap = false, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = true, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false;
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10;
 		private static int randomSeed = -1;
-		private static int numClusters = 5;
+		
+		// Clustering
+		public static String[] distMetrics = new String[] { "Frechet (L1)", "Frechet (Euclidean)", "Hausdorff (Euclidean)" };
+		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
+		public static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
+		private static int numClusters = 5, distMetric = 0;
+		private static bool[] showPaths = new bool[colors.Count()];
 
 		// Computed parameters
 		private static int[,] heatMap, deathHeatMap, combatHeatMap;
@@ -646,10 +652,12 @@ namespace EditorArea {
 			#endregion
 			
 			#region 7. Clustering
-			
+						
 			EditorGUILayout.LabelField ("");
 			EditorGUILayout.LabelField ("7. Clustering");
-			numClusters = EditorGUILayout.IntSlider ("Number of clusters", numClusters, 1, 6);
+			numClusters = EditorGUILayout.IntSlider ("Number of clusters", numClusters, 1, 7);
+			distMetric = EditorGUILayout.Popup("Dist metric:", distMetric, distMetrics);
+			
 			if (GUILayout.Button ("Cluster on path similarity"))
 			{
 				if (paths.Count < numClusters)
@@ -663,7 +671,7 @@ namespace EditorArea {
 
 				if (paths.Count > 90)
 				{
-					List<PathCollection> clusters = KMeans.DoKMeans(new PathCollection(paths), paths.Count/10);
+					List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/10, distMetric);
 				
 					List<Path> clusterCentroids = new List<Path>();
 					foreach(PathCollection pc in clusters)
@@ -671,9 +679,7 @@ namespace EditorArea {
 						clusterCentroids.Add(pc.Centroid);
 					}
 				
-					List<PathCollection> newClusters = KMeans.DoKMeans(new PathCollection(clusterCentroids), numClusters);
-
-					Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black };
+					List<PathCollection> newClusters = KMeans.DoKMeans(clusterCentroids, numClusters, distMetric);
 				
 					paths.Clear ();
 					deaths.Clear ();
@@ -697,7 +703,7 @@ namespace EditorArea {
 				}
 				else
 				{
-					List<PathCollection> clusters = KMeans.DoKMeans(new PathCollection(paths), numClusters);
+					List<PathCollection> clusters = KMeans.DoKMeans(paths, numClusters, distMetric);
 				
 					Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black };
 				
@@ -719,6 +725,38 @@ namespace EditorArea {
 				Debug.Log ("Clust elapsed time: " + KMeans.clustTime.Elapsed);
 				Debug.Log ("Dist elapsed time: " + KMeans.distTime.Elapsed);
 				Debug.Log ("Total: " + (KMeans.clustTime.Elapsed + KMeans.distTime.Elapsed));
+			}
+			
+			EditorGUILayout.LabelField ("");
+			for (int count = 0; count < colors.Count(); count ++)
+			{
+				showPaths[count] = EditorGUILayout.Toggle(colorStrings[count], showPaths[count]);
+			}
+			if (GUILayout.Button ("Show selected paths"))
+			{
+				List<Color> selectedColors = new List<Color>();
+				for (int color = 0; color < colors.Count(); color ++)
+				{
+					if (showPaths[color])
+					{
+						selectedColors.Add(colors[color]);
+					}
+				}
+				foreach (Path p in paths)
+				{
+					bool contained = false;
+					foreach (Color color in selectedColors)
+					{
+						if (p.color.r == color.r && p.color.g == color.g && p.color.b == color.b)
+						{
+							p.color.a = 1;
+							contained = true;
+							break;
+						}
+					}
+					
+					if (!contained) p.color.a = 0;
+				}
 			}
 			
 			#endregion
@@ -1276,9 +1314,7 @@ namespace EditorArea {
 		{
 			// This function was supposed to update the path colors in the editor display while the clustering process
 			// was running, but it doesn't work. It does cause the Unity window to request window focus, though.
-			
-			Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black };
-			
+						
 			paths.Clear ();
 			deaths.Clear ();
 			ClearPathsRepresentation ();
@@ -1287,7 +1323,7 @@ namespace EditorArea {
 			{
 				foreach(Path path in clusters[c])
 				{
-					path.color = colors[c%6];
+					path.color = colors[c%colors.Count()];
 					paths.Add(path);
 					toggleStatus.Add(paths.Last (), true);
 				}
