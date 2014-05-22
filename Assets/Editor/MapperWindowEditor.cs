@@ -20,6 +20,7 @@ namespace EditorArea {
 		private static Cell[][][] fullMap, original;
 		public static List<Path> paths = new List<Path> (), deaths = new List<Path>();
 
+		public int numberLines = 20; 
 		public float interpolationValue = 0.0f;
 		public float interpolationValueCheck = 0.0f; 
 		// Parameters with default values
@@ -691,6 +692,10 @@ namespace EditorArea {
 					Debug.Log("Add paths to collection"); 
 				}
 			}
+
+			numberLines =  EditorGUILayout.IntField("number of lines", numberLines); 
+
+
 			if (GUILayout.Button ("Draw lines"))
 			{
 
@@ -717,23 +722,43 @@ namespace EditorArea {
 				}
 
 				//First line
-				Vector3[] points = data.paths[0].getPoints3D();
-				VectorLine line1 = new VectorLine("1",points,Color.red,null,30.0f);
+
+				VectorLine line1 = new VectorLine("1",data.paths[0].getPoints3D(),Color.red,null,30.0f);
 
 				line1.Draw3D();
 
 				line1.vectorObject.transform.parent = lineHolder.transform;
 
 				//Second line
-				points = data.paths[1].getPoints3D();
-				VectorLine line2 = new VectorLine("2",points,Color.blue,null,30.0f);
+
+				VectorLine line2 = new VectorLine("2",data.paths[1].getPoints3D(),Color.blue,null,30.0f);
 				
 				line2.Draw3D();
 				
 				line2.vectorObject.transform.parent = lineHolder.transform;
-				//Draw the lines in between
-			}
 
+
+
+				//Draw the lines in between
+					//Find the first set of points
+				Vector3[] set1 = GetSetPointsWithN(data.paths[0].getPoints3D(),numberLines); 
+				Vector3[] set2 = GetSetPointsWithN(data.paths[1].getPoints3D(),numberLines); 
+
+				List<Vector3> linesInterpolated = new List<Vector3>(); 
+
+				for(int i = 0; i<set1.Length;i++)
+				{
+					linesInterpolated.Add(set1[i]);
+					linesInterpolated.Add(set2[i]);
+
+				}
+
+				VectorLine line3 = new VectorLine("3",linesInterpolated.ToArray(),Color.green,null,20.0f);
+				
+				line3.Draw3D();
+				
+				line3.vectorObject.transform.parent = lineHolder.transform;
+			}
 
 
 			//Draw multiple lines over the interpolation
@@ -805,7 +830,7 @@ namespace EditorArea {
 					if(interpolation >=1)
 						pointToGo = points3[points3.Length - 1];
 
-					Debug.Log(pointToGo); 
+
 
 					pairs.Add(Vector3.zero);
 					pairs.Add(pointToGo); 
@@ -915,10 +940,6 @@ namespace EditorArea {
 				
 				
 				line4.vectorObject.transform.parent = lineHolder.transform;
-
-
-
-
 
 
 			
@@ -1101,6 +1122,61 @@ namespace EditorArea {
 
 		}
 			
+		public Vector3[] GetSetPointsWithN(Vector3[] points3,int n)
+		{
+
+			
+			List<Vector3> pairs = new List<Vector3>(); 
+			
+			float lengthLine = 0; 
+			
+			for(int i =0; i<points3.Length; i+=2)
+			{
+				Vector3 t = points3[i]-points3[i+1];
+				lengthLine += t.magnitude; 
+			}
+			
+			n = n-1; 
+			
+			for(int j = 0; j<=n; j++)
+			{
+				float interpolation = (float)j/(float)n;
+				
+				Vector3 pointToGo = Vector3.zero; 
+				
+				
+				
+				//Find between which point the interpolation belongs
+				float lineAt = 0.0f;
+				for(int i =0; i<points3.Length; i+=2)
+				{
+					Vector3 t = points3[i]-points3[i+1];
+					
+					if(interpolation > (lineAt/lengthLine)  && interpolation <= (t.magnitude+lineAt)/lengthLine)
+					{
+						//We are int
+						float linter = interpolation *lengthLine;
+						linter-=lineAt;
+						float newInter = linter/t.magnitude;
+						
+						pointToGo  = points3[i] + (points3[i+1] - points3[i])*newInter   ;
+					}
+					lineAt+=t.magnitude; 
+				}
+				if(interpolation == 0)
+					pointToGo = points3[0];
+				if(interpolation >=1)
+					pointToGo = points3[points3.Length - 1];
+				
+
+				
+				pairs.Add(Vector3.zero);
+				pairs.Add(pointToGo); 
+				
+			}
+			return pairs.ToArray();
+		}
+
 		public void Update () {
 			textDraw.Clear();
 			if (playing) {
