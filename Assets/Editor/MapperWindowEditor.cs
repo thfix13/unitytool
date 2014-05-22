@@ -20,6 +20,8 @@ namespace EditorArea {
 		private static Cell[][][] fullMap, original;
 		public static List<Path> paths = new List<Path> (), deaths = new List<Path>();
 
+		public float interpolationValue = 0.0f;
+		public float interpolationValueCheck = 0.0f; 
 		// Parameters with default values
 		public static int timeSamples = 2000, attemps = 25000, iterations = 1, gridSize = 60, ticksBehind = 0;
 		private static bool drawMap = false, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = true, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false;
@@ -730,6 +732,108 @@ namespace EditorArea {
 				
 				line2.vectorObject.transform.parent = lineHolder.transform;
 				//Draw the lines in between
+			}
+
+			//Fun with line interpolation here
+			interpolationValue = EditorGUILayout.Slider("Interpolation",interpolationValue,0.0f,1.0f,null); 
+
+			if(interpolationValue != interpolationValueCheck)
+			{
+				interpolationValueCheck = interpolationValue; 
+
+
+				//clear the previous line
+				GameObject lineHolder = GameObject.Find("LinesTest"); 
+				if(lineHolder)
+					DestroyImmediate(lineHolder); 
+				
+				lineHolder = new GameObject(); 
+				lineHolder.name = "LinesTest"; 
+				
+
+				
+				//First line
+				Vector3[] points = {new Vector3(0,0,0),new Vector3(0,10,0)};
+				VectorLine line1 = new VectorLine("1",points,Color.red,null,10.0f);
+				
+				
+				line1.vectorObject.transform.parent = lineHolder.transform;
+				
+				//Second line
+				Vector3 [] points2 = { new Vector3(0,0,0),new Vector3(10,16,0)};
+				
+				VectorLine line2 = new VectorLine("2",points2,Color.blue,null,10.0f);
+				
+				
+				line2.vectorObject.transform.parent = lineHolder.transform;
+				//Draw the lines in between
+
+				//Third line
+				Vector3 [] points3 = { points[1],points2[1],points2[1],new Vector3(8,7,4),
+					new Vector3(8,7,4),new Vector3(3,15,2)};
+				
+				VectorLine line3 = new VectorLine("3",points3,Color.cyan,null,10.0f);
+				
+				
+				line3.vectorObject.transform.parent = lineHolder.transform;
+
+				//Third line
+
+
+				//Find the second point to go
+
+				Vector3 pointToGo = Vector3.zero; 
+
+				float lengthLine = 0; 
+				for(int i =0; i<points3.Length; i+=2)
+				{
+					Vector3 t = points3[i]-points3[i+1];
+					lengthLine += t.magnitude; 
+				}
+
+				//Find between which point the interpolation belongs
+				float lineAt = 0.0f;
+				for(int i =0; i<points3.Length; i+=2)
+				{
+					Vector3 t = points3[i]-points3[i+1];
+					
+					if(interpolationValue > (lineAt/lengthLine)  && interpolationValue <= (t.magnitude+lineAt)/lengthLine)
+					{
+						//We are int
+						float linter = interpolationValue *lengthLine;
+						linter-=lineAt;
+						float newInter = linter/t.magnitude;
+
+						pointToGo  = points3[i] + (points3[i+1] - points3[i])*newInter   ;
+					}
+					lineAt+=t.magnitude; 
+				}
+				if(interpolationValue == 0)
+					pointToGo = points3[0];
+				if(interpolationValue >=1)
+					pointToGo = points3[points3.Length - 1];
+
+
+				Vector3 [] points4 = { points[0],   pointToGo };
+				
+				VectorLine line4 = new VectorLine("4",points4,Color.gray,null,5.0f);
+				
+				
+				line4.vectorObject.transform.parent = lineHolder.transform;
+
+
+
+
+
+
+			
+				line3.Draw3D(lineHolder.transform);
+				line4.Draw3D(lineHolder.transform);
+
+
+
+
+
 			}
 
 			EditorGUILayout.LabelField ("");
