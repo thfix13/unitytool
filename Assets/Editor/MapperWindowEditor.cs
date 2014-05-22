@@ -369,17 +369,25 @@ namespace EditorArea {
 				Debug.Log(summary);
 			}
 			
+			String nameFile = EditorApplication.currentScene;
+			nameFile = nameFile.Replace(".unity","");
+
+			nameFile = nameFile.Replace("Assets/Levels/","");
+			
 			if (GUILayout.Button ("(DEBUG) Export Paths")) {
 				List<Path> all = new List<Path>();
 				all.AddRange(paths);
 				all.AddRange(deaths);
-				PathBulk.SavePathsToFile ("pathtest.xml", all);
+
+				PathBulk.SavePathsToFile (nameFile + "_paths.xml", all);
 			}
 			
 			if (GUILayout.Button ("(DEBUG) Import Paths")) {
 				paths.Clear ();
 				ClearPathsRepresentation ();
-				List<Path> pathsImported = PathBulk.LoadPathsFromFile ("pathtest.xml");
+				
+				List<Path> pathsImported = PathBulk.LoadPathsFromFile (nameFile + "_paths.xml");
+				
 				foreach (Path p in pathsImported) {
 					if (p.points.Last().playerhp <= 0) {
 						deaths.Add(p);
