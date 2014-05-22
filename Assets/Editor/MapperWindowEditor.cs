@@ -760,7 +760,7 @@ namespace EditorArea {
 				line3.vectorObject.transform.parent = lineHolder.transform;
 			}
 
-
+			/*
 			//Draw multiple lines over the interpolation
 			if (GUILayout.Button ("Muliple Lines"))
 			{
@@ -951,7 +951,7 @@ namespace EditorArea {
 
 
 			}
-
+			*/
 			EditorGUILayout.LabelField ("");
 			
 			numClusters = EditorGUILayout.IntSlider ("Number of clusters", numClusters, 1, 7);
