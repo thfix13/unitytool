@@ -43,6 +43,23 @@ namespace Common {
 			
 			return true;
 		}
+
+		//This is for drawing
+		public Vector3[] getPoints3D()
+		{
+			List<Vector3> vertex = new List<Vector3>(); 
+
+			//foreach(Node n in points)
+			for(int i =0;i<points.Count-1;i++)
+			{
+				Node n = points	[i]; 
+				Node n1 = points[i+1]; 
+				vertex.Add(new Vector3(n.x,n.t,n.y)); 
+				vertex.Add(new Vector3(n1.x,n1.t,n1.y)); 
+			}
+			return vertex.ToArray(); 
+		}
+
 	}
 	
 	// Export / Import paths area

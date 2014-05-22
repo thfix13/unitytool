@@ -11,6 +11,7 @@ using Path = Common.Path;
 using Extra;
 using Objects;
 using ClusteringSpace;
+using Vectrosity; 
 
 namespace EditorArea {
 	public class MapperWindowEditor : EditorWindow {
@@ -691,6 +692,44 @@ namespace EditorArea {
 			if (GUILayout.Button ("Draw lines"))
 			{
 
+				//clear the previous line
+				GameObject lineHolder = GameObject.Find("Lines"); 
+				if(lineHolder)
+					DestroyImmediate(lineHolder); 
+
+				lineHolder = new GameObject(); 
+				lineHolder.name = "Lines"; 
+
+				//Get the data
+				GameObject g = GameObject.Find("DataPath") as GameObject;
+				if(!g)
+				{
+					Debug.Log("No paths");
+					return;
+				}
+				PathsHolder data = g.GetComponent("PathsHolder") as PathsHolder; 
+				if(data.paths.Count==0)
+				{
+					Debug.Log("No paths"); 
+					return; 
+				}
+
+				//First line
+				Vector3[] points = data.paths[0].getPoints3D();
+				VectorLine line1 = new VectorLine("1",points,Color.red,null,30.0f);
+
+				line1.Draw3D();
+
+				line1.vectorObject.transform.parent = lineHolder.transform;
+
+				//Second line
+				points = data.paths[1].getPoints3D();
+				VectorLine line2 = new VectorLine("2",points,Color.blue,null,30.0f);
+				
+				line2.Draw3D();
+				
+				line2.vectorObject.transform.parent = lineHolder.transform;
+				//Draw the lines in between
 			}
 
 			EditorGUILayout.LabelField ("");
