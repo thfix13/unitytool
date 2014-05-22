@@ -8,6 +8,7 @@ using Objects;
 using Extra;
 
 namespace Common {
+	[Serializable]
 	public class Path : IEquatable<Path> {
 		public String name;
 		public Color color;

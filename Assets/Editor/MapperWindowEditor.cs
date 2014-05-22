@@ -663,6 +663,38 @@ namespace EditorArea {
 						
 			EditorGUILayout.LabelField ("");
 			EditorGUILayout.LabelField ("7. Clustering");
+			EditorGUILayout.LabelField ("");
+
+			if (GUILayout.Button ("Select 2 random paths"))
+			{
+				GameObject g = GameObject.Find("DataPath") as GameObject;
+				if (!g)
+				{	
+					g = new GameObject(); 
+					g.name = "DataPath"; 
+					g.AddComponent("PathsHolder"); 
+				}
+
+				PathsHolder data = g.GetComponent("PathsHolder") as PathsHolder; 
+				 
+				if(paths.Count!=0)
+				{
+					data.paths.Clear();
+					data.paths.Add ( paths[UnityEngine.Random.Range(0,paths.Count)]);
+					data.paths.Add ( paths[UnityEngine.Random.Range(0,paths.Count)]);
+				}
+				else
+				{
+					Debug.Log("Add paths to collection"); 
+				}
+			}
+			if (GUILayout.Button ("Draw lines"))
+			{
+
+			}
+
+			EditorGUILayout.LabelField ("");
+			
 			numClusters = EditorGUILayout.IntSlider ("Number of clusters", numClusters, 1, 7);
 			distMetric = EditorGUILayout.Popup("Dist metric:", distMetric, distMetrics);
 			
