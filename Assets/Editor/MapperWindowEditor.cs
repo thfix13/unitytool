@@ -734,6 +734,94 @@ namespace EditorArea {
 				//Draw the lines in between
 			}
 
+
+
+			//Draw multiple lines over the interpolation
+			if (GUILayout.Button ("Muliple Lines"))
+			{
+				GameObject lineHolder = GameObject.Find("LinesMulitple"); 
+				if(lineHolder)
+					DestroyImmediate(lineHolder); 
+				
+				lineHolder = new GameObject(); 
+				lineHolder.name = "LinesMulitple"; 
+				
+				
+				//Third line
+				Vector3 [] points3 = { new Vector3(1,3,14),new Vector3(8,7,4),new Vector3(8,7,4),new Vector3(8,3,6),
+					new Vector3(8,3,6),new Vector3(7,15,6)};
+				
+				VectorLine line3 = new VectorLine("3",points3,Color.cyan,null,10.0f);
+				
+				
+				line3.vectorObject.transform.parent = lineHolder.transform;
+				
+
+				
+				
+				line3.Draw3D(); 
+
+				int n = 50;
+				
+				List<Vector3> pairs = new List<Vector3>(); 
+
+				float lengthLine = 0; 
+				
+				for(int i =0; i<points3.Length; i+=2)
+				{
+					Vector3 t = points3[i]-points3[i+1];
+					lengthLine += t.magnitude; 
+				}
+
+				n = n-1; 
+
+				for(int j = 0; j<=n; j++)
+				{
+					float interpolation = (float)j/(float)n;
+
+					Vector3 pointToGo = Vector3.zero; 
+					
+
+					
+					//Find between which point the interpolation belongs
+					float lineAt = 0.0f;
+					for(int i =0; i<points3.Length; i+=2)
+					{
+						Vector3 t = points3[i]-points3[i+1];
+						
+						if(interpolation > (lineAt/lengthLine)  && interpolation <= (t.magnitude+lineAt)/lengthLine)
+						{
+							//We are int
+							float linter = interpolation *lengthLine;
+							linter-=lineAt;
+							float newInter = linter/t.magnitude;
+							
+							pointToGo  = points3[i] + (points3[i+1] - points3[i])*newInter   ;
+						}
+						lineAt+=t.magnitude; 
+					}
+					if(interpolation == 0)
+						pointToGo = points3[0];
+					if(interpolation >=1)
+						pointToGo = points3[points3.Length - 1];
+
+					Debug.Log(pointToGo); 
+
+					pairs.Add(Vector3.zero);
+					pairs.Add(pointToGo); 
+
+				}
+
+				VectorLine line4 = new VectorLine("2",pairs.ToArray(),Color.blue,null,2.0f);
+
+				line4.vectorObject.transform.parent = lineHolder.transform;
+				
+				line4.Draw3D(); 
+				
+			
+			}
+
+
 			//Fun with line interpolation here
 			interpolationValue = EditorGUILayout.Slider("Interpolation",interpolationValue,0.0f,1.0f,null); 
 
@@ -781,6 +869,13 @@ namespace EditorArea {
 
 
 				//Find the second point to go
+
+				int n = 100;
+
+				List<Vector3> pairs = new List<Vector3>(); 
+
+
+
 
 				Vector3 pointToGo = Vector3.zero; 
 
