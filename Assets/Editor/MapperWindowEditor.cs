@@ -26,7 +26,7 @@ namespace EditorArea {
 		private static int randomSeed = -1;
 		
 		// Clustering
-		public static String[] distMetrics = new String[] { "Frechet (L1)", "Frechet (Euclidean)", "Hausdorff (Euclidean)" };
+		public static String[] distMetrics = new String[] { "Frechet (L1)", "Frechet (Euclidean)", "Hausdorff (Euclidean)", "Frechet (L1) 3D" };
 		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
 		public static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
 		private static int numClusters = 5, distMetric = 0;
@@ -732,7 +732,7 @@ namespace EditorArea {
 			{
 				showPaths[count] = EditorGUILayout.Toggle(colorStrings[count], showPaths[count]);
 			}
-			if (GUILayout.Button ("Show selected paths"))
+			if (GUILayout.Button ("Show selected colors"))
 			{
 				List<Color> selectedColors = new List<Color>();
 				for (int color = 0; color < colors.Count(); color ++)
@@ -1329,8 +1329,6 @@ namespace EditorArea {
 				}
 			}
 			
-			//Update();
-			Debug.Log("---");
 			MapperWindowEditor window = (MapperWindowEditor)EditorWindow.GetWindow (typeof(MapperWindowEditor));
 			EditorUtility.SetDirty (window);
 			window.Repaint();

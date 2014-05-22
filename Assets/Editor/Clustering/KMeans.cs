@@ -30,9 +30,7 @@ namespace ClusteringSpace
 				Debug.Log("No paths to cluster!");
 				return null;
 			}
-			
-			Debug.Log("Dist metric chosen: " + distMetric_);
-			
+						
 			distMetric = distMetric_;
 			if (distMetric == 0)
 			{
@@ -42,7 +40,10 @@ namespace ClusteringSpace
 			{
 				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.epsApproximation2D(1.1));
 			}
-			
+			else if (distMetric == 3)
+			{
+				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(3));
+			}
 			clustTime.Start();
 
             //divide paths into equal clusters
@@ -129,23 +130,38 @@ namespace ClusteringSpace
 			
 			clustTime.Stop();
 			distTime.Start();
-			
-			double[][] curveA = new double[path1.points.Count][];
-			double[][] curveB = new double[path2.points.Count][];
-			for (int i = 0; i < path1.points.Count; i ++)
-			{
-				curveA[i] = new double[] { path1.points[i].x, path1.points[i].y };
-			}
-			for (int i = 0; i < path2.points.Count; i ++)
-			{
-				curveB[i] = new double[] { path2.points[i].x, path2.points[i].y };
-			}
 
 			double result = 0.0;
 			
-			//public String[] distMetrics = new String[] { "Fréchet (L1)", "Fréchet (Euclidean)", "Hausdorff (Euclidean)" };
-			if (distMetric == 0 || distMetric == 1)
+			//public String[] distMetrics = new String[] { "Fréchet (L1)", "Fréchet (Euclidean)", "Hausdorff (Euclidean)", "Frechet L1 3D" };
+			if (distMetric == 0 || distMetric == 1 || distMetric == 3)
 			{
+				double[][] curveA = new double[path1.points.Count][];
+				double[][] curveB = new double[path2.points.Count][];
+				
+				if (distMetric <= 1)
+				{
+					for (int i = 0; i < path1.points.Count; i ++)
+					{
+						curveA[i] = new double[] { path1.points[i].x, path1.points[i].y };
+					}
+					for (int i = 0; i < path2.points.Count; i ++)
+					{
+						curveB[i] = new double[] { path2.points[i].x, path2.points[i].y };
+					}
+				}
+				else if (distMetric == 3)
+				{
+					for (int i = 0; i < path1.points.Count; i ++)
+					{
+						curveA[i] = new double[] { path1.points[i].x, path1.points[i].y, path1.points[i].t };
+					}
+					for (int i = 0; i < path2.points.Count; i ++)
+					{
+						curveB[i] = new double[] { path2.points[i].x, path2.points[i].y, path2.points[i].t };
+					}
+				}
+				
 				result = frechet.computeDistance(curveA,curveB);
 			}
 			else if (distMetric == 2)
