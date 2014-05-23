@@ -33,8 +33,9 @@ namespace EditorArea {
 		public static String[] distMetrics = new String[] { "Frechet (L1)", "Frechet (Euclidean)", "Hausdorff (Euclidean)", "Frechet (L1) 3D" };
 		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
 		public static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
-		private static int numClusters = 5, distMetric = 0;
+		private static int numClusters = 5, distMetric = 0, chosenFileIndex = -1;
 		private static bool[] showPaths = new bool[colors.Count()];
+		private static bool autoSavePaths = true;
 
 		// Computed parameters
 		private static int[,] heatMap, deathHeatMap, combatHeatMap;
@@ -1024,6 +1025,46 @@ namespace EditorArea {
 				Debug.Log ("Clust elapsed time: " + KMeans.clustTime.Elapsed);
 				Debug.Log ("Dist elapsed time: " + KMeans.distTime.Elapsed);
 				Debug.Log ("Total: " + (KMeans.clustTime.Elapsed + KMeans.distTime.Elapsed));
+				
+				if (autoSavePaths)
+				{
+					String currentTime = System.DateTime.UtcNow.ToString("yyyymmdd-HH:mm");
+					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_"+numClusters+"c"+paths.Count()+"p@" + currentTime + ".xml", paths);
+				}
+			}
+			
+			autoSavePaths = EditorGUILayout.Toggle("Automatically save results", autoSavePaths);
+			
+			DirectoryInfo dir = new DirectoryInfo("clusteringdata/");
+			FileInfo[] info = dir.GetFiles("*.xml");
+			String[] fileNames = new String[info.Count()];
+			for (int count = 0; count < info.Count(); count ++)
+			{
+				fileNames[count] = info[count].Name;
+			}
+			chosenFileIndex = EditorGUILayout.Popup("Load saved results...", chosenFileIndex, fileNames);
+			if (chosenFileIndex != -1)
+			{
+				paths.Clear ();
+				ClearPathsRepresentation ();
+				
+				List<Path> pathsImported = PathBulk.LoadPathsFromFile ("clusteringdata/" + fileNames[chosenFileIndex]);
+				
+				foreach (Path p in pathsImported) {
+					if (p.points.Last().playerhp <= 0) {
+						deaths.Add(p);
+					} else {
+						p.name = "Imported " + (++imported);
+		//				p.color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
+						toggleStatus.Add (p, true);
+					}
+					paths.Add(p);
+				}
+				ComputeHeatMap (paths, deaths);
+				SetupArrangedPaths (paths);
+				
+				chosenFileIndex = -1;
+				Debug.Log("Done loading paths");
 			}
 			
 			EditorGUILayout.LabelField ("");
