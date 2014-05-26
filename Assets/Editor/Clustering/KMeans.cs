@@ -17,6 +17,16 @@ namespace ClusteringSpace
 {
     public class KMeans
     {
+		public enum Metrics
+		{
+			FrechetL1 = 0,
+			FrechetL13D,
+			FrechetEuclidean,
+			HausdorffEuclidean,
+			HausdorffEuclidean3D
+			//Frechet (L1)", "Frechet (Euclidean)", "Hausdorff (Euclidean)", "Frechet (L1) 3D"
+		}
+		
 		public static Stopwatch distTime = new Stopwatch();
 		public static Stopwatch clustTime = new Stopwatch();
 		static FrechetDistance frechet;
@@ -32,15 +42,15 @@ namespace ClusteringSpace
 			}
 						
 			distMetric = distMetric_;
-			if (distMetric == 0)
+			if (distMetric == (int)Metrics.FrechetL1)
 			{
 				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(2));
 			}
-			else if (distMetric == 1)
+			else if (distMetric == (int)Metrics.FrechetEuclidean)
 			{
 				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.epsApproximation2D(1.1));
 			}
-			else if (distMetric == 3)
+			else if (distMetric == (int)Metrics.FrechetL13D)
 			{
 				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(3));
 			//	frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.LInfinity(3));
@@ -135,12 +145,12 @@ namespace ClusteringSpace
 			double result = 0.0;
 			
 			//public String[] distMetrics = new String[] { "Fréchet (L1)", "Fréchet (Euclidean)", "Hausdorff (Euclidean)", "Frechet L1 3D" };
-			if (distMetric == 0 || distMetric == 1 || distMetric == 3)
+			if (distMetric == (int)Metrics.FrechetL1 || distMetric == (int)Metrics.FrechetEuclidean || distMetric == (int)Metrics.FrechetL13D)
 			{
 				double[][] curveA = new double[path1.points.Count][];
 				double[][] curveB = new double[path2.points.Count][];
 				
-				if (distMetric <= 1)
+				if (distMetric == (int)Metrics.FrechetL1 || distMetric == (int)Metrics.FrechetEuclidean)
 				{
 					for (int i = 0; i < path1.points.Count; i ++)
 					{
@@ -151,7 +161,7 @@ namespace ClusteringSpace
 						curveB[i] = new double[] { path2.points[i].x, path2.points[i].y };
 					}
 				}
-				else if (distMetric == 3)
+				else if (distMetric == (int)Metrics.FrechetL13D)
 				{
 					for (int i = 0; i < path1.points.Count; i ++)
 					{
@@ -165,9 +175,9 @@ namespace ClusteringSpace
 				
 				result = frechet.computeDistance(curveA,curveB);
 			}
-			else if (distMetric == 2)
+			else if (distMetric == (int)Metrics.HausdorffEuclidean || distMetric == (int)Metrics.HausdorffEuclidean3D)
 			{
-				result = HausdorffDist.computeDistance(path1, path2);
+				result = HausdorffDist.computeDistance(path1, path2, distMetric);
 			}
 			else
 			{

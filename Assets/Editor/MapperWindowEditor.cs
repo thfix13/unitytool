@@ -30,7 +30,7 @@ namespace EditorArea {
 		private static int randomSeed = -1;
 		
 		// Clustering
-		public static String[] distMetrics = new String[] { "Frechet (L1)", "Frechet (Euclidean)", "Hausdorff (Euclidean)", "Frechet (L1) 3D" };
+		public static String[] distMetrics = new String[] { "Frechet (L1)", "Frechet (L1) 3D", "Frechet (Euclidean)", "Hausdorff (Euclidean)", "Hausdorff (Euclidean) 3D" };
 		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
 		public static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
 		private static int numClusters = 5, distMetric = 0, chosenFileIndex = -1, currentColor = 0;
@@ -1031,7 +1031,7 @@ namespace EditorArea {
 				{
 					String currentTime = System.DateTime.UtcNow.ToString("yyyymmdd-HHmm");
 					String totalTimeStr = new DateTime(Math.Abs(totalTime.Ticks)).ToString("hhmmss");
-					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + paths.Count() + "p" + numClusters + "c" + distMetric + "d" + totalTimeStr + "t@" + currentTime + ".xml", paths);
+					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetric + "d-" + paths.Count() + "p-" + totalTimeStr + "t@" + currentTime + ".xml", paths);
 				}
 			}
 			
