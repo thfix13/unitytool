@@ -33,7 +33,7 @@ namespace EditorArea {
 		public static String[] distMetrics = new String[] { "Frechet (L1)", "Frechet (Euclidean)", "Hausdorff (Euclidean)", "Frechet (L1) 3D" };
 		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
 		public static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
-		private static int numClusters = 5, distMetric = 0, chosenFileIndex = -1;
+		private static int numClusters = 5, distMetric = 0, chosenFileIndex = -1, currentColor = 0;
 		private static bool[] showPaths = new bool[colors.Count()];
 		private static bool autoSavePaths = true;
 
@@ -1024,12 +1024,14 @@ namespace EditorArea {
 				
 				Debug.Log ("Clust elapsed time: " + KMeans.clustTime.Elapsed);
 				Debug.Log ("Dist elapsed time: " + KMeans.distTime.Elapsed);
-				Debug.Log ("Total: " + (KMeans.clustTime.Elapsed + KMeans.distTime.Elapsed));
+				TimeSpan totalTime = KMeans.clustTime.Elapsed + KMeans.distTime.Elapsed;
+				Debug.Log ("Total: " + totalTime);
 				
 				if (autoSavePaths)
 				{
-					String currentTime = System.DateTime.UtcNow.ToString("yyyymmdd-HH:mm");
-					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_"+numClusters+"c"+paths.Count()+"p@" + currentTime + ".xml", paths);
+					String currentTime = System.DateTime.UtcNow.ToString("yyyymmdd-HHmm");
+					String totalTimeStr = new DateTime(Math.Abs(totalTime.Ticks)).ToString("hhmmss");
+					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + paths.Count() + "p" + numClusters + "c" + distMetric + "d" + totalTimeStr + "t@" + currentTime + ".xml", paths);
 				}
 			}
 			
@@ -1042,7 +1044,7 @@ namespace EditorArea {
 			{
 				fileNames[count] = info[count].Name;
 			}
-			chosenFileIndex = EditorGUILayout.Popup("Load saved results...", chosenFileIndex, fileNames);
+			chosenFileIndex = EditorGUILayout.Popup("Load saved results", chosenFileIndex, fileNames);
 			if (chosenFileIndex != -1)
 			{
 				paths.Clear ();
@@ -1055,7 +1057,6 @@ namespace EditorArea {
 						deaths.Add(p);
 					} else {
 						p.name = "Imported " + (++imported);
-		//				p.color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
 						toggleStatus.Add (p, true);
 					}
 					paths.Add(p);
@@ -1096,6 +1097,18 @@ namespace EditorArea {
 					}
 					
 					if (!contained) p.color.a = 0;
+				}
+			}
+			if (GUILayout.Button ("Show next color"))
+			{
+				currentColor = (currentColor + 1) % colors.Count();
+				foreach (Path p in paths)
+				{
+					if (p.color.r == colors[currentColor].r && p.color.g == colors[currentColor].g && p.color.b == colors[currentColor].b)
+					{
+						p.color.a = 1;
+					}
+					else p.color.a = 0;
 				}
 			}
 			

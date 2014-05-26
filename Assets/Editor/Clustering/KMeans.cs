@@ -43,6 +43,7 @@ namespace ClusteringSpace
 			else if (distMetric == 3)
 			{
 				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(3));
+			//	frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.LInfinity(3));
 			}
 			clustTime.Start();
 
