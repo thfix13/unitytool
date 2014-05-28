@@ -7,6 +7,7 @@ using System.Threading;
 using System.Linq;
 using System.Text;
 using Path = Common.Path;
+using Node = Common.Node;
 using Debug = UnityEngine.Debug;
 using EditorArea;
 
@@ -51,6 +52,13 @@ namespace ClusteringSpace
 			else if (distMetric == (int)Metrics.FrechetL13D)
 			{
 				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(3));
+				foreach (Path p in paths)
+				{
+					foreach (Node n in p.points)
+					{
+						n.t ^= 2;
+					}
+				}
 			//	frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.LInfinity(3));
 			}
 			clustTime.Start();

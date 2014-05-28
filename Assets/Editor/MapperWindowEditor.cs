@@ -34,6 +34,7 @@ namespace EditorArea {
 		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
 		public static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
 		private static int numClusters = 5, distMetric = 0, chosenFileIndex = -1, currentColor = 0, curCluster = 0;
+		private static List<Path> clusterCentroids = new List<Path>();
 		private static List<PathCollection> clusters20 = new List<PathCollection>();
 		private static bool[] showPaths = new bool[colors.Count()];
 		private static bool autoSavePaths = true;
@@ -697,7 +698,6 @@ namespace EditorArea {
 
 			numberLines =  EditorGUILayout.IntField("number of lines", numberLines); 
 
-
 			if (GUILayout.Button ("Draw lines"))
 			{
 
@@ -974,13 +974,19 @@ namespace EditorArea {
 				{
 					List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/20, distMetric);
 				
-					List<Path> clusterCentroids = new List<Path>();
+					List<Path> tempCentroids = new List<Path>();
 					foreach(PathCollection pc in clusters)
+					{
+						tempCentroids.Add(pc.Centroid);
+					}
+				
+					List<PathCollection> newClusters = KMeans.DoKMeans(tempCentroids, numClusters, distMetric);
+		
+					clusterCentroids.Clear();
+					foreach(PathCollection pc in newClusters)
 					{
 						clusterCentroids.Add(pc.Centroid);
 					}
-				
-					List<PathCollection> newClusters = KMeans.DoKMeans(clusterCentroids, numClusters, distMetric);
 				
 					paths.Clear ();
 					deaths.Clear ();
@@ -1005,6 +1011,12 @@ namespace EditorArea {
 				else
 				{
 					List<PathCollection> clusters = KMeans.DoKMeans(paths, numClusters, distMetric);
+					
+					clusterCentroids.Clear();
+					foreach(PathCollection pc in clusters)
+					{
+						clusterCentroids.Add(pc.Centroid);
+					}
 								
 					paths.Clear ();
 					deaths.Clear ();
@@ -1040,6 +1052,12 @@ namespace EditorArea {
 				KMeans.distTime = new System.Diagnostics.Stopwatch();
 				
 				clusters20 = KMeans.DoKMeans(paths, 20, distMetric);
+				
+				clusterCentroids.Clear();
+				foreach(PathCollection pc in clusters20)
+				{
+					clusterCentroids.Add(pc.Centroid);
+				}
 						
 				paths.Clear ();
 				deaths.Clear ();
@@ -1161,6 +1179,35 @@ namespace EditorArea {
 						p.color.a = 1;
 					}
 					else p.color.a = 0;
+				}
+			}
+			if (GUILayout.Button ("Show centroid path for current color"))
+			{
+				int colorIndex = -1;
+				int numSelectedColors = 0;
+				for (int color = 0; color < colors.Count(); color ++)
+				{
+					if (showPaths[color])
+					{
+						numSelectedColors ++;
+						colorIndex = color;
+					}
+				}
+				
+				if (colorIndex == -1 || numSelectedColors > 1)
+				{
+					Debug.Log("You must first select exactly one color above.");
+				}
+				else
+				{
+					foreach (Path p in paths)
+					{
+						if (p == clusterCentroids[colorIndex])
+						{
+							p.color.a = 1;
+						}
+						else p.color.a = 0;
+					}
 				}
 			}
 			
