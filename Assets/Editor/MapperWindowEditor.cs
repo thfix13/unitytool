@@ -30,10 +30,11 @@ namespace EditorArea {
 		private static int randomSeed = -1;
 		
 		// Clustering
-		public static String[] distMetrics = new String[] { "Frechet (L1)", "Frechet (L1) 3D", "Frechet (Euclidean)", "Hausdorff (Euclidean)", "Hausdorff (Euclidean) 3D" };
+		public static String[] distMetrics = new String[] { "Frechet (L1)", "Frechet (L1) 3D", "Frechet (Euclidean)", "Hausdorff (Euclidean)", "Hausdorff (Euclidean) 3D", "Area Dist (Interpolation)", "Area Dist (Triangulation)" };
 		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
 		public static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
-		private static int numClusters = 5, distMetric = 0, chosenFileIndex = -1, currentColor = 0;
+		private static int numClusters = 5, distMetric = 0, chosenFileIndex = -1, currentColor = 0, curCluster = 0;
+		private static List<PathCollection> clusters20 = new List<PathCollection>();
 		private static bool[] showPaths = new bool[colors.Count()];
 		private static bool autoSavePaths = true;
 
@@ -971,7 +972,7 @@ namespace EditorArea {
 
 				if (paths.Count > 90)
 				{
-					List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/10, distMetric);
+					List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/20, distMetric);
 				
 					List<Path> clusterCentroids = new List<Path>();
 					foreach(PathCollection pc in clusters)
@@ -1004,9 +1005,7 @@ namespace EditorArea {
 				else
 				{
 					List<PathCollection> clusters = KMeans.DoKMeans(paths, numClusters, distMetric);
-				
-					Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black };
-				
+								
 					paths.Clear ();
 					deaths.Clear ();
 					ClearPathsRepresentation ();
@@ -1035,7 +1034,60 @@ namespace EditorArea {
 				}
 			}
 			
-			autoSavePaths = EditorGUILayout.Toggle("Automatically save results", autoSavePaths);
+			if (GUILayout.Button ("Cluster 20"))
+			{
+				KMeans.clustTime = new System.Diagnostics.Stopwatch();
+				KMeans.distTime = new System.Diagnostics.Stopwatch();
+				
+				clusters20 = KMeans.DoKMeans(paths, 20, distMetric);
+						
+				paths.Clear ();
+				deaths.Clear ();
+				ClearPathsRepresentation ();
+
+				for(int c = 0; c < clusters20.Count; c ++)
+				{
+					foreach(Path path in clusters20[c])
+					{
+						path.color = colors[c % colors.Count()];
+						paths.Add(path);
+						toggleStatus.Add(paths.Last (), true);
+					}
+				}
+				
+				Debug.Log ("Clust elapsed time: " + KMeans.clustTime.Elapsed);
+				Debug.Log ("Dist elapsed time: " + KMeans.distTime.Elapsed);
+				TimeSpan totalTime = KMeans.clustTime.Elapsed + KMeans.distTime.Elapsed;
+				Debug.Log ("Total: " + totalTime);
+				
+				if (autoSavePaths)
+				{
+					String currentTime = System.DateTime.UtcNow.ToString("yyyymmdd-HHmm");
+					String totalTimeStr = new DateTime(Math.Abs(totalTime.Ticks)).ToString("hhmmss");
+					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetric + "d-" + paths.Count() + "p-" + totalTimeStr + "t@" + currentTime + ".xml", paths);
+				}
+			}
+			if (GUILayout.Button ("Next"))
+			{
+				//clusters20
+				foreach (Path p in paths)
+				{
+					p.color.a = 0;
+				}
+				foreach (Path clusterPath in clusters20[curCluster])
+				{
+					foreach (Path p in paths)
+					{
+						if (clusterPath == p)
+						{
+							p.color.a = 1;
+						}
+					}
+				}
+				curCluster ++;
+			}
+
+			autoSavePaths = EditorGUILayout.Toggle("Autosave cluster results", autoSavePaths);
 			
 			DirectoryInfo dir = new DirectoryInfo("clusteringdata/");
 			FileInfo[] info = dir.GetFiles("*.xml");
@@ -1176,7 +1228,7 @@ namespace EditorArea {
 
 		}
 			
-		public Vector3[] GetSetPointsWithN(Vector3[] points3,int n)
+		public static Vector3[] GetSetPointsWithN(Vector3[] points3,int n)
 		{
 
 			

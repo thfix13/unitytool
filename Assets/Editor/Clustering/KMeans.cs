@@ -1,6 +1,3 @@
-//KMeans.cs
-//modified from source at http://codeding.com/articles/k-means-algorithm
-
 using UnityEngine;
 using System;
 using System.Collections;
@@ -23,8 +20,9 @@ namespace ClusteringSpace
 			FrechetL13D,
 			FrechetEuclidean,
 			HausdorffEuclidean,
-			HausdorffEuclidean3D
-			//Frechet (L1)", "Frechet (Euclidean)", "Hausdorff (Euclidean)", "Frechet (L1) 3D"
+			HausdorffEuclidean3D,
+			AreaDistInterpolation,
+			AreaDistTriangulation
 		}
 		
 		public static Stopwatch distTime = new Stopwatch();
@@ -67,6 +65,7 @@ namespace ClusteringSpace
             }
 			
             //start k-means clustering
+			// src : http://codeding.com/articles/k-means-algorithm
             int movements = 1;
 			int count = 0;
             while (movements > 0)
@@ -77,7 +76,6 @@ namespace ClusteringSpace
 				if (count > 200) { Debug.Log("Over 200 iterations"); clustTime.Stop(); return allClusters; }
                 movements = 0;
 
-//                foreach (PathCollection cluster in allClusters) //for all clusters
                 for (int clusterIndex = 0; clusterIndex < allClusters.Count; clusterIndex ++)
                 {
 					for (int pathIndex = 0; pathIndex < allClusters[clusterIndex].Count; pathIndex++) //for all paths in each cluster
@@ -104,13 +102,12 @@ namespace ClusteringSpace
         }
 
         public static int FindNearestCluster(List<PathCollection> allClusters, Path path)
-        {
+        { // src : http://codeding.com/articles/k-means-algorithm
             double minimumDistance = 0.0;
             int nearestClusterIndex = -1;
 
             for (int k = 0; k < allClusters.Count; k++) //find nearest cluster
             {
-	//			Debug.Log("FNC");
                 double distance = FindDistance(path, allClusters[k].Centroid);
                 if (k == 0)
                 {
@@ -124,8 +121,6 @@ namespace ClusteringSpace
                 }
             }
 			
-//			Debug.Log("Path p(" + path.points[6].x +", " + path.points[6].y + ") is closest to cluster " + nearestClusterIndex);
-
             return (nearestClusterIndex);
         }
 		
@@ -144,7 +139,6 @@ namespace ClusteringSpace
 
 			double result = 0.0;
 			
-			//public String[] distMetrics = new String[] { "Fréchet (L1)", "Fréchet (Euclidean)", "Hausdorff (Euclidean)", "Frechet L1 3D" };
 			if (distMetric == (int)Metrics.FrechetL1 || distMetric == (int)Metrics.FrechetEuclidean || distMetric == (int)Metrics.FrechetL13D)
 			{
 				double[][] curveA = new double[path1.points.Count][];
@@ -179,12 +173,15 @@ namespace ClusteringSpace
 			{
 				result = HausdorffDist.computeDistance(path1, path2, distMetric);
 			}
+			else if (distMetric == (int)Metrics.AreaDistInterpolation || distMetric == (int)Metrics.AreaDistTriangulation)
+			{
+				result = AreaDist.computeDistance(path1, path2, distMetric);
+			}
 			else
 			{
 				Debug.Log("Invalid distance metric ("+distMetric+")!");
 				return -1;
 			}
-		//	double result = AreaDist.computeDistance(path1, path2);
 			
 			distTime.Stop();
 			clustTime.Start();

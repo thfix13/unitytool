@@ -4,6 +4,9 @@ using UnityEngine;
 using Path = Common.Path;
 using Node = Common.Node;
 using System.Linq;
+using Vectrosity; 
+using EditorArea;
+using ClusteringSpace;
 
 public class AreaDist
 {
@@ -21,47 +24,72 @@ public class AreaDist
 		}
 	}
 	
-	public static double computeDistance(Path path1, Path path2)
-	{ // vertices of each path
-//		List<Node> allNodes;
-//		allNodes.AddRange(path1.points);
-//		allNodes.AddRange(path2.points.Reverse());
+	public static double computeDistance(Path path1, Path path2, int distMetric)
+	{
+		if (distMetric == (int)KMeans.Metrics.AreaDistInterpolation)
+		{
+			return areaFromInterpolation(path1, path2);
+		}
+		else if (distMetric == (int)KMeans.Metrics.AreaDistTriangulation)
+		{
+			return areaFromTriangulation(path1, path2);
+		}
+		else return -1;
+	}
+	
+	public static double areaFromInterpolation(Path path1, Path path2)
+	{
+		int numberLines = 50;
+		Vector3[] set1 = MapperWindowEditor.GetSetPointsWithN(path1.getPoints3D(),numberLines); 
+		Vector3[] set2 = MapperWindowEditor.GetSetPointsWithN(path2.getPoints3D(),numberLines); 
+
+/*		List<Vector3> linesInterpolated = new List<Vector3>(); 
+
+		for(int i = 0; i<set1.Length;i++)
+		{
+			linesInterpolated.Add(set1[i]);
+			linesInterpolated.Add(set2[i]);
+		}*/
 		
+		// rectangle from set1[i], set1[i+1] to set2[i], set2[i+1]
+		double area = 0.0;
+		/*for (int i = 0; i < set1.Length; i ++)
+		{
+			// x dist
+			int width = Mathf.Abs((float)(set1[i+1].x - set1[i].x)) + Mathf.Abs((float)(set1[i+1].y - set1[i].y));
+			int height = Mathf.Abs((float)(set1[i] - set2[i])) + Mathf.Abs((float)(set1[i].y - set2[i].y));
+			area += width * height;
+			}*/
+
+		return area;
+	}
+	
+	public static double areaFromTriangulation(Path path1, Path path2)
+	{ // vertices of each path
 		Debug.Log("Start dist");
 		
 		List<Point> polygonVertices = new List<Point>();
+		double area = 0.0;
 		for (int count = 0; count < path1.points.Count-1; count ++)
 		{
-			polygonVertices.Add(new Point(path1.points[count].x, path1.points[count].y));
+			polygonVertices.Add(new Point(path1.points[count].x, path1.points[count].y)); // s1
 			for (int count2 = 0; count2 < path2.points.Count-1; count2 ++)
 			{
 				Point intersection = getIntersectionOf(path1.points[count], path1.points[count+1], path2.points[count2], path2.points[count2+1]);
 				if (intersection != null)
 				{
-					polygonVertices.Add(intersection);
+					polygonVertices.Add(intersection); // i
+					polygonVertices.Add(new Point(path2.points[count2].x, path2.points[count2].y)); // s2
+					
+					area += getArea(polygonVertices);
+					
+					polygonVertices.Clear();
+					polygonVertices.Add(intersection); // i
+					polygonVertices.Add(new Point(path2.points[count2+1].x, path2.points[count2+1].y)); // e2
 				}
 			}
-			polygonVertices.Add(new Point(path1.points[count+1].x, path1.points[count+1].y));
+			polygonVertices.Add(new Point(path1.points[count+1].x, path1.points[count+1].y)); // e1
 		}
-		
-		List<Node> revP2Points = path2.points;
-		revP2Points.Reverse();
-		for (int count = 0; count < path2.points.Count; count ++)
-		{
-			polygonVertices.Add(new Point(revP2Points[count].x, revP2Points[count].y));
-		}
-		
-		List<Point> distinctVertices = polygonVertices.Distinct().ToList();
-		
-		int[][] vertices = new int[distinctVertices.Count][];
-		for (int count = 0; count < distinctVertices.Count; count ++)
-		{
-			vertices[count] = new int[2];
-			vertices[count][0] = distinctVertices[count].x;
-			vertices[count][1] = distinctVertices[count].y;
-		}
-		
-		double area = getArea(vertices);
 		
 		Debug.Log("End dist, area: " + area);
 		
@@ -96,6 +124,19 @@ public class AreaDist
 
 		Debug.Log("intersection at "+x+", "+y);
 		return new Point((int)x, (int)y);
+	}
+	
+	public static double getArea(List<Point> vertexList)
+	{
+		int[][] vertices = new int[vertexList.Count()][];
+		for (int count = 0; count < vertexList.Count(); count ++)
+		{
+			vertices[count] = new int[2];
+			vertices[count][0] = vertexList[count].x;
+			vertices[count][1] = vertexList[count].y;
+		}
+		
+		return getArea(vertices);
 	}
 	
 	public static double getArea(int[][] arr)
