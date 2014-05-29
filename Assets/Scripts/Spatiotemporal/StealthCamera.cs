@@ -11,10 +11,10 @@ namespace Spatiotemporal {
 		public enum Type: byte {
 			Sweeping, Rotating
 		};
-		private enum Sense: byte {
+		enum Sense: byte {
 			CW, CCW
 		}
-		private enum Motion: byte {
+		enum Motion: byte {
 			Turning, Pausing
 		}
 	
@@ -36,9 +36,11 @@ namespace Spatiotemporal {
 			}
 		}
 		
+		// disable CompareOfFloatsByEqualityOperator
 		public float omega {
 			get { return omega_; }
 			set {
+				
 				if (omega_ != value) {
 					omega_ = value;
 					dirty = true;
@@ -77,21 +79,19 @@ namespace Spatiotemporal {
 			
 			base.Awake();
 			
-			
-			
 			cameraID = map.GetCameras ().Count;
 			gameObject.name = "Camera " + cameraID;
 			
-			Material mat = (Material)AssetDatabase.LoadAssetAtPath("Assets/Materials/CameraMat.mat", typeof(Material));
+			var mat = (Material)AssetDatabase.LoadAssetAtPath("Assets/Materials/CameraMat.mat", typeof(Material));
 			gameObject.renderer.material = mat;
 		}
 		
 		public override List<Shape3> Shapes()
 		{
-			List<Shape3> shLst = new List<Shape3> ();
+			var shLst = new List<Shape3> ();
 			
 			float rot = 0.0f;
-			float time = 0.0f;
+			float curTime = 0.0f;
 			float pauseTime = 0.0f;
 			Sense sense;
 			if (type == Type.Rotating) {
@@ -105,8 +105,7 @@ namespace Spatiotemporal {
 			for (int i = 0; i < numSub; i++) {
 				Gizmos.color = new Color (1.0f, 0.1f, 0.2f);
 				
-				Shape3 vision = StealthFov.Vertices(viewDistance, fieldOfView, frontSegments, position + new Vector3(0, time, 0), rot + rotation);
-				shLst.Add (StealthFov.Occlude(map, vision, position + new Vector3(0, time, 0), viewDistance));
+				shLst.Add (Occlude(position + new Vector3(0, curTime, 0), rot + rotation));
 				
 				if (type == Type.Rotating) {
 					if (motion == Motion.Turning) {
@@ -166,7 +165,7 @@ namespace Spatiotemporal {
 						pauseTime += timeStep;
 					}
 				}
-				time += timeStep;
+				curTime += timeStep;
 			}
 			
 			return shLst;
@@ -182,7 +181,6 @@ namespace Spatiotemporal {
 		}
 		
 		new public void Validate() {
-			position.y = 0;
 			
 			if (amplitude < 0.001f) {
 				amplitude = 0.001f;
@@ -191,10 +189,7 @@ namespace Spatiotemporal {
 				pause = 0;
 			}
 			
-			if (dirty) {
-				UpdateMesh();
-				dirty = false;
-			}
+			base.Validate();
 		}
 	}
 }

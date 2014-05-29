@@ -12,17 +12,14 @@ namespace Spatiotemporal {
 				AddCoordinate();
 			}
 			
-			
 			base.Awake();
-			
-			
 			
 			name = "CoordGuard " + guardID;
 		}
 		
 		public List<StealthGuardPosition> getSGP()
 		{
-			List<StealthGuardPosition> lst = new List<StealthGuardPosition>();
+			var lst = new List<StealthGuardPosition>();
 	
 			foreach (Transform child in gameObject.transform) {
 				if (child.GetComponent<StealthGuardPosition>()) {
@@ -30,11 +27,7 @@ namespace Spatiotemporal {
 				}
 			}
 			
-			lst.Sort(
-				delegate(StealthGuardPosition p1, StealthGuardPosition p2) {
-					return Mathf.RoundToInt(p1.time_*100 - p2.time_*100);
-				}
-			);
+			lst.Sort( (p1, p2) => Mathf.RoundToInt(p1.time_ * 100 - p2.time_ * 100) );
 	
 			return lst;
 		}
@@ -47,16 +40,15 @@ namespace Spatiotemporal {
 				last = positions[positions.Count - 1];
 			}
 	
+			// disable once CompareOfFloatsByEqualityOperator
 			if (last != null && last.time == map.timeLength)
 				return null;
 	
-			GameObject go = new GameObject ("Position " + (positions.Count + 1));
+			var go = new GameObject ("Position " + (positions.Count + 1));
 			go.transform.parent = transform;
 			go.AddComponent ("StealthGuardPosition");
 	
 			if (last != null) {
-				Debug.Log(last.time);
-				
 				StealthGuardPosition gp = go.GetComponent<StealthGuardPosition> ();
 				
 				gp.velocity = last.velocity;
@@ -70,10 +62,10 @@ namespace Spatiotemporal {
 		}
 		
 		public override List<Pose> getPositions() {
-			List<Pose> poses = new List<Pose>();
+			var poses = new List<Pose>();
 			
 			foreach (StealthGuardPosition sgp in getSGP()) {
-				Pose p = new Pose(sgp.position-position, Quaternion.Euler(0, sgp.rotation-rotation, 0));
+				var p = new Pose(sgp.position-position, Quaternion.Euler(0, sgp.rotation-rotation, 0));
 				p.velocity = sgp.velocity;
 				p.omega = sgp.omega;
 				poses.Add(p);
@@ -92,12 +84,7 @@ namespace Spatiotemporal {
 		}
 		
 		new public void Validate() {
-			position.y = 0;
-	
-			if (dirty) {
-				UpdateMesh ();
-				dirty = false;
-			}
+			base.Validate();
 		}
 	}
 }

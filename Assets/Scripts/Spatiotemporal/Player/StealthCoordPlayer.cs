@@ -52,30 +52,26 @@ namespace Spatiotemporal {
 		
 		public override List<Pose> getPositions()
 		{
-			List<Pose> lst = new List<Pose>();
+			var lst = new List<Pose>();
 	
 			foreach (Transform child in gameObject.transform) {
 				if (child.GetComponent<StealthPlayerPosition>()) {
 					StealthPlayerPosition spp = child.GetComponent<StealthPlayerPosition>();
-					Pose p = new Pose(spp.position, Quaternion.identity);
+					var p = new Pose(spp.position, Quaternion.identity);
 					p.velocity = spp.velocity_;
 					p.omega = 0;
 					lst.Add(p);
 				}
 			}
 			
-			lst.Sort(
-				delegate(Pose p1, Pose p2) {
-					return Mathf.RoundToInt(p1.time*100 - p2.time*100);
-				}
-			);
+			lst.Sort( (p1, p2) => Mathf.RoundToInt(p1.time * 100 - p2.time * 100) );
 	
 			return lst;
 		}
 		
 		public List<StealthPlayerPosition> getSPP()
 		{
-			List<StealthPlayerPosition> lst = new List<StealthPlayerPosition>();
+			var lst = new List<StealthPlayerPosition>();
 	
 			foreach (Transform child in gameObject.transform) {
 				if (child.GetComponent<StealthPlayerPosition>()) {
@@ -84,11 +80,7 @@ namespace Spatiotemporal {
 				}
 			}
 			
-			lst.Sort(
-				delegate(StealthPlayerPosition p1, StealthPlayerPosition p2) {
-					return Mathf.RoundToInt(p1.time*100 - p2.time*100);
-				}
-			);
+			lst.Sort( (p1, p2) => Mathf.RoundToInt(p1.time * 100 - p2.time * 100) );
 	
 			return lst;
 		}
@@ -101,15 +93,15 @@ namespace Spatiotemporal {
 				last = positions[positions.Count - 1];
 			}
 	
+			// disable once CompareOfFloatsByEqualityOperator
 			if (last != null && last.time == map.timeLength)
 				return null;
 	
-			GameObject go = new GameObject ("Position " + (positions.Count + 1));
+			var go = new GameObject ("Position " + (positions.Count + 1));
 			go.transform.parent = transform;
 			go.AddComponent ("StealthPlayerPosition");
 	
 			if (last != null) {
-				Debug.Log(last.time);
 				
 				StealthPlayerPosition pp = go.GetComponent<StealthPlayerPosition> ();
 				
@@ -164,10 +156,10 @@ namespace Spatiotemporal {
 				}
 				
 				if (Collide()) {
-					Material mat = (Material)AssetDatabase.LoadAssetAtPath("Assets/Materials/PlayerCollMat.mat", typeof(Material));
+					var mat = (Material)AssetDatabase.LoadAssetAtPath("Assets/Materials/PlayerCollMat.mat", typeof(Material));
 					gameObject.renderer.material = mat;
 				} else {
-					Material mat = (Material)AssetDatabase.LoadAssetAtPath("Assets/Materials/PlayerMat.mat", typeof(Material));
+					var mat = (Material)AssetDatabase.LoadAssetAtPath("Assets/Materials/PlayerMat.mat", typeof(Material));
 					gameObject.renderer.material = mat;
 				}
 			}

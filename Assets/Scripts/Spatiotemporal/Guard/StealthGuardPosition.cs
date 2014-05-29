@@ -26,6 +26,7 @@ namespace Spatiotemporal {
 			get { return Quaternion.Euler(0, rotation, 0) * velocity_; }
 		}
 		
+		// disable CompareOfFloatsByEqualityOperator
 		public float time
 		{
 			get {return time_; }
@@ -78,9 +79,8 @@ namespace Spatiotemporal {
 		{
 			get {
 				if (gameObject.activeInHierarchy) {
-					if (transform.parent == null)
-						return null;
-					return (StealthCoordGuard)transform.parent.gameObject.GetComponent<StealthCoordGuard>();
+					return transform.parent == null ?
+							null : (StealthCoordGuard)transform.parent.gameObject.GetComponent<StealthCoordGuard>();
 				}
 				return null;
 			}
@@ -93,16 +93,15 @@ namespace Spatiotemporal {
 		{
 			get {
 				if (gameObject.activeInHierarchy ) {
-					if (guard == null)
-						return null;
-					return guard.map;
+					return guard == null ?
+						null : guard.map;
 				}
 				return null;
 			}
 		}
 	
 		private void Gizmo() {
-			Shape3 shape = StealthFov.Vertices(guard.viewDistance, guard.fieldOfView, guard.frontSegments, position, rotation);
+			Shape3 shape = guard.Vertices(position, rotation);
 			
 			foreach (Edge3Abs e in shape) {
 				Gizmos.DrawLine(e.a, e.b);
@@ -119,7 +118,7 @@ namespace Spatiotemporal {
 	
 		void OnDrawGizmosSelected()
 		{
-			Gizmos.color = new Color (1.0f, 1.0f, 1.0f);
+			Gizmos.color = new Color (0.6f, 1.0f, 0.8f);
 			Gizmo ();
 			Gizmos.color = new Color(0f, 1.0f, 0.5f, 1.0f);
 			Gizmos.DrawSphere(position, 1);
@@ -160,11 +159,9 @@ namespace Spatiotemporal {
 				omega_ = -guard.maxOmega;
 			}
 			
-			if (velocity_.y != 1.0f) {
-				velocity_.y = 1.0f;
-			}
+			velocity_.y = 1.0f;
 			
-			Vector2 v = new Vector2(velocity_.x, velocity.z);
+			var v = new Vector2(velocity_.x, velocity.z);
 			if (v.magnitude > guard.maxSpeed) {
 				v *= guard.maxSpeed/v.magnitude;
 				velocity_.x = v.x;

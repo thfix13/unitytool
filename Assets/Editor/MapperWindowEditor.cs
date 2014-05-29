@@ -128,6 +128,9 @@ namespace EditorArea {
 			EditorGUILayout.LabelField ("3. Map Computation");
 			timeSamples = EditorGUILayout.IntSlider ("Time samples", timeSamples, 1, 10000);
 			stepSize = EditorGUILayout.Slider ("Step size", stepSize, 0.01f, 1f);
+			if (this.map != null) {
+				this.map.timeLength = timeSamples * stepSize;
+			}
 			stepInTicks = ((long)(stepSize * 10000000L));
 			ticksBehind = EditorGUILayout.IntSlider (new GUIContent ("Ticks behind", "Number of ticks that the FoV will remain seen after the enemy has no visibility on that cell (prevents noise/jitter like behaviours)"), ticksBehind, 0, 100);
 			
@@ -453,14 +456,31 @@ namespace EditorArea {
 			
 			EditorGUILayout.LabelField ("");
 			
-			if (visualize3d = (EditorGUILayout.Toggle("Visualize Spatiotemporal state space", visualize3d))) {
+			if (EditorGUILayout.Toggle("Visualize Spatiotemporal state space", visualize3d)) {
 				if (map == null) {
-					
+					if (mapper != null) {
+						GameObject go = new GameObject("Spatiotemporal State Space");
+						go.AddComponent("Map");
+						map = go.GetComponent<Map>();
+						Debug.Log(mapper);
+						Debug.Log(floor);
+						//map.master = mapper;
+						Debug.Log("and there");
+						
+						map.timeLength = timeSamples * stepSize;
+						
+						visualize3d = true;
+					} else {
+						Debug.LogError("Mapper is null!");
+					}
 				}
 			} else {
 				if (map != null) {
-					
+					Debug.Log("DESTROY");
+					UnityEngine.Object.DestroyImmediate(map.gameObject);
+					map = null;
 				}
+				visualize3d = false;
 			}
 			
 			EditorGUILayout.LabelField ("");

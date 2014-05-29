@@ -39,7 +39,7 @@ namespace Spatiotemporal {
 			
 			if (waypoints == null)  {
 				name = "WaypointPlayer";
-				GameObject go = new GameObject();
+				var go = new GameObject();
 				go.transform.parent = transform;
 				go.AddComponent("WaypointManager");
 				waypoints = go.GetComponent<WaypointManager>();
@@ -87,7 +87,7 @@ namespace Spatiotemporal {
 		
 		public override List<Pose> getPositions()
 		{
-			List<Pose> lst = new List<Pose>();
+			var lst = new List<Pose>();
 			
 			Waypoint wp;
 			
@@ -99,42 +99,45 @@ namespace Spatiotemporal {
 				float currRotation = 0;
 				Vector3 currPos = wp.transform.position;
 				
-				if (typeof(RotationWaypoint).IsAssignableFrom(wp.GetType())) {
-					currRotation = ((RotationWaypoint)wp).theta;
+				var rotationWaypoint = wp as RotationWaypoint;
+				if (rotationWaypoint != null) {
+					currRotation = rotationWaypoint.theta;
 				}
 				
-				Pose p = new Pose(new Vector3(currPos.x, currTime, currPos.z), Quaternion.Euler(0, currRotation, 0));
+				var p = new Pose(new Vector3(currPos.x, currTime, currPos.z), Quaternion.Euler(0, currRotation, 0));
 				
-				if (typeof(WaitingWaypoint).IsAssignableFrom(wp.GetType())) {
-					currTime += ((WaitingWaypoint)wp).waitingTime;
+				var waitingWaypoint = wp as WaitingWaypoint;
+				if (waitingWaypoint != null) {
+					currTime += waitingWaypoint.waitingTime;
 				}
 				
 				while ((wp = wp.next) != null) {
 					
-					if (typeof(RotationWaypoint).IsAssignableFrom(wp.GetType())) {
-						RotationWaypoint curr = (RotationWaypoint)wp;
+					rotationWaypoint = wp as RotationWaypoint;
+					if (rotationWaypoint != null) {
+						RotationWaypoint curr = rotationWaypoint;
 						// Speed =  dist/time
 						// time = dist/speed
-						currTime += Mathf.Abs((curr.theta - currRotation)/maxOmega_);
-						if (curr.theta - currRotation < 0) {
-							p.omega = -maxOmega_;
-						} else {
-							p.omega = maxOmega_;
-						}
+						currTime += Mathf.Abs((curr.theta - currRotation) / maxOmega_);
+						p.omega = curr.theta - currRotation < 0 ?
+							-maxOmega_ : maxOmega_;
 						currRotation = curr.theta;
 						p.velocity = new Vector3(0, 1, 0);
-					} else if (typeof(WaitingWaypoint).IsAssignableFrom(wp.GetType())) {
-						WaitingWaypoint curr = (WaitingWaypoint)wp;
-						currTime += curr.waitingTime;
-						p.velocity = new Vector3(0, 1, 0);
 					} else {
-						Vector3 diff = wp.transform.position - currPos;
-						diff.y = 0;
-						currTime += diff.magnitude / maxSpeed_;
-						diff.Normalize();
-						p.velocity = diff * maxSpeed_;
-						p.velocity.y = 1;
-						currPos = wp.transform.position;
+						waitingWaypoint = wp as WaitingWaypoint;
+						if (waitingWaypoint != null) {
+							WaitingWaypoint curr = waitingWaypoint;
+							currTime += curr.waitingTime;
+							p.velocity = new Vector3(0, 1, 0);
+						} else {
+							Vector3 diff = wp.transform.position - currPos;
+							diff.y = 0;
+							currTime += diff.magnitude / maxSpeed_;
+							diff.Normalize();
+							p.velocity = diff * maxSpeed_;
+							p.velocity.y = 1;
+							currPos = wp.transform.position;
+						}
 					}
 					lst.Add(p);
 					p = new Pose(new Vector3(currPos.x, currTime, currPos.z), Quaternion.Euler(0, currRotation, 0));
@@ -176,10 +179,10 @@ namespace Spatiotemporal {
 				}
 				
 				if (Collide()) {
-					Material mat = (Material)AssetDatabase.LoadAssetAtPath("Assets/Materials/PlayerCollMat.mat", typeof(Material));
+					var mat = (Material)AssetDatabase.LoadAssetAtPath("Assets/Materials/PlayerCollMat.mat", typeof(Material));
 					gameObject.renderer.material = mat;
 				} else {
-					Material mat = (Material)AssetDatabase.LoadAssetAtPath("Assets/Materials/PlayerMat.mat", typeof(Material));
+					var mat = (Material)AssetDatabase.LoadAssetAtPath("Assets/Materials/PlayerMat.mat", typeof(Material));
 					gameObject.renderer.material = mat;
 				}
 			}

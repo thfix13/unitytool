@@ -22,6 +22,7 @@ namespace Spatiotemporal {
 		{
 			get {return time_; }
 			set {
+				// disable once CompareOfFloatsByEqualityOperator
 				if (time_ != value) {
 					time_ = value;
 					player.dirty = true;
@@ -46,9 +47,8 @@ namespace Spatiotemporal {
 		{
 			get {
 				if (gameObject.activeInHierarchy) {
-					if (transform.parent == null)
-						return null;
-					return (StealthPlayer)transform.parent.gameObject.GetComponent<StealthPlayer>();
+					return transform.parent == null ?
+						null : (StealthPlayer)transform.parent.gameObject.GetComponent<StealthPlayer>();
 				}
 				return null;
 			}
@@ -112,9 +112,7 @@ namespace Spatiotemporal {
 					time_ = after.time_ - 0.1f;
 			}
 			
-			if (velocity_.y != 1.0f) {
-				velocity_.y = 1.0f;
-			}
+			velocity_.y = 1.0f;
 			
 			Vector2 v = new Vector2(velocity_.x, velocity.z);
 			if (v.magnitude > player.maxSpeed) {

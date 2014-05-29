@@ -12,6 +12,7 @@ namespace Spatiotemporal {
 		
 		public int guardID = 0;
 		
+		// disable CompareOfFloatsByEqualityOperator
 		public float maxOmega {
 			get { return maxOmega_; }
 			set {
@@ -45,7 +46,7 @@ namespace Spatiotemporal {
 			guardID = map.GetGuards ().Count;
 			gameObject.name = "Guard " + guardID;
 			
-			Material mat = (Material)AssetDatabase.LoadAssetAtPath("Assets/Materials/GuardMat.mat", typeof(Material));
+			var mat = (Material)AssetDatabase.LoadAssetAtPath("Assets/Materials/GuardMat.mat", typeof(Material));
 			gameObject.renderer.material = mat;
 			
 		}
@@ -54,7 +55,7 @@ namespace Spatiotemporal {
 		
 		public override List<Shape3> Shapes()
 		{
-			List<Shape3> shLst = new List<Shape3> ();
+			var shLst = new List<Shape3> ();
 			
 			List<Pose> positions = getPositions();
 			Pose? current = positions[0];
@@ -77,8 +78,7 @@ namespace Spatiotemporal {
 			
 			int ind = 1;
 			for (int i = 0; i < numSub; i++) {
-				Shape3 vision = StealthFov.Vertices(viewDistance, fieldOfView, frontSegments, position + pos, rotation + rot);
-				shLst.Add(StealthFov.Occlude(map, vision, position + pos, viewDistance));
+				shLst.Add(Occlude(position + pos, rotation + rot));
 				
 				pos += timeStep * (current.Value.rotationQ * current.Value.velocity);
 				rot += timeStep * current.Value.omega;
@@ -93,9 +93,10 @@ namespace Spatiotemporal {
 						rot += over * next.Value.omega;
 						
 						current = next;
-						if (positions.Count > ind + 1)
+						// disable once ConvertIfStatementToConditionalTernaryExpression
+						if (positions.Count > ind + 1) {
 							next = positions[ind + 1];
-						else {
+						} else {
 							next = null;
 						}
 						ind++;
@@ -117,12 +118,7 @@ namespace Spatiotemporal {
 		}
 		
 		new public void Validate() {
-			position.y = 0;
-	
-			if (dirty) {
-				UpdateMesh ();
-				dirty = false;
-			}
+			base.Validate();
 		}
 	}
 }

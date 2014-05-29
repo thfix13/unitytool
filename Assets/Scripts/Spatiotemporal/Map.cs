@@ -1,35 +1,40 @@
 ﻿using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using GeometryLib;
 
 namespace Spatiotemporal {
 	[ExecuteInEditMode]
-	public class Map : MonoBehaviour {
+	public class Map : MonoBehaviour, IObstacle {
 		public bool dirty = true;
 	
-		public Mapper master;
+		public Vector3 dimensions = new Vector3 (100.0f, 60.0f, 100.0f);
+		public float sub_ = 1;
+		public bool clipMap_ = true;
 		
-		public Vector3 dimensions {
-			get {
-				if (master != null) {
-					return master.transform.localScale * 10;
-				} else {
-					return Vector3.one;
+		public bool clipMap
+		{
+			get { return clipMap_; }
+			set {
+				if (clipMap_ != value) {
+					dirty = true;
+					clipMap_ = value;
+					Validate();
 				}
 			}
-			set {
-				master.transform.localScale = value/10;
-			}
 		}
-		public float sub_ = 1;
-	
+		
+		public Vector3 position { get { return Vector3.zero; } }
+		public float rotation { get { return 0.0f; } }
+		
+		// disable CompareOfFloatsByEqualityOperator
 		public float sizeX
 		{
 			get { return dimensions.x; }
 			set {
 				if (dimensions.x != value) {
 					dirty = true;
-					dimensions = new Vector3(value, dimensions.y, dimensions.z);
+					dimensions.x = value;
 					Validate();
 				}
 			}
@@ -40,7 +45,7 @@ namespace Spatiotemporal {
 			set {
 				if (dimensions.y != value) {
 					dirty = true;
-					dimensions = new Vector3(dimensions.x, value, dimensions.z);
+					dimensions.y = value;
 					Validate();
 				}
 			}
@@ -51,7 +56,7 @@ namespace Spatiotemporal {
 			set {
 				if (dimensions.z != value) {
 					dirty = true;
-					dimensions = new Vector3(dimensions.x, dimensions.y,value);
+					dimensions.z = value;
 					Validate();
 				}
 			}
@@ -69,41 +74,35 @@ namespace Spatiotemporal {
 			}
 		}
 		
-		private MeshFilter mf
-		{
-			get {return gameObject.GetComponent<MeshFilter> ();}
-		}
+		private MeshFilter mf { get {return gameObject.GetComponent<MeshFilter> ();} }
 	
 		void Awake()
 		{
+			gameObject.name = "Map";
 			
-			PrefabUtility.DisconnectPrefabInstance(gameObject);
-			// Count number of maps
-			int mapID = GameObject.FindObjectsOfType(typeof(Map)).Length;
-			
-	//		if (mapID > 1) {
-	//			Debug.LogError("There can be only one map");
-	//			Object.DestroyImmediate(gameObject);
-	//		}
-			
-			gameObject.name = "Map " + (mapID);
-	
 			if (gameObject.GetComponent<MeshFilter> () == null)
 				gameObject.AddComponent ("MeshFilter");
 			if (gameObject.GetComponent<MeshRenderer> () == null)
 				gameObject.AddComponent ("MeshRenderer");
 			if (gameObject.GetComponent<MeshCollider> () == null)
 				gameObject.AddComponent ("MeshCollider");
-	
-			Material mat = (Material)AssetDatabase.LoadAssetAtPath("Assets/Materials/MapMat.mat", typeof(Material));
+			
+			var mat = (Material)AssetDatabase.LoadAssetAtPath("Assets/Materials/MapMat.mat", typeof(Material));
 			gameObject.renderer.material = mat;
-	
-			CreateMesh ();
 		}
-	
+		
 		void Start ()
 		{
 	
+		}
+		
+		void OnEnable() {
+			CreateMesh();
+		}
+		
+		void Reset()
+		{
+
 		}
 	
 		void Update ()
@@ -126,7 +125,9 @@ namespace Spatiotemporal {
 			y = timeLength < 1.0f ? 1.0f : timeLength;
 			z = sizeZ < 1.0f ? 1.0f : sizeZ;
 			
-			dimensions = new Vector3(x, y, z);
+			dimensions.x = x;
+			dimensions.y = y;
+			dimensions.z = z;
 			
 			if (sub_ < 0.1f) {
 				sub_ = 0.1f;
@@ -150,7 +151,7 @@ namespace Spatiotemporal {
 		
 		public List<StealthPlayer> GetPlayers()
 		{
-			List<StealthPlayer> lst = new List<StealthPlayer>();
+			var lst = new List<StealthPlayer>();
 			
 			foreach (Transform child in gameObject.transform) {
 				if (child.GetComponent<StealthPlayer>()) {
@@ -163,7 +164,7 @@ namespace Spatiotemporal {
 		
 		public List<MapChild> GetChildren()
 		{
-			List<MapChild> lst = new List<MapChild>();
+			var lst = new List<MapChild>();
 			
 			foreach (Transform child in gameObject.transform) {
 				if (child.GetComponent<MapChild>()) {
@@ -174,14 +175,17 @@ namespace Spatiotemporal {
 			return lst;
 		}
 	
-		public List<StealthObstacle> GetObstacles()
+		public List<IObstacle> GetObstacles()
 		{
-			List<StealthObstacle> lst = new List<StealthObstacle>();
+			var lst = new List<IObstacle>();
 			
 			foreach (Transform child in gameObject.transform) {
 				if (child.GetComponent<StealthObstacle>()) {
 					lst.Add(child.GetComponent<StealthObstacle>());
 				}
+			}
+			if (clipMap_) {
+				lst.Add(this);
 			}
 			
 			return lst;
@@ -189,7 +193,7 @@ namespace Spatiotemporal {
 	
 		public List<StealthGuard> GetGuards()
 		{
-			List<StealthGuard> lst = new List<StealthGuard>();
+			var lst = new List<StealthGuard>();
 			
 			foreach (Transform child in gameObject.transform) {
 				if (child.GetComponent<StealthGuard>()) {
@@ -202,7 +206,7 @@ namespace Spatiotemporal {
 	
 		public List<StealthCamera> GetCameras()
 		{
-			List<StealthCamera> lst = new List<StealthCamera> ();
+			var lst = new List<StealthCamera> ();
 	
 			foreach (Transform child in gameObject.transform) {
 				if (child.GetComponent<StealthCamera>()) {
@@ -215,47 +219,59 @@ namespace Spatiotemporal {
 	
 		private Vector3[] Vertices()
 		{
-			return new Vector3[]{
-				new Vector3(0.5f * sizeX, 0, 0.5f * sizeZ),
-				new Vector3(0.5f * sizeX, 0, -0.5f * sizeZ),
+			return new []{
+				// Bottom
+				new Vector3( 0.5f * sizeX, 0,  0.5f * sizeZ),
+				new Vector3( 0.5f * sizeX, 0, -0.5f * sizeZ),
 				new Vector3(-0.5f * sizeX, 0, -0.5f * sizeZ),
-				new Vector3(-0.5f * sizeX, 0, 0.5f * sizeZ),
-				new Vector3(0.5f * sizeX, timeLength, 0.5f * sizeZ),
-				new Vector3(0.5f * sizeX, timeLength, -0.5f * sizeZ),
+				new Vector3(-0.5f * sizeX, 0,  0.5f * sizeZ),
+				// North
+				new Vector3( 0.5f * sizeX, 0,  0.5f * sizeZ),
+				new Vector3(-0.5f * sizeX, 0,  0.5f * sizeZ),
+				new Vector3(-0.5f * sizeX, timeLength,  0.5f * sizeZ),
+				new Vector3( 0.5f * sizeX, timeLength,  0.5f * sizeZ),
+				// West
+				new Vector3( 0.5f * sizeX, 0,  0.5f * sizeZ),
+				new Vector3( 0.5f * sizeX, timeLength,  0.5f * sizeZ),
+				new Vector3( 0.5f * sizeX, timeLength, -0.5f * sizeZ),
+				new Vector3( 0.5f * sizeX, 0, -0.5f * sizeZ),
+				// South
+				new Vector3(-0.5f * sizeX, 0, -0.5f * sizeZ),
+				new Vector3( 0.5f * sizeX, 0, -0.5f * sizeZ),
+				new Vector3( 0.5f * sizeX, timeLength, -0.5f * sizeZ),
 				new Vector3(-0.5f * sizeX, timeLength, -0.5f * sizeZ),
-				new Vector3(-0.5f * sizeX, timeLength, 0.5f * sizeZ),
+				// East
+				new Vector3(-0.5f * sizeX, 0, -0.5f * sizeZ),
+				new Vector3(-0.5f * sizeX, timeLength, -0.5f * sizeZ),
+				new Vector3(-0.5f * sizeX, timeLength,  0.5f * sizeZ),
+				new Vector3(-0.5f * sizeX, 0,  0.5f * sizeZ),
 			};
 		}
 	
 		public void CreateMesh()
 		{
-			Mesh m = new Mesh ();
+			var m = new Mesh ();
 			m.name = "Map Space";
 			m.vertices = Vertices ();
-			m.triangles = new int[]{
+			m.triangles = new []{
+				// Bottom
 				0, 1, 2, 0, 2, 3,
-				4, 1, 0, 4, 5, 1,
-				2, 1, 5, 2, 5, 6,
-				2, 7, 3, 2, 6, 7,
-				3, 7, 4, 3, 4, 0
+				// North
+				4, 5, 6, 4, 6, 7,
+				// West
+				8, 9, 10, 8, 10, 11,
+				// South
+				12, 13, 14, 12, 14, 15,
+				// East
+				16, 17, 18, 16, 18, 19
 			};
-			m.uv = new Vector2[]{
-				new Vector2(0,0),
-				new Vector2(1,0),
-				new Vector2(0,1),
-				new Vector2(1,1),
-				new Vector2(0,0),
-				new Vector2(1,0),
-				new Vector2(0,1),
-				new Vector2(1,1)};
+			m.uv = new Vector2[m.vertexCount];
 			m.RecalculateNormals();
 			mf.sharedMesh = m;
 		}
 	
 		public void UpdateMesh()
 		{
-			if (mf.sharedMesh == null)
-				CreateMesh();
 			mf.sharedMesh.vertices = Vertices ();
 			
 			Mesh m = mf.sharedMesh;
@@ -267,6 +283,19 @@ namespace Spatiotemporal {
 				mc.dirty = true;
 				mc.Validate();
 			}
+		}
+		
+		public Shape3 GetShape() {
+			var ret = new Shape3();
+			ret.AddVertex(new Vector3( sizeX*0.5001f, 0, sizeZ*0.5001f));
+			ret.AddVertex(new Vector3( sizeX*0.5001f, 0,-sizeZ*0.5001f));
+			ret.AddVertex(new Vector3(-sizeX*0.5001f, 0,-sizeZ*0.5001f));
+			ret.AddVertex(new Vector3(-sizeX*0.5001f, 0, sizeZ*0.5001f));
+			return ret;
+		}
+		
+		public Shape3 ShadowPolygon(Vector3 viewpoint, float viewDistance){
+			return GetShape();
 		}
 	}
 	
@@ -281,6 +310,7 @@ namespace Spatiotemporal {
 		{
 			get {return position.x; }
 			set {
+				// disable once CompareOfFloatsByEqualityOperator
 				if (position.x != value) {
 					position.x = value;
 					dirty = true;
@@ -294,6 +324,7 @@ namespace Spatiotemporal {
 		{
 			get {return position.y; }
 			set {
+				// disable once CompareOfFloatsByEqualityOperator
 				if (position.y != value) {
 					position.y = value;
 					dirty = true;
@@ -306,6 +337,7 @@ namespace Spatiotemporal {
 		{
 			get {return position.z; }
 			set {
+				// disable once CompareOfFloatsByEqualityOperator
 				if (position.z != value) {
 					position.z = value;
 					dirty = true;
@@ -318,6 +350,7 @@ namespace Spatiotemporal {
 		{
 			get {return rotationQ.eulerAngles.y; }
 			set {
+				// disable once CompareOfFloatsByEqualityOperator
 				if (rotationQ.eulerAngles.y != value) {
 					rotationQ = Quaternion.Euler(0, value, 0);
 					dirty = true;
@@ -331,9 +364,8 @@ namespace Spatiotemporal {
 		{
 			get {
 				if (gameObject.activeInHierarchy) {
-					if (transform.parent == null)
-						return null;
-					return (Map)transform.parent.gameObject.GetComponent<Map>();
+					return transform.parent == null ?
+						null : (Map)transform.parent.gameObject.GetComponent<Map>();
 				}
 				return null;
 			}
