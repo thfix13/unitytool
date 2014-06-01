@@ -106,6 +106,17 @@ namespace ClusteringSpace
 			
 			clustTime.Stop();
 
+			foreach (PathCollection pc in allClusters)
+			{
+				foreach (Path p in pc)
+				{
+					foreach (Node n in p.points)
+					{
+						n.t = (int)(Math.Sqrt(n.t));
+					}
+				}
+			}
+
             return (allClusters);
         }
 

@@ -24,13 +24,13 @@ namespace EditorArea {
 		public float interpolationValue = 0.0f;
 		public float interpolationValueCheck = 0.0f; 
 		// Parameters with default values
-		public static int timeSamples = 2000, attemps = 25000, iterations = 1, gridSize = 60, ticksBehind = 0;
+		public static int timeSamples = 1000, attemps = 20000, iterations = 1, gridSize = 60, ticksBehind = 0;
 		private static bool drawMap = false, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = true, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false;
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10;
 		private static int randomSeed = -1;
 		
 		// Clustering
-		public static String[] distMetrics = new String[] { "Frechet (L1)", "Frechet (L1) 3D", "Frechet (Euclidean)", "Hausdorff (Euclidean)", "Hausdorff (Euclidean) 3D", "Area Dist (Interpolation)", "Area Dist (Triangulation)" };
+		public static String[] distMetrics = new String[] { "Frechet (L1) (fastest)", "Frechet (L1) 3D", "Frechet (Euclidean)", "Hausdorff (Euclidean)", "Hausdorff (Euclidean) 3D", "Area Dist (Interpolation)", "Area Dist (Triangulation)" };
 		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
 		public static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
 		private static int numClusters = 5, distMetric = 0, chosenFileIndex = -1, currentColor = 0, curCluster = 0;
@@ -1001,8 +1001,11 @@ namespace EditorArea {
 								foreach (Path path in clusters[c2])
 								{
 									path.color = colors[c];
-									paths.Add(path);
-									toggleStatus.Add(paths.Last (), true);
+									if (!paths.Contains(path))
+									{
+										paths.Add(path);
+										toggleStatus.Add(paths.Last (), true);
+									}
 								}
 							}
 						}
@@ -1043,6 +1046,11 @@ namespace EditorArea {
 					String currentTime = System.DateTime.UtcNow.ToString("yyyymmdd-HHmm");
 					String totalTimeStr = new DateTime(Math.Abs(totalTime.Ticks)).ToString("hhmmss");
 					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetric + "d-" + paths.Count() + "p-" + totalTimeStr + "t@" + currentTime + ".xml", paths);
+				}
+				
+				for (int color = 0; color < colors.Count(); color ++)
+				{
+					showPaths[color] = (color < numClusters) ? true : false;
 				}
 			}
 			
@@ -1131,7 +1139,7 @@ namespace EditorArea {
 					}
 					paths.Add(p);
 				}
-				ComputeHeatMap (paths, deaths);
+				//ComputeHeatMap (paths, deaths);
 				SetupArrangedPaths (paths);
 				
 				chosenFileIndex = -1;
@@ -1171,15 +1179,21 @@ namespace EditorArea {
 			}
 			if (GUILayout.Button ("Show next color"))
 			{
-				currentColor = (currentColor + 1) % colors.Count();
-				foreach (Path p in paths)
+				int numPaths = 0;
+				do
 				{
-					if (p.color.r == colors[currentColor].r && p.color.g == colors[currentColor].g && p.color.b == colors[currentColor].b)
+					currentColor = (currentColor + 1) % colors.Count();
+				
+					foreach (Path p in paths)
 					{
-						p.color.a = 1;
+						if (p.color.r == colors[currentColor].r && p.color.g == colors[currentColor].g && p.color.b == colors[currentColor].b)
+						{
+							numPaths ++;
+							p.color.a = 1;
+						}
+						else p.color.a = 0;
 					}
-					else p.color.a = 0;
-				}
+				} while(numPaths == 0);
 			}
 			if (GUILayout.Button ("Show centroid path for current color"))
 			{
@@ -1202,7 +1216,7 @@ namespace EditorArea {
 				{
 					foreach (Path p in paths)
 					{
-						if (p == clusterCentroids[colorIndex])
+						if (p.Equals(clusterCentroids[colorIndex]))
 						{
 							p.color.a = 1;
 						}
