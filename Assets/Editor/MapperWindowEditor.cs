@@ -1229,7 +1229,7 @@ public class MapperWindowEditor : EditorWindow
 				PCG.ClearBehaviours ();
 				PCG.ClearUpObjects (enemypathObjects);
 				PCG.numOfGuards = numOfGuards;
-				enemypathObjects = PCG.PopulateGuardsWithBehavioursAndSaveToFile (enemyPrefab, waypointPrefab, floor, iterations4, pLine, pDot, pSplit, pZigZag, pPause, pSwipe, pFullRotate, pNinety).ToArray ();
+				enemypathObjects = PCG.PopulateGuardsWithBehaviours (enemyPrefab, waypointPrefab, floor, iterations4, pLine, pDot, pSplit, pZigZag, pPause, pSwipe, pFullRotate, pNinety).ToArray ();
 				StorePositions ();
 			}
 			
