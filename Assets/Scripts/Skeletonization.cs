@@ -34,9 +34,6 @@ public class Skeletonization
 		jmax = (int)(floor.collider.bounds.size.z / SpaceState.TileSize.y);
 		for (int i = 0; i < imax + 1; i++) {
 			for (int j = 0; j < jmax + 1; j++) {
-				if (obs [i] [j].obsVisited) {
-					continue;	
-				}
 				boundaryIndex++;
 				depthFirstSearchForObstacles (i, j, boundaryIndex);
 				if (boundaryContoursList.Count != boundaryIndex) {
@@ -48,20 +45,18 @@ public class Skeletonization
 	
 	private void depthFirstSearchForObstacles (int i, int j, int boundaryIndex)
 	{
+		// Skip if the node has been already visited
 		if (obs [i] [j].obsVisited) {
 			return;	
 		}
 		
-		if ((obs [i] [j].blocked == true || (obs [i] [j].blocked == false && (i == 0 || j == 0 
-			|| i == imax
-			|| j == jmax))) && obs [i] [j].obsVisited == false) {
-			
+		if ((obs [i] [j].blocked == true || (obs [i] [j].blocked == false && (i == 0 || j == 0 || i == imax || j == jmax)))) {
 			obs [i] [j].obsVisited = true;	
 			
 			if ((i > 0 && j > 0 && i < imax && j < jmax) && (!obs [i - 1] [j].blocked || !obs [i + 1] [j].blocked || !obs [i] [j + 1].blocked || !obs [i] [j - 1].blocked
 				|| !obs [i - 1] [j + 1].blocked || !obs [i + 1] [j + 1].blocked || !obs [i + 1] [j - 1].blocked || !obs [i - 1] [j - 1].blocked)) {
 				obs [i] [j].obstacleBelongTo = boundaryIndex;
-				
+				// Add to boundary contours list
 				if (boundaryContoursList.Count != boundaryIndex) {
 					List<Cell> boundary = new List<Cell> ();
 					boundaryContoursList.Add (boundary);
@@ -179,7 +174,7 @@ public class Skeletonization
 				depthFirstSearchForObstacles (i - 1, j, boundaryIndex);
 			}
 			
-			// Not boundary but blocked
+			// Not boundary but blocked, set obstacleBelongTo to 0
 			if (i > 0 && j > 0 && i < imax && j < jmax 
 				&& obs [i - 1] [j].blocked && obs [i - 1] [j + 1].blocked && obs [i] [j + 1].blocked
 				&& obs [i + 1] [j + 1].blocked && obs [i + 1] [j].blocked && obs [i + 1] [j - 1].blocked
@@ -218,7 +213,6 @@ public class Skeletonization
 			if (i == imax && j == 0 && obs [i - 1] [j].blocked && obs [i - 1] [j + 1].blocked && obs [i] [j + 1].blocked) {
 				obs [i] [j].obstacleBelongTo = 0;
 			}
-			
 		}
 		return;
 	}
@@ -228,52 +222,60 @@ public class Skeletonization
 		imax = (int)(floor.collider.bounds.size.x / SpaceState.TileSize.x);
 		jmax = (int)(floor.collider.bounds.size.z / SpaceState.TileSize.y);
 		
+		// Gather all the free cells with obstacleBelongTo = -1
 		calculateFreeCells (floor);
 		while (freeCells.Count != 0) {
-			//for (int a = 0; a < 6; a++) {
 			foreach (List<Cell> boundaryContour in boundaryContoursList) {
 				int numOfCells = boundaryContour.Count;
 				bool changedLT = false, changedRT = false, changedRB = false, changedLB = false;
 				for (int cnt = 0; cnt < numOfCells; cnt++) {
 					Cell boundaryCell = boundaryContour.First ();
+					// Left
 					if (boundaryCell.i > 0 && obs [boundaryCell.i - 1] [boundaryCell.j].obstacleBelongTo == -1) {
 						obs [boundaryCell.i - 1] [boundaryCell.j].obstacleBelongTo = boundaryCell.obstacleBelongTo;
 						boundaryContour.Add (obs [boundaryCell.i - 1] [boundaryCell.j]);
 						freeCells.Remove (obs [boundaryCell.i - 1] [boundaryCell.j]);
 					}
+					// Left-top
 					if (boundaryCell.i > 0 && boundaryCell.j < jmax && obs [boundaryCell.i - 1] [boundaryCell.j + 1].obstacleBelongTo == -1) {
 						changedLT = true;
 						obs [boundaryCell.i - 1] [boundaryCell.j + 1].obstacleBelongTo = boundaryCell.obstacleBelongTo;
 						boundaryContour.Add (obs [boundaryCell.i - 1] [boundaryCell.j + 1]);
 						freeCells.Remove (obs [boundaryCell.i - 1] [boundaryCell.j + 1]);
 					}
+					// Top
 					if (boundaryCell.j < jmax && obs [boundaryCell.i] [boundaryCell.j + 1].obstacleBelongTo == -1) {
 						obs [boundaryCell.i] [boundaryCell.j + 1].obstacleBelongTo = boundaryCell.obstacleBelongTo;
 						boundaryContour.Add (obs [boundaryCell.i] [boundaryCell.j + 1]);
 						freeCells.Remove (obs [boundaryCell.i] [boundaryCell.j + 1]);
 					}
+					// Right-top
 					if (boundaryCell.i < imax && boundaryCell.j < jmax && obs [boundaryCell.i + 1] [boundaryCell.j + 1].obstacleBelongTo == -1) {
 						changedRT = true;
 						obs [boundaryCell.i + 1] [boundaryCell.j + 1].obstacleBelongTo = boundaryCell.obstacleBelongTo;
 						boundaryContour.Add (obs [boundaryCell.i + 1] [boundaryCell.j + 1]);
 						freeCells.Remove (obs [boundaryCell.i + 1] [boundaryCell.j + 1]);
 					}
+					// Right
 					if (boundaryCell.i < imax && obs [boundaryCell.i + 1] [boundaryCell.j].obstacleBelongTo == -1) {
 						obs [boundaryCell.i + 1] [boundaryCell.j].obstacleBelongTo = boundaryCell.obstacleBelongTo;
 						boundaryContour.Add (obs [boundaryCell.i + 1] [boundaryCell.j]);
 						freeCells.Remove (obs [boundaryCell.i + 1] [boundaryCell.j]);
 					}
+					// Right-bottom
 					if (boundaryCell.i < imax && boundaryCell.j > 0 && obs [boundaryCell.i + 1] [boundaryCell.j - 1].obstacleBelongTo == -1) {
 						changedRB = true;
 						obs [boundaryCell.i + 1] [boundaryCell.j - 1].obstacleBelongTo = boundaryCell.obstacleBelongTo;
 						boundaryContour.Add (obs [boundaryCell.i + 1] [boundaryCell.j - 1]);	
 						freeCells.Remove (obs [boundaryCell.i + 1] [boundaryCell.j - 1]);
 					}
+					// Bottom
 					if (boundaryCell.j > 0 && obs [boundaryCell.i] [boundaryCell.j - 1].obstacleBelongTo == -1) {
 						obs [boundaryCell.i] [boundaryCell.j - 1].obstacleBelongTo = boundaryCell.obstacleBelongTo;
 						boundaryContour.Add (obs [boundaryCell.i] [boundaryCell.j - 1]);
 						freeCells.Remove (obs [boundaryCell.i] [boundaryCell.j - 1]);
 					}
+					// Left-bottom
 					if (boundaryCell.i > 0 && boundaryCell.j > 0 && obs [boundaryCell.i - 1] [boundaryCell.j - 1].obstacleBelongTo == -1) {
 						changedLB = true;
 						obs [boundaryCell.i - 1] [boundaryCell.j - 1].obstacleBelongTo = boundaryCell.obstacleBelongTo;
@@ -383,7 +385,7 @@ public class Skeletonization
 		}
 		// Guarantee x1 <= x2 && y1 <= y2 to avoid duplicated roadmap nodes
 		if ((i2 - i1 == 0) && (j2 - j1 == 1)) {
-			if (j1 < jmax && obs [i1] [j1].obstacleBelongTo != obs [i2] [j2].obstacleBelongTo && obs [i2] [j2].obstacleBelongTo != 0) {
+			if (j1 < jmax && obs [i1] [j1].obstacleBelongTo != obs [i2] [j2].obstacleBelongTo && obs [i2] [j2].obstacleBelongTo != 0 && obs [i1] [j1].obstacleBelongTo != 0) {
 				roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2].isVisited = true;
 				roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2].parent = parent;
 				parent.children.Add (roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2]);
@@ -396,8 +398,9 @@ public class Skeletonization
 				depthFirstSearchForRoadmaps (i1, j1, i1 + 1, j1, roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2]);			
 			}
 		}
+		// Guarantee x1 <= x2 && y1 <= y2 to avoid duplicated roadmap nodes
 		if ((i2 - i1 == 1) && (j2 - j1 == 0)) {
-			if (i1 < imax && obs [i1] [j1].obstacleBelongTo != obs [i2] [j2].obstacleBelongTo && obs [i2] [j2].obstacleBelongTo != 0) {
+			if (i1 < imax && obs [i1] [j1].obstacleBelongTo != obs [i2] [j2].obstacleBelongTo && obs [i2] [j2].obstacleBelongTo != 0 && obs [i1] [j1].obstacleBelongTo != 0) {
 				roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2].isVisited = true;
 				roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2].parent = parent;
 				parent.children.Add (roadmapDictionary [i1 + ", " + j1 + ", " + i2 + ", " + j2]);
@@ -443,6 +446,7 @@ public class Skeletonization
 	
 	public void selectSuperNodes ()
 	{
+		// foreach contour
 		foreach (RoadmapNode root in roadmapNodesList) {
 			RoadmapNode currentNode = root;
 			foreach (RoadmapNode rn in currentNode.children) {
@@ -553,15 +557,13 @@ public class Skeletonization
 				recurseChildren (roadmapDictionary [currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1) + ", " + currentRoadmapNode.x2 + ", " + currentRoadmapNode.y2]);										
 			}
 			// Check top edge
-			if (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].isVisited == true
-				&& roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].isChecked == false) {
+			if (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 + 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 + 1)].isVisited == true) {
 				currentRoadmapNode.isChecked = true;
 				currentRoadmapNode.isKept = true;
 				return;
 			}
 			// Check bot edge
-			if (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1)].isVisited == true
-				&& roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1)].isChecked == false) {
+			if (roadmapDictionary [currentRoadmapNode.x1 + ", " + (currentRoadmapNode.y1 - 1) + ", " + currentRoadmapNode.x2 + ", " + (currentRoadmapNode.y2 - 1)].isVisited == true) {
 				currentRoadmapNode.isChecked = true;
 				currentRoadmapNode.isKept = true;
 				return;
@@ -595,15 +597,13 @@ public class Skeletonization
 				recurseChildren (roadmapDictionary [currentRoadmapNode.x1 + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1]);										
 			}
 			// Check left edge
-			if (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x2 - 1) + ", " + currentRoadmapNode.y2].isVisited == true
-				&& roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x2 - 1) + ", " + currentRoadmapNode.y2].isChecked == false) {
+			if (roadmapDictionary [(currentRoadmapNode.x1 - 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x2 - 1) + ", " + currentRoadmapNode.y2].isVisited == true) {
 				currentRoadmapNode.isChecked = true;
 				currentRoadmapNode.isKept = true;
 				return;
 			}
 			// Check right edge
-			if (roadmapDictionary [(currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].isVisited == true
-				&& roadmapDictionary [(currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].isChecked == false) {
+			if (roadmapDictionary [(currentRoadmapNode.x1 + 1) + ", " + currentRoadmapNode.y1 + ", " + (currentRoadmapNode.x2 + 1) + ", " + currentRoadmapNode.y2].isVisited == true) {
 				currentRoadmapNode.isChecked = true;
 				currentRoadmapNode.isKept = true;			
 				return;
@@ -625,8 +625,52 @@ public class Skeletonization
 			}
 		}
 		
-		// Reconstruct a graph
+		// Cure for cross
+		foreach (GraphNode gn in graphNodesList) {
+			// -
+			if (gn.x1 == gn.x2 && gn.y2 - gn.y1 == 1) {
+				GraphNode topNode = null, botNode = null, rightNode = null;
+				int topExist = 0, botExist = 0, rightExist = 0;
+				foreach (GraphNode sgn in graphNodesList) {
+					if (sgn.y1 == sgn.y2 && sgn.x2 - sgn.x1 == 1 && sgn.x1 == gn.x1 && sgn.y1 == gn.y2) {
+						topNode = sgn;
+						topExist = 1;
+					}
+					if (sgn.y1 == sgn.y2 && sgn.x2 - sgn.x1 == 1 && sgn.x1 == gn.x1 && sgn.y1 == gn.y1) {
+						botNode = sgn;
+						botExist = 1;
+					}
+				}
+				foreach (GraphNode gnn in gn.neighbors) {
+					if (gnn.x1 == gnn.x2 && gnn.y2 - gnn.y1 == 1 && gnn.x1 - gn.x1 == 1) {
+						rightNode = gnn;
+						rightExist = 1;
+					}
+					if (gnn == topNode && topExist == 1) {
+						topExist = 2;	
+					}
+					if (gnn == botNode && botExist == 1) {
+						botExist = 2;	
+					}
+				}
+				if (rightNode != null) {
+					foreach (GraphNode gnnn in rightNode.neighbors) {
+						if (gnnn == topNode) {
+							topExist = 3;
+						}
+						if (gnnn == botNode) {
+							botExist = 3;	
+						}
+					}
+				}
+				if (topExist == 1 && botExist == 1 && rightExist == 1) {
+					gn.neighbors.Add (botNode);
+					botNode.neighbors.Add (gn);
+				}
+			}
+		}
 		
+		// Reconstruct a graph
 		foreach (GraphNode gn in graphNodesList) {
 			GraphNode graphNode = new GraphNode (gn.x1, gn.y1, gn.x2, gn.y2);
 			finalGraphNodesList.Add (graphNode);
@@ -719,8 +763,6 @@ public class Skeletonization
 				}
 			}
 		}
-		
-		// Collect all graph edges
 	}
 	
 	private void depthFirstSearchForGraphNodes (RoadmapNode currentRoadmapNode, GraphNode prevGraphNode)
@@ -957,196 +999,65 @@ public class Skeletonization
 		return;
 	}
 	
-	public void merge ()
-	{
-		// Operate on the adjacent list	
-//		foreach (GraphNode currentGraphNode in finalGraphNodesList) {
-//			foreach (GraphNode otherGraphNode in finalGraphNodesList) {
-//				if (otherGraphNode != currentGraphNode) {
-//					int distance = currentGraphNode.distance (otherGraphNode);
-//					if (distance == 1) {
-//						if (!(currentGraphNode.x1 == otherGraphNode.x1 && currentGraphNode.x2 == otherGraphNode.x2) || (currentGraphNode.y1 == otherGraphNode.y1 && currentGraphNode.y2 == otherGraphNode.y2)) {
-//						}
-//					}
-//				}
-//			}
-//		}
-	}
-	
 	public void cleanUp (GameObject floor)
 	{
-		// Creating a new list of graph node and a list of key nodes
-		List<GraphNode> tempList = new List<GraphNode> ();
-//		List<int> keyNodesIndexList = new List<int> ();
-		
-		foreach (GraphNode gn in finalGraphNodesList) {
-			GraphNode newGraphNode = new GraphNode (gn.x1, gn.y1, gn.x2, gn.y2);
-			if (gn.isTail) {
-				newGraphNode.isTail = true;
-			}
-			tempList.Add (newGraphNode);
-		}
-		
-		// GraphNode keyNode = new GraphNode (finalGraphNodesList.ElementAt (0).x1, finalGraphNodesList.ElementAt (0).y1, finalGraphNodesList.ElementAt (0).x2, finalGraphNodesList.ElementAt (0).y2);
-
-
 		foreach (GraphNode g in finalGraphNodesList) {
-			int layerMask = 1 << 8;
-			bool seen = true; 
-
-			while (seen) {
-				seen = false; 
-				List<GraphNode> temp = null; 
-				GraphNode[] t = new GraphNode[g.neighbors.Count]; 
-				g.neighbors.CopyTo (t);
-				temp = t.ToList ();
-
-				foreach (GraphNode n in g.neighbors) {
-					if (n.neighbors.Count == 2) {
-						GraphNode m = (g == n.neighbors [0]) ? n.neighbors [1] : n.neighbors [0];
-
-						//ray casting
-						Vector3 v1 = g.Pos (floor);
-						Vector3 v2 = m.Pos (floor);
-						Vector3 dir = v2 - v1;
-						float dist = Vector3.Distance (v1, v2) + Mathf.Epsilon;
-						// not Collided
-						if (! Physics.Raycast (v1, dir, dist, layerMask)) {
-							seen = true; 
-							//Changing neigbhoor for g
-							temp.Remove (n);
-							temp.Add (m); 
-							//changing neigbhors for m
-							m.neighbors.Remove (n); 
-							m.neighbors.Add (g); 
-							n.neighbors.Clear (); 
-							break; 
+			if (!g.isRemoved) {
+				int layerMask = 1 << 8;
+				bool seen = true; 
+				
+				while (seen) {
+					seen = false; 
+					// Copy current graph node's neighbors to temp
+					List<GraphNode> temp = null; 
+					GraphNode[] t = new GraphNode[g.neighbors.Count]; 
+					g.neighbors.CopyTo (t);
+					temp = t.ToList ();
+	
+					foreach (GraphNode n in g.neighbors) {
+						if (n.neighbors.Count == 2) {
+							GraphNode m = (g == n.neighbors [0]) ? n.neighbors [1] : n.neighbors [0];
+							//ray casting
+							Vector3 v1 = g.Pos (floor);
+							Vector3 v2 = m.Pos (floor);
+							Vector3 dir = v2 - v1;
+							float dist = Vector3.Distance (v1, v2) + Mathf.Epsilon;
+							// not Collided
+							if (! Physics.Raycast (v1, dir, dist, layerMask)) {
+								// Insert a new node here to judge whether we should delete n
+								// Obtain the mid-point of n and m
+								Vector3 v3 = n.Pos (floor);
+								Vector3 midpoint = Vector3.Slerp (v3, v2, 0.5f);
+								Vector3 dir2 = midpoint - v1;
+								float dist2 = Vector3.Distance (v1, midpoint) + Mathf.Epsilon;
+								// If the ray towards midpoint goes through any obstacle
+								if (!Physics.Raycast (v1, dir2, dist2, layerMask)) {
+									seen = true; 
+									// Changing neighbors for g
+									temp.Remove (n);
+									temp.Add (m); 
+									// Changing neigbhors for m
+									m.neighbors.Remove (n); 
+									m.neighbors.Add (g); 
+									// Changing neighbors for n
+									n.neighbors.Clear (); 
+									n.isRemoved = true;
+									break; 
+								}
+							}
 						}
 					}
-
+					// Update g's neighbors
+					g.neighbors = temp; 
 				}
-				g.neighbors = temp; 
 			}
 		}
 		
 		// For M.G.S only
-		finalGraphNodesList.ElementAt (28).neighbors.Remove (finalGraphNodesList.ElementAt (30));
-		finalGraphNodesList.ElementAt (30).neighbors.Remove (finalGraphNodesList.ElementAt (28));
+//		finalGraphNodesList.ElementAt (28).neighbors.Remove (finalGraphNodesList.ElementAt (30));
+//		finalGraphNodesList.ElementAt (30).neighbors.Remove (finalGraphNodesList.ElementAt (28));
 		
-		return; 
-
-
-//		GraphNode prevNode = tempList.ElementAt (0), curNode = tempList.ElementAt (0);
-//		float prevPosX = 0.0f, prevPosY = 0.0f, curPosX = 0.0f, curPosY = 0.0f;
-//		int nodeIndex = -1, prevIndex = 0, tailIndex = 0;
-//		
-//		while (nodeIndex < tempList.Count - 2) {
-//			nodeIndex ++;
-//			// Calculate positions
-//			if (prevNode.x1 == prevNode.x2 && prevNode.y2 - prevNode.y1 == 1) {
-//				prevPosX = SpaceState.TileSize.x * prevNode.x1 + SpaceState.TileSize.x / 2.0f + floor.collider.bounds.min.x;
-//				prevPosY = SpaceState.TileSize.y * prevNode.y1 + SpaceState.TileSize.y + floor.collider.bounds.min.z;
-//			}
-//			if (prevNode.y1 == prevNode.y2 && prevNode.x2 - prevNode.x1 == 1) {
-//				prevPosX = SpaceState.TileSize.x * prevNode.x2 + floor.collider.bounds.min.x;
-//				prevPosY = SpaceState.TileSize.y * prevNode.y1 + SpaceState.TileSize.y / 2.0f + floor.collider.bounds.min.z;
-//			}
-//			if (curNode.x1 == curNode.x2 && curNode.y2 - curNode.y1 == 1) {
-//				curPosX = SpaceState.TileSize.x * curNode.x1 + SpaceState.TileSize.x / 2.0f + floor.collider.bounds.min.x;
-//				curPosY = SpaceState.TileSize.y * curNode.y1 + SpaceState.TileSize.y + floor.collider.bounds.min.z;
-//			}
-//			if (curNode.y1 == curNode.y2 && curNode.x2 - curNode.x1 == 1) {
-//				curPosX = SpaceState.TileSize.x * curNode.x2 + floor.collider.bounds.min.x;
-//				curPosY = SpaceState.TileSize.y * curNode.y1 + SpaceState.TileSize.y / 2.0f + floor.collider.bounds.min.z;
-//			}
-//			if (finalGraphNodesList.ElementAt (nodeIndex).isTail && nodeIndex != 0) {
-//				Debug.Log ("Hey! I am here!");
-//				Debug.Log ("x1: " + finalGraphNodesList.ElementAt (nodeIndex).x1 + " ,y1: " + finalGraphNodesList.ElementAt (nodeIndex).y1);
-//				tailIndex = nodeIndex;
-//				prevIndex = tempList.IndexOf (prevNode);
-//				if (prevIndex + 1 < nodeIndex) {
-//					for (int id = prevIndex + 1; id < nodeIndex; id ++) {
-//						finalGraphNodesList.ElementAt (id).neighbors.Clear ();
-//					}
-//					finalGraphNodesList.ElementAt (prevIndex).neighbors.Remove (finalGraphNodesList.ElementAt(prevIndex + 1));
-//					finalGraphNodesList.ElementAt (nodeIndex).neighbors.Remove (finalGraphNodesList.ElementAt (nodeIndex - 1));
-//					finalGraphNodesList.ElementAt (prevIndex).neighbors.Add (finalGraphNodesList.ElementAt (nodeIndex));
-//					finalGraphNodesList.ElementAt (nodeIndex).neighbors.Add (finalGraphNodesList.ElementAt (prevIndex));					
-//				}
-//				prevIndex = keyNodesIndexList.Last ();
-//				keyNodesIndexList.Remove (keyNodesIndexList.Last ());
-//				prevNode = tempList.ElementAt (prevIndex);
-//				curNode = tempList.ElementAt (nodeIndex + 1);
-//			} else {
-//				if (curNode.x1 != prevNode.x1 || curNode.y1 != prevNode.y1 || curNode.x2 != prevNode.x2 || curNode.y2 != prevNode.y2) {
-//					Vector3 v1 = new Vector3 (prevPosX, 0f, prevPosY);
-//					Vector3 v2 = new Vector3 (curPosX, 0f, curPosY);
-//					Vector3 dir = new Vector3 (v2.x - v1.x, v2.y - v1.y, v2.z - v1.z);
-//					float dist = Vector3.Distance (v1, v2);
-//					// blocked
-//			 		if (Physics.Raycast (v1, dir, dist)) {
-//						if (finalGraphNodesList.ElementAt (nodeIndex).neighbors.Count == 3) {
-//							// Put it into key nodes list
-//							if (!keyNodesIndexList.Contains (nodeIndex)) {
-//								keyNodesIndexList.Add (nodeIndex);
-//							}
-//							prevIndex = tempList.IndexOf (prevNode);
-//							prevNode = tempList.ElementAt (nodeIndex);
-//							curNode = tempList.ElementAt (nodeIndex + 1);
-//							int lastIndex = tailIndex > (prevIndex + 1) ? tailIndex : (prevIndex + 1);
-//							if (lastIndex < nodeIndex - 1) {
-//								for (int id = lastIndex; id < nodeIndex - 1; id ++) {
-//									finalGraphNodesList.ElementAt (id).neighbors.Clear ();
-//								}
-//								finalGraphNodesList.ElementAt (prevIndex).neighbors.Remove (finalGraphNodesList.ElementAt(prevIndex + 1));
-//								finalGraphNodesList.ElementAt (nodeIndex - 1).neighbors.Remove (finalGraphNodesList.ElementAt (nodeIndex - 2));
-//								finalGraphNodesList.ElementAt (prevIndex).neighbors.Add (finalGraphNodesList.ElementAt (nodeIndex - 1));
-//								finalGraphNodesList.ElementAt (nodeIndex - 1).neighbors.Add (finalGraphNodesList.ElementAt (prevIndex));
-//							}
-//						} else {
-//							prevIndex = tempList.IndexOf (prevNode);
-//							prevNode = tempList.ElementAt (nodeIndex - 1);
-//							curNode = tempList.ElementAt (nodeIndex);
-//							// Delete indice between prevIndex and nodeIndex - 1
-//							int lastIndex = tailIndex > (prevIndex + 1) ? tailIndex : (prevIndex + 1);
-//							if (lastIndex < nodeIndex - 1) {
-//								for (int id = lastIndex; id < nodeIndex - 1; id ++) {
-//									finalGraphNodesList.ElementAt (id).neighbors.Clear ();
-//								}
-//								finalGraphNodesList.ElementAt (prevIndex).neighbors.Remove (finalGraphNodesList.ElementAt(prevIndex + 1));
-//								finalGraphNodesList.ElementAt (nodeIndex - 1).neighbors.Remove (finalGraphNodesList.ElementAt (nodeIndex - 2));
-//								finalGraphNodesList.ElementAt (prevIndex).neighbors.Add (finalGraphNodesList.ElementAt (nodeIndex - 1));
-//								finalGraphNodesList.ElementAt (nodeIndex - 1).neighbors.Add (finalGraphNodesList.ElementAt (prevIndex));
-//							}
-//							nodeIndex --;
-//						}
-//					} else {
-//						curNode = tempList.ElementAt (nodeIndex + 1);
-//						if (finalGraphNodesList.ElementAt (nodeIndex).neighbors.Count == 3) {
-//							// Put it into key nodes list
-//							if (!keyNodesIndexList.Contains (nodeIndex)) {
-//								keyNodesIndexList.Add (nodeIndex);
-//							}
-//							prevIndex = tempList.IndexOf (prevNode);
-//							prevNode = tempList.ElementAt (nodeIndex);
-//							curNode = tempList.ElementAt (nodeIndex + 1);
-//							int lastIndex = tailIndex > (prevIndex + 1) ? tailIndex : (prevIndex + 1);
-//							if (lastIndex < nodeIndex) {
-//								for (int id = lastIndex; id < nodeIndex; id ++) {
-//									finalGraphNodesList.ElementAt (id).neighbors.Clear ();
-//								}
-//								finalGraphNodesList.ElementAt (prevIndex).neighbors.Remove (finalGraphNodesList.ElementAt(prevIndex + 1));
-//								finalGraphNodesList.ElementAt (nodeIndex).neighbors.Remove (finalGraphNodesList.ElementAt (nodeIndex - 1));
-//								finalGraphNodesList.ElementAt (prevIndex).neighbors.Add (finalGraphNodesList.ElementAt (nodeIndex));
-//								finalGraphNodesList.ElementAt (nodeIndex).neighbors.Add (finalGraphNodesList.ElementAt (prevIndex));
-//							}
-//						} 
-//					}
-//				} else {
-//					curNode = tempList.ElementAt (nodeIndex + 1);
-//				}
-//			}
-//		}
+		return;
 	}
 
 	public void clearGraph ()

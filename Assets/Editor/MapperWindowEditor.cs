@@ -1069,7 +1069,7 @@ public class MapperWindowEditor : EditorWindow
 				initializeGraphOpEnables = true;
 			}
 			
-			drawRoadmaps3 = EditorGUILayout.Toggle ("Draw Roadmaps Nodes", drawRoadmaps3);
+			drawRoadmaps3 = EditorGUILayout.Toggle ("Draw Super Nodes", drawRoadmaps3);
 			
 			//		if (GUILayout.Button ("Select Boundaries")) {
 			//			if (obs == null) { 

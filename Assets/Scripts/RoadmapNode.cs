@@ -8,6 +8,7 @@ public class RoadmapNode
 	public int x1, y1, x2, y2;
 	public float posX, posY;
 	public bool isKept = false;
+	// Is a Roadmap node actually
 	public bool isVisited = false;
 	public bool isChecked = false;
 	

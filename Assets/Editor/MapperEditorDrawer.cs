@@ -467,10 +467,13 @@ public class MapperEditorDrawer : MonoBehaviour
 					Gizmos.DrawSphere (new Vector3 ((gn.x1 * tileSize.x + zero.x + tileSize.x / 2f + gn.x2 * tileSize.x + zero.x + tileSize.x / 2f) / 2f, 0f, 
 						(gn.y1 * tileSize.y + zero.y + tileSize.y / 2f + gn.y2 * tileSize.y + zero.y + tileSize.y / 2f) / 2f), 0.1f);			
 					foreach (GraphNode neighbor in gn.neighbors) {
-						Gizmos.color = Color.grey;
-						Gizmos.DrawLine (new Vector3 ((gn.x1 * tileSize.x + zero.x + tileSize.x / 2f + gn.x2 * tileSize.x + zero.x + tileSize.x / 2f) / 2f, 0f, 
-						(gn.y1 * tileSize.y + zero.y + tileSize.y / 2f + gn.y2 * tileSize.y + zero.y + tileSize.y / 2f) / 2f), new Vector3 ((neighbor.x1 * tileSize.x + zero.x + tileSize.x / 2f + neighbor.x2 * tileSize.x + zero.x + tileSize.x / 2f) / 2f, 0f, 
-						(neighbor.y1 * tileSize.y + zero.y + tileSize.y / 2f + neighbor.y2 * tileSize.y + zero.y + tileSize.y / 2f) / 2f));
+						if (neighbor.neighbors.Contains (gn)) {
+							Gizmos.color = Color.gray;
+							Gizmos.DrawLine (new Vector3 ((gn.x1 * tileSize.x + zero.x + tileSize.x / 2f + gn.x2 * tileSize.x + zero.x + tileSize.x / 2f) / 2f, 0f, 
+							(gn.y1 * tileSize.y + zero.y + tileSize.y / 2f + gn.y2 * tileSize.y + zero.y + tileSize.y / 2f) / 2f), new Vector3 ((neighbor.x1 * tileSize.x + zero.x + tileSize.x / 2f + neighbor.x2 * tileSize.x + zero.x + tileSize.x / 2f) / 2f, 0f, 
+							(neighbor.y1 * tileSize.y + zero.y + tileSize.y / 2f + neighbor.y2 * tileSize.y + zero.y + tileSize.y / 2f) / 2f));
+					
+						}
 					}
 				}
 			}
