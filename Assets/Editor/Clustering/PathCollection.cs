@@ -49,15 +49,6 @@ namespace ClusteringSpace
             UpdateCentroid();
         }
 
-     /*   public Path RemovePath(int index)
-        {
-            Path removedPath = new Path(this[index].points);
-            this.RemoveAt(index);
-            UpdateCentroid();
-
-            return (removedPath);
-        }*/
-
         public Path removePath(Path p)
         {
             Path removedPath = new Path(p.points);

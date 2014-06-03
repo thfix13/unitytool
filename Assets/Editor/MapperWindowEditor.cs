@@ -24,7 +24,7 @@ namespace EditorArea {
 		public float interpolationValue = 0.0f;
 		public float interpolationValueCheck = 0.0f; 
 		// Parameters with default values
-		public static int timeSamples = 1000, attemps = 20000, iterations = 1, gridSize = 60, ticksBehind = 0;
+		public static int timeSamples = 2000, attemps = 25000, iterations = 1, gridSize = 60, ticksBehind = 0;
 		private static bool drawMap = false, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = true, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false;
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10;
 		private static int randomSeed = -1;
@@ -1043,7 +1043,7 @@ namespace EditorArea {
 				
 				if (autoSavePaths)
 				{
-					String currentTime = System.DateTime.UtcNow.ToString("yyyymmdd-HHmm");
+					String currentTime = System.DateTime.Now.ToString("s");
 					String totalTimeStr = new DateTime(Math.Abs(totalTime.Ticks)).ToString("hhmmss");
 					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetric + "d-" + paths.Count() + "p-" + totalTimeStr + "t@" + currentTime + ".xml", paths);
 				}
@@ -1054,7 +1054,7 @@ namespace EditorArea {
 				}
 			}
 			
-			if (GUILayout.Button ("Cluster 20"))
+/*			if (GUILayout.Button ("Cluster 20"))
 			{
 				KMeans.clustTime = new System.Diagnostics.Stopwatch();
 				KMeans.distTime = new System.Diagnostics.Stopwatch();
@@ -1113,15 +1113,22 @@ namespace EditorArea {
 				curCluster ++;
 			}
 
-			autoSavePaths = EditorGUILayout.Toggle("Autosave cluster results", autoSavePaths);
+			autoSavePaths = EditorGUILayout.Toggle("Autosave cluster results", autoSavePaths);*/
 			
 			DirectoryInfo dir = new DirectoryInfo("clusteringdata/");
 			FileInfo[] info = dir.GetFiles("*.xml");
-			String[] fileNames = new String[info.Count()];
+			
+			List<String> goodFiles = new List<String>();
 			for (int count = 0; count < info.Count(); count ++)
 			{
-				fileNames[count] = info[count].Name;
+				String[] temp = info[count].Name.Split(new Char[]{'_'});
+				if (temp[0] == nameFile)
+				{
+					goodFiles.Add(info[count].Name);
+				}				
 			}
+			
+			String[] fileNames = goodFiles.ToArray();
 			chosenFileIndex = EditorGUILayout.Popup("Load saved results", chosenFileIndex, fileNames);
 			if (chosenFileIndex != -1)
 			{

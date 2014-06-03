@@ -54,8 +54,10 @@ namespace Common {
 			{
 				Node n = points	[i]; 
 				Node n1 = points[i+1]; 
-				vertex.Add(new Vector3(n.x,n.t/10,n.y)); 
-				vertex.Add(new Vector3(n1.x,n1.t/10,n1.y)); 
+				vertex.Add(new Vector3(n.x,n.t,n.y)); 
+				vertex.Add(new Vector3(n1.x,n1.t,n1.y)); 
+//				vertex.Add(new Vector3(n.x,n.t/10,n.y)); 
+//				vertex.Add(new Vector3(n1.x,n1.t/10,n1.y)); 
 			}
 			return vertex.ToArray(); 
 		}
