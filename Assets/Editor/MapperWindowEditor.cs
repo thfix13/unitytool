@@ -963,6 +963,7 @@ namespace EditorArea {
 			
 			int prevMetric = distMetric;
 			distMetric = EditorGUILayout.Popup("Dist metric:", distMetric, distMetrics);
+			
 			if (prevMetric != distMetric && (distMetric == 1 || distMetric == 3)) { scaleTime = true; }
 			scaleTime = EditorGUILayout.Toggle("Scale time", scaleTime);
 			
@@ -988,9 +989,9 @@ namespace EditorArea {
 					}
 				}
 
-				if (paths.Count > 90)
+				if (paths.Count > 99)
 				{
-					List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/20, distMetric); // 50 (orig=20)
+					List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/20, distMetric);
 				
 					List<Path> tempCentroids = new List<Path>();
 					foreach(PathCollection pc in clusters)

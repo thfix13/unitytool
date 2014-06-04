@@ -89,7 +89,7 @@ namespace ClusteringSpace
 			}
 			clustTime.Start();
 
-            //divide paths into equal clusters
+            // divide paths into equal clusters
             List<PathCollection> allClusters = new List<PathCollection>();
             List<List<Path>> allGroups = ListUtility.SplitList<Path>(paths, clusterCount);
             foreach (List<Path> pathGroup in allGroups)
@@ -98,7 +98,7 @@ namespace ClusteringSpace
                 allClusters.Add(cluster);
             }
 			
-            //start k-means clustering
+            // start k-means clustering
 			// src : http://codeding.com/articles/k-means-algorithm
             int movements = 1;
 			int count = 0;

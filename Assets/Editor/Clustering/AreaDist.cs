@@ -47,17 +47,8 @@ public class AreaDist
 	}
 	
 	public static double areaFromInterpolation2D(Path path1, Path path2)
-	{
-		foreach (Node n in path1.points)
-		{
-			n.t = 0;
-		}
-		foreach (Node n in path2.points)
-		{
-			n.t = 0;
-		}
-		
-		return areaFromInterpolation3D(path1, path2);
+	{		
+		return -1;
 	}
 	
 	public static double areaFromInterpolation3D(Path path1, Path path2)
