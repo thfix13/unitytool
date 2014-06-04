@@ -984,7 +984,7 @@ namespace EditorArea {
 					{
 						foreach (Node n in p.points)
 						{
-							n.t = (int)Math.Pow(n.t, 4);
+							n.t = (int)Math.Pow(n.t, 2);
 						}
 					}
 				}
@@ -1069,7 +1069,7 @@ namespace EditorArea {
 					{
 						foreach (Node n in p.points)
 						{
-							n.t = (int)(Math.Pow(n.t, (double)1.0 / 4.0));
+							n.t = (int)(Math.Pow(n.t, (double)1.0 / 2.0));
 						}
 					}
 				}
@@ -1081,9 +1081,9 @@ namespace EditorArea {
 				
 				if (autoSavePaths)
 				{
-					String currentTime = System.DateTime.Now.ToString("s");
+		//			String currentTime = System.DateTime.Now.ToString("s");
 					String totalTimeStr = new DateTime(Math.Abs(totalTime.Ticks)).ToString("hhmmss");
-					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetric + "d-" + paths.Count() + "p-" + totalTimeStr + "t@" + currentTime + ".xml", paths);
+					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetric + "d-" + paths.Count() + "p-" + totalTimeStr + "t" + ".xml", paths);
 				}
 				
 				for (int color = 0; color < colors.Count(); color ++)
