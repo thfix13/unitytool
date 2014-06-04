@@ -760,6 +760,9 @@ namespace EditorArea {
 				line3.Draw3D();
 				
 				line3.vectorObject.transform.parent = lineHolder.transform;
+				
+				double area = AreaDist.areaFromInterpolation(data.paths[0], data.paths[1]);
+				Debug.Log("Area between paths: " + area);
 			}
 
 			/*
@@ -1054,12 +1057,12 @@ namespace EditorArea {
 				}
 			}
 			
-/*			if (GUILayout.Button ("Cluster 20"))
+			if (GUILayout.Button ("Cluster 20"))
 			{
 				KMeans.clustTime = new System.Diagnostics.Stopwatch();
 				KMeans.distTime = new System.Diagnostics.Stopwatch();
 				
-				clusters20 = KMeans.DoKMeans(paths, 20, distMetric);
+				clusters20 = KMeans.DoKMeans(paths, 100, distMetric);
 				
 				clusterCentroids.Clear();
 				foreach(PathCollection pc in clusters20)
@@ -1088,7 +1091,7 @@ namespace EditorArea {
 				
 				if (autoSavePaths)
 				{
-					String currentTime = System.DateTime.UtcNow.ToString("yyyymmdd-HHmm");
+					String currentTime = System.DateTime.Now.ToString("s");
 					String totalTimeStr = new DateTime(Math.Abs(totalTime.Ticks)).ToString("hhmmss");
 					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetric + "d-" + paths.Count() + "p-" + totalTimeStr + "t@" + currentTime + ".xml", paths);
 				}
@@ -1110,10 +1113,10 @@ namespace EditorArea {
 						}
 					}
 				}
-				curCluster ++;
+				curCluster = (curCluster + 1) % 100;
 			}
 
-			autoSavePaths = EditorGUILayout.Toggle("Autosave cluster results", autoSavePaths);*/
+		//	autoSavePaths = EditorGUILayout.Toggle("Autosave cluster results", autoSavePaths);
 			
 			DirectoryInfo dir = new DirectoryInfo("clusteringdata/");
 			FileInfo[] info = dir.GetFiles("*.xml");
@@ -1190,6 +1193,11 @@ namespace EditorArea {
 				do
 				{
 					currentColor = (currentColor + 1) % colors.Count();
+					for (int color = 0; color < colors.Count(); color ++)
+					{
+						if (color == currentColor) showPaths[color] = true;
+						else showPaths[color] = false;
+					}
 				
 					foreach (Path p in paths)
 					{

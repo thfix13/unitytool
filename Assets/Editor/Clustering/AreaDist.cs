@@ -18,6 +18,11 @@ public class AreaDist
 			x = x_;
 			y = y_;
 		}
+/*		public Point(Vector3 vec_)
+		{
+			x = (int)vec_.x;
+			y = (int)vec_.y;
+		}*/
 		public bool Equals(Point other)
 		{
 			return (x == other.x && y == other.y);
@@ -39,28 +44,29 @@ public class AreaDist
 	
 	public static double areaFromInterpolation(Path path1, Path path2)
 	{
-		int numberLines = 50;
-		Vector3[] set1 = MapperWindowEditor.GetSetPointsWithN(path1.getPoints3D(),numberLines); 
-		Vector3[] set2 = MapperWindowEditor.GetSetPointsWithN(path2.getPoints3D(),numberLines); 
-
-/*		List<Vector3> linesInterpolated = new List<Vector3>(); 
-
-		for(int i = 0; i<set1.Length;i++)
-		{
-			linesInterpolated.Add(set1[i]);
-			linesInterpolated.Add(set2[i]);
-		}*/
+		int numberLines = 20;
+		Vector3[] set1 = MapperWindowEditor.GetSetPointsWithN(path1.getPoints3D(), numberLines); 
+		Vector3[] set2 = MapperWindowEditor.GetSetPointsWithN(path2.getPoints3D(), numberLines); 
 		
-		// rectangle from set1[i], set1[i+1] to set2[i], set2[i+1]
+		// shape formed from set1[i], set1[i+1] to set2[i], set2[i+1]
 		double area = 0.0;
-		/*for (int i = 0; i < set1.Length; i ++)
-		{
-			// x dist
-			int width = Mathf.Abs((float)(set1[i+1].x - set1[i].x)) + Mathf.Abs((float)(set1[i+1].y - set1[i].y));
-			int height = Mathf.Abs((float)(set1[i] - set2[i])) + Mathf.Abs((float)(set1[i].y - set2[i].y));
-			area += width * height;
-			}*/
-
+		for (int i = 0; i < set1.Length-1; i ++)
+		{			
+			float[][] vertices = new float[4][];
+			for (int j = 0; j < 4; j ++) vertices[j] = new float[2];
+			
+			vertices[0][0] = set1[i].x;
+			vertices[0][1] = set1[i].y;
+			vertices[1][0] = set1[i+1].x;
+			vertices[1][1] = set1[i+1].y;
+			vertices[2][0] = set2[i+1].x;
+			vertices[2][1] = set2[i+1].y;
+			vertices[3][0] = set2[i].x;
+			vertices[3][1] = set2[i].y;
+			
+			area += getArea(vertices);
+		}
+		
 		return area;
 	}
 	
@@ -128,10 +134,10 @@ public class AreaDist
 	
 	public static double getArea(List<Point> vertexList)
 	{
-		int[][] vertices = new int[vertexList.Count()][];
+		float[][] vertices = new float[vertexList.Count()][];
 		for (int count = 0; count < vertexList.Count(); count ++)
-		{
-			vertices[count] = new int[2];
+		{ // alg takes ordered pairs of (x,y)
+			vertices[count] = new float[2];
 			vertices[count][0] = vertexList[count].x;
 			vertices[count][1] = vertexList[count].y;
 		}
@@ -139,7 +145,7 @@ public class AreaDist
 		return getArea(vertices);
 	}
 	
-	public static double getArea(int[][] arr)
+	public static double getArea(float[][] arr)
 	{ // src : http://www.sanfoundry.com/java-program-shoelace-algorithm/
 		int n = arr.Length;
 		/** copy initial point to last row **/
