@@ -21,7 +21,7 @@ namespace ClusteringSpace
 			FrechetL13D,
 			FrechetEuclidean,
 			AreaDistInterpolation3D,
-			AreaDistInterpolation
+			AreaDistTriangulation
 		}
 		
 		public static Stopwatch distTime = new Stopwatch();
@@ -207,7 +207,7 @@ namespace ClusteringSpace
 			{
 				result = HausdorffDist.computeDistance(path1, path2, distMetric);
 			}*/
-			else if (distMetric == (int)Metrics.AreaDistInterpolation || distMetric == (int)Metrics.AreaDistInterpolation3D /*|| distMetric == (int)Metrics.AreaDistTriangulation*/)
+			else if (distMetric == (int)Metrics.AreaDistTriangulation || distMetric == (int)Metrics.AreaDistInterpolation3D)
 			{
 				result = AreaDist.computeDistance(path1, path2, distMetric);
 			}

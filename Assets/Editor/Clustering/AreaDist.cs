@@ -31,24 +31,15 @@ public class AreaDist
 	
 	public static double computeDistance(Path path1, Path path2, int distMetric)
 	{
-		if (distMetric == (int)KMeans.Metrics.AreaDistInterpolation)
+		if (distMetric == (int)KMeans.Metrics.AreaDistTriangulation)
 		{
-			return areaFromInterpolation2D(path1, path2);
+			return areaFromTriangulation(path1, path2);
 		}
 		else if (distMetric == (int)KMeans.Metrics.AreaDistInterpolation3D)
 		{
 			return areaFromInterpolation3D(path1, path2);
 		}
-//		else if (distMetric == (int)KMeans.Metrics.AreaDistTriangulation)
-//		{
-//			return areaFromTriangulation(path1, path2);
-//		}
 		else return -1;
-	}
-	
-	public static double areaFromInterpolation2D(Path path1, Path path2)
-	{		
-		return -1;
 	}
 	
 	public static double areaFromInterpolation3D(Path path1, Path path2)
@@ -84,6 +75,7 @@ public class AreaDist
 		Debug.Log("Start dist");
 		
 		List<Point> polygonVertices = new List<Point>();
+		
 		double area = 0.0;
 		for (int count = 0; count < path1.points.Count-1; count ++)
 		{
@@ -105,6 +97,19 @@ public class AreaDist
 			}
 			polygonVertices.Add(new Point(path1.points[count+1].x, path1.points[count+1].y)); // e1
 		}
+		
+/*		List<Point> intersections = new List<Point>();
+		for (int count = 0; count < path1.points.Count-1; count ++)
+		{
+			for (int count2 = 0; count2 < path2.points.Count-1; count2 ++)
+			{
+				Point intersection = getIntersectionOf(path1.points[count], path1.points[count+1], path2.points[count2], path2.points[count2+1]);
+				if (intersection != null)
+				{
+					intersections.Add(intersection);
+				}
+			}
+		}*/
 		
 		Debug.Log("End dist, area: " + area);
 		

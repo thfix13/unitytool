@@ -984,7 +984,7 @@ namespace EditorArea {
 					{
 						foreach (Node n in p.points)
 						{
-							n.t = (int)Math.Pow(n.t, 2);
+							n.t = (int)Math.Pow(n.t, 3);
 						}
 					}
 				}
@@ -1069,7 +1069,7 @@ namespace EditorArea {
 					{
 						foreach (Node n in p.points)
 						{
-							n.t = (int)(Math.Pow(n.t, (double)1.0 / 2.0));
+							n.t = (int)(Math.Pow(n.t, (double)1.0 / 3.0));
 						}
 					}
 				}
@@ -1083,7 +1083,7 @@ namespace EditorArea {
 				{
 					String currentTime = System.DateTime.Now.ToString("s");
 					currentTime = currentTime.Replace(':', '-');
-					String totalTimeStr = new DateTime(Math.Abs(totalTime.Ticks)).ToString("hhmmss");
+					String totalTimeStr = new DateTime(Math.Abs(totalTime.Ticks)).ToString("HHmmss");
 					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetric + "d-" + paths.Count() + "p-" + totalTimeStr + "t" + currentTime + ".xml", paths);
 				}
 				
@@ -1093,7 +1093,7 @@ namespace EditorArea {
 				}
 			}
 			
-			if (GUILayout.Button ("Cluster 20"))
+		/*	if (GUILayout.Button ("Cluster 20"))
 			{
 				KMeans.clustTime = new System.Diagnostics.Stopwatch();
 				KMeans.distTime = new System.Diagnostics.Stopwatch();
@@ -1128,13 +1128,6 @@ namespace EditorArea {
 				Debug.Log ("Dist elapsed time: " + KMeans.distTime.Elapsed);
 				TimeSpan totalTime = KMeans.clustTime.Elapsed + KMeans.distTime.Elapsed;
 				Debug.Log ("Total: " + totalTime);
-				
-			/*	if (autoSavePaths)
-				{
-					String currentTime = System.DateTime.Now.ToString("s");
-					String totalTimeStr = new DateTime(Math.Abs(totalTime.Ticks)).ToString("hhmmss");
-					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetric + "d-" + paths.Count() + "p-" + totalTimeStr + "t@" + currentTime + ".xml", paths);
-				}*/
 			}
 			if (GUILayout.Button ("Next"))
 			{
@@ -1154,7 +1147,7 @@ namespace EditorArea {
 					}
 				}
 				curCluster = (curCluster + 1) % 100;
-			}
+			}*/
 
 		//	autoSavePaths = EditorGUILayout.Toggle("Autosave cluster results", autoSavePaths);
 			
