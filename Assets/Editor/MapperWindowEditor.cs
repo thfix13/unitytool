@@ -1081,9 +1081,10 @@ namespace EditorArea {
 				
 				if (autoSavePaths)
 				{
-		//			String currentTime = System.DateTime.Now.ToString("s");
+					String currentTime = System.DateTime.Now.ToString("s");
+					currentTime = currentTime.Replace(':', '-');
 					String totalTimeStr = new DateTime(Math.Abs(totalTime.Ticks)).ToString("hhmmss");
-					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetric + "d-" + paths.Count() + "p-" + totalTimeStr + "t" + ".xml", paths);
+					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetric + "d-" + paths.Count() + "p-" + totalTimeStr + "t" + currentTime + ".xml", paths);
 				}
 				
 				for (int color = 0; color < colors.Count(); color ++)
