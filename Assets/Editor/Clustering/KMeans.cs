@@ -20,10 +20,8 @@ namespace ClusteringSpace
 			FrechetL1 = 0,
 			FrechetL13D,
 			FrechetEuclidean,
-			HausdorffEuclidean,
-			HausdorffEuclidean3D,
-			AreaDistInterpolation,
-			AreaDistTriangulation
+			AreaDistInterpolation3D,
+			AreaDistInterpolation
 		}
 		
 		public static Stopwatch distTime = new Stopwatch();
@@ -41,7 +39,7 @@ namespace ClusteringSpace
 			}
 						
 			distMetric = distMetric_;
-			if (distMetric == (int)Metrics.FrechetL1 || distMetric == (int)Metrics.FrechetEuclidean || distMetric == (int)Metrics.FrechetL13D)
+			if (distMetric == (int)Metrics.FrechetL1 || distMetric == (int)Metrics.FrechetEuclidean /*|| distMetric == (int)Metrics.FrechetL13D*/)
 			{ // make sure paths have enough points
 				foreach(Path p in paths)
 				{
@@ -88,14 +86,6 @@ namespace ClusteringSpace
 			else if (distMetric == (int)Metrics.FrechetL13D)
 			{
 				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(3));
-				foreach (Path p in paths)
-				{
-					foreach (Node n in p.points)
-					{
-						n.t ^= 3;
-					}
-				}
-			//	frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.LInfinity(3));
 			}
 			clustTime.Start();
 
@@ -141,20 +131,6 @@ namespace ClusteringSpace
             }
 			
 			clustTime.Stop();
-
-			if (distMetric == (int)Metrics.FrechetL13D)
-			{
-				foreach (PathCollection pc in allClusters)
-				{
-					foreach (Path p in pc)
-					{
-						foreach (Node n in p.points)
-						{
-							n.t = (int)(Math.Pow(n.t, 1.0 / 3.0));
-						}
-					}
-				}				
-			}
 
             return (allClusters);
         }
@@ -227,11 +203,11 @@ namespace ClusteringSpace
 				
 				result = frechet.computeDistance(curveA,curveB);
 			}
-			else if (distMetric == (int)Metrics.HausdorffEuclidean || distMetric == (int)Metrics.HausdorffEuclidean3D)
+/*			else if (distMetric == (int)Metrics.HausdorffEuclidean || distMetric == (int)Metrics.HausdorffEuclidean3D)
 			{
 				result = HausdorffDist.computeDistance(path1, path2, distMetric);
-			}
-			else if (distMetric == (int)Metrics.AreaDistInterpolation || distMetric == (int)Metrics.AreaDistTriangulation)
+			}*/
+			else if (distMetric == (int)Metrics.AreaDistInterpolation || distMetric == (int)Metrics.AreaDistInterpolation3D /*|| distMetric == (int)Metrics.AreaDistTriangulation*/)
 			{
 				result = AreaDist.computeDistance(path1, path2, distMetric);
 			}

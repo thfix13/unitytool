@@ -30,14 +30,14 @@ namespace EditorArea {
 		private static int randomSeed = -1;
 		
 		// Clustering
-		public static String[] distMetrics = new String[] { "Frechet (L1) (fastest)", "Frechet (L1) 3D", "Frechet (Euclidean)", "Hausdorff (Euclidean)", "Hausdorff (Euclidean) 3D", "Area Dist (Interpolation)", "Area Dist (Triangulation)" };
+		public static String[] distMetrics = new String[] { "Frechet (L1) (fastest)", "Frechet (L1) 3D", "Frechet (Euclidean)", "Area Dist (Interpolation) 3D", "AD 2D"};
 		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
 		public static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
-		private static int numClusters = 5, distMetric = 0, chosenFileIndex = -1, currentColor = 0, curCluster = 0;
+		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, curCluster = 0;
 		private static List<Path> clusterCentroids = new List<Path>();
 		private static List<PathCollection> clusters20 = new List<PathCollection>();
 		private static bool[] showPaths = new bool[colors.Count()];
-		private static bool autoSavePaths = true;
+		private static bool autoSavePaths = true, scaleTime = false;
 
 		// Computed parameters
 		private static int[,] heatMap, deathHeatMap, combatHeatMap;
@@ -761,7 +761,7 @@ namespace EditorArea {
 				
 				line3.vectorObject.transform.parent = lineHolder.transform;
 				
-				double area = AreaDist.areaFromInterpolation(data.paths[0], data.paths[1]);
+				double area = AreaDist.areaFromInterpolation3D(data.paths[0], data.paths[1]);
 				Debug.Log("Area between paths: " + area);
 			}
 
@@ -960,7 +960,11 @@ namespace EditorArea {
 			EditorGUILayout.LabelField ("");
 			
 			numClusters = EditorGUILayout.IntSlider ("Number of clusters", numClusters, 1, 7);
+			
+			int prevMetric = distMetric;
 			distMetric = EditorGUILayout.Popup("Dist metric:", distMetric, distMetrics);
+			if (prevMetric != distMetric && (distMetric == 1 || distMetric == 3)) { scaleTime = true; }
+			scaleTime = EditorGUILayout.Toggle("Scale time", scaleTime);
 			
 			if (GUILayout.Button ("Cluster on path similarity"))
 			{
@@ -973,9 +977,20 @@ namespace EditorArea {
 				KMeans.clustTime = new System.Diagnostics.Stopwatch();
 				KMeans.distTime = new System.Diagnostics.Stopwatch();
 
+				if (scaleTime)
+				{
+					foreach (Path p in paths)
+					{
+						foreach (Node n in p.points)
+						{
+							n.t = (int)Math.Pow(n.t, 4);
+						}
+					}
+				}
+
 				if (paths.Count > 90)
 				{
-					List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/20, distMetric);
+					List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/20, distMetric); // 50 (orig=20)
 				
 					List<Path> tempCentroids = new List<Path>();
 					foreach(PathCollection pc in clusters)
@@ -1004,6 +1019,10 @@ namespace EditorArea {
 								foreach (Path path in clusters[c2])
 								{
 									path.color = colors[c];
+									if (path.Equals(clusters[c2].Centroid))
+									{
+										path.color.a = 0.5f;
+									}
 									if (!paths.Contains(path))
 									{
 										paths.Add(path);
@@ -1033,8 +1052,23 @@ namespace EditorArea {
 						foreach(Path path in clusters[c])
 						{
 							path.color = colors[c];
+							if (path.Equals(clusters[c].Centroid))
+							{
+								path.color.a = 0.5f;
+							}
 							paths.Add(path);
 							toggleStatus.Add(paths.Last (), true);
+						}
+					}
+				}
+				
+				if (scaleTime)
+				{
+					foreach (Path p in paths)
+					{
+						foreach (Node n in p.points)
+						{
+							n.t = (int)(Math.Pow(n.t, (double)1.0 / 4.0));
 						}
 					}
 				}
@@ -1062,7 +1096,7 @@ namespace EditorArea {
 				KMeans.clustTime = new System.Diagnostics.Stopwatch();
 				KMeans.distTime = new System.Diagnostics.Stopwatch();
 				
-				clusters20 = KMeans.DoKMeans(paths, 100, distMetric);
+				clusters20 = KMeans.DoKMeans(paths, 50, distMetric);
 				
 				clusterCentroids.Clear();
 				foreach(PathCollection pc in clusters20)
@@ -1079,6 +1113,10 @@ namespace EditorArea {
 					foreach(Path path in clusters20[c])
 					{
 						path.color = colors[c % colors.Count()];
+						if (path.Equals(clusters20[c].Centroid))
+						{
+							path.color.a = 0.5f;
+						}
 						paths.Add(path);
 						toggleStatus.Add(paths.Last (), true);
 					}
@@ -1089,12 +1127,12 @@ namespace EditorArea {
 				TimeSpan totalTime = KMeans.clustTime.Elapsed + KMeans.distTime.Elapsed;
 				Debug.Log ("Total: " + totalTime);
 				
-				if (autoSavePaths)
+			/*	if (autoSavePaths)
 				{
 					String currentTime = System.DateTime.Now.ToString("s");
 					String totalTimeStr = new DateTime(Math.Abs(totalTime.Ticks)).ToString("hhmmss");
 					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetric + "d-" + paths.Count() + "p-" + totalTimeStr + "t@" + currentTime + ".xml", paths);
-				}
+				}*/
 			}
 			if (GUILayout.Button ("Next"))
 			{
@@ -1231,7 +1269,7 @@ namespace EditorArea {
 				{
 					foreach (Path p in paths)
 					{
-						if (p.Equals(clusterCentroids[colorIndex]))
+						if (p.Equals(clusterCentroids[colorIndex]) || (p.color.a == 0.5 && p.color.Equals(colors[colorIndex])))
 						{
 							p.color.a = 1;
 						}

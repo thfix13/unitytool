@@ -35,11 +35,11 @@ public class HausdorffDist
 	
 	public static double computeDistance(Node node1, Node node2, int distMetric)
 	{
-		if (distMetric == (int)KMeans.Metrics.HausdorffEuclidean)
+/*		if (distMetric == (int)KMeans.Metrics.HausdorffEuclidean)
 			return Mathf.Sqrt(Mathf.Pow(node1.x - node2.x, 2) + Mathf.Pow(node1.y - node2.y, 2));
 		else if (distMetric == (int)KMeans.Metrics.HausdorffEuclidean3D)
 			return Mathf.Sqrt(Mathf.Pow(node1.x - node2.x, 2) + Mathf.Pow(node1.y - node2.y, 2) + Mathf.Pow(node1.t - node2.t, 2));
-		else
+		else*/
 		{
 			Debug.Log("Incorrect Hausdorff dist metric.");
 			return -1.0;

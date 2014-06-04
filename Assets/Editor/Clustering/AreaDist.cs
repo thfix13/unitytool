@@ -33,16 +33,34 @@ public class AreaDist
 	{
 		if (distMetric == (int)KMeans.Metrics.AreaDistInterpolation)
 		{
-			return areaFromInterpolation(path1, path2);
+			return areaFromInterpolation2D(path1, path2);
 		}
-		else if (distMetric == (int)KMeans.Metrics.AreaDistTriangulation)
+		else if (distMetric == (int)KMeans.Metrics.AreaDistInterpolation3D)
 		{
-			return areaFromTriangulation(path1, path2);
+			return areaFromInterpolation3D(path1, path2);
 		}
+//		else if (distMetric == (int)KMeans.Metrics.AreaDistTriangulation)
+//		{
+//			return areaFromTriangulation(path1, path2);
+//		}
 		else return -1;
 	}
 	
-	public static double areaFromInterpolation(Path path1, Path path2)
+	public static double areaFromInterpolation2D(Path path1, Path path2)
+	{
+		foreach (Node n in path1.points)
+		{
+			n.t = 0;
+		}
+		foreach (Node n in path2.points)
+		{
+			n.t = 0;
+		}
+		
+		return areaFromInterpolation3D(path1, path2);
+	}
+	
+	public static double areaFromInterpolation3D(Path path1, Path path2)
 	{
 		int numberLines = 20;
 		Vector3[] set1 = MapperWindowEditor.GetSetPointsWithN(path1.getPoints3D(), numberLines); 
