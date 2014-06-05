@@ -91,14 +91,14 @@ public class Triangulation : MonoBehaviour
 
 				if(ll.Length == 1)
 				{
-					Debug.DrawLine(ll[0].MidPoint(), tt.GetCenterTriangle(),Color.red);
+					Debug.DrawLine(ll[0].MidPoint(), tt.GetCenterTriangle(),Color.blue);
 
 				}
-				else if(ll.Length > 2)
+				else if(ll.Length == 3)
 				{
 					for(int i = 0; i<ll.Length; i++)
 					{
-						Debug.DrawLine(ll[i].MidPoint(), tt.GetCenterTriangle(),Color.red);
+						Debug.DrawLine(ll[i].MidPoint(), tt.GetCenterTriangle(),Color.blue);
 					}
 				}
 				
