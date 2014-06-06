@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System; 
+using Vectrosity; 
 
 
 [ExecuteInEditMode]
@@ -124,7 +125,84 @@ public class Triangulation : MonoBehaviour
 		points.Add(v); 
 		colours.Add(c); 
 	}
+	public void TriangulationCurves()
+	{
+		GameObject dataCurve = GameObject.Find("DataPath");
+		GameObject temp = GameObject.Find("temp");
+		
+		if(temp != null)
+			GameObject.DestroyImmediate(temp);
+		
+		temp = new GameObject("temp");
+		
+			
+		if (dataCurve == null || 
+			dataCurve.GetComponent<PathsHolder>().paths.Count==0)
+		{
+			Debug.Log("No curves");
+			return; 
+		}
 
+		Vector3[] path1 = dataCurve.GetComponent<PathsHolder>().paths[0].getPoints3DFlat();
+		Vector3[] path2 = dataCurve.GetComponent<PathsHolder>().paths[1].getPoints3DFlat();
+
+		//Constructing the geometry
+		//Find all the vectors that are colliding and there position. 
+		for(int i = 0; i<path1.Length-1; i+=2)
+		{
+			//Colliding with your path
+			for(int j = 0; j<path1.Length-1; j+=2)
+			{
+				if (j == i)
+				{
+					continue; 
+				}
+				if(LineIntersection(path1[i],path1[i+1],path1[j],path1[j+1]))
+				{
+					Debug.Log("Collide p1 with p2");
+					Debug.DrawLine(path1[i],path1[i+1],Color.yellow);
+					Debug.DrawLine(path1[j],path1[j+1],Color.green);
+					GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+					sphere.transform.parent = temp.transform;
+					
+					//Find the position of collision
+					sphere.transform.position = LineIntersectVect(path1[i],path1[i+1],path1[j],path1[j+1]);
+				}
+			}
+			//Collide with the other path
+			for(int j = 0; j<path2.Length-1; j+=2)
+			{
+				if (j == i)
+				{
+					continue; 
+				}
+				if(LineIntersection(path1[i],path1[i+1],path2[j],path2[j+1]))
+				{
+					Debug.Log("Collide p1 with p2");
+					Debug.DrawLine(path1[i],path1[i+1],Color.yellow);
+					Debug.DrawLine(path2[j],path2[j+1],Color.green);
+					GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+					sphere.transform.parent = temp.transform;
+					
+					//Find the position of collision
+					sphere.transform.position = LineIntersectVect(path1[i],path1[i+1],
+						path2[j],path2[j+1]);
+
+					Debug.Log(path1[i]);	
+
+					//Draw the two lines
+					
+					VectorLine line = new VectorLine("4",new Vector3[]{path1[i],path1[i+1],
+						path2[j],path2[j+1]},Color.gray,null,2.0f);
+
+					line.vectorObject.transform.parent = temp.transform;
+					line.Draw3D();
+				}
+			}
+
+		}
+
+	}
 	public void TriangulationSpace ()
 	{
 		//Compute one step of the discritzation
@@ -355,6 +433,44 @@ public class Triangulation : MonoBehaviour
 		return false; 
 	}
 	
+	private Vector3 LineIntersectVect (Vector3 a, Vector3 b, Vector3 c, Vector3 d)
+	{
+		//Debug.Log(a); 
+		//Debug.Log(b); 
+		//Debug.Log(c); 
+		//Debug.Log(d); 
+		
+		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
+		Vector2 p0 = new Vector2 (a.x, a.z);
+		Vector2 p1 = new Vector2 (b.x, b.z); 
+		
+		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
+		Vector2 q0 = new Vector2 (c.x, c.z);
+		Vector2 q1 = new Vector2 (d.x, d.z);
+		
+		Vector2 w = new Vector2 (a.x, a.z) - new Vector2 (d.x, d.z);
+		
+		
+		//if (u.x * v.y - u.y*v.y == 0)
+		//	return true;
+		
+		double s = (v.y * w.x - v.x * w.y) / (v.x * u.y - v.y * u.x);
+		double t = (u.x * w.y - u.y * w.x) / (u.x * v.y - u.y * v.x); 
+		//Debug.Log(s); 
+		//Debug.Log(t); 
+		
+		if ((s > 0 && s < 1) || (t > 0 && t < 1))
+		{
+			//Interpolation
+			Vector3 r = a + (b-a)*(float)s; 
+			return r; 
+		}
+		
+
+
+		return Vector3.zero; 
+	}
+
 	private Boolean LineIntersection (Vector3 a, Vector3 b, Vector3 c, Vector3 d)
 	{
 		
