@@ -150,6 +150,21 @@ public class Triangulation : MonoBehaviour
 		//Find all the vectors that are colliding and there position. 
 		lines.Clear(); 
 
+		
+
+		//From the persceptive p1 to p2
+		foreach(Line l in GetLines(path1,path2))
+			lines.Add(l);
+		foreach(Line l in GetLines(path2,path1))
+			lines.Add(l);
+
+		foreach(Line l in lines)
+			l.DrawVector(temp);
+
+	}
+	private List<Line> GetLines(Vector3[] path1, Vector3[] path2)
+	{
+		List<Line>ToReturnLine = new List<Line>(); 
 		for(int i = 0; i<path1.Length-1; i+=2)
 		{
 			//Colliding with your path
@@ -180,8 +195,26 @@ public class Triangulation : MonoBehaviour
 				}
 				if(LineIntersection(path1[i],path1[i+1],path2[j],path2[j+1]))
 				{
-					vs.Add(	LineIntersectVect(path1[i],path1[i+1],path1[j],path1[j+1]) );
+					Debug.Log("Collide p1 with p2");
+					vs.Add(	LineIntersectVect(path1[i],path1[i+1],path2[j],path2[j+1]) );
 					//Testing
+
+                    //GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    //sphere.transform.parent = temp.transform;
+                   
+                    //Find the position of collision
+                    //sphere.transform.position = LineIntersectVect(path1[i],path1[i+1],
+                    //    path2[j],path2[j+1]);
+
+                    //Debug.Log(sphere.transform.position);   
+
+                    //Draw the two lines
+                   
+                    //VectorLine line = new VectorLine("4",new Vector3[]{path1[i],path1[i+1],
+                    //    path2[j],path2[j+1]},Color.gray,null,2.0f);
+
+                    //line.vectorObject.transform.parent = temp.transform;
+                    //line.Draw3D();
 					
 				}
 			}
@@ -190,7 +223,7 @@ public class Triangulation : MonoBehaviour
 			if(vs.Count == 0)
 			{	
 				//No collision add the line normally
-				lines.Add(new Line(path1[i],path1[i+1]));
+				ToReturnLine.Add(new Line(path1[i],path1[i+1]));
 				continue;
 			}
 			else 
@@ -216,7 +249,7 @@ public class Triangulation : MonoBehaviour
 					}
 
 					vs.Remove(end);
-					lines.Add(new Line(start,end));
+					ToReturnLine.Add(new Line(start,end));
 					Debug.Log(start);
 					Debug.Log(end);
 					start = end; 
@@ -224,14 +257,11 @@ public class Triangulation : MonoBehaviour
 
 				}
 				//Add the last part. 
-				//lines.Add(new Line(start,path1[i+1]));
+				ToReturnLine.Add(new Line(start,path1[i+1]));
 
 			}
 		}
-
-		foreach(Line l in lines)
-			l.DrawVector(temp);
-
+		return ToReturnLine; 
 	}
 	public void TriangulationSpace ()
 	{
