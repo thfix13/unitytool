@@ -148,9 +148,17 @@ public class Triangulation : MonoBehaviour
 
 		//Constructing the geometry
 		//Find all the vectors that are colliding and there position. 
+		lines.Clear(); 
+
 		for(int i = 0; i<path1.Length-1; i+=2)
 		{
 			//Colliding with your path
+			
+			List<Vector3> vs = new List<Vector3>(); 
+			//list of points where collision occured
+
+			//Use to add to the collection of lines for triangulation
+			
 			for(int j = 0; j<path1.Length-1; j+=2)
 			{
 				if (j == i)
@@ -159,16 +167,10 @@ public class Triangulation : MonoBehaviour
 				}
 				if(LineIntersection(path1[i],path1[i+1],path1[j],path1[j+1]))
 				{
-					Debug.Log("Collide p1 with p2");
-					Debug.DrawLine(path1[i],path1[i+1],Color.yellow);
-					Debug.DrawLine(path1[j],path1[j+1],Color.green);
-					GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-					sphere.transform.parent = temp.transform;
-					
-					//Find the position of collision
-					sphere.transform.position = LineIntersectVect(path1[i],path1[i+1],path1[j],path1[j+1]);
+					vs.Add(	LineIntersectVect(path1[i],path1[i+1],path1[j],path1[j+1]) );	
 				}
 			}
+
 			//Collide with the other path
 			for(int j = 0; j<path2.Length-1; j+=2)
 			{
@@ -178,29 +180,57 @@ public class Triangulation : MonoBehaviour
 				}
 				if(LineIntersection(path1[i],path1[i+1],path2[j],path2[j+1]))
 				{
-					Debug.Log("Collide p1 with p2");
-					Debug.DrawLine(path1[i],path1[i+1],Color.yellow);
-					Debug.DrawLine(path2[j],path2[j+1],Color.green);
-					GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-					sphere.transform.parent = temp.transform;
+					vs.Add(	LineIntersectVect(path1[i],path1[i+1],path1[j],path1[j+1]) );
+					//Testing
 					
-					//Find the position of collision
-					sphere.transform.position = LineIntersectVect(path1[i],path1[i+1],
-						path2[j],path2[j+1]);
-
-					Debug.Log(path1[i]);	
-
-					//Draw the two lines
-					
-					VectorLine line = new VectorLine("4",new Vector3[]{path1[i],path1[i+1],
-						path2[j],path2[j+1]},Color.gray,null,2.0f);
-
-					line.vectorObject.transform.parent = temp.transform;
-					line.Draw3D();
 				}
 			}
 
+			//Construct the lines based on the collisions
+			if(vs.Count == 0)
+			{	
+				//No collision add the line normally
+				lines.Add(new Line(path1[i],path1[i+1]));
+				continue;
+			}
+			else 
+			{
+				Vector3 start = path1[i];
+				Debug.Log(vs[0]);	
+				while(vs.Count>0)
+				{	
+
+					Vector3 end = vs[0]; 
+					float dist = (start - end).magnitude;
+					
+					//Find the closest vector to the start
+					//Could sort them as a distance function with start;
+					//Lazyness shall be it
+					for(int t=1; t<vs.Count; t++)
+					{
+						if( (start - vs[t]).magnitude<dist)
+						{
+							dist =(start - vs[t]).magnitude; 
+							end = vs[t];
+						}
+					}
+
+					vs.Remove(end);
+					lines.Add(new Line(start,end));
+					Debug.Log(start);
+					Debug.Log(end);
+					start = end; 
+
+
+				}
+				//Add the last part. 
+				//lines.Add(new Line(start,path1[i+1]));
+
+			}
 		}
+
+		foreach(Line l in lines)
+			l.DrawVector(temp);
 
 	}
 	public void TriangulationSpace ()
