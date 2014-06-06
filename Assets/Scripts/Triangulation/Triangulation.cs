@@ -158,9 +158,69 @@ public class Triangulation : MonoBehaviour
 		foreach(Line l in GetLines(path2,path1))
 			lines.Add(l);
 
+		
+
+		//Get the vertex
+		List<Vector3> vertex = new List<Vector3>(); 
+
+		foreach(Line l in lines)
+		{
+			foreach(Vector3 v in l.vertex)
+			{
+				if(!vertex.Contains(v))
+					vertex.Add(v);
+			}
+		}	
+
+		foreach(Vector3 v in vertex)
+		{
+			//Testing
+
+	        GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+	        sphere.transform.parent = temp.transform;
+	       
+	        //Find the position of collision
+	        sphere.transform.position = v; 
+		}
+
+		//Triangulate
+
+		foreach(Vector3 v1 in vertex)
+		{
+			foreach(Vector3 v2 in vertex)
+			{
+				if(v1 == v2)
+					continue;
+
+				bool collisionFree = true; 
+				Line t = new Line(v1,v2);
+				
+				//Check if collision exists
+				foreach (Line l in lines)
+				{
+					if(l == t)
+						continue;
+
+					if(l.LineIntersection(t))
+					{
+						//Debug.DrawLine(t.vertex[0],t.vertex[1],Color.red);	
+						//lines.Add(t);
+						collisionFree = false; 
+						break; 
+					}
+
+				}
+
+
+				if(collisionFree)
+				{
+					//Add the line
+					lines.Add(t);
+				}
+			}
+		}
 		foreach(Line l in lines)
 			l.DrawVector(temp);
-
 	}
 	private List<Line> GetLines(Vector3[] path1, Vector3[] path2)
 	{
