@@ -62,6 +62,23 @@ namespace Common {
 			}
 			return vertex.ToArray(); 
 		}
+		public Vector3[] getPoints3DFlat()
+		{
+			List<Vector3> vertex = new List<Vector3>(); 
+			
+			//foreach(Node n in points)
+			for(int i =0;i<points.Count-1;i++)
+			{
+				Node n = points	[i]; 
+				Node n1 = points[i+1]; 
+				vertex.Add(new Vector3(n.x,2,n.y)); 
+				vertex.Add(new Vector3(n1.x,2,n1.y)); 
+				//				vertex.Add(new Vector3(n.x,n.t/10,n.y)); 
+				//				vertex.Add(new Vector3(n1.x,n1.t/10,n1.y)); 
+			}
+			return vertex.ToArray(); 
+		}
+
 
 	}
 	

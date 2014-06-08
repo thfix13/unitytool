@@ -724,9 +724,13 @@ namespace EditorArea {
 					return; 
 				}
 
+				//flat the lines
+
+
+
 				//First line
 
-				VectorLine line1 = new VectorLine("1",data.paths[0].getPoints3D(),Color.red,null,30.0f);
+				VectorLine line1 = new VectorLine("1",data.paths[0].getPoints3DFlat(),Color.red,null,10.0f);
 
 				line1.Draw3D();
 
@@ -734,7 +738,7 @@ namespace EditorArea {
 
 				//Second line
 
-				VectorLine line2 = new VectorLine("2",data.paths[1].getPoints3D(),Color.blue,null,30.0f);
+				VectorLine line2 = new VectorLine("2",data.paths[1].getPoints3DFlat(),Color.blue,null,10.0f);
 				
 				line2.Draw3D();
 				
@@ -756,14 +760,14 @@ namespace EditorArea {
 
 				}
 
-				VectorLine line3 = new VectorLine("3",linesInterpolated.ToArray(),Color.green,null,20.0f);
+				//VectorLine line3 = new VectorLine("3",linesInterpolated.ToArray(),Color.green,null,20.0f);
 				
-				line3.Draw3D();
+				//line3.Draw3D();
 				
-				line3.vectorObject.transform.parent = lineHolder.transform;
+				//line3.vectorObject.transform.parent = lineHolder.transform;
 				
 				double area = AreaDist.areaFromInterpolation3D(data.paths[0], data.paths[1]);
-				Debug.Log("Area between paths: " + area);
+				//Debug.Log("Area between paths: " + area);
 			}
 
 			/*
