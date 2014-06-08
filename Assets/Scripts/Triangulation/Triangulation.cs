@@ -158,7 +158,8 @@ public class Triangulation : MonoBehaviour
 		foreach(Line l in GetLines(path2,path1))
 			lines.Add(l);
 
-		
+		//Keep polygon in memory
+		List<Line> poly = new List<Line>(lines);
 
 		//Get the vertex
 		List<Vector3> vertex = new List<Vector3>(); 
@@ -171,6 +172,8 @@ public class Triangulation : MonoBehaviour
 					vertex.Add(v);
 			}
 		}	
+
+
 
 		foreach(Vector3 v in vertex)
 		{
@@ -215,7 +218,26 @@ public class Triangulation : MonoBehaviour
 				if(collisionFree)
 				{
 					//Add the line
-					lines.Add(t);
+					//Check if the line is inside or outside. 
+
+					int counter = 0; 
+					Vector3 center = t.MidPoint(); 
+
+					//Path will never be negatif, so safe to test
+					Vector3 rayEnd = new Vector3(-1, center.y,-1 );
+
+					Line rayTest = new Line(center,rayEnd);
+
+					//rayTest.DrawVector(temp); 
+
+					foreach(Line l in poly)
+					{
+						if(l.LineIntersection(rayTest))
+							counter++; 
+					}
+
+					if(counter %2==1 && !lines.Contains(t))
+						lines.Add(t);
 				}
 			}
 		}
