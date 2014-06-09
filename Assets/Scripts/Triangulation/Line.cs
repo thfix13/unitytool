@@ -68,6 +68,13 @@ public class Line
 		line.vectorObject.transform.parent = parent.transform;
 		line.Draw3D();
 	}
+	public void DrawVector(GameObject parent,Color c)
+	{
+	
+		VectorLine line = new VectorLine("Line",vertex,c,null,5.0f);
+		line.vectorObject.transform.parent = parent.transform;
+		line.Draw3D();
+	}
 	public bool ShareVertex(Line l)
 	{
 		foreach(Vector3 v in vertex)

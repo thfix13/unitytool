@@ -768,7 +768,27 @@ namespace EditorArea {
 				double area = AreaDist.areaFromInterpolation3D(data.paths[0], data.paths[1]);
 				//Debug.Log("Area between paths: " + area);
 			}
+			if(GUILayout.Button("Triangle 2 random Curves"))
+			{
 
+				GameObject k = GameObject.Find("DataPath") as GameObject;
+				PathsHolder data = k.GetComponent("PathsHolder") as PathsHolder; 
+				 
+				if(paths.Count!=0)
+				{
+					data.paths.Clear();
+					data.paths.Add ( paths[UnityEngine.Random.Range(0,paths.Count)]);
+					data.paths.Add ( paths[UnityEngine.Random.Range(0,paths.Count)]);
+				}
+
+				GameObject g = GameObject.Find("Triangulation"); 
+				
+				if(g != null)
+				{
+					Triangulation tObject = g.GetComponent<Triangulation>(); 
+					tObject.TriangulationCurves(); 
+				}	
+			}
 			/*
 			//Draw multiple lines over the interpolation
 			if (GUILayout.Button ("Muliple Lines"))

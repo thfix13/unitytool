@@ -29,6 +29,20 @@ public class Triangle
 		colourVertex[1] = Color.cyan;
 		colourVertex[2] = Color.cyan;
 	}
+
+	public float GetArea()
+	{
+		float s = 0.0f; 
+		foreach(Line l in getLines())
+			s += l.Magnitude(); 
+		s*=0.5f; 
+
+		float area = s; 
+		foreach(Line l in getLines())
+			area *= (s - l.Magnitude());
+		return Mathf.Sqrt(area); 
+	}
+
 	public Triangle(Vector3 v1,int i, Vector3 v2,int j,Vector3 v3,int k)
 	{
 		vertex[0]=v1; 
