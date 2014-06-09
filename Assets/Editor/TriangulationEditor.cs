@@ -26,7 +26,7 @@ public class TriangulationEditor : Editor {
 			if(g != null)
 			{
 				Triangulation tObject = g.GetComponent<Triangulation>(); 
-				tObject.TriangulationCurves(); 
+				tObject.ShowTriangulation(); 
 			}	
 		}
 

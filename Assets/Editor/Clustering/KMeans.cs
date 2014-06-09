@@ -86,9 +86,6 @@ namespace ClusteringSpace
 					} while(newPoint);
 				}
 			}*/
-			{
-
-			}
 			
 			clustTime.Start();
 

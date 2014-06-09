@@ -27,7 +27,7 @@ namespace EditorArea {
 		private static int randomSeed = -1;
 		
 		// Clustering
-		public static String[] distMetrics = new String[] { "Frechet (L1) (fastest)", "Frechet (L1) 3D", "Frechet (Euclidean)", "Area Dist (Interpolation) 3D", "AD 2D", "Time (no x,y)" };
+		public static String[] distMetrics = new String[] { "Frechet (L1) (fastest)", "Frechet (L1) 3D", "Frechet (Euclidean)", "Area (Interpolation) 3D", "Area (Triangulation)", "Time (no x,y)" };
 		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
 		public static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
 		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, curCluster = 0;
@@ -783,7 +783,7 @@ namespace EditorArea {
 				if(g != null)
 				{
 					Triangulation tObject = g.GetComponent<Triangulation>(); 
-					tObject.TriangulationCurves(); 
+					tObject.ShowTriangulation(); 
 				}	
 			}
 			/*

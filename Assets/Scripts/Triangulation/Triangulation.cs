@@ -127,15 +127,13 @@ public class Triangulation : MonoBehaviour
 		points.Add(v); 
 		colours.Add(c); 
 	}
-	public void TriangulationCurves()
+	
+	public void ShowTriangulation()
 	{
 		GameObject dataCurve = GameObject.Find("DataPath");
 		GameObject temp = GameObject.Find("temp");
 		
-		if(temp != null)
-			GameObject.DestroyImmediate(temp);
-		
-		temp = new GameObject("temp");
+
 		
 			
 		if (dataCurve == null || 
@@ -148,6 +146,20 @@ public class Triangulation : MonoBehaviour
 		Vector3[] path1 = dataCurve.GetComponent<PathsHolder>().paths[0].getPoints3DFlat();
 		Vector3[] path2 = dataCurve.GetComponent<PathsHolder>().paths[1].getPoints3DFlat();
 
+
+		
+		float area = TriangulationCurves(path1, path2, true);
+		Debug.Log("Area: " + area);
+	}
+	
+	public float TriangulationCurves(Vector3[] path1, Vector3[] path2, bool display = false)
+	{
+		GameObject temp = GameObject.Find("temp");
+		if(temp != null)
+			GameObject.DestroyImmediate(temp);
+		
+		temp = new GameObject("temp");
+				
 		//Draw the two paths:
 
 		VectorLine line1 = new VectorLine("1",path1,Color.red,null,10.0f);
@@ -163,12 +175,10 @@ public class Triangulation : MonoBehaviour
 		line2.Draw3D();
 		
 		line2.vectorObject.transform.parent = temp.transform;
-
+		
 		//Constructing the geometry
 		//Find all the vectors that are colliding and there position. 
 		lines.Clear(); 
-
-		
 
 		//From the persceptive p1 to p2
 		foreach(Line l in GetLines(path1,path2))
@@ -211,7 +221,7 @@ public class Triangulation : MonoBehaviour
 
 	        GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 	        sphere.transform.parent = temp.transform;
-	       
+       
 	        //Find the position of collision
 	        sphere.transform.position = v; 
 		}
@@ -357,7 +367,7 @@ public class Triangulation : MonoBehaviour
 		foreach(Triangle tt in triangles)
 			area += tt.GetArea(); 
 
-		Debug.Log(area);
+		return area;
 
 		//foreach(Line l in lines)
 			//l.DrawVector(temp);

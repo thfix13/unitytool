@@ -72,9 +72,23 @@ public class AreaDist
 	
 	public static double areaFromTriangulation(Path path1, Path path2)
 	{ // vertices of each path
-		Debug.Log("Start dist");
 		
-		List<Point> polygonVertices = new List<Point>();
+		GameObject g = GameObject.Find("Triangulation"); 
+				
+		if(g != null)
+		{
+			Triangulation tObject = g.GetComponent<Triangulation>(); 
+			float area = tObject.TriangulationCurves(path1.getPoints3DFlat(), path2.getPoints3DFlat());
+			Debug.Log("A: "+area);
+			return area;
+		}
+		else
+		{
+			Debug.Log("You must have a Triangulation object.");
+			return -1;
+		}
+		
+		/*List<Point> polygonVertices = new List<Point>();
 		
 		double area = 0.0;
 		for (int count = 0; count < path1.points.Count-1; count ++)
@@ -96,7 +110,7 @@ public class AreaDist
 				}
 			}
 			polygonVertices.Add(new Point(path1.points[count+1].x, path1.points[count+1].y)); // e1
-		}
+		} */
 		
 /*		List<Point> intersections = new List<Point>();
 		for (int count = 0; count < path1.points.Count-1; count ++)
@@ -109,11 +123,9 @@ public class AreaDist
 					intersections.Add(intersection);
 				}
 			}
-		}*/
-		
-		Debug.Log("End dist, area: " + area);
-		
-		return area;
+		}
+				
+		return area;*/
 	}
 	
 	public static Point getIntersectionOf(Node s1, Node e1, Node s2, Node e2)
