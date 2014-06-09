@@ -50,42 +50,46 @@ namespace ClusteringSpace
 					}
 				}
 			}
-//			if (distMetric == (int)Metrics.FrechetL1 || distMetric == (int)Metrics.FrechetEuclidean /*|| distMetric == (int)Metrics.FrechetL13D*/)
-//			{ // make sure paths have enough points
-//				foreach(Path p in paths)
-//				{
-//					bool newPoint = false;
-//					do
-//					{
-//						newPoint = false;
-//						
-//						// get total distance
-//						int totalLength = 0;
-//						int[] distances = new int[p.points.Count()-1];
-//						for(int nodeCount = 0; nodeCount < p.points.Count()-1; nodeCount ++)
-//						{
-//							//distances[nodeCount] = Math.Abs(p.points[nodeCount].x - p.points[nodeCount+1].x) + Math.Abs(p.points[nodeCount].y - p.points[nodeCount+1].y) + Math.Abs(p.points[nodeCount].t - p.points[nodeCount+1].t);
-//							totalLength += distances[nodeCount];
-//						}
-//				
-//						for(int nodeCount = 0; nodeCount < p.points.Count()-1; nodeCount ++)
-//						{
-//							if ((double)distances[nodeCount] / (double)totalLength > 0.10)
-//							{ // segment is larger than 20% of total length, so must be split						
-//								Node n = new Node();
-//								n.x = (int)(p.points[nodeCount].x + (p.points[nodeCount+1].x - p.points[nodeCount].x)*0.50);
-//								n.y = (int)(p.points[nodeCount].y + (p.points[nodeCount+1].y - p.points[nodeCount].y)*0.50);
-//								n.t = (int)(p.points[nodeCount].t + (p.points[nodeCount+1].t - p.points[nodeCount].t)*0.50);
-//								
-//								p.points.Insert(nodeCount+1, n);
-//						
-//								newPoint = true;
-//								break;
-//							}
-//						}
-//					} while(newPoint);
-//				}
-//			}
+			/*			if (distMetric == (int)Metrics.FrechetL1 || distMetric == (int)Metrics.FrechetEuclidean)
+			{ // make sure paths have enough points
+				foreach(Path p in paths)
+				{
+					bool newPoint = false;
+					do
+					{
+						newPoint = false;
+						
+						// get total distance
+						int totalLength = 0;
+						int[] distances = new int[p.points.Count()-1];
+						for(int nodeCount = 0; nodeCount < p.points.Count()-1; nodeCount ++)
+						{
+							distances[nodeCount] = Math.Abs(p.points[nodeCount].x - p.points[nodeCount+1].x) + Math.Abs(p.points[nodeCount].y - p.points[nodeCount+1].y) + Math.Abs(p.points[nodeCount].t - p.points[nodeCount+1].t);
+							totalLength += distances[nodeCount];
+						}
+				
+						for(int nodeCount = 0; nodeCount < p.points.Count()-1; nodeCount ++)
+						{
+							if ((double)distances[nodeCount] / (double)totalLength > 0.10)
+							{ // segment is larger than 20% of total length, so must be split						
+								Node n = new Node();
+								n.x = (int)(p.points[nodeCount].x + (p.points[nodeCount+1].x - p.points[nodeCount].x)*0.50);
+								n.y = (int)(p.points[nodeCount].y + (p.points[nodeCount+1].y - p.points[nodeCount].y)*0.50);
+								n.t = (int)(p.points[nodeCount].t + (p.points[nodeCount+1].t - p.points[nodeCount].t)*0.50);
+								
+								p.points.Insert(nodeCount+1, n);
+						
+								newPoint = true;
+								break;
+							}
+						}
+					} while(newPoint);
+				}
+			}*/
+			{
+
+			}
+			
 			clustTime.Start();
 
             //divide paths into equal clusters

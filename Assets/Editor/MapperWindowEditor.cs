@@ -724,13 +724,9 @@ namespace EditorArea {
 					return; 
 				}
 
-				//flat the lines
-
-
-
 				//First line
 
-				VectorLine line1 = new VectorLine("1",data.paths[0].getPoints3DFlat(),Color.red,null,10.0f);
+				VectorLine line1 = new VectorLine("1",data.paths[0].getPoints3D(),Color.red,null,30.0f);
 
 				line1.Draw3D();
 
@@ -738,7 +734,7 @@ namespace EditorArea {
 
 				//Second line
 
-				VectorLine line2 = new VectorLine("2",data.paths[1].getPoints3DFlat(),Color.blue,null,10.0f);
+				VectorLine line2 = new VectorLine("2",data.paths[1].getPoints3D(),Color.blue,null,30.0f);
 				
 				line2.Draw3D();
 				
@@ -760,14 +756,14 @@ namespace EditorArea {
 
 				}
 
-				//VectorLine line3 = new VectorLine("3",linesInterpolated.ToArray(),Color.green,null,20.0f);
+				VectorLine line3 = new VectorLine("3",linesInterpolated.ToArray(),Color.green,null,20.0f);
 				
-				//line3.Draw3D();
+				line3.Draw3D();
 				
-				//line3.vectorObject.transform.parent = lineHolder.transform;
+				line3.vectorObject.transform.parent = lineHolder.transform;
 				
 				double area = AreaDist.areaFromInterpolation3D(data.paths[0], data.paths[1]);
-				//Debug.Log("Area between paths: " + area);
+				Debug.Log("Area between paths: " + area);
 			}
 
 			/*
@@ -979,6 +975,23 @@ namespace EditorArea {
 					Debug.Log("You have less paths than you have desired clusters - either compute more paths or decrease cluster amount.");
 					return;
 				}
+				
+			/*	for (int i = 0; i < paths.Count; i ++)
+				{ // make each path have same # of points
+					Vector3[] set1 = MapperWindowEditor.GetSetPointsWithN(paths[i].getPoints3D(), 10);
+					List<Node> nodes = new List<Node>();
+					foreach(Vector3 v in set1)
+					{
+						Debug.Log(v);
+						if (v.x == 0 && v.y == 0 && v.z == 0) continue;
+						Node n = new Node();
+						n.x = (int)v.x;
+						n.y = (int)v.z;
+						n.t = (int)v.y;
+						nodes.Add(n);
+					}
+					paths[i] = new Path(nodes);
+				} */
 
 				KMeans.clustTime = new System.Diagnostics.Stopwatch();
 				KMeans.distTime = new System.Diagnostics.Stopwatch();
@@ -1067,7 +1080,7 @@ namespace EditorArea {
 					String currentTime = System.DateTime.Now.ToString("s");
 					currentTime = currentTime.Replace(':', '-');
 					String totalTimeStr = new DateTime(Math.Abs(totalTime.Ticks)).ToString("HHmmss");
-					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetric + "d-" + paths.Count() + "p-" + totalTimeStr + "t" + currentTime + ".xml", paths);
+					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetric + "d-" + paths.Count() + "p-" + totalTimeStr + "t@" + currentTime + ".xml", paths);
 				}
 				
 				for (int color = 0; color < colors.Count(); color ++)

@@ -93,9 +93,6 @@ namespace ClusteringSpace
 
         public void UpdateCentroid()
         {
-	//		System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
-	//		watch.Start();
-			
 		/*	double xSum = 0.0;
 			double ySum = 0.0;
 			
@@ -110,41 +107,48 @@ namespace ClusteringSpace
 				ySum += (ySump / this[i].points.Count);
 			}
 			
-    //        double xSum = (from p in this select p.X).Sum();
-      //      double ySum = (from p in this select p.Y).Sum();
+            double xSum = (from p in this select p.X).Sum();
+            double ySum = (from p in this select p.Y).Sum();
             Centroid.X = (xSum / (double)this.Count);
-            Centroid.Y = (ySum / (double)this.Count);*/
+            Centroid.Y = (ySum / (double)this.Count); */
 			
-	/*		int maxPathLength = 0;
+		/*	int maxPathLength = 0;
 			foreach (Path p in this)
 			{
 				if (p.points.Count > maxPathLength)
 				{
+					Debug.Log("points count:" + p.points.Count);
 					maxPathLength = p.points.Count;
 				}
 			}
 			
-			Node[] nodes = new Node[maxPathLength];
-			for (int count = 0; count < maxPathLength; count ++)
+			Node[] nodes = new Node[this[0].points.Count()];
+			for (int count = 0; count < this[0].points.Count(); count ++)
 			{
 				nodes[count] = new Node();
-				nodes[count].x = nodes[count].y = 0;
+				nodes[count].x = nodes[count].y = nodes[count].t = 0;
 			}
 			foreach (Path p in this)
 			{
-				for (int count = 0; count < maxPathLength; count ++)
+				for (int count = 0; count < p.points.Count; count ++)
 				{
-					if (count < p.points.Count)
+			//		if (count < p.points.Count)
 					{ // has a node at that position
-						nodes[count].x += (p.points[count].x / maxPathLength);
-						nodes[count].y += (p.points[count].y / maxPathLength);
+						nodes[count].x += p.points[count].x; // (p.points[count].x / maxPathLength);
+						nodes[count].y += p.points[count].y; // (p.points[count].y / maxPathLength);
+						nodes[count].t += p.points[count].t;
 					}
 				}
 			}
-			Centroid = new Path(new List<Node>(nodes));*/
+			foreach(Node n in nodes)
+			{
+				n.x /= this.Count;
+				n.y /= this.Count;
+				n.t /= this.Count;
+			}
 			
-			// TODO-find different way of computing centroid
-			
+			Centroid = new Path(new List<Node>(nodes)); */
+						
 			double pathTotalMinDist = double.PositiveInfinity;
 			int pIndex = -1;
 			for (int i = 0; i < this.Count; i ++)
@@ -154,12 +158,10 @@ namespace ClusteringSpace
 				{
 					if (i == j) continue;
 
-		//			Debug.Log("uc");
 					currentPathTotalMinDist += KMeans.FindDistance(this[i], this[j]);
 				}
 				if (currentPathTotalMinDist < pathTotalMinDist)
 				{
-					//currentPathTotalMinDist = pathTotalMinDist;
 					pathTotalMinDist = currentPathTotalMinDist;
 					pIndex = i;
 				}
@@ -173,10 +175,36 @@ namespace ClusteringSpace
 			}
 			
 			Centroid = new Path(this[pIndex].points);
-			
-//			watch.Stop();
-//			Debug.Log("UC elapsed time: " + watch.Elapsed);
         }
+		
+		public Path getCenterDistPath()
+		{
+			double pathTotalMinDist = double.PositiveInfinity;
+			int pIndex = -1;
+			for (int i = 0; i < this.Count; i ++)
+			{
+				double currentPathTotalMinDist = 0;
+				for (int j = 0; j < this.Count; j ++)
+				{
+					if (i == j) continue;
+
+					currentPathTotalMinDist += KMeans.FindDistance(this[i], this[j]);
+				}
+				if (currentPathTotalMinDist < pathTotalMinDist)
+				{
+					pathTotalMinDist = currentPathTotalMinDist;
+					pIndex = i;
+				}
+			}
+
+			if (pIndex == -1)
+			{
+				Debug.Log("-1");
+				return null;
+			}
+
+			return new Path(this[pIndex].points);
+		}
 
         #endregion
     }
