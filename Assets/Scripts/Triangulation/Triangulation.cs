@@ -14,6 +14,7 @@ public class Triangulation : MonoBehaviour
 	// Use this for initialization
 
 	public List<Triangle> triangles = new List<Triangle>(); 
+	 
 	public List<Line> lines = new List<Line>(); 
 
 	public List<Line> linesMinSpanTree = new List<Line>(); 
@@ -107,7 +108,8 @@ public class Triangulation : MonoBehaviour
 				{
 					for(int i = 0; i<ll.Length; i++)
 					{
-						Debug.DrawLine(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint(),Color.red);
+						Debug.DrawLine(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint(),
+							Color.red);
 					}
 				}
 			}
@@ -146,6 +148,22 @@ public class Triangulation : MonoBehaviour
 		Vector3[] path1 = dataCurve.GetComponent<PathsHolder>().paths[0].getPoints3DFlat();
 		Vector3[] path2 = dataCurve.GetComponent<PathsHolder>().paths[1].getPoints3DFlat();
 
+		//Draw the two paths:
+
+		VectorLine line1 = new VectorLine("1",path1,Color.red,null,10.0f);
+
+		line1.Draw3D();
+
+		line1.vectorObject.transform.parent = temp.transform;
+
+		//Second line
+
+		VectorLine line2 = new VectorLine("2",path2,Color.blue,null,10.0f);
+		
+		line2.Draw3D();
+		
+		line2.vectorObject.transform.parent = temp.transform;
+
 		//Constructing the geometry
 		//Find all the vectors that are colliding and there position. 
 		lines.Clear(); 
@@ -158,7 +176,20 @@ public class Triangulation : MonoBehaviour
 		foreach(Line l in GetLines(path2,path1))
 			lines.Add(l);
 
-		
+		//Keep polygon in memory
+		List<Line> poly = new List<Line>(); 
+
+		for(int i =0; i<path1.Length;i+=2)
+			poly.Add(new Line(path1[i],path1[i+1]));
+		for(int i =0; i<path2.Length;i+=2)
+			poly.Add(new Line(path2[i],path2[i+1]));
+
+
+		//Draw polygon
+		foreach(Line l in poly)
+		{
+			l.DrawVector(temp,Color.gray);
+		}
 
 		//Get the vertex
 		List<Vector3> vertex = new List<Vector3>(); 
@@ -171,6 +202,8 @@ public class Triangulation : MonoBehaviour
 					vertex.Add(v);
 			}
 		}	
+
+		//Debug.Log(vertex.Count);
 
 		foreach(Vector3 v in vertex)
 		{
@@ -193,13 +226,43 @@ public class Triangulation : MonoBehaviour
 					continue;
 
 				bool collisionFree = true; 
+
 				Line t = new Line(v1,v2);
 				
+				//Check if the line is inside or outside. 
+				//odd indside, even outside. 
+
+				int counter = 0; 
+				Vector3 center = t.MidPoint(); 
+
+				//Path will never be negatif, so safe to test
+				Vector3 rayEnd = new Vector3(-10, center.y,-1 );
+
+				Line rayTest = new Line(center,rayEnd);
+
+				//rayTest.DrawVector(temp); 
+
+				foreach(Line l in poly)
+				{
+					if(l.LineIntersection(rayTest))
+						counter++; 
+					if(l.LineIntersection(t))
+					{	
+						collisionFree = false;
+						break;
+					}
+				}
+
+				if(counter %2==0 || !collisionFree)
+					continue; 
+				
+
 				//Check if collision exists
 				foreach (Line l in lines)
 				{
 					if(l == t)
 						continue;
+
 
 					if(l.LineIntersection(t))
 					{
@@ -212,15 +275,92 @@ public class Triangulation : MonoBehaviour
 				}
 
 
-				if(collisionFree)
+				if(collisionFree && !lines.Contains(t))
 				{
-					//Add the line
+					//Add the line	
 					lines.Add(t);
 				}
 			}
 		}
-		foreach(Line l in lines)
-			l.DrawVector(temp);
+
+		//Find the triangles
+		//Find the centers 
+		triangles = new List<Triangle> (); 
+		//Well why be efficient when you can be not efficient
+		foreach (Line l in lines) {
+			Vector3 v1 = l.vertex [0]; 
+			Vector3 v2 = l.vertex [1];
+			foreach (Line l2 in lines) {
+				if (l == l2)
+					continue;
+				Vector3 v3 = Vector3.zero; 
+				
+				
+				if (l2.vertex [0].Equals (v2)) {
+					v3 = l2.vertex [1];
+					//have to check if closes
+				} else if (l2.vertex [1].Equals (v2)) {
+					v3 = l2.vertex [0];
+				}
+				
+				if (v3 != Vector3.zero) {
+					foreach (Line l3 in lines) {
+						if (l3 == l2 || l3 == l)
+							continue; 
+						if ((l3.vertex [0].Equals (v1) && l3.vertex [1].Equals (v3))
+						    || (l3.vertex [1].Equals (v1) && l3.vertex [0].Equals (v3))) {
+							//Debug.DrawLine(v1,v2,Color.red); 
+							//Debug.DrawLine(v2,v3,Color.red); 
+							//Debug.DrawLine(v3,v1,Color.red); 
+							
+							//Add the traingle
+							Triangle toAddTriangle = new Triangle (
+								v1,v2,v3);
+							
+							
+							Boolean isAlready = false; 
+							foreach (Triangle tt in triangles) {
+								if (tt.Equals (toAddTriangle)) {
+									//Debug.Log(toAddTriangle.refPoints[0]+", "+
+									//          toAddTriangle.refPoints[1]+", "+
+									//          toAddTriangle.refPoints[2]+", "); 
+									isAlready = true; 
+									break; 
+								}
+								
+							}
+							if (!isAlready) {
+								triangles.Add (toAddTriangle);
+							}
+							
+						}
+					}
+				}
+			}
+		}
+		
+		
+		//Find shared edge and triangle structure
+		
+		foreach (Triangle tt in triangles) {
+			foreach (Triangle ttt in triangles) {
+				if (tt == ttt)
+					continue; 
+				tt.ShareEdged (ttt);
+				
+			}
+			
+		}
+		
+		//Get the area of the triangles
+		float area = 0.0f; 
+		foreach(Triangle tt in triangles)
+			area += tt.GetArea(); 
+
+		Debug.Log(area);
+
+		//foreach(Line l in lines)
+			//l.DrawVector(temp);
 	}
 	private List<Line> GetLines(Vector3[] path1, Vector3[] path2)
 	{
@@ -249,34 +389,44 @@ public class Triangulation : MonoBehaviour
 			//Collide with the other path
 			for(int j = 0; j<path2.Length-1; j+=2)
 			{
-				if (j == i)
+				Line t1 = new Line(path1[i],path1[i+1]);
+				Line t2 = new Line(path2[j],path2[j+1]);
+
+				if (t1 == t2)
 				{
 					continue; 
 				}
+				GameObject temp = GameObject.Find("temp");
+
 				if(LineIntersection(path1[i],path1[i+1],path2[j],path2[j+1]))
 				{
-					Debug.Log("Collide p1 with p2");
+					//Debug.Log("Collide p1 with p2");
 					vs.Add(	LineIntersectVect(path1[i],path1[i+1],path2[j],path2[j+1]) );
 					//Testing
-
-                    //GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                    //sphere.transform.parent = temp.transform;
+                    GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    sphere.transform.parent = temp.transform;
                    
                     //Find the position of collision
-                    //sphere.transform.position = LineIntersectVect(path1[i],path1[i+1],
-                    //    path2[j],path2[j+1]);
+                    sphere.transform.position = LineIntersectVect(path1[i],path1[i+1],
+                        path2[j],path2[j+1]);
 
                     //Debug.Log(sphere.transform.position);   
 
                     //Draw the two lines
-                   
-                    //VectorLine line = new VectorLine("4",new Vector3[]{path1[i],path1[i+1],
-                    //    path2[j],path2[j+1]},Color.gray,null,2.0f);
+                    /*
+                    if(i == 2)
+                    {
+	                    VectorLine line = new VectorLine("4",new Vector3[]{path1[i],path1[i+1],
+	                    	path2[j],path2[j+1]},Color.red,null,2.0f);
 
-                    //line.vectorObject.transform.parent = temp.transform;
-                    //line.Draw3D();
-					
+	                    line.vectorObject.transform.parent = temp.transform;
+	                    line.Draw3D();
+						
+					}
+					*/
 				}
+
+
 			}
 
 			//Construct the lines based on the collisions
@@ -289,7 +439,7 @@ public class Triangulation : MonoBehaviour
 			else 
 			{
 				Vector3 start = path1[i];
-				Debug.Log(vs[0]);	
+				//Debug.Log(vs[0]);	
 				while(vs.Count>0)
 				{	
 
@@ -310,8 +460,8 @@ public class Triangulation : MonoBehaviour
 
 					vs.Remove(end);
 					ToReturnLine.Add(new Line(start,end));
-					Debug.Log(start);
-					Debug.Log(end);
+
+
 					start = end; 
 
 
@@ -579,16 +729,16 @@ public class Triangulation : MonoBehaviour
 		//Debug.Log(s); 
 		//Debug.Log(t); 
 		
-		if ((s > 0 && s < 1) || (t > 0 && t < 1))
-		{
+		//if ((s > 0 && s < 1) || (t > 0 && t < 1))
+		//{
 			//Interpolation
 			Vector3 r = a + (b-a)*(float)s; 
 			return r; 
-		}
+		//}
 		
 
 
-		return Vector3.zero; 
+		//return Vector3.zero; 
 	}
 
 	private Boolean LineIntersection (Vector3 a, Vector3 b, Vector3 c, Vector3 d)
