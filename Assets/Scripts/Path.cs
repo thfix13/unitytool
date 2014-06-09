@@ -20,6 +20,7 @@ namespace Common {
 		/// Serialization only.
 		/// </summary>
 		public Path () {
+			points = new List<Node>();
 		}
 		
 		public Path (List<Node> points) {
