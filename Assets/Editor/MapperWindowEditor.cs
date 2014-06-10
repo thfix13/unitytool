@@ -35,7 +35,7 @@ namespace EditorArea {
 		private static List<PathCollection> clusters20 = new List<PathCollection>();
 		private static bool[] showPaths = new bool[colors.Count()];
 		private static bool autoSavePaths = true;
-		public static bool scaleTime = false;
+		public static bool scaleTime = false, altCentroidComp = false;
 		public int numberLines = 20; 
 		public float interpolationValue = 0.0f;
 		public float interpolationValueCheck = 0.0f; 
@@ -987,6 +987,7 @@ namespace EditorArea {
 			
 			if (prevMetric != distMetric && (distMetric == 1 || distMetric == 3 || distMetric == 5)) { scaleTime = true; }
 			scaleTime = EditorGUILayout.Toggle("Scale time", scaleTime);
+			altCentroidComp = EditorGUILayout.Toggle("Alt centroid computation", altCentroidComp);
 			
 			if (GUILayout.Button ("Cluster on path similarity"))
 			{
@@ -996,22 +997,33 @@ namespace EditorArea {
 					return;
 				}
 				
-			/*	for (int i = 0; i < paths.Count; i ++)
-				{ // make each path have same # of points
-					Vector3[] set1 = MapperWindowEditor.GetSetPointsWithN(paths[i].getPoints3D(), 10);
-					List<Node> nodes = new List<Node>();
-					foreach(Vector3 v in set1)
-					{
-						Debug.Log(v);
-						if (v.x == 0 && v.y == 0 && v.z == 0) continue;
-						Node n = new Node();
-						n.x = (int)v.x;
-						n.y = (int)v.z;
-						n.t = (int)v.y;
-						nodes.Add(n);
+				if (altCentroidComp)
+				{
+					for (int i = 0; i < paths.Count; i ++)
+					{ // make each path have same # of points
+						// find the highest time value!
+						double maxTime = Double.NegativeInfinity;
+						foreach (Path p in paths)
+						{
+							foreach (Node n in p.points)
+							{
+								if (n.t > maxTime)
+								{
+									maxTime = n.t;
+								}
+							}
+						}
+						Vector3[] set1 = MapperWindowEditor.GetSetPointsWithN(paths[i].getPoints3D(), (int)maxTime/2, false);
+						Debug.Log("Paths now have " + maxTime/2 + " points.");
+						List<Node> nodes = new List<Node>();
+						foreach(Vector3 v in set1)
+						{
+							if (v.x == 0 && v.y == 0 && v.z == 0) continue;
+							nodes.Add(new Node((int)v.x, (int)v.z, (int)v.y));
+						}
+						paths[i] = new Path(nodes);
 					}
-					paths[i] = new Path(nodes);
-				} */
+				}
 
 				KMeans.clustTime = new System.Diagnostics.Stopwatch();
 				KMeans.distTime = new System.Diagnostics.Stopwatch();
@@ -1023,7 +1035,8 @@ namespace EditorArea {
 					List<Path> tempCentroids = new List<Path>();
 					foreach(PathCollection pc in clusters)
 					{
-						tempCentroids.Add(pc.Centroid);
+						if (altCentroidComp) tempCentroids.Add(pc.getCenterDistPath());
+						else tempCentroids.Add(pc.Centroid);
 					}
 				
 					List<PathCollection> newClusters = KMeans.DoKMeans(tempCentroids, numClusters, distMetric);
@@ -1042,12 +1055,12 @@ namespace EditorArea {
 					{
 						for (int c2 = 0; c2 < clusters.Count; c2 ++)
 						{
-							if (newClusters[c].Contains(clusters[c2].Centroid))
+							if (newClusters[c].Contains(tempCentroids[c2]))
 							{ // then all paths of clusters[c2] list should be of the same color!
 								foreach (Path path in clusters[c2])
 								{
 									path.color = colors[c];
-									if (path.Equals(clusters[c2].Centroid))
+									if (path.Equals(tempCentroids[c2]))
 									{
 										path.color.a = 0.5f;
 									}
@@ -1068,7 +1081,9 @@ namespace EditorArea {
 					clusterCentroids.Clear();
 					foreach(PathCollection pc in clusters)
 					{
-						clusterCentroids.Add(pc.Centroid);
+//						clusterCentroids.Add(pc.Centroid);
+						if (altCentroidComp) clusterCentroids.Add(pc.getCenterDistPath());
+						else clusterCentroids.Add(pc.Centroid);
 					}
 								
 					paths.Clear ();
@@ -1080,7 +1095,7 @@ namespace EditorArea {
 						foreach(Path path in clusters[c])
 						{
 							path.color = colors[c];
-							if (path.Equals(clusters[c].Centroid))
+							if (path.Equals(clusterCentroids[c]))
 							{
 								path.color.a = 0.5f;
 							}
@@ -1439,10 +1454,8 @@ namespace EditorArea {
 
 		}
 			
-		public static Vector3[] GetSetPointsWithN(Vector3[] points3,int n)
+		public static Vector3[] GetSetPointsWithN(Vector3[] points3,int n, bool zeroVector = true)
 		{
-
-			
 			List<Vector3> pairs = new List<Vector3>(); 
 			
 			float lengthLine = 0; 
@@ -1460,8 +1473,6 @@ namespace EditorArea {
 				float interpolation = (float)j/(float)n;
 				
 				Vector3 pointToGo = Vector3.zero; 
-				
-				
 				
 				//Find between which point the interpolation belongs
 				float lineAt = 0.0f;
@@ -1485,11 +1496,8 @@ namespace EditorArea {
 				if(interpolation >=1)
 					pointToGo = points3[points3.Length - 1];
 				
-
-				
-				pairs.Add(Vector3.zero);
-				pairs.Add(pointToGo); 
-				
+				if (zeroVector) pairs.Add(Vector3.zero);
+				pairs.Add(pointToGo); 	
 			}
 			return pairs.ToArray();
 		}

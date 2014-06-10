@@ -27,6 +27,15 @@ namespace Common {
 		public double accSpeed = 0.0d;
 		[XmlIgnore]
 		public List<HealthPack> picked;
+		
+		public Node() { }
+		
+		public Node(int x_, int y_, int t_)
+		{
+			x = x_;
+			y = y_;
+			t = t_;
+		}
 
 		public float DistanceFrom (Node n) {
 			Vector2 v1, v2;

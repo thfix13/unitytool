@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using Path = Common.Path;
 using Node = Common.Node;
+using EditorArea;
 
 using UnityEngine;
 namespace ClusteringSpace
@@ -112,69 +113,74 @@ namespace ClusteringSpace
             Centroid.X = (xSum / (double)this.Count);
             Centroid.Y = (ySum / (double)this.Count); */
 			
-		/*	int maxPathLength = 0;
-			foreach (Path p in this)
+			if (MapperWindowEditor.altCentroidComp)
 			{
-				if (p.points.Count > maxPathLength)
+				int maxPathLength = 0;
+				foreach (Path p in this)
 				{
-					Debug.Log("points count:" + p.points.Count);
-					maxPathLength = p.points.Count;
-				}
-			}
-			
-			Node[] nodes = new Node[this[0].points.Count()];
-			for (int count = 0; count < this[0].points.Count(); count ++)
-			{
-				nodes[count] = new Node();
-				nodes[count].x = nodes[count].y = nodes[count].t = 0;
-			}
-			foreach (Path p in this)
-			{
-				for (int count = 0; count < p.points.Count; count ++)
-				{
-			//		if (count < p.points.Count)
-					{ // has a node at that position
-						nodes[count].x += p.points[count].x; // (p.points[count].x / maxPathLength);
-						nodes[count].y += p.points[count].y; // (p.points[count].y / maxPathLength);
-						nodes[count].t += p.points[count].t;
+					if (p.points.Count > maxPathLength)
+					{
+						Debug.Log("points count:" + p.points.Count);
+						maxPathLength = p.points.Count;
 					}
 				}
-			}
-			foreach(Node n in nodes)
-			{
-				n.x /= this.Count;
-				n.y /= this.Count;
-				n.t /= this.Count;
-			}
 			
-			Centroid = new Path(new List<Node>(nodes)); */
-						
-			double pathTotalMinDist = double.PositiveInfinity;
-			int pIndex = -1;
-			for (int i = 0; i < this.Count; i ++)
-			{
-				double currentPathTotalMinDist = 0;
-				for (int j = 0; j < this.Count; j ++)
+				Node[] nodes = new Node[this[0].points.Count()];
+				for (int count = 0; count < this[0].points.Count(); count ++)
 				{
-					if (i == j) continue;
+					nodes[count] = new Node();
+					nodes[count].x = nodes[count].y = nodes[count].t = 0;
+				}
+				foreach (Path p in this)
+				{
+					for (int count = 0; count < p.points.Count; count ++)
+					{
+				//		if (count < p.points.Count)
+						{ // has a node at that position
+							nodes[count].x += p.points[count].x; // (p.points[count].x / maxPathLength);
+							nodes[count].y += p.points[count].y; // (p.points[count].y / maxPathLength);
+							nodes[count].t += p.points[count].t;
+						}
+					}
+				}
+				foreach(Node n in nodes)
+				{
+					n.x /= this.Count;
+					n.y /= this.Count;
+					n.t /= this.Count;
+				}
+			
+				Centroid = new Path(new List<Node>(nodes));
+			}
+			else
+			{
+				double pathTotalMinDist = double.PositiveInfinity;
+				int pIndex = -1;
+				for (int i = 0; i < this.Count; i ++)
+				{
+					double currentPathTotalMinDist = 0;
+					for (int j = 0; j < this.Count; j ++)
+					{
+						if (i == j) continue;
 
-					currentPathTotalMinDist += KMeans.FindDistance(this[i], this[j]);
+						currentPathTotalMinDist += KMeans.FindDistance(this[i], this[j]);
+					}
+					if (currentPathTotalMinDist < pathTotalMinDist)
+					{
+						pathTotalMinDist = currentPathTotalMinDist;
+						pIndex = i;
+					}
 				}
-				if (currentPathTotalMinDist < pathTotalMinDist)
+			
+				if (pIndex == -1)
 				{
-					pathTotalMinDist = currentPathTotalMinDist;
-					pIndex = i;
+					Debug.Log("-1");
+					Centroid = null;
+					return;
 				}
-			}
 			
-			if (pIndex == -1)
-			{
-				Debug.Log("-1");
-				Centroid = null;
-				return;
+				Centroid = new Path(this[pIndex].points);
 			}
-			
-			Centroid = new Path(this[pIndex].points);
         }
 		
 		public Path getCenterDistPath()

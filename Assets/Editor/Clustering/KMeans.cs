@@ -102,12 +102,23 @@ namespace ClusteringSpace
 			// src : http://codeding.com/articles/k-means-algorithm
             int movements = 1;
 			int count = 0;
+			int[] previousMovements = new int[100];
             while (movements > 0)
             {
+				previousMovements[count] = movements;
+				if (count > 10)
+				{
+					int avgLastThree = (previousMovements[count-2] + previousMovements[count-1] + previousMovements[count]) / 3;
+					if (Math.Abs(avgLastThree - previousMovements[count]) <= 10)
+					{
+						Debug.Log("Not converging.");
+						break;
+					}
+				}
+				
 				count ++;
 				MapperWindowEditor.updatePaths(allClusters);
 				
-				if (count > 200) { Debug.Log("Over 200 iterations"); clustTime.Stop(); return allClusters; }
                 movements = 0;
 
                 for (int clusterIndex = 0; clusterIndex < allClusters.Count; clusterIndex ++)
