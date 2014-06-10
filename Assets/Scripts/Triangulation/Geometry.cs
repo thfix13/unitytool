@@ -7,7 +7,7 @@ using Objects;
 
 public class Geometry
 {
-	public Vector3 [] vertex = new Vector3[4]; 
-
+	//public Vector3 [] vertex = new Vector3[4]; 
+	public List<Line> edges = new List<Line> ();
 	
 }
