@@ -19,8 +19,14 @@ namespace EditorArea {
 		public static List<Path> paths = new List<Path> (), deaths = new List<Path>();
 
 		// Parameters with default values
-		public static int timeSamples = 2000, attemps = 25000, iterations = 1, gridSize = 60, ticksBehind = 0;
-		private static bool drawMap = true, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = false, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false;
+		public static int timeSamples = 800, attemps = 1000, iterations = 1, gridSize = 60, 
+			ticksBehind = 0;
+		
+		private static bool drawMap = true, drawNeverSeen = false, drawHeatMap = false, 
+			drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, 
+			drawCombatHeatMap = false, drawPath = true, smoothPath = true, drawFoVOnly = false, 
+			drawCombatLines = false, simulateCombat = false;
+
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10;
 		private static int randomSeed = -1;
 
