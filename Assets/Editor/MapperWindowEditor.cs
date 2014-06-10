@@ -20,9 +20,6 @@ namespace EditorArea {
 		private static Cell[][][] fullMap, original;
 		public static List<Path> paths = new List<Path> (), deaths = new List<Path>();
 
-		public int numberLines = 20; 
-		public float interpolationValue = 0.0f;
-		public float interpolationValueCheck = 0.0f; 
 		// Parameters with default values
 		public static int timeSamples = 2000, attemps = 25000, iterations = 1, gridSize = 60, ticksBehind = 0;
 		private static bool drawMap = false, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = true, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false;
@@ -30,14 +27,18 @@ namespace EditorArea {
 		private static int randomSeed = -1;
 		
 		// Clustering
-		public static String[] distMetrics = new String[] { "Frechet (L1) (fastest)", "Frechet (L1) 3D", "Frechet (Euclidean)", "Area Dist (Interpolation) 3D", "AD 2D"};
+		public static String[] distMetrics = new String[] { "Frechet (L1) (fastest)", "Frechet (L1) 3D", "Frechet (Euclidean)", "Area (Interpolation) 3D", "Area (Triangulation)", "Time (no x,y)" };
 		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
 		public static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
 		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, curCluster = 0;
 		private static List<Path> clusterCentroids = new List<Path>();
 		private static List<PathCollection> clusters20 = new List<PathCollection>();
 		private static bool[] showPaths = new bool[colors.Count()];
-		private static bool autoSavePaths = true, scaleTime = false;
+		private static bool autoSavePaths = true;
+		public static bool scaleTime = false;
+		public int numberLines = 20; 
+		public float interpolationValue = 0.0f;
+		public float interpolationValueCheck = 0.0f; 
 
 		// Computed parameters
 		private static int[,] heatMap, deathHeatMap, combatHeatMap;
@@ -764,7 +765,27 @@ namespace EditorArea {
 				double area = AreaDist.areaFromInterpolation3D(data.paths[0], data.paths[1]);
 				Debug.Log("Area between paths: " + area);
 			}
+			if(GUILayout.Button("Triangle 2 random Curves"))
+			{
 
+				GameObject k = GameObject.Find("DataPath") as GameObject;
+				PathsHolder data = k.GetComponent("PathsHolder") as PathsHolder; 
+				 
+				if(paths.Count!=0)
+				{
+					data.paths.Clear();
+					data.paths.Add ( paths[UnityEngine.Random.Range(0,paths.Count)]);
+					data.paths.Add ( paths[UnityEngine.Random.Range(0,paths.Count)]);
+				}
+
+				GameObject g = GameObject.Find("Triangulation"); 
+				
+				if(g != null)
+				{
+					Triangulation tObject = g.GetComponent<Triangulation>(); 
+					tObject.ShowTriangulation(); 
+				}	
+			}
 			/*
 			//Draw multiple lines over the interpolation
 			if (GUILayout.Button ("Muliple Lines"))
@@ -964,7 +985,7 @@ namespace EditorArea {
 			int prevMetric = distMetric;
 			distMetric = EditorGUILayout.Popup("Dist metric:", distMetric, distMetrics);
 			
-			if (prevMetric != distMetric && (distMetric == 1 || distMetric == 3)) { scaleTime = true; }
+			if (prevMetric != distMetric && (distMetric == 1 || distMetric == 3 || distMetric == 5)) { scaleTime = true; }
 			scaleTime = EditorGUILayout.Toggle("Scale time", scaleTime);
 			
 			if (GUILayout.Button ("Cluster on path similarity"))
@@ -974,20 +995,26 @@ namespace EditorArea {
 					Debug.Log("You have less paths than you have desired clusters - either compute more paths or decrease cluster amount.");
 					return;
 				}
+				
+			/*	for (int i = 0; i < paths.Count; i ++)
+				{ // make each path have same # of points
+					Vector3[] set1 = MapperWindowEditor.GetSetPointsWithN(paths[i].getPoints3D(), 10);
+					List<Node> nodes = new List<Node>();
+					foreach(Vector3 v in set1)
+					{
+						Debug.Log(v);
+						if (v.x == 0 && v.y == 0 && v.z == 0) continue;
+						Node n = new Node();
+						n.x = (int)v.x;
+						n.y = (int)v.z;
+						n.t = (int)v.y;
+						nodes.Add(n);
+					}
+					paths[i] = new Path(nodes);
+				} */
 
 				KMeans.clustTime = new System.Diagnostics.Stopwatch();
 				KMeans.distTime = new System.Diagnostics.Stopwatch();
-
-				if (scaleTime)
-				{
-					foreach (Path p in paths)
-					{
-						foreach (Node n in p.points)
-						{
-							n.t = (int)Math.Pow(n.t, 3);
-						}
-					}
-				}
 
 				if (paths.Count > 99)
 				{
@@ -1063,17 +1090,6 @@ namespace EditorArea {
 					}
 				}
 				
-				if (scaleTime)
-				{
-					foreach (Path p in paths)
-					{
-						foreach (Node n in p.points)
-						{
-							n.t = (int)(Math.Pow(n.t, (double)1.0 / 3.0));
-						}
-					}
-				}
-				
 				Debug.Log ("Clust elapsed time: " + KMeans.clustTime.Elapsed);
 				Debug.Log ("Dist elapsed time: " + KMeans.distTime.Elapsed);
 				TimeSpan totalTime = KMeans.clustTime.Elapsed + KMeans.distTime.Elapsed;
@@ -1084,12 +1100,105 @@ namespace EditorArea {
 					String currentTime = System.DateTime.Now.ToString("s");
 					currentTime = currentTime.Replace(':', '-');
 					String totalTimeStr = new DateTime(Math.Abs(totalTime.Ticks)).ToString("HHmmss");
-					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetric + "d-" + paths.Count() + "p-" + totalTimeStr + "t" + currentTime + ".xml", paths);
+					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetric + "d-" + paths.Count() + "p-" + totalTimeStr + "t@" + currentTime + ".xml", paths);
 				}
 				
 				for (int color = 0; color < colors.Count(); color ++)
 				{
 					showPaths[color] = (color < numClusters) ? true : false;
+				}
+			}
+			
+			if (GUILayout.Button ("Cluster with optimal k (2-7)"))
+			{
+				if (paths.Count() < 7)
+				{
+					Debug.Log("You must have at least 100 paths to perform this operation!");
+					return;
+				}
+				
+				List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/20, distMetric);
+			
+				List<Path> tempCentroids = new List<Path>();
+				foreach(PathCollection pc in clusters)
+				{
+					tempCentroids.Add(pc.Centroid);
+				}
+				
+				double maxDistanceBetweenClusters = Double.NegativeInfinity;
+				int clusterNumOfMaxDist = -1;
+				
+				for (int numClusters_ = 7; numClusters_ > 1; numClusters_ --)
+				{	
+					List<PathCollection> newClusters = KMeans.DoKMeans(tempCentroids, numClusters_, distMetric);
+					
+					clusterCentroids.Clear();
+					foreach(PathCollection pc in newClusters)
+					{
+						clusterCentroids.Add(pc.Centroid);
+					}
+					
+					paths.Clear ();
+					deaths.Clear ();
+					ClearPathsRepresentation ();
+
+					for (int c = 0; c < newClusters.Count; c ++)
+					{
+						for (int c2 = 0; c2 < clusters.Count; c2 ++)
+						{
+							if (newClusters[c].Contains(clusters[c2].Centroid))
+							{ // then all paths of clusters[c2] list should be of the same color!
+								foreach (Path path in clusters[c2])
+								{
+									path.color = colors[c];
+									if (path.Equals(clusters[c2].Centroid))
+									{
+										path.color.a = 0.5f;
+									}
+									if (!paths.Contains(path))
+									{
+										paths.Add(path);
+										toggleStatus.Add(paths.Last (), true);
+									}
+								}
+							}
+						}
+					}
+
+					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters_ + "c-" + distMetric + "d-" + paths.Count() + "p.xml", paths);
+				
+					double totalDist = 0;
+					int numDist = 0;
+					for (int i = 0; i < clusterCentroids.Count(); i ++)
+					{
+						for (int j = i+1; j < clusterCentroids.Count(); j ++)
+						{
+							numDist ++;
+							totalDist += KMeans.FindDistance(clusterCentroids[i], clusterCentroids[j]);
+						}
+					}
+					
+					double avgDist = totalDist / numDist;
+					if (avgDist > maxDistanceBetweenClusters)
+					{
+						clusterNumOfMaxDist = numClusters_;
+						maxDistanceBetweenClusters = avgDist;
+					}
+				}
+				
+				// find cluster # that on average maximizes the distances between cluster centroids.				
+				Debug.Log("Optimal cluster #: " + clusterNumOfMaxDist + ".");
+				
+				// Display the optimal clustering.
+				List<Path> pathsImported = PathBulk.LoadPathsFromFile ("clusteringdata/" + nameFile + "_" + clusterNumOfMaxDist + "c-" + distMetric + "d-" + paths.Count() + "p.xml");
+
+				paths.Clear ();
+				ClearPathsRepresentation ();
+								
+				foreach (Path p in pathsImported)
+				{
+					toggleStatus.Add (p, true);
+					paths.Add(p);
 				}
 			}
 			
@@ -1174,19 +1283,12 @@ namespace EditorArea {
 				List<Path> pathsImported = PathBulk.LoadPathsFromFile ("clusteringdata/" + fileNames[chosenFileIndex]);
 				
 				foreach (Path p in pathsImported) {
-					if (p.points.Last().playerhp <= 0) {
-						deaths.Add(p);
-					} else {
-						p.name = "Imported " + (++imported);
-						toggleStatus.Add (p, true);
-					}
+					toggleStatus.Add (p, true);
 					paths.Add(p);
 				}
-				//ComputeHeatMap (paths, deaths);
-				SetupArrangedPaths (paths);
+				//SetupArrangedPaths (paths);
 				
 				chosenFileIndex = -1;
-				Debug.Log("Done loading paths");
 			}
 			
 			EditorGUILayout.LabelField ("");

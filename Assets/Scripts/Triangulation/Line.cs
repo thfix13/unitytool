@@ -2,6 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System; 
+using Vectrosity; 
+
+[Serializable]
 public class Line 
 {
 
@@ -46,6 +49,7 @@ public class Line
 	{
 		Debug.DrawLine(this.vertex[0],this.vertex[1],c); 
 	}
+
 	public void DrawLine()
 	{
 		Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
@@ -53,6 +57,23 @@ public class Line
 		                           UnityEngine.Random.Range(0.0f,1.0f)) ;
 
 		Debug.DrawLine(this.vertex[0],this.vertex[1],c); 
+	}
+	public void DrawVector(GameObject parent)
+	{
+		Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
+		                           UnityEngine.Random.Range(0.0f,1.0f),
+		                           UnityEngine.Random.Range(0.0f,1.0f)) ;
+
+		VectorLine line = new VectorLine("Line",vertex,c,null,5.0f);
+		line.vectorObject.transform.parent = parent.transform;
+		line.Draw3D();
+	}
+	public void DrawVector(GameObject parent,Color c)
+	{
+	
+		VectorLine line = new VectorLine("Line",vertex,c,null,5.0f);
+		line.vectorObject.transform.parent = parent.transform;
+		line.Draw3D();
 	}
 	public bool ShareVertex(Line l)
 	{

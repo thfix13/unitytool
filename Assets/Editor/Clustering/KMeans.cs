@@ -21,7 +21,8 @@ namespace ClusteringSpace
 			FrechetL13D,
 			FrechetEuclidean,
 			AreaDistInterpolation3D,
-			AreaDistTriangulation
+			AreaDistTriangulation,
+			Time
 		}
 		
 		public static Stopwatch distTime = new Stopwatch();
@@ -37,56 +38,55 @@ namespace ClusteringSpace
 				Debug.Log("No paths to cluster!");
 				return null;
 			}
+			
+			setDistMetric(distMetric_);
+			if (MapperWindowEditor.scaleTime)
+			{
+				foreach (Path p in paths)
+				{
+					foreach (Node n in p.points)
+					{
+						n.t = (int)Math.Pow(n.t, 3);
+					}
+				}
+			}
+			/*			if (distMetric == (int)Metrics.FrechetL1 || distMetric == (int)Metrics.FrechetEuclidean)
+			{ // make sure paths have enough points
+				foreach(Path p in paths)
+				{
+					bool newPoint = false;
+					do
+					{
+						newPoint = false;
 						
-			distMetric = distMetric_;
-//			if (distMetric == (int)Metrics.FrechetL1 || distMetric == (int)Metrics.FrechetEuclidean /*|| distMetric == (int)Metrics.FrechetL13D*/)
-//			{ // make sure paths have enough points
-//				foreach(Path p in paths)
-//				{
-//					bool newPoint = false;
-//					do
-//					{
-//						newPoint = false;
-//						
-//						// get total distance
-//						int totalLength = 0;
-//						int[] distances = new int[p.points.Count()-1];
-//						for(int nodeCount = 0; nodeCount < p.points.Count()-1; nodeCount ++)
-//						{
-//							//distances[nodeCount] = Math.Abs(p.points[nodeCount].x - p.points[nodeCount+1].x) + Math.Abs(p.points[nodeCount].y - p.points[nodeCount+1].y) + Math.Abs(p.points[nodeCount].t - p.points[nodeCount+1].t);
-//							totalLength += distances[nodeCount];
-//						}
-//				
-//						for(int nodeCount = 0; nodeCount < p.points.Count()-1; nodeCount ++)
-//						{
-//							if ((double)distances[nodeCount] / (double)totalLength > 0.10)
-//							{ // segment is larger than 20% of total length, so must be split						
-//								Node n = new Node();
-//								n.x = (int)(p.points[nodeCount].x + (p.points[nodeCount+1].x - p.points[nodeCount].x)*0.50);
-//								n.y = (int)(p.points[nodeCount].y + (p.points[nodeCount+1].y - p.points[nodeCount].y)*0.50);
-//								n.t = (int)(p.points[nodeCount].t + (p.points[nodeCount+1].t - p.points[nodeCount].t)*0.50);
-//								
-//								p.points.Insert(nodeCount+1, n);
-//						
-//								newPoint = true;
-//								break;
-//							}
-//						}
-//					} while(newPoint);
-//				}
-//			}
-			if (distMetric == (int)Metrics.FrechetL1)
-			{
-				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(2));
-			}
-			else if (distMetric == (int)Metrics.FrechetEuclidean)
-			{
-				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.epsApproximation2D(1.1));
-			}
-			else if (distMetric == (int)Metrics.FrechetL13D)
-			{
-				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(3));
-			}
+						// get total distance
+						int totalLength = 0;
+						int[] distances = new int[p.points.Count()-1];
+						for(int nodeCount = 0; nodeCount < p.points.Count()-1; nodeCount ++)
+						{
+							distances[nodeCount] = Math.Abs(p.points[nodeCount].x - p.points[nodeCount+1].x) + Math.Abs(p.points[nodeCount].y - p.points[nodeCount+1].y) + Math.Abs(p.points[nodeCount].t - p.points[nodeCount+1].t);
+							totalLength += distances[nodeCount];
+						}
+				
+						for(int nodeCount = 0; nodeCount < p.points.Count()-1; nodeCount ++)
+						{
+							if ((double)distances[nodeCount] / (double)totalLength > 0.10)
+							{ // segment is larger than 20% of total length, so must be split						
+								Node n = new Node();
+								n.x = (int)(p.points[nodeCount].x + (p.points[nodeCount+1].x - p.points[nodeCount].x)*0.50);
+								n.y = (int)(p.points[nodeCount].y + (p.points[nodeCount+1].y - p.points[nodeCount].y)*0.50);
+								n.t = (int)(p.points[nodeCount].t + (p.points[nodeCount+1].t - p.points[nodeCount].t)*0.50);
+								
+								p.points.Insert(nodeCount+1, n);
+						
+								newPoint = true;
+								break;
+							}
+						}
+					} while(newPoint);
+				}
+			}*/
+			
 			clustTime.Start();
 
             //divide paths into equal clusters
@@ -132,6 +132,17 @@ namespace ClusteringSpace
 			
 			clustTime.Stop();
 
+			if (MapperWindowEditor.scaleTime)
+			{
+				foreach (Path p in paths)
+				{
+					foreach (Node n in p.points)
+					{
+						n.t = (int)(Math.Pow(n.t, (double)1.0 / 3.0));
+					}
+				}
+			}
+
             return (allClusters);
         }
 
@@ -158,10 +169,34 @@ namespace ClusteringSpace
             return (nearestClusterIndex);
         }
 		
+		private static void setDistMetric(int distMetric_)
+		{
+			distMetric = distMetric_;
+			
+			if (distMetric == (int)Metrics.FrechetL1)
+			{
+				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(2));
+			}
+			else if (distMetric == (int)Metrics.FrechetEuclidean)
+			{
+				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.epsApproximation2D(1.1));
+			}
+			else if (distMetric == (int)Metrics.FrechetL13D)
+			{
+				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(3));
+			}
+		}
+		
 		// source : http://www.win.tue.nl/~wmeulema/implementations.html
 		// Implementation by Wouter Meulemans
 		// based on paper by Buchin et al
 		// http://arxiv.org/abs/1306.5527
+		
+		public static double FindDistance(Path path1, Path path2, int distMetric_)
+		{
+			setDistMetric(distMetric_);
+			return FindDistance(path1, path2);
+		}
 		
         public static double FindDistance(Path path1, Path path2)
         {
@@ -210,6 +245,22 @@ namespace ClusteringSpace
 			else if (distMetric == (int)Metrics.AreaDistTriangulation || distMetric == (int)Metrics.AreaDistInterpolation3D)
 			{
 				result = AreaDist.computeDistance(path1, path2, distMetric);
+			}
+			else if (distMetric == (int)Metrics.Time)
+			{
+				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(1));
+				double[][] curveA = new double[path1.points.Count][];
+				double[][] curveB = new double[path2.points.Count][];
+				
+				for (int i = 0; i < path1.points.Count; i ++)
+				{
+					curveA[i] = new double[] { path1.points[i].t };
+				}
+				for (int i = 0; i < path2.points.Count; i ++)
+				{
+					curveB[i] = new double[] { path2.points[i].t };
+				}
+				result = frechet.computeDistance(curveA,curveB);
 			}
 			else
 			{
