@@ -14,7 +14,7 @@
 *.pidb
 
 ProjectSettings/GraphicsSettings.asset
-
+ProjectSettings/Physics2DSettings.asset
 SvgToPdf.py
 
 *.userprefs
