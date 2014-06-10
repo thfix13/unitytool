@@ -1013,8 +1013,8 @@ namespace EditorArea {
 								}
 							}
 						}
-						Vector3[] set1 = MapperWindowEditor.GetSetPointsWithN(paths[i].getPoints3D(), (int)maxTime/2, false);
-						Debug.Log("Paths now have " + maxTime/2 + " points.");
+						Vector3[] set1 = MapperWindowEditor.GetSetPointsWithN(paths[i].getPoints3D(), (int)Math.Sqrt(maxTime), false);
+						Debug.Log("Paths now have " + Math.Sqrt(maxTime) + " points.");
 						List<Node> nodes = new List<Node>();
 						foreach(Vector3 v in set1)
 						{
@@ -1045,6 +1045,8 @@ namespace EditorArea {
 					foreach(PathCollection pc in newClusters)
 					{
 						clusterCentroids.Add(pc.Centroid);
+						paths.Add(pc.Centroid);
+						toggleStatus.Add(paths.Last(), true);
 					}
 				
 					paths.Clear ();

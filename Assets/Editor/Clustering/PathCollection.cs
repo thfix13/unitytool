@@ -115,39 +115,25 @@ namespace ClusteringSpace
 			
 			if (MapperWindowEditor.altCentroidComp)
 			{
-				int maxPathLength = 0;
-				foreach (Path p in this)
-				{
-					if (p.points.Count > maxPathLength)
-					{
-						Debug.Log("points count:" + p.points.Count);
-						maxPathLength = p.points.Count;
-					}
-				}
-			
 				Node[] nodes = new Node[this[0].points.Count()];
 				for (int count = 0; count < this[0].points.Count(); count ++)
 				{
-					nodes[count] = new Node();
-					nodes[count].x = nodes[count].y = nodes[count].t = 0;
+					nodes[count] = new Node(0, 0, 0);
 				}
 				foreach (Path p in this)
 				{
 					for (int count = 0; count < p.points.Count; count ++)
 					{
-				//		if (count < p.points.Count)
-						{ // has a node at that position
-							nodes[count].x += p.points[count].x; // (p.points[count].x / maxPathLength);
-							nodes[count].y += p.points[count].y; // (p.points[count].y / maxPathLength);
-							nodes[count].t += p.points[count].t;
-						}
+						nodes[count].x += p.points[count].x;
+						nodes[count].y += p.points[count].y;
+						nodes[count].t += p.points[count].t;
 					}
 				}
 				foreach(Node n in nodes)
 				{
-					n.x /= this.Count;
-					n.y /= this.Count;
-					n.t /= this.Count;
+					n.x /= this[0].points.Count;
+					n.y /= this[0].points.Count;
+					n.t /= this[0].points.Count;
 				}
 			
 				Centroid = new Path(new List<Node>(nodes));
