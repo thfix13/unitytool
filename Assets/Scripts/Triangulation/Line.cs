@@ -64,14 +64,14 @@ public class Line
 		                           UnityEngine.Random.Range(0.0f,1.0f),
 		                           UnityEngine.Random.Range(0.0f,1.0f)) ;
 
-		VectorLine line = new VectorLine("Line",vertex,c,null,5.0f);
+		VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
 		line.vectorObject.transform.parent = parent.transform;
 		line.Draw3D();
 	}
 	public void DrawVector(GameObject parent,Color c)
 	{
 	
-		VectorLine line = new VectorLine("Line",vertex,c,null,5.0f);
+		VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
 		line.vectorObject.transform.parent = parent.transform;
 		line.Draw3D();
 	}
@@ -148,7 +148,7 @@ public class Line
 		//Debug.Log(s); 
 		//Debug.Log(t); 
 		
-		if ( (s>0 && s< 1) && (t>0 && t< 1) )
+		if ( (s>0 && s< 1) || (t>0 && t< 1) )
 			return true;
 		
 		return false; 

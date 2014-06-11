@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System; 
-
+using Vectrosity;
 
 [ExecuteInEditMode]
 public class Triangulation : MonoBehaviour 
@@ -55,10 +55,10 @@ public class Triangulation : MonoBehaviour
 		//return; 
 		//points.Clear(); 
 		//colours.Clear();  
-		foreach (Geometry g in obsLines) {
-			foreach( Line l in g.edges )
-				Debug.DrawLine(l.vertex[0],l.vertex[1], Color.blue);
-		}
+		//foreach (Geometry g in obsLines) {
+		//	foreach( Line l in g.edges )
+		//		Debug.DrawLine(l.vertex[0],l.vertex[1], Color.blue);
+		//}
 		
 
 		if(drawMinSpanTree)
@@ -143,6 +143,9 @@ public class Triangulation : MonoBehaviour
 		List<Geometry> geos = new List<Geometry> ();
 
 		
+		//Drawing lines
+		//VectorLine.SetCamera3D(Camera.current); 
+
 		//Floor
 		Vector3[] f = new Vector3[4];
 		MeshFilter mesh = (MeshFilter)(floor.GetComponent ("MeshFilter"));
@@ -220,22 +223,47 @@ public class Triangulation : MonoBehaviour
 		obsLines.Clear ();
 		obsLines = geos;
 
+
+		//Create empty GameObject
+		GameObject temp = GameObject.Find("temp");
+		DestroyImmediate(temp);
+		temp = new GameObject("temp");
+
+		foreach(Geometry g in geos)
+			g.DrawGeometry(temp);
+
 		//CODESPACE
 		//Find out intersection. Reconstruct.
 
 		for (int i = 0; i < geos.Count; i++) {
 			for (int j = i + 1; j < geos.Count; j++) {
 				//check all line intersections
-				if( GeometryIntersect( i, j ) ){
+				if( GeometryIntersect( i, j ) )
+				{
 					Debug.Log("Obstacles Intersect " + i + " " + j);
 					//if intersections
 					//resolve to form new geometry at position j --resolve(i,j)
 					tempGeometry = GeometryMerge( i, j );
 					//remove item at position i, decrement i since it will be increment in the next step, break
+				
+					
 				}
 
 			}
 		}
+
+		//Draw a spere where the collision happenned
+		foreach(Geometry g1 in geos)
+		{
+			foreach(Geometry g2 in geos)
+			{
+				if(g1 == g2 )
+					continue; 
+
+				
+			}
+		}
+
 
 		///Uncomment the following later
 		/*
