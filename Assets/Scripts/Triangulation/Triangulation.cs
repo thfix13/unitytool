@@ -238,15 +238,17 @@ public class Triangulation : MonoBehaviour
 		for (int i = 0; i < geos.Count; i++) {
 			for (int j = i + 1; j < geos.Count; j++) {
 				//check all line intersections
-				if( GeometryIntersect( i, j ) )
-				{
+				Debug.Log("Inside Check");
+				if( GeometryIntersect( i, j ) ){
 					Debug.Log("Obstacles Intersect " + i + " " + j);
 					//if intersections
 					//resolve to form new geometry at position j --resolve(i,j)
 					tempGeometry = GeometryMerge( i, j );
+					obsLines.RemoveAt(j);
+					obsLines.RemoveAt(i);
+					obsLines.Add(tempGeometry);
 					//remove item at position i, decrement i since it will be increment in the next step, break
-				
-					
+					i--;
 				}
 
 			}
@@ -406,41 +408,115 @@ public class Triangulation : MonoBehaviour
 	private Geometry GeometryMerge( int x, int y ){
 		Geometry tempGeometry = new Geometry ();
 		//Two Geometry objects - G1 and G2
+		Geometry G1 = obsLines [x];
+		Geometry G2 = obsLines [y];
 		//Create new called G3 which starts as an union of G1 and G2
+		Geometry G3 = new Geometry ();
+		foreach (Line l in G1.edges)
+			G3.edges.Add(l);		
+		foreach (Line l in G2.edges)
+			G3.edges.Add(l);		
+
+
 		//Check for intersection points between G1 and G2
-		//Make 4 new line segements from that point to the endpoints of the two lines in G3
+		foreach (Line LA in G1.edges){
+			foreach (Line LB in G2.edges){
+				if( LineIntersect( LA.vertex[0], LA.vertex[1], LB.vertex[0], LB.vertex[1] ) ){
+					//Make 4 new line segements from that point to the endpoints of the two lines in G3
+					Vector3 pt = LineIntersectionPoint( LA.vertex[0], LA.vertex[1], LB.vertex[0], LB.vertex[1] );
+					Line lne = new Line( pt, LA.vertex[0] );
+					G3.edges.Add( lne );
+					lne = new Line( pt, LA.vertex[1] );
+					G3.edges.Add( lne );
+					lne = new Line( pt, LB.vertex[0] );
+					G3.edges.Add( lne );
+					lne = new Line( pt, LB.vertex[1] );
+					G3.edges.Add( lne );
+				}
+			}
+		}
+
 
 		//Check A: Points inside Polygon
-		//Check all points in G2 with original G1. If inside remove all related lines from G3.
 		//Check all points in G1 with original G2. If inside remove all related lines from G3.
+		//copying g3 for modification purposes
+		Geometry G3temp = new Geometry ();
+		foreach (Line LA in G3.edges) 
+			G3temp.edges.Add(LA);
 
-		//Check B: Midpoint check
-		//Take all the lines in G3. Check to see if their midpoint falls inside G1 or G2.
-		//If yes, remove line.
+		foreach( Line LA in G1.edges ){
+			Vector3 pt = LA.vertex[0];
+			if( pointInsideGeo( pt, G2 ) ){
+				// // Make this removal more efficient
+				foreach( Line LB in G3temp.edges ){
+					if( LB.vertex[0] == pt || LB.vertex[1] == pt ) G3.edges.Remove(LB);
+				}
+			}
+			pt = LA.vertex[1];
+			if( pointInsideGeo( pt, G2 ) ){
+				foreach( Line LB in G3temp.edges ){
+					if( LB.vertex[0] == pt || LB.vertex[1] == pt ) G3.edges.Remove(LB);
+				}
+			}			
+		}
 
-		//Return G3
-		return tempGeometry;
+		//Check all points in G2 with original G1. If inside remove all related lines from G3.
+		foreach( Line LA in G2.edges ){
+			Vector3 pt = LA.vertex[0];
+			if( pointInsideGeo( pt, G1 ) ){
+				foreach( Line LB in G3temp.edges ){
+					if( LB.vertex[0] == pt || LB.vertex[1] == pt ) G3.edges.Remove(LB);
+				}
+			}
+			pt = LA.vertex[1];
+			if( pointInsideGeo( pt, G1 ) ){
+				foreach( Line LB in G3temp.edges ){
+					if( LB.vertex[0] == pt || LB.vertex[1] == pt ) G3.edges.Remove(LB);
+				}
+			}			
+		}
+		//OTHER Cases
+		//Check B: Check for Internal Line Segment Portions that are inside the polygon
+		//Take all the lines in G3. Check for intersection with all other lines in G3.
+		//If intersection doesn't consist of an endpoint from each line then remove
+
+		//Copy new G3
+		/*G3temp.edges.Clear ();
+		foreach (Line LA in G3.edges) 
+			G3temp.edges.Add(LA);
+		//Trim
+		foreach (Line LA in G3temp.edges) {
+			foreach (Line LB in G3temp.edges) {
+				if( LA == LB ) continue;
+				if( LineIntersect( LA.vertex[0], LA.vertex[1], LB.vertex[0], LB.vertex[1] ) ){
+					Vector3 pt = LineIntersectionPoint( LA.vertex[0], LA.vertex[1], LB.vertex[0], LB.vertex[1] );
+					if( pt 
+				}
+			}
+			Vector3 pt = new Vector3( (LA.vertex[0].x + LA.vertex[1].x)/2f, 1f, (LA.vertex[0].z + LA.vertex[1].z)/2f );
+			if( pointInsideGeo( pt, G1 ) || pointInsideGeo( pt, G2 )  )
+				G3.edges.Remove(LA);
+		}*/
+		return G3;
 	}
 
 	private bool GeometryIntersect( int x, int y ){
 		foreach( Line La in obsLines[x].edges ){
 			foreach( Line Lb in obsLines[y].edges ){
-				if( LineIntersect( La.vertex[0], La.vertex[1], Lb.vertex[0], Lb.vertex[1] ) )
+				if( LineIntersect( La.vertex[0], La.vertex[1], Lb.vertex[0], Lb.vertex[1] ) ){
+					/*Debug.Log(La.vertex[0] + "  " + La.vertex[1] );
+					Debug.Log(Lb.vertex[0] + "  " + Lb.vertex[1] );
+					Vector3 vv = LineIntersectionPoint( La.vertex[0], La.vertex[1], Lb.vertex[0], Lb.vertex[1] );
+					Debug.Log(vv);
+					Debug.Log ("BREAK");*/
 					return true;
-				//Debug.Log(La.vertex[0].x + "," + La.vertex[0].z + " " + La.vertex[1].x + "," + La.vertex[1].z);
-				//Debug.Log(Lb.vertex[0].x + "," + Lb.vertex[0].z + " " + Lb.vertex[1].x + "," + Lb.vertex[1].z);
+				}
 			}
 		}
 		return false;
 	}
 
-	private Boolean LineIntersect (Vector3 a, Vector3 b, Vector3 c, Vector3 d)
-	{
-		/*Debug.Log(a); 
-		Debug.Log(b); 
-		Debug.Log(c); 
-		Debug.Log(d); */
-
+	private Boolean LineIntersect (Vector3 a, Vector3 b, Vector3 c, Vector3 d){
 		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
 		Vector2 p0 = new Vector2 (a.x, a.z);
 				
@@ -470,8 +546,26 @@ public class Triangulation : MonoBehaviour
 							
 		if ((s >= 0 && s <= 1) && (t >= 0 && t <= 1))
 			return true;
-
+		
 		return false; 
+	}
+
+	private Vector3 LineIntersectionPoint (Vector3 a, Vector3 b, Vector3 c, Vector3 d){
+		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
+		Vector2 p0 = new Vector2 (a.x, a.z);
+		
+		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
+		Vector2 q0 = new Vector2 (c.x, c.z);
+		
+		double numerator1 = CrossProduct ((q0 - p0), v);
+		double numerator2 = CrossProduct ((q0 - p0), u);
+		double denom = CrossProduct (u, v);
+		
+		double s = numerator1 / denom;
+		double t = numerator2 / denom;
+		
+		Vector3 r = a + (b-a)*(float)s; 
+		return r;
 	}
 
 	private double CrossProduct( Vector2 a, Vector2 b ){
