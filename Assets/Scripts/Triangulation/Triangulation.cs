@@ -259,7 +259,7 @@ public class Triangulation : MonoBehaviour
 			{
 				if(g1 == g2 )
 					continue; 
-
+				g1.CollisionDraw(g2,temp);
 				
 			}
 		}

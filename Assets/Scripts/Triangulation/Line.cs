@@ -153,6 +153,51 @@ public class Line
 		
 		return false; 
 	}
+	public Vector3 LineIntersectionVect(Line l)
+	{
+		Vector3 a = l.vertex[0]; 
+		Vector3 b = l.vertex[1];
+		Vector3 c = vertex[0];
+		Vector3 d = vertex[1];
+
+		return LineIntersectVect(a,b,c,d);
+	}
+	private Vector3 LineIntersectVect (Vector3 a, Vector3 b, Vector3 c, Vector3 d)
+	{
+		//Debug.Log(a); 
+		//Debug.Log(b); 
+		//Debug.Log(c); 
+		//Debug.Log(d); 
+		
+		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
+		Vector2 p0 = new Vector2 (a.x, a.z);
+		Vector2 p1 = new Vector2 (b.x, b.z); 
+		
+		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
+		Vector2 q0 = new Vector2 (c.x, c.z);
+		Vector2 q1 = new Vector2 (d.x, d.z);
+		
+		Vector2 w = new Vector2 (a.x, a.z) - new Vector2 (d.x, d.z);
+		
+		
+		//if (u.x * v.y - u.y*v.y == 0)
+		//	return true;
+		
+		double s = (v.y * w.x - v.x * w.y) / (v.x * u.y - v.y * u.x);
+		double t = (u.x * w.y - u.y * w.x) / (u.x * v.y - u.y * v.x); 
+		//Debug.Log(s); 
+		//Debug.Log(t); 
+		
+
+			//Interpolation
+		Vector3 r = a + (b-a)*(float)s; 
+		return r; 
+		//}
+		
+
+
+		//return Vector3.zero; 
+	}
 	private bool CounterClockWise(Vector3 v1,Vector3 v2,Vector3 v3)
 	{
 		//v1 = a,b

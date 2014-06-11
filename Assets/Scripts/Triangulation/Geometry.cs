@@ -46,7 +46,12 @@ public class Geometry
 					continue;
 				if(l1.LineIntersection(l2))
 				{
-					
+
+					Vector3 pos = l1.LineIntersectionVect(l2);
+					GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+					inter.transform.position = pos;
+					inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
+					inter.transform.parent = parent.transform; 
 				} 
 			}
 		}
