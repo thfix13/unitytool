@@ -21,17 +21,10 @@ public class Geometry
 		foreach (Line l in edges) {
 			l.DrawVector (parent, c);
 
-			c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
-			              UnityEngine.Random.Range(0.0f,1.0f),
-			              UnityEngine.Random.Range(0.0f,1.0f)) ;
 		}
 	}
 
-	public void clearDraw(GameObject parent){
-		edges.Clear ();
-		//GL.Clear ();
-		//GL.cl
-	}
+
 
 	public bool Collision(Geometry g)
 	{
@@ -47,7 +40,34 @@ public class Geometry
 		}
 		return false; 
 	}
-	/*public void CollisionDraw(Geometry g, GameObject parent)
+
+	public void DrawVertex(GameObject parent)
+	{
+		//Find vertex
+		List<Vector3> vertex = new List<Vector3>(); 
+		foreach(Line l in edges)
+		{
+			foreach(Vector3 v in l.vertex)
+			{
+				if(!vertex.Contains(v))
+					vertex.Add(v); 
+
+			}
+
+		}
+
+		//Draw
+		foreach(Vector3 v in vertex)
+		{
+			GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+			inter.transform.position = v;
+			inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
+			inter.transform.parent = parent.transform;
+		}
+
+	}
+
+	public void CollisionDraw(Geometry g, GameObject parent)
 	{
 		foreach(Line l1 in edges)
 		{
@@ -67,5 +87,5 @@ public class Geometry
 			}
 		}
 		 
-	}*/
+	}
 }

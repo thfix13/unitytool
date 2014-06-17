@@ -36,13 +36,10 @@ public class Triangulation : MonoBehaviour
 		points.Clear(); 
 		colours.Clear();
 		debugLines.edges.Clear ();
-		//GL.Clear ();
-		//GL.cle
-		debugLines.clearDraw (gameObject);
-		//while (GameObject.Find("Vector Line") != null) {
-			GameObject g = GameObject.Find("Vector Line");
-		if (g != null)
-			Debug.Log ("found");
+
+		GameObject temp = GameObject.Find("temp"); 
+		DestroyImmediate(temp); 
+
 
 		stopAll = true;
 	}
@@ -72,12 +69,12 @@ public class Triangulation : MonoBehaviour
 		//colours.Clear();  
 		if ( stopAll )
 			return;
-		foreach (Geometry g in obsLines) {
-			foreach( Line l in g.edges ){
-				Debug.DrawLine(l.vertex[0],l.vertex[1], Color.blue);
-				debugLines.DrawGeometry(this.gameObject);
-			}
-		}
+//		foreach (Geometry g in obsLines) {
+//			foreach( Line l in g.edges ){
+//				Debug.DrawLine(l.vertex[0],l.vertex[1], Color.blue);
+//				debugLines.DrawGeometry(this.gameObject);
+//			}
+//		}
 		
 		/***
 		if(drawMinSpanTree)
@@ -240,6 +237,8 @@ public class Triangulation : MonoBehaviour
 					lines.Add (new Line (g.vertex [0], g.vertex [i]));
 				}
 		}*/
+
+
 		obsLines.Clear ();
 		obsLines = geos;
 
@@ -249,11 +248,28 @@ public class Triangulation : MonoBehaviour
 		DestroyImmediate(temp);
 		temp = new GameObject("temp");
 
-		//foreach(Geometry g in geos)
-		//	g.DrawGeometry(temp);
+		foreach(Geometry g in geos)
+			g.DrawGeometry(temp);
 
 		//CODESPACE
 		//Find out intersection. Reconstruct.
+
+
+
+		//Draw a spere where the collision happenned
+		foreach(Geometry g1 in geos)
+		{
+			foreach(Geometry g2 in geos)
+			{
+				if(g1 == g2 )
+					continue; 
+				g1.CollisionDraw(g2,temp);
+				
+			}
+			g1.DrawVertex(temp);
+		}
+
+
 
 		for (int i = 0; i < geos.Count; i++) {
 			for (int j = i + 1; j < geos.Count; j++) {
@@ -274,17 +290,11 @@ public class Triangulation : MonoBehaviour
 			}
 		}
 
-		//Draw a spere where the collision happenned
-		/*foreach(Geometry g1 in geos)
-		{
-			foreach(Geometry g2 in geos)
-			{
-				if(g1 == g2 )
-					continue; 
-				g1.CollisionDraw(g2,temp);
-				
-			}
-		}*/
+
+
+
+
+
 
 
 		///Uncomment the following later
