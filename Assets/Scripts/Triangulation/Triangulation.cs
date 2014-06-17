@@ -248,8 +248,8 @@ public class Triangulation : MonoBehaviour
 		DestroyImmediate(temp);
 		temp = new GameObject("temp");
 
-		foreach(Geometry g in geos)
-			g.DrawGeometry(temp);
+		//foreach(Geometry g in geos)
+		//	g.DrawGeometry(temp);
 
 		//CODESPACE
 		//Find out intersection. Reconstruct.
@@ -257,7 +257,7 @@ public class Triangulation : MonoBehaviour
 
 
 		//Draw a spere where the collision happenned
-		foreach(Geometry g1 in geos)
+		/*foreach(Geometry g1 in geos)
 		{
 			foreach(Geometry g2 in geos)
 			{
@@ -267,7 +267,7 @@ public class Triangulation : MonoBehaviour
 				
 			}
 			g1.DrawVertex(temp);
-		}
+		}*/
 
 
 
@@ -421,14 +421,17 @@ public class Triangulation : MonoBehaviour
 			if( minz > l.vertex[0].z ) minz = l.vertex[0].z;
 			if( minz > l.vertex[1].z ) minz = l.vertex[1].z;
 		}
-		minx -= 10;
-		minz -= 10;
+		minx -= 100;
+		minz -= 100;
 		Vector3 extPoint = new Vector3 (minx, 1.0f, minz);
 
 		int intersects = 0;
 		foreach (Line l in G.edges) {
-			if( LineIntersect( extPoint, point, l.vertex[0], l.vertex[1] ) > 0 )
-			   intersects++;
+			if( LineIntersect( extPoint, point, l.vertex[0], l.vertex[1] ) > 0 ){
+				Vector3 ipt = LineIntersectionPoint(extPoint, point, l.vertex[0], l.vertex[1] );
+				if( !(Math.Abs(ipt.x - point.x) < 0.1 && Math.Abs(ipt.z - point.z) < 0.1) )//if "point" itself isn't the intersection
+				   	intersects++;
+			}
 		}
 		if( intersects % 2 == 0 )
 			return false;
@@ -474,168 +477,31 @@ public class Triangulation : MonoBehaviour
 					i--;
 					break;
 				}
-				/*else if( caseType == 2 ){//Colinear overlapping lines
-					//Case 1: no shared endpoints
-
-					bool xCol = false; //colinear on x-axis
-					bool yCol = false; //colinear on y-axis
-					if( vA.x == vB.x && vB.x == vC.x && vC.x == vD.x )
-						yCol = true;
-					else if( vA.y == vB.y && vB.y == vC.y && vC.y == vD.y )
-						xCol = true;
-
-					Vector3 pt = LineIntersectionPoint( vA, vB, vC, vD );
-					Line lne = new Line( vA, vB );
-					//Debug.Log("Hello");
-					//No need to find intersections. Can determine by minx, maxx checks
-					if( yCol ){
-						if( vA.y > vB.y )
-							Swap( ref vA, ref vB );
-					}
-					else{
-						if( vA.x > vB.x )
-							Swap( ref vA, ref vB );
-					}
-
-					if( EndPointIntersecion( pt, vA, vB, vC, vD ) > 0 ){////Case 2A: Shared endpoint
-
-						bool removeAtI = false;
-						bool removeAtJ = false;
-
-						Vector3 otherEndPt;
-						if( pt == vC ) otherEndPt = vD;
-						else otherEndPt = vC;
-
-						if( pt == vB ){//common endpoint at vB
-							if( yCol ){
-								if( otherEndPt.y < vA.y )
-									removeAtJ = true;
-								else if( otherEndPt.y < vB.y )
-									removeAtI = true;
-							}
-							else{
-								if( otherEndPt.x < vA.x )
-									removeAtJ = true;
-								else if( otherEndPt.x < vB.x )
-									removeAtI = true;
-							}
-						}
-						else{//common endpoint at vA
-							if( yCol ){
-								if( otherEndPt.y > vB.y )
-									removeAtJ = true;
-								else if( otherEndPt.y > vA.y )
-									removeAtI = true;
-							}
-							else{
-								if( otherEndPt.x > vB.x )
-									removeAtJ = true;
-								else if( otherEndPt.x > vA.x )
-									removeAtI = true;
-							}
-						}
-
-						if( removeAtI ){
-							//G3.edges.RemoveAt(i);
-							//i--;
-							//Debug.Log("REMOVING i");
-							//break;
-						}
-						else if( removeAtJ ){
-							//G3.edges.RemoveAt(j);
-							//j--;
-							//Debug.Log("REMOVING j");
-						}
-						else continue;
-					}
-					else{//Case 2B: No shared endpoints
-						Debug.DrawRay( vA, Vector3.up, Color.cyan );
-						Debug.DrawRay( vB, Vector3.up, Color.cyan );
-						Debug.DrawRay( vC, Vector3.up );
-						Debug.DrawRay( vD, Vector3.up );
-						List<Vector3> pointList = new List<Vector3>();
-						pointList.Add( vA );
-						pointList.Add( vB );
-						pointList.Add( vC );
-						pointList.Add( vD );
-						sortPointsX sopx = new sortPointsX();
-						sortPointsY sopy = new sortPointsY();
-						if( yCol )
-							pointList.Sort( sopy );
-						else
-							pointList.Sort( sopx );
-						
-						for( int k = 0; k < 3; k++ ){
-							G3.edges.Add( new Line( pointList[k], pointList[k + 1] ) );
-						}
-						G3.edges.RemoveAt(j);
-						G3.edges.RemoveAt(i);
-						i--;
-						break;
-					}
-				}*/
 			}
 		}
 
-		//Check A: Points inside Polygon
-		//Check all points in G1 with original G2. If inside remove all related lines from G3.
-		//copying g3 for modification purposes
+		//Check: Points inside Polygon
+		//Check all midpoint of each line in G3 to see if it lies in G1 or G2. If inside remove.
+		Geometry inliers = new Geometry ();
 
 		for (int i = 0; i < G3.edges.Count; i++) {
 			Vector3	pt1 = G3.edges[i].vertex[0];
 			Vector3	pt2 = G3.edges[i].vertex[1];
-			if( pointInsideGeo( pt1, G1 ) || pointInsideGeo( pt2, G1 ) || pointInsideGeo( pt1, G2 ) || pointInsideGeo( pt2, G2 ) ){
-				//Debug.DrawRay( pt1, Vector3.up, Color.red );
-				//Debug.DrawLine( pt1, new Vector3( 100, 1, 100 ), Color.red);
-				debugLines.edges.Add(new Line( pt1, new Vector3( 20, 1, 20 ) ) );
-				debugLines.edges.Add(new Line( pt2, new Vector3( 20, 1, 20 ) ) );
-				Debug.Log("point inside " + pt1 + " " + pt2);
-				//G3.edges.RemoveAt(i);
-				//i--;
+			Vector3 midpt = new Vector3();
+			midpt.x = (pt1.x + pt2.x ) / 2.0f;
+			midpt.z = (pt1.z + pt2.z ) / 2.0f;
+			if( pointInsideGeo(midpt, G1) || pointInsideGeo(midpt, G2) ){
+				/*if( pointInsideGeo( midpt, G1 ) )
+					inliers.edges.Add(new Line( midpt, new Vector3(100, 1, 100) ));		
+				else
+					inliers.edges.Add(new Line( midpt, new Vector3(-100, 1, 100) ));		*/
+				G3.edges.RemoveAt(i);
+				i--;
 			}
 		}
 
-			//OTHER Cases
-		//Check B: Check for Internal Line Segment Portions that are inside the polygon
-		//Take all the lines in G3. Check for intersection with all other lines in G3.
-		//If intersection doesn't consist of an endpoint from each line then remove
-		/*
-		for (int i = 0; i < G3.edges.Count; i++) {
-			Vector3	pt = G3.edges[i].vertex[0];
-			pt.x = (G3.edges[i].vertex[0].x + G3.edges[i].vertex[1].x) / 2;
-			pt.z = (G3.edges[i].vertex[0].z + G3.edges[i].vertex[1].z) / 2;
-			if( pointInsideGeo( pt, G1 ) ){
-				//G3.edges.RemoveAt(i);
-				//i--;
-				//Debug.DrawRay( pt, Vector3.up );
-				Debug.Log("woah1");
-				//debugLines.edges.Add( new Line( pt, new Vector3(100, 1, 100) ) );
-			}
-			else if( pointInsideGeo( pt, G2 ) ){
-				Debug.Log("woah2");
-				//debugLines.edges.Add( new Line( pt, new Vector3(100, 1, 100) ) );
-				//G3.edges.RemoveAt(i);
-				//i--;
-			}
-		}
-		//Copy new G3
-		/*G3temp.edges.Clear ();
-		foreach (Line LA in G3.edges) 
-			G3temp.edges.Add(LA);
-		//Trim
-		foreach (Line LA in G3temp.edges) {
-			foreach (Line LB in G3temp.edges) {
-				if( LA == LB ) continue;
-				if( LineIntersect( LA.vertex[0], LA.vertex[1], LB.vertex[0], LB.vertex[1] ) ){
-					Vector3 pt = LineIntersectionPoint( LA.vertex[0], LA.vertex[1], LB.vertex[0], LB.vertex[1] );
-					if( pt 
-				}
-			}
-			Vector3 pt = new Vector3( (LA.vertex[0].x + LA.vertex[1].x)/2f, 1f, (LA.vertex[0].z + LA.vertex[1].z)/2f );
-			if( pointInsideGeo( pt, G1 ) || pointInsideGeo( pt, G2 )  )
-				G3.edges.Remove(LA);
-		}*/
-
+		G3.DrawGeometry (GameObject.Find("temp"));
+		//inliers.DrawGeometry (GameObject.Find ("temp"));
 		return G3;
 	}
 
