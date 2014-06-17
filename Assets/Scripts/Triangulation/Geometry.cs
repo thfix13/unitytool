@@ -44,6 +44,39 @@ public class Geometry
 		return false; 
 	}
 
+	public bool LineInside(Line l)
+	{
+		//Test if one of my line
+		//This is not the best version should check is colinear inastead!
+		foreach(Line myLine in edges)
+		{
+			foreach(Vector3 v1 in myLine.vertex)
+			{
+				foreach(Vector3 v2 in l.vertex)
+				{
+					if(v1 == v2)
+						return false; 
+				}
+			}
+		}
+
+		//Now we check count the intersection
+		Vector3 mid = l.MidPoint(); 
+		//TODO: CHange this for finding the minimum
+		Line lray = new Line(mid, new Vector3(-10,-10)); 
+		int count = 0; 
+		foreach(Line myLine in edges)
+		{
+			if(myLine.LineIntersection(lray))
+			{
+				count++; 
+			}
+
+		}
+
+		return count%2 == 1; 
+	}
+
 	public void DrawVertex(GameObject parent)
 	{
 		//Find vertex

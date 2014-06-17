@@ -451,6 +451,9 @@ public class Triangulation : MonoBehaviour
 			G3.edges.Add(l);		
 
 
+
+
+
 		//Check for intersection points among lines in G3
 		for (int i = 0; i < G3.edges.Count; i++) {
 			for( int j = i + 1; j < G3.edges.Count; j++ ) {
@@ -461,8 +464,7 @@ public class Triangulation : MonoBehaviour
 				int caseType = LineIntersect( vA, vB, vC, vD );
 				if( caseType == 1 ){//Regular intersections
 					Vector3 pt = LineIntersectionPoint( vA, vB, vC, vD );
-					if( EndPointIntersecion( pt, vA, vB, vC, vD ) > 0 )
-						continue;
+
 
 					Line lne = new Line( pt, vA );
 					G3.edges.Add( lne );
@@ -479,28 +481,47 @@ public class Triangulation : MonoBehaviour
 				}
 			}
 		}
-
 		//Check: Points inside Polygon
 		//Check all midpoint of each line in G3 to see if it lies in G1 or G2. If inside remove.
 		Geometry inliers = new Geometry ();
 
-		for (int i = 0; i < G3.edges.Count; i++) {
-			Vector3	pt1 = G3.edges[i].vertex[0];
-			Vector3	pt2 = G3.edges[i].vertex[1];
-			Vector3 midpt = new Vector3();
-			midpt.x = (pt1.x + pt2.x ) / 2.0f;
-			midpt.z = (pt1.z + pt2.z ) / 2.0f;
-			if( pointInsideGeo(midpt, G1) || pointInsideGeo(midpt, G2) ){
-				/*if( pointInsideGeo( midpt, G1 ) )
-					inliers.edges.Add(new Line( midpt, new Vector3(100, 1, 100) ));		
-				else
-					inliers.edges.Add(new Line( midpt, new Vector3(-100, 1, 100) ));		*/
-				G3.edges.RemoveAt(i);
-				i--;
+
+
+		Geometry toReturn = new Geometry(); 
+		foreach(Line l in G3.edges)
+		{
+			if(!G1.LineInside(l) && !G2.LineInside(l))
+			{
+				toReturn.edges.Add(l);
 			}
+
 		}
 
-		G3.DrawGeometry (GameObject.Find("temp"));
+
+//		for (int i = 0; i < G3.edges.Count; i++) {
+//			Vector3	pt1 = G3.edges[i].vertex[0];
+//			Vector3	pt2 = G3.edges[i].vertex[1];
+//			Vector3 midpt = new Vector3();
+//			midpt.x = (pt1.x + pt2.x ) / 2.0f;
+//			midpt.z = (pt1.z + pt2.z ) / 2.0f;
+//
+//
+//
+//
+//
+//			if( pointInsideGeo(midpt, G1) || pointInsideGeo(midpt, G2) )
+//			{
+//				/*if( pointInsideGeo( midpt, G1 ) )
+//					inliers.edges.Add(new Line( midpt, new Vector3(100, 1, 100) ));		
+//				else
+//					inliers.edges.Add(new Line( midpt, new Vector3(-100, 1, 100) ));		*/
+//				G3.edges.RemoveAt(i);
+//				i--;
+//			}
+//		}
+
+		toReturn.DrawGeometry (GameObject.Find("temp"));
+
 		//inliers.DrawGeometry (GameObject.Find ("temp"));
 		return G3;
 	}
@@ -549,7 +570,7 @@ public class Triangulation : MonoBehaviour
 		double s = numerator1 / denom;
 		 	double t = numerator2 / denom;
 							
-		if ((s >= 0 && s <= 1) && (t >= 0 && t <= 1))
+		if ((s > 0 && s < 1) && (t > 0 && t < 1))
 			return 1;
 		
 		return 0; 
