@@ -20,9 +20,6 @@ public class Geometry
 
 		foreach (Line l in edges) {
 			l.DrawVector (parent, c);
-			c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
-			              UnityEngine.Random.Range(0.0f,1.0f),
-			              UnityEngine.Random.Range(0.0f,1.0f)) ;
 		}
 		//DrawVertex (parent);
 	}
@@ -63,7 +60,7 @@ public class Geometry
 		//Now we check count the intersection
 		Vector3 mid = l.MidPoint(); 
 		//TODO: CHange this for finding the minimum
-		Line lray = new Line(mid, new Vector3(-10,-10)); 
+		Line lray = new Line(mid, new Vector3(-100,-100)); 
 		int count = 0; 
 		foreach(Line myLine in edges)
 		{

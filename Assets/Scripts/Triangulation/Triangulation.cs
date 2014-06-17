@@ -69,13 +69,7 @@ public class Triangulation : MonoBehaviour
 		//colours.Clear();  
 		if ( stopAll )
 			return;
-//		foreach (Geometry g in obsLines) {
-//			foreach( Line l in g.edges ){
-//				Debug.DrawLine(l.vertex[0],l.vertex[1], Color.blue);
-//				debugLines.DrawGeometry(this.gameObject);
-//			}
-//		}
-		
+
 		/***
 		if(drawMinSpanTree)
 		{
@@ -271,25 +265,29 @@ public class Triangulation : MonoBehaviour
 
 
 
-		for (int i = 0; i < geos.Count; i++) {
-			for (int j = i + 1; j < geos.Count; j++) {
+		for (int i = 0; i < obsLines.Count; i++) {
+			for (int j = i + 1; j < obsLines.Count; j++) {
 				//check all line intersections
-				//Debug.Log("Inside Check");
 				if( GeometryIntersect( i, j ) ){
-					//Debug.Log("Obstacles Intersect " + i + " " + j);
-					//if intersections
-					//resolve to form new geometry at position j --resolve(i,j)
+					Debug.Log("Geometries Intersect: " + i + " " + j);
 					tempGeometry = GeometryMerge( i, j );
 					obsLines.RemoveAt(j);
 					obsLines.RemoveAt(i);
 					obsLines.Add(tempGeometry);
+					//tempGeometry.DrawGeometry(GameObject.Find("temp"));
+					//break;
 					//remove item at position i, decrement i since it will be increment in the next step, break
 					i--;
+					break;
 				}
 
 			}
 		}
-
+		//Debug.Log ("Number of geometries: " + obsLines.Count);
+		//obsLines [0].DrawGeometry (temp);
+		foreach (Geometry g in obsLines) {
+			g.DrawGeometry(GameObject.Find("temp"));
+		}
 
 
 
@@ -411,33 +409,6 @@ public class Triangulation : MonoBehaviour
 		
 	}
 
-	private bool pointInsideGeo( Vector3 point, Geometry G ){
-		float minx = float.MaxValue, minz = float.MaxValue;
-
-		foreach (Line l in G.edges) {
-			if( minx > l.vertex[0].x ) minx = l.vertex[0].x;
-			if( minx > l.vertex[1].x ) minx = l.vertex[1].x;
-
-			if( minz > l.vertex[0].z ) minz = l.vertex[0].z;
-			if( minz > l.vertex[1].z ) minz = l.vertex[1].z;
-		}
-		minx -= 100;
-		minz -= 100;
-		Vector3 extPoint = new Vector3 (minx, 1.0f, minz);
-
-		int intersects = 0;
-		foreach (Line l in G.edges) {
-			if( LineIntersect( extPoint, point, l.vertex[0], l.vertex[1] ) > 0 ){
-				Vector3 ipt = LineIntersectionPoint(extPoint, point, l.vertex[0], l.vertex[1] );
-				if( !(Math.Abs(ipt.x - point.x) < 0.1 && Math.Abs(ipt.z - point.z) < 0.1) )//if "point" itself isn't the intersection
-				   	intersects++;
-			}
-		}
-		if( intersects % 2 == 0 )
-			return false;
-		return true;
-	}
-
 	private Geometry GeometryMerge( int x, int y ){
 		Geometry tempGeometry = new Geometry ();
 		//Two Geometry objects - G1 and G2
@@ -483,11 +454,9 @@ public class Triangulation : MonoBehaviour
 		}
 		//Check: Points inside Polygon
 		//Check all midpoint of each line in G3 to see if it lies in G1 or G2. If inside remove.
-		Geometry inliers = new Geometry ();
-
-
 
 		Geometry toReturn = new Geometry(); 
+		//G3.DrawGeometry (GameObject.Find ("temp"));
 		foreach(Line l in G3.edges)
 		{
 			if(!G1.LineInside(l) && !G2.LineInside(l))
@@ -520,10 +489,8 @@ public class Triangulation : MonoBehaviour
 //			}
 //		}
 
-		toReturn.DrawGeometry (GameObject.Find("temp"));
-
-		//inliers.DrawGeometry (GameObject.Find ("temp"));
-		return G3;
+		//toReturn.DrawGeometry (GameObject.Find("temp"));
+		return toReturn;
 	}
 
 	private bool GeometryIntersect( int x, int y ){
