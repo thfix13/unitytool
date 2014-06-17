@@ -19,5 +19,17 @@ public class TriangulationEditor : Editor {
 				tObject.TriangulationSpace(); 
 			}
 		}
+		else if(GUILayout.Button("Clear"))
+		{
+			//Start the triangulation
+			GameObject g = GameObject.Find("Triangulation"); 
+			
+			if(g != null)
+			{
+				Triangulation tObject = g.GetComponent<Triangulation>(); 
+				tObject.Clear(); 
+
+			}
+		}
 	}
 }

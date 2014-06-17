@@ -18,8 +18,19 @@ public class Geometry
                            UnityEngine.Random.Range(0.0f,1.0f),
                            UnityEngine.Random.Range(0.0f,1.0f)) ;
 
-		foreach(Line l in edges)
-			l.DrawVector(parent,c);
+		foreach (Line l in edges) {
+			l.DrawVector (parent, c);
+
+			c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
+			              UnityEngine.Random.Range(0.0f,1.0f),
+			              UnityEngine.Random.Range(0.0f,1.0f)) ;
+		}
+	}
+
+	public void clearDraw(GameObject parent){
+		edges.Clear ();
+		//GL.Clear ();
+		//GL.cl
 	}
 
 	public bool Collision(Geometry g)
@@ -36,7 +47,7 @@ public class Geometry
 		}
 		return false; 
 	}
-	public void CollisionDraw(Geometry g, GameObject parent)
+	/*public void CollisionDraw(Geometry g, GameObject parent)
 	{
 		foreach(Line l1 in edges)
 		{
@@ -56,5 +67,5 @@ public class Geometry
 			}
 		}
 		 
-	}
+	}*/
 }
