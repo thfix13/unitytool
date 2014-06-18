@@ -30,7 +30,7 @@ namespace EditorArea {
 		public static String[] distMetrics = new String[] { "Frechet (L1) (fastest)", "Frechet (L1) 3D", "Frechet (Euclidean)", "Area (Interpolation) 3D", "Area (Triangulation)", "Time (no x,y)" };
 		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
 		public static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
-		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, curCluster = 0;
+		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, curCluster = 0, numPasses = 2;
 		private static List<Path> clusterCentroids = new List<Path>();
 		private static List<PathCollection> clusters20 = new List<PathCollection>();
 		private static bool[] showPaths = new bool[colors.Count()];
@@ -673,7 +673,9 @@ namespace EditorArea {
 			EditorGUILayout.LabelField ("7. Clustering");
 			EditorGUILayout.LabelField ("");
 
-			if (GUILayout.Button ("Select 2 random paths"))
+			numberLines =  EditorGUILayout.IntField("number of lines", numberLines); 
+
+			if (GUILayout.Button ("Draw lines of 2 random paths"))
 			{
 				GameObject g = GameObject.Find("DataPath") as GameObject;
 				if (!g)
@@ -695,34 +697,14 @@ namespace EditorArea {
 				{
 					Debug.Log("Add paths to collection"); 
 				}
-			}
-
-			numberLines =  EditorGUILayout.IntField("number of lines", numberLines); 
-
-			if (GUILayout.Button ("Draw lines"))
-			{
-
+				
 				//clear the previous line
 				GameObject lineHolder = GameObject.Find("Lines"); 
 				if(lineHolder)
 					DestroyImmediate(lineHolder); 
 
 				lineHolder = new GameObject(); 
-				lineHolder.name = "Lines"; 
-
-				//Get the data
-				GameObject g = GameObject.Find("DataPath") as GameObject;
-				if(!g)
-				{
-					Debug.Log("No paths");
-					return;
-				}
-				PathsHolder data = g.GetComponent("PathsHolder") as PathsHolder; 
-				if(data.paths.Count==0)
-				{
-					Debug.Log("No paths"); 
-					return; 
-				}
+				lineHolder.name = "Lines";
 
 				//First line
 
@@ -765,7 +747,7 @@ namespace EditorArea {
 				double area = AreaDist.areaFromInterpolation3D(data.paths[0], data.paths[1]);
 				Debug.Log("Area between paths: " + area);
 			}
-			if(GUILayout.Button("Triangle 2 random Curves"))
+			if(GUILayout.Button("Triangulate 2 random curves"))
 			{
 
 				GameObject k = GameObject.Find("DataPath") as GameObject;
@@ -981,7 +963,7 @@ namespace EditorArea {
 			EditorGUILayout.LabelField ("");
 			
 			numClusters = EditorGUILayout.IntSlider ("Number of clusters", numClusters, 1, 7);
-			
+			numPasses = EditorGUILayout.IntSlider ("Number of passes", numPasses, 1, 15);
 			int prevMetric = distMetric;
 			distMetric = EditorGUILayout.Popup("Dist metric:", distMetric, distMetrics);
 			
@@ -1030,7 +1012,7 @@ namespace EditorArea {
 
 				if (paths.Count > 99)
 				{
-					List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/20, distMetric);
+					List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/20, distMetric, numPasses);
 				
 					List<Path> tempCentroids = new List<Path>();
 					foreach(PathCollection pc in clusters)
@@ -1041,7 +1023,7 @@ namespace EditorArea {
 				
 					if (altCentroidComp) altCentroidComp = false;
 				
-					List<PathCollection> newClusters = KMeans.DoKMeans(tempCentroids, numClusters, distMetric);
+					List<PathCollection> newClusters = KMeans.DoKMeans(tempCentroids, numClusters, distMetric, numPasses);
 				
 					paths.Clear ();
 					ClearPathsRepresentation ();
@@ -1086,7 +1068,7 @@ namespace EditorArea {
 				else
 				{
 					Debug.Log("<99 paths");
-					List<PathCollection> clusters = KMeans.DoKMeans(paths, numClusters, distMetric);
+					List<PathCollection> clusters = KMeans.DoKMeans(paths, numClusters, distMetric, numPasses);
 					
 					clusterCentroids.Clear();
 					foreach(PathCollection pc in clusters)
@@ -1143,7 +1125,7 @@ namespace EditorArea {
 					return;
 				}
 				
-				List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/20, distMetric);
+				List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/20, distMetric, numPasses);
 			
 				List<Path> tempCentroids = new List<Path>();
 				foreach(PathCollection pc in clusters)
@@ -1156,7 +1138,7 @@ namespace EditorArea {
 				
 				for (int numClusters_ = 7; numClusters_ > 1; numClusters_ --)
 				{	
-					List<PathCollection> newClusters = KMeans.DoKMeans(tempCentroids, numClusters_, distMetric);
+					List<PathCollection> newClusters = KMeans.DoKMeans(tempCentroids, numClusters_, distMetric, numPasses);
 					
 					clusterCentroids.Clear();
 					foreach(PathCollection pc in newClusters)
@@ -1284,8 +1266,6 @@ namespace EditorArea {
 				curCluster = (curCluster + 1) % 100;
 			}*/
 
-		//	autoSavePaths = EditorGUILayout.Toggle("Autosave cluster results", autoSavePaths);
-			
 			DirectoryInfo dir = new DirectoryInfo("clusteringdata/");
 			FileInfo[] info = dir.GetFiles("*.xml");
 			
@@ -1346,6 +1326,11 @@ namespace EditorArea {
 					
 					if (!contained) p.color.a = 0;
 				}
+			}
+			if (GUILayout.Button ("Show all colors"))
+			{
+				for(int i = 0; i < showPaths.Count(); i ++) showPaths[i] = true;
+				foreach (Path p in paths) p.color.a = 1;
 			}
 			if (GUILayout.Button ("Show next color"))
 			{

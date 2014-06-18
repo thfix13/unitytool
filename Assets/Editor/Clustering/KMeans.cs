@@ -125,7 +125,7 @@ namespace ClusteringSpace
 			return clusters;
         }
 		
-        public static List<PathCollection> DoKMeans(List<Path> paths, int clusterCount, int distMetric_)
+        public static List<PathCollection> DoKMeans(List<Path> paths, int clusterCount, int distMetric_, int numPasses)
         {
 			if (paths.Count == 0)
 			{
@@ -161,9 +161,7 @@ namespace ClusteringSpace
 			
 			double bestE = double.MaxValue;
 			List<PathCollection> bestClustering = new List<PathCollection>();
-			
-			int numPasses = 3;
-			
+						
 			for (int curPass = 0; curPass < numPasses; curPass ++)
 			{
 				List<PathCollection> allClusters = initializeCentroids(paths, clusterCount);
@@ -220,6 +218,7 @@ namespace ClusteringSpace
 						E += FindDistance(path, cluster.Centroid);
 					}
 				}
+				Debug.Log("Pass " + curPass + ", val: " + E);
 //                for (int curPoint = 0; curPoint < paths.Count(); curPoint++)
 //                    E += EuclideanDistance(data, curPoint, centroids, clusters[curPoint], nDimensions);
                 if (E < bestE || curPass == 0)
