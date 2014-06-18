@@ -71,6 +71,60 @@ namespace ClusteringSpace
 			return allClusters;
 		}
 		
+		// based on https://www.planet-source-code.com/vb/scripts/ShowCode.asp?txtCodeId=7944&lngWId=10
+        private static List<PathCollection> initializeCentroids(List<Path> paths, int numClusters)
+        {
+			numClusters --;
+			
+			List<PathCollection> clusters = new List<PathCollection>();
+			
+            bool[] usedPoint = new bool[paths.Count()];
+
+            //Pick 1st centroid at random
+            int c1 = new System.Random().Next(0, paths.Count() - 1);
+            usedPoint[c1] = true;
+			clusters.Add(new PathCollection(paths[c1]));
+
+            //Pick the rest of the centroids
+            for (int curK = 0; curK < numClusters; curK++)
+            {
+                double maxD = 0;
+                int bestCentroid = 0;
+
+                //Find a point that is the furthest distance from all current centroids
+                for (int curPoint = 0; curPoint < paths.Count(); curPoint++)
+                {
+                    //Skip if this point is a centroid
+                    if (!usedPoint[curPoint])
+                    {
+                        //Find distance to the closest centroid
+                        double minD = double.MaxValue;
+                        for (int testK = 0; testK < clusters.Count(); testK++)
+                            minD = Math.Min(minD, FindDistance(paths[curPoint], clusters[testK].Centroid));
+
+                        //See if this distance is farther than current farthest point
+                        if (maxD < minD)
+                        {
+                            maxD = minD;
+                            bestCentroid = curPoint;
+                        }
+                    }
+                }
+
+                //Set the centroid
+                usedPoint[bestCentroid] = true;
+				clusters.Add(new PathCollection(paths[bestCentroid]));
+            }
+			
+			for (int pathIndex = 0; pathIndex < paths.Count; pathIndex++)
+            {
+                int nearestCluster = FindNearestCluster(clusters, paths[pathIndex]);
+                clusters[nearestCluster].Add(paths[pathIndex]);
+            }
+			
+			return clusters;
+        }
+		
         public static List<PathCollection> DoKMeans(List<Path> paths, int clusterCount, int distMetric_)
         {
 			if (paths.Count == 0)
@@ -132,14 +186,16 @@ namespace ClusteringSpace
             //divide paths into equal clusters
        //     List<PathCollection> allClusters = usePredeterminedCentroids(paths);
 			
-            List<PathCollection> allClusters = new List<PathCollection>();
+			List<PathCollection> allClusters = initializeCentroids(paths, clusterCount);
+			
+       /*     List<PathCollection> allClusters = new List<PathCollection>();
 
             List<List<Path>> allGroups = ListUtility.SplitList<Path>(paths, clusterCount);
             foreach (List<Path> pathGroup in allGroups)
             {
                 PathCollection cluster = new PathCollection(pathGroup);
                 allClusters.Add(cluster);
-            }
+            }*/
 			
             //start k-means clustering
 			// src : http://codeding.com/articles/k-means-algorithm

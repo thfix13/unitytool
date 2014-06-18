@@ -1039,10 +1039,11 @@ namespace EditorArea {
 						else tempCentroids.Add(pc.Centroid);
 					}
 				
+					if (altCentroidComp) altCentroidComp = false;
+				
 					List<PathCollection> newClusters = KMeans.DoKMeans(tempCentroids, numClusters, distMetric);
 				
 					paths.Clear ();
-					deaths.Clear ();
 					ClearPathsRepresentation ();
 
 					clusterCentroids.Clear();
@@ -1058,7 +1059,6 @@ namespace EditorArea {
 						toggleStatus.Add(paths.Last(), true);
 						cluster ++;
 					}
-					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "CLUS_" + numClusters + "c-" + distMetric + "d-" + clusterCentroids.Count() + "p.xml", clusterCentroids);
 
 					for (int c = 0; c < newClusters.Count; c ++)
 					{
@@ -1066,7 +1066,6 @@ namespace EditorArea {
 						{
 							if (newClusters[c].Contains(tempCentroids[c2]))
 							{ // then all paths of clusters[c2] list should be of the same color!
-					//			Debug.Log(c + "contains " + c2);
 								foreach (Path path in clusters[c2])
 								{
 									path.color = colors[c];
@@ -1074,11 +1073,11 @@ namespace EditorArea {
 									{
 										path.color.a = 0.5f;
 									}
-				//					if (!paths.Contains(path))
-				//					{
-									paths.Add(path);
-									toggleStatus.Add(paths.Last (), true);
-			//						}
+									if (!paths.Contains(path))
+									{
+										paths.Add(path);
+										toggleStatus.Add(paths.Last (), true);
+									}
 								}
 							}
 						}
@@ -1313,7 +1312,6 @@ namespace EditorArea {
 					toggleStatus.Add (p, true);
 					paths.Add(p);
 				}
-				//SetupArrangedPaths (paths);
 				
 				chosenFileIndex = -1;
 			}
