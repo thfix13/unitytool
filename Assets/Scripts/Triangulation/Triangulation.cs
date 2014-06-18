@@ -165,19 +165,19 @@ public class Triangulation : MonoBehaviour
 		
 		//Draw the two paths:
 
-		VectorLine line1 = new VectorLine("1",path1,Color.red,null,10.0f);
+	//	VectorLine line1 = new VectorLine("1",path1,Color.red,null,10.0f);
 
-		line1.Draw3D();
+	//	line1.Draw3D();
 
-		line1.vectorObject.transform.parent = temp.transform;
+	//	line1.vectorObject.transform.parent = temp.transform;
 
 		//Second line
 
-		VectorLine line2 = new VectorLine("2",path2,Color.blue,null,10.0f);
+	//	VectorLine line2 = new VectorLine("2",path2,Color.blue,null,10.0f);
 		
-		line2.Draw3D();
-		
-		line2.vectorObject.transform.parent = temp.transform;
+	//	line2.Draw3D();
+
+	//	line2.vectorObject.transform.parent = temp.transform;
 		
 		//Constructing the geometry
 		//Find all the vectors that are colliding and there position. 
@@ -199,10 +199,10 @@ public class Triangulation : MonoBehaviour
 
 
 		//Draw polygon
-		foreach(Line l in poly)
+	/*	foreach(Line l in poly)
 		{
 			l.DrawVector(temp,Color.gray);
-		}
+		} */
 
 		//Get the vertex
 		List<Vector3> vertex = new List<Vector3>(); 
