@@ -16,8 +16,9 @@ public class Triangulation : MonoBehaviour
 	public List<Line> lines = new List<Line>(); 
 
 	public List<Line> linesMinSpanTree = new List<Line>(); 
-	public List<Geometry> obsLines = new List<Geometry> (); 
-	public Geometry debugLines = new Geometry (); 
+	public List<Geometry> obsGeos = new List<Geometry> (); 
+	//Contains Map
+	public Geometry mapBG = new Geometry ();
 
 	public bool drawTriangles = false; 
 	public bool drawRoadMap = false; 
@@ -25,7 +26,7 @@ public class Triangulation : MonoBehaviour
 	public bool stopAll = false;
 
 	public void Start(){
-		debugLines.edges.Clear ();
+	
 	}
 
 	public void Clear()
@@ -35,8 +36,7 @@ public class Triangulation : MonoBehaviour
 		lines.Clear(); 
 		points.Clear(); 
 		colours.Clear();
-		debugLines.edges.Clear ();
-
+	
 		GameObject temp = GameObject.Find("temp"); 
 		DestroyImmediate(temp); 
 
@@ -163,7 +163,7 @@ public class Triangulation : MonoBehaviour
 		Vector3[] t = mesh.sharedMesh.vertices; 
 		
 		Geometry tempGeometry = new Geometry (); 
-		
+
 		
 		vertex [0] = mesh.transform.TransformPoint (t [0]);
 		vertex [2] = mesh.transform.TransformPoint (t [120]);
@@ -178,9 +178,19 @@ public class Triangulation : MonoBehaviour
 
 		//Disabled Temporarily - Find a way to avoid floor when checking for obstacle collision
 		//geos.Add (tempGeometry);
-		
-		
-		
+
+		Vector3 [] mapBoundary = new Vector3[4]; 
+
+		for (int i = 0; i < 4; i++) {
+			mapBoundary [i] = vertex [i];
+		}
+
+		Geometry mapBG = new Geometry (); 
+		for (int i = 0; i < 4; i++)
+			mapBG.edges.Add( new Line( mapBoundary[i], mapBoundary[(i + 1) % 4]) );
+		//mapBG.DrawVertex (GameObject.Find ("temp"));
+		//mapBG.DrawGeometry(GameObject.find);
+
 		GameObject[] obs = GameObject.FindGameObjectsWithTag ("Obs");
 		if(obs == null)
 		{
@@ -214,7 +224,7 @@ public class Triangulation : MonoBehaviour
 				else 	       
 					tempGeometry.edges.Add (new Line (vertex [0], vertex [i]));
 			}	
-			
+			//tempGeometry.BoundGeometry(mapBoundary);
 			geos.Add (tempGeometry); 
 			
 		}
@@ -233,19 +243,16 @@ public class Triangulation : MonoBehaviour
 		}*/
 
 
-		obsLines.Clear ();
-		obsLines = geos;
+		obsGeos.Clear ();
+		obsGeos = geos;
 
 
 		//Create empty GameObject
 		GameObject temp = GameObject.Find("temp");
 		DestroyImmediate(temp);
 		temp = new GameObject("temp");
-
-		//foreach(Geometry g in geos)
-		//	g.DrawGeometry(temp);
-
-		//CODESPACE
+		//mapBG.DrawGeometry(temp);
+			//CODESPACE
 		//Find out intersection. Reconstruct.
 
 
@@ -264,31 +271,37 @@ public class Triangulation : MonoBehaviour
 		}*/
 
 
-
-		for (int i = 0; i < obsLines.Count; i++) {
-			for (int j = i + 1; j < obsLines.Count; j++) {
+		//Merging Polygons
+		for (int i = 0; i < obsGeos.Count; i++) {
+			for (int j = i + 1; j < obsGeos.Count; j++) {
 				//check all line intersections
-				if( GeometryIntersect( i, j ) ){
-					Debug.Log("Geometries Intersect: " + i + " " + j);
-					tempGeometry = GeometryMerge( i, j );
-					obsLines.RemoveAt(j);
-					obsLines.RemoveAt(i);
-					obsLines.Add(tempGeometry);
-					//tempGeometry.DrawGeometry(GameObject.Find("temp"));
-					//break;
+				if( obsGeos[i].GeometryIntersect( obsGeos[j] ) ){
+					//Debug.Log("Geometries Intersect: " + i + " " + j);
+					tempGeometry = obsGeos[i].GeometryMerge( obsGeos[j] );
 					//remove item at position i, decrement i since it will be increment in the next step, break
+					obsGeos.RemoveAt(j);
+					obsGeos.RemoveAt(i);
+					obsGeos.Add(tempGeometry);
 					i--;
 					break;
 				}
 
 			}
 		}
-		//Debug.Log ("Number of geometries: " + obsLines.Count);
-		//obsLines [0].DrawGeometry (temp);
-		foreach (Geometry g in obsLines) {
+
+		List<Geometry> finalPoly = new List<Geometry> ();//Contains all polygons that are fully insde the map
+		foreach ( Geometry g in obsGeos ) {
+			if( mapBG.GeometryIntersect( g ) && !mapBG.GeometryInside( g ) ){
+				mapBG = mapBG.GeometryMergeInner( g );
+				mapBG.BoundGeometry( mapBoundary );
+			}
+			else
+				finalPoly.Add(g);
+		}
+		foreach (Geometry g in finalPoly) {
 			g.DrawGeometry(GameObject.Find("temp"));
 		}
-
+		mapBG.DrawGeometry (GameObject.Find ("temp"));
 
 
 
@@ -296,12 +309,12 @@ public class Triangulation : MonoBehaviour
 
 
 		///Uncomment the following later
-		/*
+
 		//Lines are also the one added. 
 
 		//Compare each point to every point 
 
-
+		/*
 		for (int i = 0; i < geos.Count; i++) {
 			
 			for (int j = i+1; j < geos.Count; j++) {
@@ -403,166 +416,9 @@ public class Triangulation : MonoBehaviour
 			
 		}
 		
-		triangulation.triangles = triangles; */
-		
-		
-		
-	}
+		triangulation.triangles = triangles;
 
-	private Geometry GeometryMerge( int x, int y ){
-		Geometry tempGeometry = new Geometry ();
-		//Two Geometry objects - G1 and G2
-		Geometry G1 = obsLines [x];
-		Geometry G2 = obsLines [y];
-		//Create new called G3 which starts as an union of G1 and G2
-		Geometry G3 = new Geometry ();
-		foreach (Line l in G1.edges)
-			G3.edges.Add(l);		
-		foreach (Line l in G2.edges)
-			G3.edges.Add(l);		
-
-
-
-
-
-		//Check for intersection points among lines in G3
-		for (int i = 0; i < G3.edges.Count; i++) {
-			for( int j = i + 1; j < G3.edges.Count; j++ ) {
-				Vector3 vA = G3.edges[i].vertex[0];
-				Vector3 vB = G3.edges[i].vertex[1];
-				Vector3 vC = G3.edges[j].vertex[0];
-				Vector3 vD = G3.edges[j].vertex[1];
-				int caseType = LineIntersect( vA, vB, vC, vD );
-				if( caseType == 1 ){//Regular intersections
-					Vector3 pt = LineIntersectionPoint( vA, vB, vC, vD );
-
-
-					Line lne = new Line( pt, vA );
-					G3.edges.Add( lne );
-					lne = new Line( pt, vB );
-					G3.edges.Add( lne );
-					lne = new Line( pt, vC );
-					G3.edges.Add( lne );
-					lne = new Line( pt, vD );
-					G3.edges.Add( lne );
-					G3.edges.RemoveAt(j);
-					G3.edges.RemoveAt(i);
-					i--;
-					break;
-				}
-			}
-		}
-		//Check: Points inside Polygon
-		//Check all midpoint of each line in G3 to see if it lies in G1 or G2. If inside remove.
-
-		Geometry toReturn = new Geometry(); 
-		//G3.DrawGeometry (GameObject.Find ("temp"));
-		foreach(Line l in G3.edges)
-		{
-			if(!G1.LineInside(l) && !G2.LineInside(l))
-			{
-				toReturn.edges.Add(l);
-			}
-
-		}
-
-
-//		for (int i = 0; i < G3.edges.Count; i++) {
-//			Vector3	pt1 = G3.edges[i].vertex[0];
-//			Vector3	pt2 = G3.edges[i].vertex[1];
-//			Vector3 midpt = new Vector3();
-//			midpt.x = (pt1.x + pt2.x ) / 2.0f;
-//			midpt.z = (pt1.z + pt2.z ) / 2.0f;
-//
-//
-//
-//
-//
-//			if( pointInsideGeo(midpt, G1) || pointInsideGeo(midpt, G2) )
-//			{
-//				/*if( pointInsideGeo( midpt, G1 ) )
-//					inliers.edges.Add(new Line( midpt, new Vector3(100, 1, 100) ));		
-//				else
-//					inliers.edges.Add(new Line( midpt, new Vector3(-100, 1, 100) ));		*/
-//				G3.edges.RemoveAt(i);
-//				i--;
-//			}
-//		}
-
-		//toReturn.DrawGeometry (GameObject.Find("temp"));
-		return toReturn;
-	}
-
-	private bool GeometryIntersect( int x, int y ){
-		foreach( Line La in obsLines[x].edges ){
-			foreach( Line Lb in obsLines[y].edges ){
-				if( LineIntersect( La.vertex[0], La.vertex[1], Lb.vertex[0], Lb.vertex[1] ) > 0 ){
-					/*Debug.Log(La.vertex[0] + "  " + La.vertex[1] );
-					Debug.Log(Lb.vertex[0] + "  " + Lb.vertex[1] );
-					Vector3 vv = LineIntersectionPoint( La.vertex[0], La.vertex[1], Lb.vertex[0], Lb.vertex[1] );
-					Debug.Log(vv);
-					Debug.Log ("BREAK");*/
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	private int LineIntersect (Vector3 a, Vector3 b, Vector3 c, Vector3 d){
-		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
-		Vector2 p0 = new Vector2 (a.x, a.z);
-				
-		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
-		Vector2 q0 = new Vector2 (c.x, c.z);
-
-		double numerator1 = CrossProduct ((q0 - p0), v);
-		double numerator2 = CrossProduct ((q0 - p0), u);
-		double denom = CrossProduct (u, v);
-
-		//Case 1 - Colinear
-		if ( denom == 0 && numerator2 == 0 ) {
-			//Case 2 - Colinear and Overlapping
-			if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
-				return 2;
-			if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
-				return 2;
-			return 0;
-		}
-		//Case 3 - Parallel
-		if (denom == 0 && numerator2 != 0)
-			return 0;
-
-		//Case 4 - Intersects
-		double s = numerator1 / denom;
-		 	double t = numerator2 / denom;
-							
-		if ((s > 0 && s < 1) && (t > 0 && t < 1))
-			return 1;
-		
-		return 0; 
-	}
-
-	private Vector3 LineIntersectionPoint (Vector3 a, Vector3 b, Vector3 c, Vector3 d){
-		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
-		Vector2 p0 = new Vector2 (a.x, a.z);
-		
-		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
-		Vector2 q0 = new Vector2 (c.x, c.z);
-		
-		double numerator1 = CrossProduct ((q0 - p0), v);
-		double numerator2 = CrossProduct ((q0 - p0), u);
-		double denom = CrossProduct (u, v);
-		
-		double s = numerator1 / denom;
-		double t = numerator2 / denom;
-		
-		Vector3 r = a + (b-a)*(float)s; 
-		return r;
-	}
-
-	private double CrossProduct( Vector2 a, Vector2 b ){
-		return (a.x * b.y) - (a.y * b.x);
+		*/
 	}
 
 	private Vector3 LineIntersectVect (Vector3 a, Vector3 b, Vector3 c, Vector3 d)

@@ -121,4 +121,191 @@ public class Geometry
 		}
 		 
 	}
+
+	public void BoundGeometry(Vector3[] boundary){
+		//Debug.Log (boundary [0] + " " + boundary [2]);
+		List<Vector3> newPts = new List<Vector3>();
+		List<Line> removeLines = new List<Line> ();
+		foreach (Line l in edges) {
+			Vector3 diff = l.vertex[1] - l.vertex[0];
+			float grad = 0, cx, cz;
+			if( diff.x != 0 ) grad = diff.z / diff.x;//A Z-axis parallel line
+			cx = (-l.vertex[1].x * grad) + l.vertex[1].z;
+			cz = -l.vertex[1].z + (l.vertex[1].x * grad);
+
+
+			bool bothPtsOut = true;
+			for( int i = 0; i < 2; i++ ){
+				if( (l.vertex[i].x > boundary[0].x || l.vertex[i].x < boundary[2].x) || (l.vertex[i].z > boundary[0].z && l.vertex[i].z < boundary[2].z) )
+					bothPtsOut = true;
+				else{
+					bothPtsOut = false;
+					break;
+				}
+			}
+
+			if( bothPtsOut ){
+				Debug.Log ("both points out");
+				removeLines.Add(l);
+				continue;
+			}
+
+			for( int i = 0; i < 2; i++ ){
+				bool xchanged = false;
+
+				if( l.vertex[i].x > boundary[0].x ){
+					l.vertex[i].x = boundary[0].x;
+					if( diff.x != 0 )
+						l.vertex[i].z = boundary[0].x * grad + cx;
+					break;
+				}
+				else if( l.vertex[i].x < boundary[2].x ){
+					l.vertex[i].x = boundary[2].x;
+					if( diff.x != 0 )
+						l.vertex[i].z = boundary[2].x * grad + cx;
+					break;
+				}
+
+				if( l.vertex[i].z > boundary[0].z ){
+					l.vertex[i].z = boundary[0].z;
+					if( diff.x != 0 )
+						l.vertex[i].x = (boundary[0].z - cz) / grad;
+				}
+				else if( l.vertex[i].z < boundary[2].z ){
+					l.vertex[i].z = boundary[2].z;
+					if( diff.x != 0 )
+						l.vertex[i].x = (boundary[2].z - cz) / grad;
+				}
+			}
+		}
+		foreach (Line l in removeLines)
+			edges.Remove (l);
+	}
+
+	public Geometry GeometryMerge( Geometry G2 ){
+		Geometry tempGeometry = new Geometry ();
+		//Two Geometry objects - G1 and G2
+		Geometry G1 = this;
+		//Create new called G3 which starts as an union of G1 and G2
+		Geometry G3 = new Geometry ();
+		foreach (Line l in G1.edges)
+			G3.edges.Add(l);		
+		foreach (Line l in G2.edges)
+			G3.edges.Add(l);		
+		
+		//Check for intersection points among lines in G3
+		for (int i = 0; i < G3.edges.Count; i++) {
+			for( int j = i + 1; j < G3.edges.Count; j++ ) {
+				Line LA = G3.edges[i];
+				Line LB = G3.edges[j];
+				int caseType = LA.LineIntersectMuntac( LB );
+				if( caseType == 1 ){//Regular intersections
+					Vector3 pt = LA.GetIntersectionPoint( LB );
+					G3.edges.Add( new Line( pt, LA.vertex[0] ) );
+					G3.edges.Add( new Line( pt, LA.vertex[1] ) );
+					G3.edges.Add( new Line( pt, LB.vertex[0] ) );
+					G3.edges.Add( new Line( pt, LB.vertex[1] ));
+					G3.edges.RemoveAt(j);
+					G3.edges.RemoveAt(i);
+					i--;
+					break;
+				}
+			}
+		}
+		//Check: Points inside Polygon
+		//Check all midpoint of each line in G3 to see if it lies in G1 or G2. If inside remove.
+		Geometry toReturn = new Geometry();
+
+		foreach(Line l in G3.edges){
+			if(!G1.LineInside(l) && !G2.LineInside(l))
+				toReturn.edges.Add(l);
+		}
+//		this.edges.Clear ();
+//		foreach (Line l in toReturn.edges)
+//			this.edges.Add (l);
+		return toReturn;
+	}
+
+	public Geometry GeometryMergeInner( Geometry G2 ){
+		Geometry tempGeometry = new Geometry ();
+		//Two Geometry objects - G1 and G2
+		Geometry G1 = this;
+		//Create new called G3 which starts as an union of G1 and G2
+		Geometry G3 = new Geometry ();
+		foreach (Line l in G1.edges)
+			G3.edges.Add(l);		
+		foreach (Line l in G2.edges)
+			G3.edges.Add(l);		
+		
+		//Check for intersection points among lines in G3
+		for (int i = 0; i < G3.edges.Count; i++) {
+			for( int j = i + 1; j < G3.edges.Count; j++ ) {
+				Line LA = G3.edges[i];
+				Line LB = G3.edges[j];
+				int caseType = LA.LineIntersectMuntac( LB );
+				if( caseType == 1 ){//Regular intersections
+					Vector3 pt = LA.GetIntersectionPoint( LB );
+					G3.edges.Add( new Line( pt, LA.vertex[0] ) );
+					G3.edges.Add( new Line( pt, LA.vertex[1] ) );
+					G3.edges.Add( new Line( pt, LB.vertex[0] ) );
+					G3.edges.Add( new Line( pt, LB.vertex[1] ));
+					G3.edges.RemoveAt(j);
+					G3.edges.RemoveAt(i);
+					i--;
+					break;
+				}
+			}
+		}
+		//Check: Points inside Polygon
+		//Check all midpoint of each line in G3 to see if it lies in G1 or G2. If inside remove.
+		Geometry toReturn = new Geometry();
+		
+		foreach(Line l in G3.edges){
+			if(!G2.LineInside(l))
+				toReturn.edges.Add(l);
+		}
+		//Check pt inside in G2
+		foreach (Line l in toReturn.edges) {
+			if( G2.LineInside( l ) ){
+				toReturn.edges.Remove(l);
+				break;
+			}
+		}
+		return toReturn;
+	}
+
+	public bool GeometryIntersect( Geometry G2 ){
+		//Note: function assumes that no obstacle will be fully inside another
+		foreach( Line La in this.edges ){
+			foreach( Line Lb in G2.edges ){
+				if( La.LineIntersectMuntac( Lb ) > 0 )
+					return true;
+			}
+		}
+		return false;
+	}
+	
+	private double CrossProduct( Vector2 a, Vector2 b ){
+		return (a.x * b.y) - (a.y * b.x);
+	}
+
+	public bool GeometryInside( Geometry G2 ){
+		float minx = float.MaxValue, maxx = float.MinValue;
+		float minz = float.MaxValue, maxz = float.MinValue;
+		foreach (Line l in edges) {
+			minx = Math.Min(minx, Math.Min(l.vertex[0].x, l.vertex[1].x));
+			maxx = Math.Max(maxx, Math.Max(l.vertex[0].x, l.vertex[1].x));
+			minz = Math.Min(minz, Math.Min (l.vertex[0].z, l.vertex[1].z));
+			maxz = Math.Max(maxz, Math.Max (l.vertex[0].z, l.vertex[1].z));
+		}
+		foreach (Line l in G2.edges) {
+			for( int i = 0; i < 2; i++ ){
+				if( l.vertex[i].x < minx || l.vertex[i].x > maxx )
+					return false;
+				if( l.vertex[i].z < minz || l.vertex[i].z > maxz )
+					return false;
+			}
+		}
+		return true;
+	}
 }

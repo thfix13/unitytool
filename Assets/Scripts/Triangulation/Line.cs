@@ -4,6 +4,10 @@ using System.Collections.Generic;
 using System; 
 using Vectrosity; 
 
+
+//Changes Made:
+//Used my implementation of line intersection function called: LineIntersectionMuntac (will change name later)
+//Another function called GetIntersectionPoint
 [Serializable]
 public class Line 
 {
@@ -214,7 +218,71 @@ public class Line
 			return false; 
 	}
 
+	public int LineIntersectMuntac (Line param){
+		Vector3 a = this.vertex [0];
+		Vector3 b = this.vertex[1];
+		Vector3 c = param.vertex [0];
+		Vector3 d = param.vertex [1];
 
+		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
+		Vector2 p0 = new Vector2 (a.x, a.z);
+		
+		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
+		Vector2 q0 = new Vector2 (c.x, c.z);
+		
+		double numerator1 = CrossProduct ((q0 - p0), v);
+		double numerator2 = CrossProduct ((q0 - p0), u);
+		double denom = CrossProduct (u, v);
+		
+		//Case 1 - Colinear
+		if ( denom == 0 && numerator2 == 0 ) {
+			//Case 2 - Colinear and Overlapping
+			if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
+				return 2;
+			if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
+				return 2;
+			return 0;
+		}
+		//Case 3 - Parallel
+		if (denom == 0 && numerator2 != 0)
+			return 0;
+		
+		//Case 4 - Intersects
+		double s = numerator1 / denom;
+		double t = numerator2 / denom;
+		
+		if ((s > 0 && s < 1) && (t > 0 && t < 1))
+			return 1;
+		
+		return 0; 
+	}
+
+	public Vector3 GetIntersectionPoint (Line param){
+		Vector3 a = this.vertex [0];
+		Vector3 b = this.vertex [1];
+		Vector3 c = param.vertex [0];
+		Vector3 d = param.vertex [1];
+
+		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
+		Vector2 p0 = new Vector2 (a.x, a.z);
+		
+		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
+		Vector2 q0 = new Vector2 (c.x, c.z);
+		
+		double numerator1 = CrossProduct ((q0 - p0), v);
+		double numerator2 = CrossProduct ((q0 - p0), u);
+		double denom = CrossProduct (u, v);
+		
+		double s = numerator1 / denom;
+		double t = numerator2 / denom;
+		
+		Vector3 r = a + (b-a)*(float)s; 
+		return r;
+	}
+
+	private double CrossProduct( Vector2 a, Vector2 b ){
+		return (a.x * b.y) - (a.y * b.x);
+	}
 }
 class LineEqualityComparer : IEqualityComparer<Line>
 {
