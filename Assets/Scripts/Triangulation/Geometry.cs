@@ -74,6 +74,18 @@ public class Geometry
 		return count%2 == 1; 
 	}
 
+	public bool PointInside( Vector3 pt )
+	{
+		Line lray = new Line(pt, new Vector3(-100,-100)); 
+		int count = 0; 
+		foreach(Line myLine in edges){
+			if(myLine.LineIntersection(lray))
+				count++; 
+		}
+		return count%2 == 1; 
+	}
+
+
 	public void DrawVertex(GameObject parent)
 	{
 		//Find vertex
@@ -183,6 +195,11 @@ public class Geometry
 	}
 
 	public Geometry GeometryMerge( Geometry G2 ){
+		if (GeometryInside (G2))
+			return this;
+		else if (G2.GeometryInside (this))
+			return G2;
+
 		Geometry tempGeometry = new Geometry ();
 		//Two Geometry objects - G1 and G2
 		Geometry G1 = this;
@@ -275,7 +292,11 @@ public class Geometry
 	}
 
 	public bool GeometryIntersect( Geometry G2 ){
-		//Note: function assumes that no obstacle will be fully inside another
+		if (GeometryInside (G2))
+			return true;
+		else if (G2.GeometryInside (this))
+			return true;
+
 		foreach( Line La in this.edges ){
 			foreach( Line Lb in G2.edges ){
 				if( La.LineIntersectMuntac( Lb ) > 0 )
@@ -290,21 +311,11 @@ public class Geometry
 	}
 
 	public bool GeometryInside( Geometry G2 ){
-		float minx = float.MaxValue, maxx = float.MinValue;
-		float minz = float.MaxValue, maxz = float.MinValue;
-		foreach (Line l in edges) {
-			minx = Math.Min(minx, Math.Min(l.vertex[0].x, l.vertex[1].x));
-			maxx = Math.Max(maxx, Math.Max(l.vertex[0].x, l.vertex[1].x));
-			minz = Math.Min(minz, Math.Min (l.vertex[0].z, l.vertex[1].z));
-			maxz = Math.Max(maxz, Math.Max (l.vertex[0].z, l.vertex[1].z));
-		}
-		foreach (Line l in G2.edges) {
-			for( int i = 0; i < 2; i++ ){
-				if( l.vertex[i].x < minx || l.vertex[i].x > maxx )
-					return false;
-				if( l.vertex[i].z < minz || l.vertex[i].z > maxz )
-					return false;
-			}
+		foreach (Line L in G2.edges) {
+			if( !PointInside( L.vertex[0] ) )
+				return false;
+			if( !PointInside( L.vertex[1] ) )
+				return false;
 		}
 		return true;
 	}
