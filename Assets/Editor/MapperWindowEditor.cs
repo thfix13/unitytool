@@ -1040,25 +1040,33 @@ namespace EditorArea {
 					}
 				
 					List<PathCollection> newClusters = KMeans.DoKMeans(tempCentroids, numClusters, distMetric);
-		
-					clusterCentroids.Clear();
-					foreach(PathCollection pc in newClusters)
-					{
-						clusterCentroids.Add(pc.Centroid);
-						paths.Add(pc.Centroid);
-						toggleStatus.Add(paths.Last(), true);
-					}
 				
 					paths.Clear ();
 					deaths.Clear ();
 					ClearPathsRepresentation ();
 
+					clusterCentroids.Clear();
+					int cluster = 0;
+					foreach(PathCollection pc in newClusters)
+					{
+						Path centroid = pc.Centroid;
+						centroid.color = colors[cluster];
+						centroid.color.a = 0.5f;
+						pc.Add(centroid);
+						clusterCentroids.Add(centroid);
+						paths.Add(centroid);
+						toggleStatus.Add(paths.Last(), true);
+						cluster ++;
+					}
+					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "CLUS_" + numClusters + "c-" + distMetric + "d-" + clusterCentroids.Count() + "p.xml", clusterCentroids);
+
 					for (int c = 0; c < newClusters.Count; c ++)
 					{
-						for (int c2 = 0; c2 < clusters.Count; c2 ++)
+						for (int c2 = 0; c2 < tempCentroids.Count; c2 ++)
 						{
 							if (newClusters[c].Contains(tempCentroids[c2]))
 							{ // then all paths of clusters[c2] list should be of the same color!
+					//			Debug.Log(c + "contains " + c2);
 								foreach (Path path in clusters[c2])
 								{
 									path.color = colors[c];
@@ -1066,11 +1074,11 @@ namespace EditorArea {
 									{
 										path.color.a = 0.5f;
 									}
-									if (!paths.Contains(path))
-									{
-										paths.Add(path);
-										toggleStatus.Add(paths.Last (), true);
-									}
+				//					if (!paths.Contains(path))
+				//					{
+									paths.Add(path);
+									toggleStatus.Add(paths.Last (), true);
+			//						}
 								}
 							}
 						}
@@ -1078,6 +1086,7 @@ namespace EditorArea {
 				}
 				else
 				{
+					Debug.Log("<99 paths");
 					List<PathCollection> clusters = KMeans.DoKMeans(paths, numClusters, distMetric);
 					
 					clusterCentroids.Clear();
@@ -1096,6 +1105,7 @@ namespace EditorArea {
 					{
 						foreach(Path path in clusters[c])
 						{
+							Debug.Log(c);
 							path.color = colors[c];
 							if (path.Equals(clusterCentroids[c]))
 							{
@@ -1107,8 +1117,8 @@ namespace EditorArea {
 					}
 				}
 				
-				Debug.Log ("Clust elapsed time: " + KMeans.clustTime.Elapsed);
-				Debug.Log ("Dist elapsed time: " + KMeans.distTime.Elapsed);
+//				Debug.Log ("Clust elapsed time: " + KMeans.clustTime.Elapsed);
+//				Debug.Log ("Dist elapsed time: " + KMeans.distTime.Elapsed);
 				TimeSpan totalTime = KMeans.clustTime.Elapsed + KMeans.distTime.Elapsed;
 				Debug.Log ("Total: " + totalTime);
 				

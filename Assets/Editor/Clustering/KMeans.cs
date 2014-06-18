@@ -31,6 +31,46 @@ namespace ClusteringSpace
         
 		private static int distMetric = 0;
 		
+		private static List<PathCollection> usePredeterminedCentroids(List<Path> paths)
+		{
+			List<PathCollection> allClusters = new List<PathCollection>();
+			
+			allClusters.Add(new PathCollection(new Path(new List<Node>() {
+				new Node(2, 43, 0),
+				new Node(19, 59, 1504),
+				new Node(31, 57, 1546),
+				new Node(53, 49, 1572),
+				new Node(55, 3, 1646)
+			}))); // top
+			allClusters.Add(new PathCollection(new Path(new List<Node>() {
+				new Node(2, 43, 0),
+				new Node(13, 35, 717),
+				new Node(50, 38, 798),
+				new Node(55, 3, 855)
+			}))); // 2nd
+			allClusters.Add(new PathCollection(new Path(new List<Node>() {
+				new Node(2, 43, 0),
+				new Node(8, 26, 1433),
+				new Node(55, 23, 1627),
+				new Node(55, 3, 1659)
+			}))); // 3rd
+			allClusters.Add(new PathCollection(new Path(new List<Node>() {
+				new Node(2, 43, 0),
+				new Node(13, 9, 68),
+				new Node(31, 14, 87),
+				new Node(53, 7, 112),
+				new Node(55, 3, 1648)
+			}))); // bottom
+			
+			for (int pathIndex = 0; pathIndex < paths.Count; pathIndex++)
+            {
+                int nearestCluster = FindNearestCluster(allClusters, paths[pathIndex]);
+                allClusters[nearestCluster].Add(paths[pathIndex]);
+            }
+			
+			return allClusters;
+		}
+		
         public static List<PathCollection> DoKMeans(List<Path> paths, int clusterCount, int distMetric_)
         {
 			if (paths.Count == 0)
@@ -90,7 +130,10 @@ namespace ClusteringSpace
 			clustTime.Start();
 
             //divide paths into equal clusters
+       //     List<PathCollection> allClusters = usePredeterminedCentroids(paths);
+			
             List<PathCollection> allClusters = new List<PathCollection>();
+
             List<List<Path>> allGroups = ListUtility.SplitList<Path>(paths, clusterCount);
             foreach (List<Path> pathGroup in allGroups)
             {

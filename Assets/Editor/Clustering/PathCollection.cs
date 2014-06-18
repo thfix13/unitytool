@@ -39,6 +39,11 @@ namespace ClusteringSpace
 			}
             UpdateCentroid();
         }
+		
+		public PathCollection(Path centroid_) : base()
+		{
+			Centroid = centroid_;
+		}
 
         #endregion
 
@@ -134,7 +139,9 @@ namespace ClusteringSpace
 					n.x /= this[0].points.Count;
 					n.y /= this[0].points.Count;
 					n.t /= this[0].points.Count;
+					Debug.Log("cnx:"+n.x+",y:"+n.y+",t:"+n.t);
 				}
+				Debug.Log("end centr");
 			
 				Centroid = new Path(new List<Node>(nodes));
 			}

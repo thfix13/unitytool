@@ -23,7 +23,6 @@ public class Triangulation : MonoBehaviour
 	public bool drawRoadMap = false; 
 	private bool drawMinSpanTree = false;
 
-
 	public void Clear()
 	{
 		linesMinSpanTree.Clear(); 
@@ -32,6 +31,7 @@ public class Triangulation : MonoBehaviour
 		points.Clear(); 
 		colours.Clear();
 	}
+
 	void OnDrawGizmosSelected() 
 	{
 		return; 
@@ -50,6 +50,7 @@ public class Triangulation : MonoBehaviour
 		//Gizmos.color = Color.red;
 		//Gizmos.DrawSphere (new Vector3(0,2,0), 1);
 	}
+
 	public void Update()
 	{
 
@@ -159,7 +160,9 @@ public class Triangulation : MonoBehaviour
 			GameObject.DestroyImmediate(temp);
 		
 		temp = new GameObject("temp");
-				
+		
+		Clear();
+		
 		//Draw the two paths:
 
 		VectorLine line1 = new VectorLine("1",path1,Color.red,null,10.0f);
@@ -372,6 +375,7 @@ public class Triangulation : MonoBehaviour
 		//foreach(Line l in lines)
 			//l.DrawVector(temp);
 	}
+
 	private List<Line> GetLines(Vector3[] path1, Vector3[] path2)
 	{
 		List<Line>ToReturnLine = new List<Line>(); 
@@ -483,6 +487,7 @@ public class Triangulation : MonoBehaviour
 		}
 		return ToReturnLine; 
 	}
+
 	public void TriangulationSpace ()
 	{
 		//Compute one step of the discritzation
@@ -795,5 +800,4 @@ public class Triangulation : MonoBehaviour
 		else
 			return false; 
 	}
-
 }
