@@ -144,101 +144,96 @@ namespace ClusteringSpace
 					}
 				}
 			}
-			/*			if (distMetric == (int)Metrics.FrechetL1 || distMetric == (int)Metrics.FrechetEuclidean)
-			{ // make sure paths have enough points
-				foreach(Path p in paths)
-				{
-					bool newPoint = false;
-					do
-					{
-						newPoint = false;
-						
-						// get total distance
-						int totalLength = 0;
-						int[] distances = new int[p.points.Count()-1];
-						for(int nodeCount = 0; nodeCount < p.points.Count()-1; nodeCount ++)
-						{
-							distances[nodeCount] = Math.Abs(p.points[nodeCount].x - p.points[nodeCount+1].x) + Math.Abs(p.points[nodeCount].y - p.points[nodeCount+1].y) + Math.Abs(p.points[nodeCount].t - p.points[nodeCount+1].t);
-							totalLength += distances[nodeCount];
-						}
-				
-						for(int nodeCount = 0; nodeCount < p.points.Count()-1; nodeCount ++)
-						{
-							if ((double)distances[nodeCount] / (double)totalLength > 0.10)
-							{ // segment is larger than 20% of total length, so must be split						
-								Node n = new Node();
-								n.x = (int)(p.points[nodeCount].x + (p.points[nodeCount+1].x - p.points[nodeCount].x)*0.50);
-								n.y = (int)(p.points[nodeCount].y + (p.points[nodeCount+1].y - p.points[nodeCount].y)*0.50);
-								n.t = (int)(p.points[nodeCount].t + (p.points[nodeCount+1].t - p.points[nodeCount].t)*0.50);
-								
-								p.points.Insert(nodeCount+1, n);
-						
-								newPoint = true;
-								break;
-							}
-						}
-					} while(newPoint);
-				}
-			}*/
 			
 			clustTime.Start();
 
             //divide paths into equal clusters
-       //     List<PathCollection> allClusters = usePredeterminedCentroids(paths);
+       //   List<PathCollection> allClusters = usePredeterminedCentroids(paths);
 			
-			List<PathCollection> allClusters = initializeCentroids(paths, clusterCount);
-			
-       /*     List<PathCollection> allClusters = new List<PathCollection>();
+       /*   List<PathCollection> allClusters = new List<PathCollection>();
 
             List<List<Path>> allGroups = ListUtility.SplitList<Path>(paths, clusterCount);
             foreach (List<Path> pathGroup in allGroups)
             {
                 PathCollection cluster = new PathCollection(pathGroup);
                 allClusters.Add(cluster);
-            }*/
+            } */
 			
-            //start k-means clustering
-			// src : http://codeding.com/articles/k-means-algorithm
-            int movements = 1;
-			int count = 0;
-			int[] previousMovements = new int[100];
-            while (movements > 0)
-            {
-				previousMovements[count] = movements;
-				if (count > 10)
-				{
-					int avgLastThree = (previousMovements[count-2] + previousMovements[count-1] + previousMovements[count]) / 3;
-					if (Math.Abs(avgLastThree - previousMovements[count]) <= 10)
+			double bestE = double.MaxValue;
+			List<PathCollection> bestClustering = new List<PathCollection>();
+			
+			int numPasses = 3;
+			
+			for (int curPass = 0; curPass < numPasses; curPass ++)
+			{
+				List<PathCollection> allClusters = initializeCentroids(paths, clusterCount);
+				
+	            // loop src : http://codeding.com/articles/k-means-algorithm
+	            int movements = 1;
+				int count = 0;
+				int[] previousMovements = new int[100];
+	            while (movements > 0)
+	            {
+					previousMovements[count] = movements;
+					if (count > 10)
 					{
-						Debug.Log("Not converging.");
-						break;
+						int avgLastThree = (previousMovements[count-2] + previousMovements[count-1] + previousMovements[count]) / 3;
+						if (Math.Abs(avgLastThree - previousMovements[count]) <= 10)
+						{
+							Debug.Log("Not converging.");
+							break;
+						}
+					}
+				
+					count ++;
+					MapperWindowEditor.updatePaths(allClusters);
+				
+	                movements = 0;
+
+	                for (int clusterIndex = 0; clusterIndex < allClusters.Count; clusterIndex ++)
+	                {
+						for (int pathIndex = 0; pathIndex < allClusters[clusterIndex].Count; pathIndex++) //for all paths in each cluster
+	                    {
+	                        Path path = allClusters[clusterIndex][pathIndex];
+
+	                        int nearestCluster = FindNearestCluster(allClusters, path);
+	                        if (nearestCluster != clusterIndex) //if path has moved
+	                        {
+								if (allClusters[clusterIndex].Count > 1) //cluster shall have minimum one path
+	                            {
+									Path removedPath = allClusters[clusterIndex].removePath(path);
+	                                allClusters[nearestCluster].AddPath(removedPath);
+	                                movements += 1;
+	                            }
+	                        }
+	                    }
+	                }
+	            }
+				
+                // E is the sum of the distances between each centroid and that centroids assigned points.
+                // The smaller the E value, the better the clustering . . .
+                double E = 0;
+				foreach (PathCollection cluster in allClusters)
+				{
+					foreach (Path path in cluster)
+					{
+						E += FindDistance(path, cluster.Centroid);
 					}
 				}
-				
-				count ++;
-				MapperWindowEditor.updatePaths(allClusters);
-				
-                movements = 0;
-
-                for (int clusterIndex = 0; clusterIndex < allClusters.Count; clusterIndex ++)
+//                for (int curPoint = 0; curPoint < paths.Count(); curPoint++)
+//                    E += EuclideanDistance(data, curPoint, centroids, clusters[curPoint], nDimensions);
+                if (E < bestE || curPass == 0)
                 {
-					for (int pathIndex = 0; pathIndex < allClusters[clusterIndex].Count; pathIndex++) //for all paths in each cluster
-                    {
-                        Path path = allClusters[clusterIndex][pathIndex];
-
-                        int nearestCluster = FindNearestCluster(allClusters, path);
-                        if (nearestCluster != clusterIndex) //if path has moved
-                        {
-							if (allClusters[clusterIndex].Count > 1) //cluster shall have minimum one path
-                            {
-								Path removedPath = allClusters[clusterIndex].removePath(path);
-                                allClusters[nearestCluster].AddPath(removedPath);
-                                movements += 1;
-                            }
-                        }
-                    }
+                    //If we found a better E, update the return variables with the current ones
+                    bestE = E;
+					
+					bestClustering.Clear();
+					foreach (PathCollection cluster in allClusters)
+					{
+						bestClustering.Add(cluster);
+					}
                 }
-            }
+			}
 			
 			clustTime.Stop();
 
@@ -253,7 +248,7 @@ namespace ClusteringSpace
 				}
 			}
 
-            return (allClusters);
+            return bestClustering;
         }
 
         public static int FindNearestCluster(List<PathCollection> allClusters, Path path)
