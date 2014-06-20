@@ -47,31 +47,16 @@ public class Geometry
 		//This is not the best version should check is colinear inastead!
 		foreach(Line myLine in edges)
 		{
-			foreach(Vector3 v1 in myLine.vertex)
-			{
-				foreach(Vector3 v2 in l.vertex)
-				{
-					if(v1 == v2)
-						return false; 
-				}
-			}
+			if(myLine == l)
+				return false; 
 		}
 
 		//Now we check count the intersection
 		Vector3 mid = l.MidPoint(); 
 		//TODO: CHange this for finding the minimum
-		Line lray = new Line(mid, new Vector3(-100,-100)); 
-		int count = 0; 
-		foreach(Line myLine in edges)
-		{
-			if(myLine.LineIntersection(lray))
-			{
-				count++; 
-			}
 
-		}
+		return PointInside(mid);
 
-		return count%2 == 1; 
 	}
 
 	public bool PointInside( Vector3 pt )
@@ -334,8 +319,12 @@ public class Geometry
 	}
 
 	public bool GeometryLineIntersect( Line param ){
-		foreach (Line L in edges) {
-			if( L.LineIntersectMuntac( param ) > 0 )
+		foreach (Line L in edges) 
+		{
+			if(L == param)
+				continue; 
+			//if( L.LineIntersectMuntac( param ) > 0 )
+			if( L.LineIntersection( param ) )
 				return true;
 		}
 		return false;
