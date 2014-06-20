@@ -63,6 +63,14 @@ namespace ClusteringSpace
 
             return (removedPath);
         }
+		
+        public Path RemovePath(Path p)
+        {
+            Path removedPath = new Path(p.points);
+            this.Remove(p);
+
+            return (removedPath);
+        }
 
 /*        public Path GetPathNearestToCentroid()
         {

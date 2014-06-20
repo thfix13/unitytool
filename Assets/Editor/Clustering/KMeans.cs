@@ -199,13 +199,19 @@ namespace ClusteringSpace
 	                        {
 								if (allClusters[clusterIndex].Count > 1) //cluster shall have minimum one path
 	                            {
-									Path removedPath = allClusters[clusterIndex].removePath(path);
-	                                allClusters[nearestCluster].AddPath(removedPath);
+									Path removedPath = allClusters[clusterIndex].RemovePath(path);
+	                                allClusters[nearestCluster].Add(removedPath);
+//									Path removedPath = allClusters[clusterIndex].removePath(path);
+//	                                allClusters[nearestCluster].AddPath(removedPath);
 	                                movements += 1;
 	                            }
 	                        }
 	                    }
 	                }
+					foreach(PathCollection cluster in allClusters)
+					{
+						cluster.UpdateCentroid();
+					}
 	            }
 				
                 // E is the sum of the distances between each centroid and that centroids assigned points.
