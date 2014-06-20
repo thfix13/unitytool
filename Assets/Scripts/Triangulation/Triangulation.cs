@@ -43,19 +43,19 @@ public class Triangulation : MonoBehaviour
 
 		stopAll = true;
 	}
-	void OnDrawGizmosSelected() 
+	void OnDrawGizmosSelected( ) 
 	{
-		return; 
+		//return; 
 		//Debug.Log(colours.Count);
 		//Debug.Log(points.Count);
 		var i = 0;
 		foreach(Vector3 v in points)
 		{
 
-			Gizmos.color = colours[i];
+			//Gizmos.color = colours[i];
 			//Gizmos.color = Color.red;
 			Gizmos.DrawSphere (v, 0.25f);
-			i++; 
+			//i++; 
 		}
 
 		//Gizmos.color = Color.red;
@@ -251,26 +251,7 @@ public class Triangulation : MonoBehaviour
 		GameObject temp = GameObject.Find("temp");
 		DestroyImmediate(temp);
 		temp = new GameObject("temp");
-		//mapBG.DrawGeometry(temp);
-			//CODESPACE
-		//Find out intersection. Reconstruct.
-
-
-
-		//Draw a spere where the collision happenned
-		/*foreach(Geometry g1 in geos)
-		{
-			foreach(Geometry g2 in geos)
-			{
-				if(g1 == g2 )
-					continue; 
-				g1.CollisionDraw(g2,temp);
-				
-			}
-			g1.DrawVertex(temp);
-		}*/
-
-
+		//CODESPACE
 		//Merging Polygons
 		for (int i = 0; i < obsGeos.Count; i++) {
 			for (int j = i + 1; j < obsGeos.Count; j++) {
@@ -285,7 +266,6 @@ public class Triangulation : MonoBehaviour
 					i--;
 					break;
 				}
-
 			}
 		}
 
@@ -298,15 +278,89 @@ public class Triangulation : MonoBehaviour
 			else
 				finalPoly.Add(g);
 		}
+
+		//Drawing merged polygons and modified map
 		foreach (Geometry g in finalPoly) {
-			g.DrawGeometry(GameObject.Find("temp"));
+			//g.DrawGeometry(GameObject.Find("temp"));
 		}
-		mapBG.DrawGeometry (GameObject.Find ("temp"));
+		//mapBG.DrawGeometry (GameObject.Find ("temp"));
 
+		List<Vector3> allVertex = new List<Vector3>();
+		List<Vector3> tempVertex = new List<Vector3>();
 
+		//Getting all vertices
+		foreach (Geometry g in finalPoly) {
+			tempVertex = g.GetVertex();
+			foreach( Vector3 v in tempVertex )
+				allVertex.Add(v);
+		}
 
+		tempVertex = mapBG.GetVertex();
+		foreach( Vector3 v in tempVertex )
+			allVertex.Add(v);
 
+		/*foreach(Vector3 v in allVertex)
+		{
+			GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+			inter.transform.position = v;
+			inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
+			inter.transform.parent = temp.transform;
+		}*/
+		//Constructing "lines" for triangulation
 
+		lines.Clear ();
+
+		foreach (Geometry g in finalPoly) {
+			//g.DrawGeometry(GameObject.Find("temp"));
+			foreach( Line L in g.edges )
+				lines.Add( L );
+		}
+		foreach (Vector3 Va in allVertex) {
+			foreach(Vector3 Vb in allVertex){
+				if( Va != Vb ){
+					//Debug.Log("Here");
+					bool collides = false;
+					Line tempLine = new Line(Va, Vb);
+
+					//A. Collision check with border
+					if( mapBG.GeometryLineIntersect( tempLine ) )
+						continue;
+
+					//B. Collision check with internal polygons
+					foreach( Geometry g in finalPoly ){
+						if( g.GeometryLineIntersect( tempLine ) || g.LineInside( tempLine ) ){
+							collides = true;
+							break;
+						}
+					}
+					if( collides ) continue;
+
+					//C. Collision check with other triangualtion clines
+					foreach( Line L in lines ){
+						if( L.LineIntersectMuntac( tempLine ) > 0 ){
+							collides = true;
+							break;
+						}
+					}
+
+					//D. Collision check inside obstacle
+					if( !collides ){
+						//tempGeometry.edges.Add(tempLine);
+						//Debug.Log("Hello");
+						lines.Add( tempLine );
+					}
+				}
+			}
+		}
+		foreach ( Line l in mapBG.edges ) {
+			lines.Add(l);
+		}
+		foreach (Line L in lines) {
+			L.DrawVector(temp);
+		}
+//
+//		foreach (Line l in lines)
+//			l.DrawLine(
 
 		///Uncomment the following later
 
@@ -489,26 +543,7 @@ public class Triangulation : MonoBehaviour
 
 	//Checks if two edges are meeting regularly at a vertex of the polygon or if they are intersecting
 	//in other manners
-	int EndPointIntersecion( Vector3 pt, Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4 ){
-		Vector3 pt2;
-		//Find common endpoint
-		if (v1 == v3)
-			pt2 = v1;
-		else if( v1 == v4 )
-			pt2 = v1;
-		else if( v2 == v3 )
-			pt2 = v2;
-		else if( v2 == v4 )
-			pt2 = v2;
-		else
-			return 0;
 
-		return 1;
-		/*if (Math.Abs (pt.x - pt2.x) < 0.01 && Math.Abs (pt.z - pt2.z) < 0.01)
-			return 1; //Endpoint and intersection point same
-		else
-			return 2;*/
-	}
 
 	private Boolean CounterClockWise (Vector3 v1, Vector3 v2, Vector3 v3)
 	{
