@@ -340,4 +340,12 @@ public class Geometry
 		}
 		return false;
 	}
+
+	public bool GeometryLineIntersectNoCol( Line param ){
+		foreach (Line L in edges) {
+			if( L.LineIntersectMuntac( param ) == 1 )
+				return true;
+		}
+		return false;
+	}
 }

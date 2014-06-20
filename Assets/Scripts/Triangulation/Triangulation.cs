@@ -70,7 +70,7 @@ public class Triangulation : MonoBehaviour
 		if ( stopAll )
 			return;
 
-		/***
+
 		if(drawMinSpanTree)
 		{
 			foreach(Line l in linesMinSpanTree)
@@ -127,7 +127,7 @@ public class Triangulation : MonoBehaviour
 				}
 			}
 		}
-		***/
+
 	}
 
 	public void AddPoint(Vector3 v)
@@ -258,11 +258,11 @@ public class Triangulation : MonoBehaviour
 				//check all line intersections
 				if( obsGeos[i].GeometryIntersect( obsGeos[j] ) ){
 					//Debug.Log("Geometries Intersect: " + i + " " + j);
-					tempGeometry = obsGeos[i].GeometryMerge( obsGeos[j] );
+					Geometry tmpG = obsGeos[i].GeometryMerge( obsGeos[j] ); 
 					//remove item at position i, decrement i since it will be increment in the next step, break
 					obsGeos.RemoveAt(j);
 					obsGeos.RemoveAt(i);
-					obsGeos.Add(tempGeometry);
+					obsGeos.Add(tmpG);
 					i--;
 					break;
 				}
@@ -310,57 +310,58 @@ public class Triangulation : MonoBehaviour
 
 		lines.Clear ();
 
+		//Adding the internal polygon lines
 		foreach (Geometry g in finalPoly) {
 			//g.DrawGeometry(GameObject.Find("temp"));
 			foreach( Line L in g.edges )
 				lines.Add( L );
 		}
+		foreach ( Line l in mapBG.edges ) {
+			lines.Add(l);
+		}
+
 		foreach (Vector3 Va in allVertex) {
 			foreach(Vector3 Vb in allVertex){
 				if( Va != Vb ){
-					//Debug.Log("Here");
 					bool collides = false;
 					Line tempLine = new Line(Va, Vb);
 
 					//A. Collision check with border
-					if( mapBG.GeometryLineIntersect( tempLine ) )
-						continue;
+					//if( mapBG.GeometryLineIntersectNoCol( tempLine ) )
+					//	continue;
 
 					//B. Collision check with internal polygons
-					foreach( Geometry g in finalPoly ){
-						if( g.GeometryLineIntersect( tempLine ) || g.LineInside( tempLine ) ){
+					foreach( Geometry g in geos ){
+						if( g.GeometryLineIntersect( tempLine ) || g.PointInside( tempLine.MidPoint() ) ){
 							collides = true;
 							break;
 						}
 					}
-					if( collides ) continue;
 
+					if( collides ) continue;
+					//tempLine.DrawVector(temp);
 					//C. Collision check with other triangualtion clines
 					foreach( Line L in lines ){
-						if( L.LineIntersectMuntac( tempLine ) > 0 ){
+						if( L.LineIntersectMuntac( tempLine ) == 1 ){
 							collides = true;
 							break;
 						}
 					}
 
-					//D. Collision check inside obstacle
 					if( !collides ){
 						//tempGeometry.edges.Add(tempLine);
 						//Debug.Log("Hello");
 						lines.Add( tempLine );
+						//tempLine.DrawVector(temp);
 					}
 				}
 			}
 		}
-		foreach ( Line l in mapBG.edges ) {
-			lines.Add(l);
-		}
+
 		foreach (Line L in lines) {
 			L.DrawVector(temp);
 		}
-//
-//		foreach (Line l in lines)
-//			l.DrawLine(
+
 
 		///Uncomment the following later
 
@@ -368,37 +369,37 @@ public class Triangulation : MonoBehaviour
 
 		//Compare each point to every point 
 
-		/*
-		for (int i = 0; i < geos.Count; i++) {
-			
-			for (int j = i+1; j < geos.Count; j++) {
-				
-				for (int w = 0; w<geos[i].vertex.Length; w++) {
-					
-					for (int z = 0; z<geos[j].vertex.Length; z++) {
-						
-						List<Line> toAdd = new List<Line> (); 
-						
-						Boolean foundBreak = false; 
-						
-						foreach (Line l in lines) {
-							
-							if (LineIntersection (geos [i].vertex [w], geos [j].vertex [z],
-							                      l.vertex [0], l.vertex [1])) {
-								
-								foundBreak = true; 
-								break; 
-							}								
-							
-						}
-						if (!foundBreak) {	
-							//Debug.DrawLine(geos[i].vertex[w], geos[j].vertex[z], Color.blue);
-							lines.Add (new Line (geos [i].vertex [w], geos [j].vertex [z])); 		
-						}	
-					}
-				}
-			}
-		}
+//
+//		for (int i = 0; i < geos.Count; i++) {
+//			
+//			for (int j = i+1; j < geos.Count; j++) {
+//				
+//				for (int w = 0; w<geos[i].vertex.Length; w++) {
+//					
+//					for (int z = 0; z<geos[j].vertex.Length; z++) {
+//						
+//						List<Line> toAdd = new List<Line> (); 
+//						
+//						Boolean foundBreak = false; 
+//						
+//						foreach (Line l in lines) {
+//							
+//							if (LineIntersection (geos [i].vertex [w], geos [j].vertex [z],
+//							                      l.vertex [0], l.vertex [1])) {
+//								
+//								foundBreak = true; 
+//								break; 
+//							}								
+//							
+//						}
+//						if (!foundBreak) {	
+//							//Debug.DrawLine(geos[i].vertex[w], geos[j].vertex[z], Color.blue);
+//							lines.Add (new Line (geos [i].vertex [w], geos [j].vertex [z])); 		
+//						}	
+//					}
+//				}
+//			}
+//		}
 		
 		//Find the centers 
 		List<Triangle> triangles = new List<Triangle> (); 
@@ -472,7 +473,7 @@ public class Triangulation : MonoBehaviour
 		
 		triangulation.triangles = triangles;
 
-		*/
+
 	}
 
 	private Vector3 LineIntersectVect (Vector3 a, Vector3 b, Vector3 c, Vector3 d)
