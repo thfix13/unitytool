@@ -70,20 +70,6 @@ public class Geometry
 		return count%2 == 1; 
 	}
 
-	public List<Vector3> GetVertex()
-	{
-		//Find vertex
-		List<Vector3> vertex = new List<Vector3>(); 
-		foreach(Line l in edges)
-		{
-			foreach(Vector3 v in l.vertex)
-			{
-				if(!vertex.Contains(v))
-					vertex.Add(v); 
-			}
-		}
-		return vertex;
-	}
 
 	public void DrawVertex(GameObject parent)
 	{
@@ -156,6 +142,7 @@ public class Geometry
 			}
 
 			if( bothPtsOut ){
+				Debug.Log ("both points out");
 				removeLines.Add(l);
 				continue;
 			}
@@ -317,6 +304,7 @@ public class Geometry
 		}
 		return true;
 	}
+<<<<<<< HEAD
 
 	public bool GeometryLineIntersect( Line param ){
 		foreach (Line L in edges) 
@@ -329,4 +317,6 @@ public class Geometry
 		}
 		return false;
 	}
+=======
+>>>>>>> parent of cb16e60... Triangulation
 }

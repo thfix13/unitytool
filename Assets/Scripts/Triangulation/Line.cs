@@ -283,28 +283,6 @@ public class Line
 	private double CrossProduct( Vector2 a, Vector2 b ){
 		return (a.x * b.y) - (a.y * b.x);
 	}
-
-	int EndPointIntersecion( Vector3 pt, Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4 ){
-			Vector3 pt2;
-		//Find common endpoint
-		if (v1 == v3)
-			pt2 = v1;
-		else if( v1 == v4 )
-			pt2 = v1;
-		else if( v2 == v3 )
-			pt2 = v2;
-		else if( v2 == v4 )
-			pt2 = v2;
-		else
-			return 0;
-		
-		return 1;
-		/*if (Math.Abs (pt.x - pt2.x) < 0.01 && Math.Abs (pt.z - pt2.z) < 0.01)
-			return 1; //Endpoint and intersection point same
-		else
-			return 2;*/
-	}
-
 }
 class LineEqualityComparer : IEqualityComparer<Line>
 {
