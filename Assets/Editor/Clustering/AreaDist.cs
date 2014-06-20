@@ -79,7 +79,7 @@ public class AreaDist
 		{
 			Triangulation tObject = g.GetComponent<Triangulation>(); 
 			float area = tObject.TriangulationCurves(path1.getPoints3DFlat(), path2.getPoints3DFlat());
-			Debug.Log("A: "+area);
+//			Debug.Log("A: "+area);
 			return area;
 		}
 		else

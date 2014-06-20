@@ -1010,9 +1010,12 @@ namespace EditorArea {
 				KMeans.clustTime = new System.Diagnostics.Stopwatch();
 				KMeans.distTime = new System.Diagnostics.Stopwatch();
 
+				double clustVal = 0.0;
+
 				if (paths.Count > 99)
 				{
 					List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/20, distMetric, numPasses);
+					clustVal = KMeans.clustVal;
 				
 					List<Path> tempCentroids = new List<Path>();
 					foreach(PathCollection pc in clusters)
@@ -1069,6 +1072,7 @@ namespace EditorArea {
 				{
 					Debug.Log("<99 paths");
 					List<PathCollection> clusters = KMeans.DoKMeans(paths, numClusters, distMetric, numPasses);
+					clustVal = KMeans.clustVal;
 					
 					clusterCentroids.Clear();
 					foreach(PathCollection pc in clusters)
@@ -1108,7 +1112,7 @@ namespace EditorArea {
 					String currentTime = System.DateTime.Now.ToString("s");
 					currentTime = currentTime.Replace(':', '-');
 					String totalTimeStr = new DateTime(Math.Abs(totalTime.Ticks)).ToString("HHmmss");
-					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetric + "d-" + paths.Count() + "p-" + totalTimeStr + "t@" + currentTime + ".xml", paths);
+					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetric + "d-" + paths.Count() + "p-" + (int)clustVal + "v-" + totalTimeStr + "t@" + currentTime + ".xml", paths);
 				}
 				
 				for (int color = 0; color < colors.Count(); color ++)

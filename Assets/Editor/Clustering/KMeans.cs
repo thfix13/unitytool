@@ -31,6 +31,8 @@ namespace ClusteringSpace
         
 		private static int distMetric = 0;
 		
+		public static double clustVal = 0.0;
+		
 		private static List<PathCollection> usePredeterminedCentroids(List<Path> paths)
 		{
 			List<PathCollection> allClusters = new List<PathCollection>();
@@ -231,6 +233,7 @@ namespace ClusteringSpace
                 {
                     //If we found a better E, update the return variables with the current ones
                     bestE = E;
+					clustVal = bestE;
 					
 					bestClustering.Clear();
 					foreach (PathCollection cluster in allClusters)
@@ -348,10 +351,6 @@ namespace ClusteringSpace
 				
 				result = frechet.computeDistance(curveA,curveB);
 			}
-/*			else if (distMetric == (int)Metrics.HausdorffEuclidean || distMetric == (int)Metrics.HausdorffEuclidean3D)
-			{
-				result = HausdorffDist.computeDistance(path1, path2, distMetric);
-			}*/
 			else if (distMetric == (int)Metrics.AreaDistTriangulation || distMetric == (int)Metrics.AreaDistInterpolation3D)
 			{
 				result = AreaDist.computeDistance(path1, path2, distMetric);
