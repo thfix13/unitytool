@@ -43,19 +43,19 @@ public class Triangulation : MonoBehaviour
 
 		stopAll = true;
 	}
-	void OnDrawGizmosSelected() 
+	void OnDrawGizmosSelected( ) 
 	{
-		return; 
+		//return; 
 		//Debug.Log(colours.Count);
 		//Debug.Log(points.Count);
 		var i = 0;
 		foreach(Vector3 v in points)
 		{
 
-			Gizmos.color = colours[i];
+			//Gizmos.color = colours[i];
 			//Gizmos.color = Color.red;
 			Gizmos.DrawSphere (v, 0.25f);
-			i++; 
+			//i++; 
 		}
 
 		//Gizmos.color = Color.red;
@@ -251,32 +251,10 @@ public class Triangulation : MonoBehaviour
 		GameObject temp = GameObject.Find("temp");
 		DestroyImmediate(temp);
 		temp = new GameObject("temp");
-<<<<<<< HEAD
 
 
 
 		//CODESPACE
-=======
-		//mapBG.DrawGeometry(temp);
-			//CODESPACE
-		//Find out intersection. Reconstruct.
-
-
-
-		//Draw a spere where the collision happenned
-		/*foreach(Geometry g1 in geos)
-		{
-			foreach(Geometry g2 in geos)
-			{
-				if(g1 == g2 )
-					continue; 
-				g1.CollisionDraw(g2,temp);
-				
-			}
-			g1.DrawVertex(temp);
-		}*/
-
->>>>>>> parent of cb16e60... Triangulation
 
 		//Merging Polygons
 		for (int i = 0; i < obsGeos.Count; i++) {
@@ -294,7 +272,6 @@ public class Triangulation : MonoBehaviour
 					i--;
 					break;
 				}
-
 			}
 		}
 
@@ -307,7 +284,6 @@ public class Triangulation : MonoBehaviour
 			else
 				finalPoly.Add(g);
 		}
-<<<<<<< HEAD
 
 		//Drawing merged polygons and modified map
 		foreach (Geometry g in finalPoly) {
@@ -328,17 +304,23 @@ public class Triangulation : MonoBehaviour
 			{
 				allVertex.Add(v);
 			}
-=======
-		foreach (Geometry g in finalPoly) {
-			g.DrawGeometry(GameObject.Find("temp"));
->>>>>>> parent of cb16e60... Triangulation
 		}
-		mapBG.DrawGeometry (GameObject.Find ("temp"));
 
+		tempVertex = mapBG.GetVertex();
+		foreach( Vector3 v in tempVertex )
+			allVertex.Add(v);
 
+		/*foreach(Vector3 v in allVertex)
+		{
+			GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+			inter.transform.position = v;
+			inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
+			inter.transform.parent = temp.transform;
+		}*/
+		//Constructing "lines" for triangulation
 
+		lines.Clear ();
 
-<<<<<<< HEAD
 		//foreach (Geometry g in finalPoly) {
 			//g.DrawGeometry(GameObject.Find("temp"));
 		//	foreach( Line L in g.edges )
@@ -395,9 +377,6 @@ public class Triangulation : MonoBehaviour
 		}
 //
 
-=======
-
->>>>>>> parent of cb16e60... Triangulation
 
 		///Uncomment the following later
 
@@ -550,26 +529,7 @@ public class Triangulation : MonoBehaviour
 
 	//Checks if two edges are meeting regularly at a vertex of the polygon or if they are intersecting
 	//in other manners
-	int EndPointIntersecion( Vector3 pt, Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4 ){
-		Vector3 pt2;
-		//Find common endpoint
-		if (v1 == v3)
-			pt2 = v1;
-		else if( v1 == v4 )
-			pt2 = v1;
-		else if( v2 == v3 )
-			pt2 = v2;
-		else if( v2 == v4 )
-			pt2 = v2;
-		else
-			return 0;
 
-		return 1;
-		/*if (Math.Abs (pt.x - pt2.x) < 0.01 && Math.Abs (pt.z - pt2.z) < 0.01)
-			return 1; //Endpoint and intersection point same
-		else
-			return 2;*/
-	}
 
 	private Boolean CounterClockWise (Vector3 v1, Vector3 v2, Vector3 v3)
 	{
