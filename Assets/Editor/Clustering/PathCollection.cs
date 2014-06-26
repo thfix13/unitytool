@@ -181,6 +181,7 @@ namespace ClusteringSpace
 				}
 			
 				Centroid = new Path(this[pIndex].points);
+				Centroid.name = this[pIndex].name;
 			}
         }
 		

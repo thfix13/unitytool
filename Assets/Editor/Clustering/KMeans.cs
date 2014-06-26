@@ -13,6 +13,36 @@ using EditorArea;
 
 namespace ClusteringSpace
 {
+	public class PathPair : IEquatable<PathPair> {
+	    public int Left { get; private set; }
+	    public int Right { get; private set; }
+
+	    public PathPair(int t1, int t2) {
+	      Left=t1;
+	      Right=t2;
+	    }
+		
+		public PathPair(String t1, String t2)
+		{
+			Left = Convert.ToInt32(t1);
+			Right = Convert.ToInt32(t2);
+		}
+
+	    public bool Equals(PathPair obj) {
+	  //    if(ReferenceEquals(null, obj)) return false;
+	  //    if(ReferenceEquals(this, obj)) return true;
+		//	Debug.Log("ch");
+	      	return Left == obj.Left && Right == obj.Right;
+	  //	  return Equals(obj.Left, Left) && Equals(obj.Right, Right);
+	    }
+
+	    public override int GetHashCode() {
+	      unchecked {
+	        return (Left + 19)^Right;
+	      }
+	    }
+	  }
+	
     public class KMeans
     {
 		public enum Metrics
@@ -32,6 +62,8 @@ namespace ClusteringSpace
 		private static int distMetric = 0;
 		
 		public static double clustVal = 0.0;
+		
+		public static Dictionary<PathPair, double> distances = new Dictionary<PathPair, double>();
 		
 		private static List<PathCollection> usePredeterminedCentroids(List<Path> paths)
 		{
@@ -135,18 +167,22 @@ namespace ClusteringSpace
 				return null;
 			}
 			
+			distances.Clear();
+			
 			setDistMetric(distMetric_);
-			if (MapperWindowEditor.scaleTime)
+			
+			for (int count = 0; count < paths.Count(); count ++)
 			{
-				foreach (Path p in paths)
+				paths[count].name = count.ToString();
+				if (MapperWindowEditor.scaleTime)
 				{
-					foreach (Node n in p.points)
+					foreach (Node n in paths[count].points)
 					{
 						n.t = (int)Math.Pow(n.t, 3);
 					}
 				}
 			}
-			
+
 			clustTime.Start();
 
             //divide paths into equal clusters
@@ -316,6 +352,23 @@ namespace ClusteringSpace
 			if (path1.points == null) { Debug.Log("P1NULL"); return -1; }
 			else if (path2.points == null) { Debug.Log("P2NULL"); return -1; }
 			
+			if (path1.name == path2.name)
+			{ // same path
+				return 0.0;
+			}
+			
+			PathPair pair1 = new PathPair(path1.name, path2.name);
+			PathPair pair2 = new PathPair(path2.name, path1.name);
+			double memoedDist = 0;
+			if (distances.TryGetValue(pair1, out memoedDist))
+			{
+				return memoedDist;
+			}
+			else if (distances.TryGetValue(pair2, out memoedDist))
+			{
+				return memoedDist;
+			}
+			
 			clustTime.Stop();
 			distTime.Start();
 
@@ -380,6 +433,9 @@ namespace ClusteringSpace
 			distTime.Stop();
 			clustTime.Start();
 			
+			distances.Add(pair1, result);
+			distances.Add(pair2, result);
+						
 			return result;
         }
     }
