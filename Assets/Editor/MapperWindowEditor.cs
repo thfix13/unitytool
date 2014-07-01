@@ -69,6 +69,7 @@ namespace EditorArea {
 			MapperWindowEditor window = (MapperWindowEditor)EditorWindow.GetWindow (typeof(MapperWindowEditor));
 			window.title = "Mapper";
 			window.ShowTab ();
+			KMeans.reset();
 		}
 		
 		void OnGUI () {
@@ -408,6 +409,12 @@ namespace EditorArea {
 				}
 				ComputeHeatMap (paths, deaths);
 				SetupArrangedPaths (paths);
+				KMeans.reset();
+				
+				for (int count = 0; count < paths.Count(); count ++)
+				{
+					paths[count].name = count.ToString();
+				}
 			}
 			
 			EditorGUILayout.LabelField ("");
@@ -963,11 +970,19 @@ namespace EditorArea {
 			EditorGUILayout.LabelField ("");
 			
 			numClusters = EditorGUILayout.IntSlider ("Number of clusters", numClusters, 1, 7);
-			numPasses = EditorGUILayout.IntSlider ("Number of passes", numPasses, 1, 15);
+			numPasses = EditorGUILayout.IntSlider ("Number of passes", numPasses, 1, 500);
 			int prevMetric = distMetric;
 			distMetric = EditorGUILayout.Popup("Dist metric:", distMetric, distMetrics);
 			
-			if (prevMetric != distMetric && (distMetric == 1 || distMetric == 3 || distMetric == 5)) { scaleTime = true; }
+			if (prevMetric != distMetric)
+			{
+				KMeans.reset();
+				
+				if (distMetric == 1 || distMetric == 3 || distMetric == 5)
+				{
+					scaleTime = true;
+				}
+			}
 			scaleTime = EditorGUILayout.Toggle("Scale time", scaleTime);
 			altCentroidComp = EditorGUILayout.Toggle("Alt centroid computation", altCentroidComp);
 			
@@ -1105,7 +1120,7 @@ namespace EditorArea {
 //				Debug.Log ("Clust elapsed time: " + KMeans.clustTime.Elapsed);
 //				Debug.Log ("Dist elapsed time: " + KMeans.distTime.Elapsed);
 				TimeSpan totalTime = KMeans.clustTime.Elapsed + KMeans.distTime.Elapsed;
-				Debug.Log ("Total: " + totalTime);
+				Debug.Log ("Total: " + totalTime + ", clust val: " + clustVal);
 				
 				if (autoSavePaths)
 				{
@@ -1289,12 +1304,18 @@ namespace EditorArea {
 			{
 				paths.Clear ();
 				ClearPathsRepresentation ();
+				KMeans.reset();
 				
 				List<Path> pathsImported = PathBulk.LoadPathsFromFile ("clusteringdata/" + fileNames[chosenFileIndex]);
 				
 				foreach (Path p in pathsImported) {
 					toggleStatus.Add (p, true);
 					paths.Add(p);
+				}
+				
+				for (int count = 0; count < paths.Count(); count ++)
+				{
+					paths[count].name = count.ToString();
 				}
 				
 				chosenFileIndex = -1;

@@ -17,6 +17,8 @@ namespace ClusteringSpace
         #region Properties
 
         public Path Centroid { get; set; }
+		
+		public bool changed = false;
 
         #endregion
 

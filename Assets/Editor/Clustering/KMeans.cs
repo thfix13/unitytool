@@ -63,7 +63,18 @@ namespace ClusteringSpace
 		
 		public static double clustVal = 0.0;
 		
-		public static Dictionary<PathPair, double> distances = new Dictionary<PathPair, double>();
+		//public static Dictionary<PathPair, double> distances = new Dictionary<PathPair, double>();
+		
+		private static int[][] distances;
+		private static bool init = false;
+		
+		public static void reset()
+		{
+		//	distances.Clear();
+			distMetric = -1;
+			clustVal = 0.0;
+			init = false;
+		}
 		
 		private static List<PathCollection> usePredeterminedCentroids(List<Path> paths)
 		{
@@ -167,13 +178,25 @@ namespace ClusteringSpace
 				return null;
 			}
 			
-			distances.Clear();
-			
+			if (!init)
+			{
+				distances = new int[paths.Count()][];
+				for (int count = 0; count < paths.Count(); count ++)
+				{
+					distances[count] = new int[paths.Count()];
+					for (int count2 = 0; count2 < paths.Count(); count2 ++)
+					{
+						distances[count][count2] = -1;
+					}
+				}
+				
+				init = true;
+			}
+						
 			setDistMetric(distMetric_);
 			
 			for (int count = 0; count < paths.Count(); count ++)
 			{
-				paths[count].name = count.ToString();
 				if (MapperWindowEditor.scaleTime)
 				{
 					foreach (Node n in paths[count].points)
@@ -238,7 +261,9 @@ namespace ClusteringSpace
 								if (allClusters[clusterIndex].Count > 1) //cluster shall have minimum one path
 	                            {
 									Path removedPath = allClusters[clusterIndex].RemovePath(path);
+									allClusters[clusterIndex].changed = true;
 	                                allClusters[nearestCluster].Add(removedPath);
+									allClusters[nearestCluster].changed = true;
 //									Path removedPath = allClusters[clusterIndex].removePath(path);
 //	                                allClusters[nearestCluster].AddPath(removedPath);
 	                                movements += 1;
@@ -248,13 +273,17 @@ namespace ClusteringSpace
 	                }
 					foreach(PathCollection cluster in allClusters)
 					{
-						cluster.UpdateCentroid();
+						if (cluster.changed)
+						{
+							cluster.UpdateCentroid();
+							cluster.changed = false;
+						}
 					}
 	            }
 				
                 // E is the sum of the distances between each centroid and that centroids assigned points.
                 // The smaller the E value, the better the clustering . . .
-                double E = 0;
+                double E = 0.0;
 				foreach (PathCollection cluster in allClusters)
 				{
 					foreach (Path path in cluster)
@@ -357,7 +386,13 @@ namespace ClusteringSpace
 				return 0.0;
 			}
 			
-			PathPair pair1 = new PathPair(path1.name, path2.name);
+			int p1num = Convert.ToInt32(path1.name);
+			int p2num = Convert.ToInt32(path2.name);
+			
+			if (distances[p1num][p2num] != -1) return distances[p1num][p2num];
+			if (distances[p2num][p1num] != -1) return distances[p2num][p1num];
+			
+		/*	PathPair pair1 = new PathPair(path1.name, path2.name);
 			PathPair pair2 = new PathPair(path2.name, path1.name);
 			double memoedDist = 0;
 			if (distances.TryGetValue(pair1, out memoedDist))
@@ -367,7 +402,7 @@ namespace ClusteringSpace
 			else if (distances.TryGetValue(pair2, out memoedDist))
 			{
 				return memoedDist;
-			}
+			}*/
 			
 			clustTime.Stop();
 			distTime.Start();
@@ -433,8 +468,10 @@ namespace ClusteringSpace
 			distTime.Stop();
 			clustTime.Start();
 			
-			distances.Add(pair1, result);
-			distances.Add(pair2, result);
+		//	distances.Add(pair1, result);
+		//	distances.Add(pair2, result);
+			distances[p1num][p2num] = (int)result;
+			distances[p1num][p2num] = (int)result;
 						
 			return result;
         }
