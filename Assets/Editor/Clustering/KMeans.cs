@@ -12,37 +12,7 @@ using Debug = UnityEngine.Debug;
 using EditorArea;
 
 namespace ClusteringSpace
-{
-	public class PathPair : IEquatable<PathPair> {
-	    public int Left { get; private set; }
-	    public int Right { get; private set; }
-
-	    public PathPair(int t1, int t2) {
-	      Left=t1;
-	      Right=t2;
-	    }
-		
-		public PathPair(String t1, String t2)
-		{
-			Left = Convert.ToInt32(t1);
-			Right = Convert.ToInt32(t2);
-		}
-
-	    public bool Equals(PathPair obj) {
-	  //    if(ReferenceEquals(null, obj)) return false;
-	  //    if(ReferenceEquals(this, obj)) return true;
-		//	Debug.Log("ch");
-	      	return Left == obj.Left && Right == obj.Right;
-	  //	  return Equals(obj.Left, Left) && Equals(obj.Right, Right);
-	    }
-
-	    public override int GetHashCode() {
-	      unchecked {
-	        return (Left + 19)^Right;
-	      }
-	    }
-	  }
-	
+{	
     public class KMeans
     {
 		public enum Metrics
@@ -76,7 +46,7 @@ namespace ClusteringSpace
 			init = false;
 		}
 		
-		private static List<PathCollection> usePredeterminedCentroids(List<Path> paths)
+	/*	private static List<PathCollection> usePredeterminedCentroids(List<Path> paths)
 		{
 			List<PathCollection> allClusters = new List<PathCollection>();
 			
@@ -114,11 +84,10 @@ namespace ClusteringSpace
             }
 			
 			return allClusters;
-		}
+		}*/
 		
-		// based on https://www.planet-source-code.com/vb/scripts/ShowCode.asp?txtCodeId=7944&lngWId=10
         private static List<PathCollection> initializeCentroids(List<Path> paths, int numClusters)
-        {
+        { // based on https://www.planet-source-code.com/vb/scripts/ShowCode.asp?txtCodeId=7944&lngWId=10
 			numClusters --;
 			
 			List<PathCollection> clusters = new List<PathCollection>();
@@ -170,6 +139,113 @@ namespace ClusteringSpace
 			return clusters;
         }
 		
+		private static List<PathCollection> initializeCentroidsScalable(List<Path> paths, int numClusters)
+		{ // based on Scalable K-Means++, Bahmani et al. http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf
+			numClusters --;
+			
+			List<Path> centroids = new List<Path>();
+			
+            bool[] usedPoint = new bool[paths.Count()];
+
+            //Pick 1st centroid at random
+            int c1 = new System.Random().Next(0, paths.Count() - 1);
+            usedPoint[c1] = true;
+			centroids.Add(paths[c1]);
+				
+			int oversamplingFactor = numClusters*2 +3;
+		
+			double initialClustCost = getClustCost(paths, centroids);
+			double currentClustCost = initialClustCost;
+			
+			for (int count = 0; count < Math.Log(initialClustCost); count ++)
+			{
+				for (int pathCount = 0; pathCount < paths.Count(); pathCount ++)
+				{ // sample each point with probability...
+					if (usedPoint[pathCount]) continue;
+					
+					double minDist = Double.PositiveInfinity;
+					foreach (Path c in centroids)
+					{
+						double dist = Math.Pow(FindDistance(paths[pathCount], c), 2);
+						if (dist < minDist)
+						{
+							minDist = dist;
+						}
+					}
+					
+					double pathProbability = oversamplingFactor * minDist / currentClustCost;
+					double chance = new System.Random().NextDouble();
+					
+					if (chance <= pathProbability)
+					{ // if sampled, add to centroid list
+						centroids.Add(paths[pathCount]);
+						usedPoint[pathCount] = true;
+					}
+				}
+				
+				// recalculate cluster cost.
+				currentClustCost = getClustCost(paths, centroids);
+			}
+			
+			int[] weights = new int[centroids.Count()];
+			foreach (Path p in paths)
+			{
+				double minDist = Double.PositiveInfinity;
+				int minIndex = -1;
+				for (int c = 0; c < centroids.Count(); c ++)
+				{
+					double dist = FindDistance(p, centroids[c]);
+					if (dist < minDist)
+					{
+						minDist = dist;
+						minIndex = c;
+					}
+				}
+				
+				weights[minIndex] ++;
+			}
+			
+			List<Path> centroidsToCluster = new List<Path>();
+			for (int c = 0; c < centroids.Count(); c ++)
+			{
+				for (; weights[c] > 0; weights[c] --)
+				{
+					centroidsToCluster.Add(centroids[c]);
+				}
+			}
+			
+			List<PathCollection> clusters = cluster(centroidsToCluster, numClusters+1);
+			
+			for (int pathIndex = 0; pathIndex < paths.Count; pathIndex++)
+            {
+                int nearestCluster = FindNearestCluster(clusters, paths[pathIndex]);
+                clusters[nearestCluster].Add(paths[pathIndex]);
+            }
+			
+			return clusters;
+		}
+		
+		public static double getClustCost(List<Path> paths, List<Path> centroids)
+		{
+			double sumMinDists = 0.0;
+			
+			foreach (Path p in paths)
+			{
+				double minDist = Double.PositiveInfinity;
+				foreach (Path c in centroids)
+				{
+					double dist = Math.Pow(FindDistance(p, c), 2);
+					if (dist < minDist)
+					{
+						minDist = dist;
+					}
+				}
+				sumMinDists += minDist;
+			}
+			
+			return sumMinDists;
+		}
+		
         public static List<PathCollection> DoKMeans(List<Path> paths, int clusterCount, int distMetric_, int numPasses)
         {
 			if (paths.Count == 0)
@@ -208,9 +284,7 @@ namespace ClusteringSpace
 
 			clustTime.Start();
 
-            //divide paths into equal clusters
-       //   List<PathCollection> allClusters = usePredeterminedCentroids(paths);
-			
+            //divide paths into equal clusters			
        /*   List<PathCollection> allClusters = new List<PathCollection>();
 
             List<List<Path>> allGroups = ListUtility.SplitList<Path>(paths, clusterCount);
@@ -225,75 +299,19 @@ namespace ClusteringSpace
 						
 			for (int curPass = 0; curPass < numPasses; curPass ++)
 			{
-				List<PathCollection> allClusters = initializeCentroids(paths, clusterCount);
-				
-	            // loop src : http://codeding.com/articles/k-means-algorithm
-	            int movements = 1;
-				int count = 0;
-				int[] previousMovements = new int[100];
-	            while (movements > 0)
-	            {
-					previousMovements[count] = movements;
-					if (count > 10)
-					{
-						int avgLastThree = (previousMovements[count-2] + previousMovements[count-1] + previousMovements[count]) / 3;
-						if (Math.Abs(avgLastThree - previousMovements[count]) <= 10)
-						{
-							Debug.Log("Not converging.");
-							break;
-						}
-					}
-				
-					count ++;
-					MapperWindowEditor.updatePaths(allClusters);
-				
-	                movements = 0;
-
-	                for (int clusterIndex = 0; clusterIndex < allClusters.Count; clusterIndex ++)
-	                {
-						for (int pathIndex = 0; pathIndex < allClusters[clusterIndex].Count; pathIndex++) //for all paths in each cluster
-	                    {
-	                        Path path = allClusters[clusterIndex][pathIndex];
-
-	                        int nearestCluster = FindNearestCluster(allClusters, path);
-	                        if (nearestCluster != clusterIndex) //if path has moved
-	                        {
-								if (allClusters[clusterIndex].Count > 1) //cluster shall have minimum one path
-	                            {
-									Path removedPath = allClusters[clusterIndex].RemovePath(path);
-									allClusters[clusterIndex].changed = true;
-	                                allClusters[nearestCluster].Add(removedPath);
-									allClusters[nearestCluster].changed = true;
-//									Path removedPath = allClusters[clusterIndex].removePath(path);
-//	                                allClusters[nearestCluster].AddPath(removedPath);
-	                                movements += 1;
-	                            }
-	                        }
-	                    }
-	                }
-					foreach(PathCollection cluster in allClusters)
-					{
-						if (cluster.changed)
-						{
-							cluster.UpdateCentroid();
-							cluster.changed = false;
-						}
-					}
-	            }
+				List<PathCollection> allClusters = cluster(paths, clusterCount);
 				
                 // E is the sum of the distances between each centroid and that centroids assigned points.
                 // The smaller the E value, the better the clustering . . .
                 double E = 0.0;
-				foreach (PathCollection cluster in allClusters)
+				foreach (PathCollection c in allClusters)
 				{
-					foreach (Path path in cluster)
+					foreach (Path path in c)
 					{
-						E += FindDistance(path, cluster.Centroid);
+						E += FindDistance(path, c.Centroid);
 					}
 				}
 				Debug.Log("Pass " + curPass + ", val: " + E);
-//                for (int curPoint = 0; curPoint < paths.Count(); curPoint++)
-//                    E += EuclideanDistance(data, curPoint, centroids, clusters[curPoint], nDimensions);
                 if (E < bestE || curPass == 0)
                 {
                     //If we found a better E, update the return variables with the current ones
@@ -301,9 +319,9 @@ namespace ClusteringSpace
 					clustVal = bestE;
 					
 					bestClustering.Clear();
-					foreach (PathCollection cluster in allClusters)
+					foreach (PathCollection c in allClusters)
 					{
-						bestClustering.Add(cluster);
+						bestClustering.Add(c);
 					}
                 }
 			}
@@ -323,6 +341,67 @@ namespace ClusteringSpace
 
             return bestClustering;
         }
+		
+		public static List<PathCollection> cluster(List<Path> paths, int clusterCount)
+		{
+			List<PathCollection> allClusters = initializeCentroidsScalable(paths, clusterCount);
+			
+            // loop src : http://codeding.com/articles/k-means-algorithm
+            int movements = 1;
+			int count = 0;
+			int[] previousMovements = new int[100];
+            while (movements > 0)
+            {
+				previousMovements[count] = movements;
+				if (count > 10)
+				{
+					int avgLastThree = (previousMovements[count-2] + previousMovements[count-1] + previousMovements[count]) / 3;
+					if (Math.Abs(avgLastThree - previousMovements[count]) <= 10)
+					{
+						Debug.Log("Not converging.");
+						break;
+					}
+				}
+			
+				count ++;
+				MapperWindowEditor.updatePaths(allClusters);
+			
+                movements = 0;
+
+                for (int clusterIndex = 0; clusterIndex < allClusters.Count; clusterIndex ++)
+                {
+					for (int pathIndex = 0; pathIndex < allClusters[clusterIndex].Count; pathIndex++) //for all paths in each cluster
+                    {
+                        Path path = allClusters[clusterIndex][pathIndex];
+
+                        int nearestCluster = FindNearestCluster(allClusters, path);
+                        if (nearestCluster != clusterIndex) //if path has moved
+                        {
+							if (allClusters[clusterIndex].Count > 1) //cluster shall have minimum one path
+                            {
+								Path removedPath = allClusters[clusterIndex].RemovePath(path);
+								allClusters[clusterIndex].changed = true;
+                                allClusters[nearestCluster].Add(removedPath);
+								allClusters[nearestCluster].changed = true;
+//									Path removedPath = allClusters[clusterIndex].removePath(path);
+//	                                allClusters[nearestCluster].AddPath(removedPath);
+                                movements += 1;
+                            }
+                        }
+                    }
+                }
+				foreach(PathCollection cluster in allClusters)
+				{
+					if (cluster.changed)
+					{
+						cluster.UpdateCentroid();
+						cluster.changed = false;
+					}
+				}
+            }
+			
+			return allClusters;
+		}
 
         public static int FindNearestCluster(List<PathCollection> allClusters, Path path)
         { // src : http://codeding.com/articles/k-means-algorithm
@@ -392,18 +471,6 @@ namespace ClusteringSpace
 			if (distances[p1num][p2num] != -1) return distances[p1num][p2num];
 			if (distances[p2num][p1num] != -1) return distances[p2num][p1num];
 			
-		/*	PathPair pair1 = new PathPair(path1.name, path2.name);
-			PathPair pair2 = new PathPair(path2.name, path1.name);
-			double memoedDist = 0;
-			if (distances.TryGetValue(pair1, out memoedDist))
-			{
-				return memoedDist;
-			}
-			else if (distances.TryGetValue(pair2, out memoedDist))
-			{
-				return memoedDist;
-			}*/
-			
 			clustTime.Stop();
 			distTime.Start();
 
@@ -468,8 +535,6 @@ namespace ClusteringSpace
 			distTime.Stop();
 			clustTime.Start();
 			
-		//	distances.Add(pair1, result);
-		//	distances.Add(pair2, result);
 			distances[p1num][p2num] = (int)result;
 			distances[p1num][p2num] = (int)result;
 						
