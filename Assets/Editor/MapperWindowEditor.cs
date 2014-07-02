@@ -30,9 +30,9 @@ namespace EditorArea {
 		public static String[] distMetrics = new String[] { "Frechet (L1) (fastest)", "Frechet (L1) 3D", "Frechet (Euclidean)", "Area (Interpolation) 3D", "Area (Triangulation)", "Time (no x,y)" };
 		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
 		public static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
-		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, curCluster = 0, numPasses = 2;
+		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, /*curCluster = 0,*/ numPasses = 2;
 		private static List<Path> clusterCentroids = new List<Path>();
-		private static List<PathCollection> clusters20 = new List<PathCollection>();
+	//	private static List<PathCollection> clusters20 = new List<PathCollection>();
 		private static bool[] showPaths = new bool[colors.Count()];
 		private static bool autoSavePaths = true;
 		public static bool scaleTime = false, altCentroidComp = false;
@@ -1055,8 +1055,11 @@ namespace EditorArea {
 						centroid.color.a = 0.5f;
 						pc.Add(centroid);
 						clusterCentroids.Add(centroid);
-						paths.Add(centroid);
-						toggleStatus.Add(paths.Last(), true);
+						if (!paths.Contains(centroid))
+						{
+							paths.Add(centroid);
+							toggleStatus.Add(paths.Last(), true);							
+						}
 						cluster ++;
 					}
 
@@ -2023,8 +2026,11 @@ namespace EditorArea {
 				foreach(Path path in clusters[c])
 				{
 					path.color = colors[c%colors.Count()];
-					paths.Add(path);
-					toggleStatus.Add(paths.Last (), true);
+					if (!paths.Contains(path))
+					{
+						paths.Add(path);
+						toggleStatus.Add(paths.Last (), true);						
+					}
 				}
 			}
 			

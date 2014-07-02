@@ -152,12 +152,14 @@ namespace ClusteringSpace
             usedPoint[c1] = true;
 			centroids.Add(paths[c1]);
 				
-			int oversamplingFactor = numClusters*2 +3;
+			double oversamplingFactor = numClusters*1.01;
 		
 			double initialClustCost = getClustCost(paths, centroids);
 			double currentClustCost = initialClustCost;
 			
-			for (int count = 0; count < Math.Log(initialClustCost); count ++)
+            int numIterations = (int)Math.Log(initialClustCost);
+            
+			for (int count = 0; count < numIterations; count ++)
 			{
 				for (int pathCount = 0; pathCount < paths.Count(); pathCount ++)
 				{ // sample each point with probability...
@@ -206,23 +208,18 @@ namespace ClusteringSpace
 			}
 			
 			List<Path> centroidsToCluster = new List<Path>();
-			for (int c = 0; c < centroids.Count(); c ++)
-			{
-				for (; weights[c] > 0; weights[c] --)
-				{
-					centroidsToCluster.Add(centroids[c]);
-				}
-			}
+			// TODO - weighted k-means
+			return null;
 			
-			List<PathCollection> clusters = cluster(centroidsToCluster, numClusters+1);
+		//	List<PathCollection> clusters = cluster(initializeCentroids(centroidsToCluster, numClusters+1));
 			
-			for (int pathIndex = 0; pathIndex < paths.Count; pathIndex++)
+		/*	for (int pathIndex = 0; pathIndex < paths.Count; pathIndex++)
             {
                 int nearestCluster = FindNearestCluster(clusters, paths[pathIndex]);
                 clusters[nearestCluster].Add(paths[pathIndex]);
             }
 			
-			return clusters;
+			return clusters;*/
 		}
 		
 		public static double getClustCost(List<Path> paths, List<Path> centroids)
@@ -299,7 +296,7 @@ namespace ClusteringSpace
 						
 			for (int curPass = 0; curPass < numPasses; curPass ++)
 			{
-				List<PathCollection> allClusters = cluster(paths, clusterCount);
+				List<PathCollection> allClusters = cluster(initializeCentroidsScalable(paths, clusterCount));
 				
                 // E is the sum of the distances between each centroid and that centroids assigned points.
                 // The smaller the E value, the better the clustering . . .
@@ -342,11 +339,8 @@ namespace ClusteringSpace
             return bestClustering;
         }
 		
-		public static List<PathCollection> cluster(List<Path> paths, int clusterCount)
-		{
-			List<PathCollection> allClusters = initializeCentroidsScalable(paths, clusterCount);
-			
-            // loop src : http://codeding.com/articles/k-means-algorithm
+		public static List<PathCollection> cluster(List<PathCollection> allClusters)
+		{ // based on http://codeding.com/articles/k-means-algorithm
             int movements = 1;
 			int count = 0;
 			int[] previousMovements = new int[100];
