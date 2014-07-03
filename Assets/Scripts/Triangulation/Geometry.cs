@@ -41,6 +41,7 @@ public class Geometry
 		return false; 
 	}
 
+	//TODO: Switch to lineintmuntac
 	public bool LineInside(Line l)
 	{
 		//Test if one of my line
@@ -64,7 +65,7 @@ public class Geometry
 		int count = 0; 
 		foreach(Line myLine in edges)
 		{
-			if(myLine.LineIntersection(lray))
+			if(myLine.LineIntersectMuntac(lray) > 0)
 			{
 				count++; 
 			}
@@ -74,12 +75,13 @@ public class Geometry
 		return count%2 == 1; 
 	}
 
+	//TODO: Switch to lineintmuntac
 	public bool PointInside( Vector3 pt )
 	{
 		Line lray = new Line(pt, new Vector3(-100,-100)); 
 		int count = 0; 
 		foreach(Line myLine in edges){
-			if(myLine.LineIntersection(lray))
+			if(myLine.LineIntersectMuntac(lray) > 0)
 				count++; 
 		}
 		return count%2 == 1; 
@@ -148,6 +150,7 @@ public class Geometry
 		 
 	}
 
+	//Figures out the boundary of the geometry
 	public void BoundGeometry(Vector3[] boundary){
 		//Debug.Log (boundary [0] + " " + boundary [2]);
 		List<Vector3> newPts = new List<Vector3>();

@@ -218,6 +218,26 @@ public class Line
 			return false; 
 	}
 
+	public bool LineInterIsLeft( Line param ){
+		bool firstA, firstB, secondA, secondB;
+		bool first = false, second = false;
+		firstA = CounterClockWise (vertex [0], vertex [1], param.vertex [0]);
+		firstB = CounterClockWise (vertex [0], vertex [1], param.vertex [1]);
+		if ((!firstA && firstB) || (firstA && !firstB))
+			first = true;
+		secondA = CounterClockWise (param.vertex [0], param.vertex [1], vertex [0]);
+		secondB = CounterClockWise (param.vertex [0], param.vertex [1], vertex [1]);
+		if ((!secondA && secondB) || (secondA && !secondB))
+			second = true;
+		if( first && second )
+			return true;
+		else
+			return false;
+	}
+
+	//Detects Intersection when endpoints are not overlapping. Returns 1 if true.
+	//Returns 2 if lines are colinear and overlapping (excludes endpoints) TODO: Understand colinearity and implement properly
+	//Returns 0 if no overlapping
 	public int LineIntersectMuntac (Line param){
 		Vector3 a = this.vertex [0];
 		Vector3 b = this.vertex[1];
@@ -237,9 +257,9 @@ public class Line
 		//Case 1 - Colinear
 		if ( denom == 0 && numerator2 == 0 ) {
 			//Case 2 - Colinear and Overlapping
-			if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
+			if( Vector2.Dot( (q0 - p0), u ) > 0 && Vector2.Dot( (q0 - p0), u ) < Vector2.Dot( u, u ) )
 				return 2;
-			if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
+			if( Vector2.Dot( (p0 - q0), v ) > 0 && Vector2.Dot( (p0 - q0), v ) < Vector2.Dot( v, v ) )
 				return 2;
 			return 0;
 		}

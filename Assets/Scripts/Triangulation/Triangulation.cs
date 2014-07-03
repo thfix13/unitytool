@@ -179,7 +179,7 @@ public class Triangulation : MonoBehaviour
 		//Disabled Temporarily - Find a way to avoid floor when checking for obstacle collision
 		//geos.Add (tempGeometry);
 
-		Vector3 [] mapBoundary = new Vector3[4]; 
+		Vector3 [] mapBoundary = new Vector3[4]; //the map's four corners
 
 		for (int i = 0; i < 4; i++) {
 			mapBoundary [i] = vertex [i];
@@ -224,24 +224,11 @@ public class Triangulation : MonoBehaviour
 				else 	       
 					tempGeometry.edges.Add (new Line (vertex [0], vertex [i]));
 			}	
-			//tempGeometry.BoundGeometry(mapBoundary);
 			geos.Add (tempGeometry); 
-			
 		}
 		
 		//lines are defined by all the points in  obs
-		//List<Line> lines = new List<Line> (); 
 		lines = new List<Line> ();
-
-		/*foreach (Geometry g in geos) {
-			for (int i = 0; i< g.vertex.Length; i+=1) {
-				if (i < g.vertex.Length - 1)
-					lines.Add (new Line (g.vertex [i], g.vertex [i + 1]));
-				else 	       
-					lines.Add (new Line (g.vertex [0], g.vertex [i]));
-				}
-		}*/
-
 
 		obsGeos.Clear ();
 		obsGeos = geos;
@@ -280,88 +267,98 @@ public class Triangulation : MonoBehaviour
 		}
 
 		//Drawing merged polygons and modified map
-		foreach (Geometry g in finalPoly) {
-			//g.DrawGeometry(GameObject.Find("temp"));
-		}
-		//mapBG.DrawGeometry (GameObject.Find ("temp"));
+//		foreach (Geometry g in finalPoly) {
+//			g.DrawGeometry(GameObject.Find("temp"));
+//		}
+//		mapBG.DrawGeometry (GameObject.Find ("temp"));
 
 		List<Vector3> allVertex = new List<Vector3>();
 		List<Vector3> tempVertex = new List<Vector3>();
+		Geometry totalGeo = new Geometry ();
 
 		//Getting all vertices
 		foreach (Geometry g in finalPoly) {
 			tempVertex = g.GetVertex();
 			foreach( Vector3 v in tempVertex )
 				allVertex.Add(v);
+			foreach( Line l in g.edges ) 
+				totalGeo.edges.Add(l);
 		}
 
 		tempVertex = mapBG.GetVertex();
 		foreach( Vector3 v in tempVertex )
 			allVertex.Add(v);
+		foreach( Line l in mapBG.edges )
+			totalGeo.edges.Add(l);
 
-		/*foreach(Vector3 v in allVertex)
+		foreach(Vector3 v in allVertex)
 		{
 			GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 			inter.transform.position = v;
 			inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
 			inter.transform.parent = temp.transform;
-		}*/
-		//Constructing "lines" for triangulation
+		}
 
 		lines.Clear ();
 
-		//Adding the internal polygon lines
-		foreach (Geometry g in finalPoly) {
-			//g.DrawGeometry(GameObject.Find("temp"));
-			foreach( Line L in g.edges )
-				lines.Add( L );
-		}
-		foreach ( Line l in mapBG.edges ) {
-			lines.Add(l);
-		}
+		//Constructing "lines" for triangulation
 
 		foreach (Vector3 Va in allVertex) {
 			foreach(Vector3 Vb in allVertex){
 				if( Va != Vb ){
-					bool collides = false;
+					bool collides = false, essential = false;
 					Line tempLine = new Line(Va, Vb);
 
-					//A. Collision check with border
-					//if( mapBG.GeometryLineIntersectNoCol( tempLine ) )
-					//	continue;
+					//A. Collision check with border--
 
 					//B. Collision check with internal polygons
-					foreach( Geometry g in geos ){
-						if( g.GeometryLineIntersect( tempLine ) || g.PointInside( tempLine.MidPoint() ) ){
+					//TODO: do with proper mapbg
+					foreach( Line l in totalGeo.edges ){
+						if( l.Equals( tempLine ) ){
+							essential = true;
+							break;
+						}
+
+						if( l.LineIntersectMuntac( tempLine ) > 0 ){
 							collides = true;
 							break;
 						}
 					}
 
-					if( collides ) continue;
-					//tempLine.DrawVector(temp);
+					if( collides && !essential ) continue;
+
 					//C. Collision check with other triangualtion clines
 					foreach( Line L in lines ){
-						if( L.LineIntersectMuntac( tempLine ) == 1 ){
+						if( L.Equals(tempLine) ){
+							essential = false;							
+							collides = true;
+							break;
+						}
+						if( L.LineIntersectMuntac( tempLine ) > 0 ){
 							collides = true;
 							break;
 						}
 					}
 
-					if( !collides ){
-						//tempGeometry.edges.Add(tempLine);
-						//Debug.Log("Hello");
-						lines.Add( tempLine );
-						//tempLine.DrawVector(temp);
+					foreach( Geometry g in geos ){
+						if( g.PointInside( tempLine.MidPoint() ) ){
+							collides = true;
+							break;
+						}
 					}
+
+					if( !collides || essential )
+						lines.Add( tempLine );
 				}
 			}
 		}
 
-		foreach (Line L in lines) {
+		foreach (Line L in lines)
 			L.DrawVector(temp);
-		}
-
+		//Debug.Log (allVertex.Count);
+//		foreach (Geometry g in finalPoly)
+//			g.DrawGeometry (temp);
+//		mapBG.DrawGeometry (temp);
 
 		///Uncomment the following later
 
