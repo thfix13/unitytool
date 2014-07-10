@@ -75,14 +75,18 @@ public class Geometry
 		return count%2 == 1; 
 	}
 
-	//TODO: Switch to lineintmuntac
+	//TODO: Fix for lines colinear
 	public bool PointInside( Vector3 pt )
 	{
 		Line lray = new Line(pt, new Vector3(-100,-100)); 
 		int count = 0; 
 		foreach(Line myLine in edges){
-			if(myLine.LineIntersectMuntac(lray) > 0)
-				count++; 
+			if( myLine.LineIntersectMuntac(lray) > 0 )
+				count++;
+			else if( myLine.LineIntersectMuntacEndPt(lray) > 0 )
+				return false;
+			if (myLine.PointOnLine (pt))
+				return false;
 		}
 		return count%2 == 1; 
 	}
@@ -96,7 +100,7 @@ public class Geometry
 			foreach(Vector3 v in l.vertex)
 			{
 				if(!vertex.Contains(v))
-					vertex.Add(v); 
+					vertex.Add(v);
 			}
 		}
 		return vertex;
@@ -196,12 +200,12 @@ public class Geometry
 
 				if( l.vertex[i].z > boundary[0].z ){
 					l.vertex[i].z = boundary[0].z;
-					if( diff.x != 0 )
+					if( diff.x != 0 && grad != 0 )
 						l.vertex[i].x = (boundary[0].z - cz) / grad;
 				}
 				else if( l.vertex[i].z < boundary[2].z ){
 					l.vertex[i].z = boundary[2].z;
-					if( diff.x != 0 )
+					if( diff.x != 0 && grad != 0 )
 						l.vertex[i].x = (boundary[2].z - cz) / grad;
 				}
 			}
@@ -258,7 +262,7 @@ public class Geometry
 //			this.edges.Add (l);
 		return toReturn;
 	}
-
+	//Used only for merging polygons with the map boundary
 	public Geometry GeometryMergeInner( Geometry G2 ){
 		Geometry tempGeometry = new Geometry ();
 		//Two Geometry objects - G1 and G2

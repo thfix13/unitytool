@@ -36,7 +36,7 @@ public class Triangulation : MonoBehaviour
 		lines.Clear(); 
 		points.Clear(); 
 		colours.Clear();
-	
+		obsGeos.Clear ();
 		GameObject temp = GameObject.Find("temp"); 
 		DestroyImmediate(temp); 
 
@@ -231,7 +231,9 @@ public class Triangulation : MonoBehaviour
 		lines = new List<Line> ();
 
 		obsGeos.Clear ();
-		obsGeos = geos;
+		foreach (Geometry g in geos) {
+			obsGeos.Add(g);
+		}
 
 
 		//Create empty GameObject
@@ -291,72 +293,123 @@ public class Triangulation : MonoBehaviour
 		foreach( Line l in mapBG.edges )
 			totalGeo.edges.Add(l);
 
+		int vlcnt = 0;
 		foreach(Vector3 v in allVertex)
 		{
 			GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 			inter.transform.position = v;
 			inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
 			inter.transform.parent = temp.transform;
+			inter.gameObject.name = vlcnt.ToString();
+			++vlcnt;
 		}
 
 		lines.Clear ();
 
 		//Constructing "lines" for triangulation
 
+		Debug.Log (allVertex.Count);
+		int iv = -1, jv;
+		vlcnt = 0;
 		foreach (Vector3 Va in allVertex) {
+			++iv;
+			jv = -1;
 			foreach(Vector3 Vb in allVertex){
+				++jv;
 				if( Va != Vb ){
 					bool collides = false, essential = false;
 					Line tempLine = new Line(Va, Vb);
-
-					//A. Collision check with border--
-
-					//B. Collision check with internal polygons
-					//TODO: do with proper mapbg
-					foreach( Line l in totalGeo.edges ){
-						if( l.Equals( tempLine ) ){
-							essential = true;
-							break;
+					//A-Collision with final polygon
+//					foreach( Line l in totalGeo.edges ){
+//						if( l.LineIntersectMuntac( tempLine ) == 1 ){
+//							if( iv == 6 && jv == 4 ){	
+//								++vlcnt;
+//								l.name = vlcnt.ToString();
+//								l.DrawVector(temp);
+//								tempLine.name = l.name + "DUP";
+//								tempLine.DrawVector(temp);
+//								Debug.Log("Here 1");
+//							}
+//							collides = true;
+//							break;
+//						}
+//					}
+					foreach( Geometry g in geos ){
+							foreach( Line l in g.edges ){
+							if( l.LineIntersectMuntac( tempLine ) == 1 ){
+//								if( iv == 60 && jv == 63 ){	
+//									++vlcnt;
+//									l.name = vlcnt.ToString();
+//									l.DrawVector(temp);
+//									tempLine.name = l.name + "DUP";
+//									tempLine.DrawVector(temp);
+//									Debug.Log("Here 1");
+//								}
+								collides = true;
+								break;
+							}
 						}
+					}
 
-						if( l.LineIntersectMuntac( tempLine ) > 0 ){
+					if( collides ) continue;
+
+					//B-Collision with existing lines
+					foreach( Line l in lines ){
+						if( l.LineIntersectMuntac( tempLine ) == 1 || l.Equals(tempLine) ){
+//							if( iv == 6 && jv == 7 ){	
+//								++vlcnt;
+//								l.name = vlcnt.ToString();
+//								l.DrawVector(temp);
+//								tempLine.name = l.name + "DUP";
+//								tempLine.DrawVector(temp);
+//								Debug.Log("Here 2");
+//							}							
 							collides = true;
 							break;
 						}
 					}
 
-					if( collides && !essential ) continue;
-
-					//C. Collision check with other triangualtion clines
-					foreach( Line L in lines ){
-						if( L.Equals(tempLine) ){
-							essential = false;							
-							collides = true;
-							break;
-						}
-						if( L.LineIntersectMuntac( tempLine ) > 0 ){
-							collides = true;
-							break;
-						}
-					}
-
+					if( collides ) continue;
+					//C-To avoid diagonals
 					foreach( Geometry g in geos ){
 						if( g.PointInside( tempLine.MidPoint() ) ){
+//							if( iv == 6 && jv == 7 ){	
+//								++vlcnt;
+//								tempLine.name = "DUP";
+//								tempLine.DrawVector(temp);
+////								g.DrawGeometry(temp);
+//								Line lray = new Line(tempLine.MidPoint(), new Vector3(-100,-100)); 
+//								lray.name = "lray";
+//								lray.DrawVector(temp);
+//								Debug.Log("Here 3");
+//								Debug.Log (tempLine.MidPoint());
+//								foreach( Line l in g.edges ){
+////									if( l.LineIntersectMuntacEndPt(lray) > 0 ){
+//										Debug.Log ("Line");
+//										Debug.Log( l.vertex[0] );
+//										Debug.Log( l.vertex[1] );
+////										Debug.Log (l.GetIntersectionPoint(lray));
+////									}
+//								}
+//							}				
 							collides = true;
 							break;
 						}
 					}
-
-					if( !collides || essential )
-						lines.Add( tempLine );
+					if( collides ) continue;
+					//Add Line
+					lines.Add( tempLine );
 				}
 			}
+//			break;
 		}
 
 		foreach (Line L in lines)
 			L.DrawVector(temp);
+		Debug.Log (lines.Count);
+//		totalGeo.DrawGeometry (temp);
 		//Debug.Log (allVertex.Count);
-//		foreach (Geometry g in finalPoly)
+//		foreach (Geometry g in geos)
 //			g.DrawGeometry (temp);
 //		mapBG.DrawGeometry (temp);
 

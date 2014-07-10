@@ -14,7 +14,7 @@ public class Line
 
 	public Vector3[] vertex = new Vector3[2];
 	public Color[] colours = new Color[2]; 
-
+	public string name = "Vector Line";
 
 	public Line(Vector3 v1, Vector3 v2)
 	{
@@ -37,9 +37,9 @@ public class Line
 	}
 	public Vector3 MidPoint()
 	{
-		return new Vector3( (vertex[0].x + vertex[1].x)/2,
-		                   (vertex[0].y + vertex[1].y)/2,
-		                   (vertex[0].z + vertex[1].z)/2);
+		return new Vector3( (vertex[0].x + vertex[1].x)/2f,
+		                   (vertex[0].y + vertex[1].y)/2f,
+		                   (vertex[0].z + vertex[1].z)/2f);
 	}
 
 	public Vector3 GetOther(Vector3 v)
@@ -70,6 +70,7 @@ public class Line
 
 		VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
 		line.vectorObject.transform.parent = parent.transform;
+		line.vectorObject.name = name;
 		line.Draw3D();
 	}
 	public void DrawVector(GameObject parent,Color c)
@@ -257,9 +258,9 @@ public class Line
 		//Case 1 - Colinear
 		if ( denom == 0 && numerator2 == 0 ) {
 			//Case 2 - Colinear and Overlapping
-			if( Vector2.Dot( (q0 - p0), u ) > 0 && Vector2.Dot( (q0 - p0), u ) < Vector2.Dot( u, u ) )
+			if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
 				return 2;
-			if( Vector2.Dot( (p0 - q0), v ) > 0 && Vector2.Dot( (p0 - q0), v ) < Vector2.Dot( v, v ) )
+			if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
 				return 2;
 			return 0;
 		}
@@ -272,6 +273,46 @@ public class Line
 		double t = numerator2 / denom;
 		
 		if ((s > 0 && s < 1) && (t > 0 && t < 1))
+			return 1;
+		
+		return 0; 
+	}
+
+	public int LineIntersectMuntacEndPt (Line param){
+		Vector3 a = this.vertex [0];
+		Vector3 b = this.vertex[1];
+		Vector3 c = param.vertex [0];
+		Vector3 d = param.vertex [1];
+		
+		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
+		Vector2 p0 = new Vector2 (a.x, a.z);
+		
+		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
+		Vector2 q0 = new Vector2 (c.x, c.z);
+		
+		double numerator1 = CrossProduct ((q0 - p0), v);
+		double numerator2 = CrossProduct ((q0 - p0), u);
+		double denom = CrossProduct (u, v);
+		
+		//Case 1 - Colinear
+		if ( denom == 0 && numerator2 == 0 ) {
+			//Case 2 - Colinear and Overlapping
+			if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
+				return 2;
+			if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
+				return 2;
+			return 0;
+		}
+		//Case 3 - Parallel
+		if (denom == 0 && numerator2 != 0)
+			return 0;
+		
+		//Case 4 - Intersects
+		double s = numerator1 / denom;
+		double t = numerator2 / denom;
+		
+//		if ((s >= 0 && s <= 1) && (t >= 0 && t <= 1))
+		if ((s >= -0.0001f && s <= 1.0001f ) && (t >= -0.0001f && t <= 1.0001f ))
 			return 1;
 		
 		return 0; 
@@ -325,6 +366,26 @@ public class Line
 			return 2;*/
 	}
 
+	public bool PointOnLine( Vector3 pt ){
+		Vector3 diff = vertex[1] - vertex[0];
+		float grad = 0, cx, cz;
+		if (diff.x != 0 && diff.y != 0) {
+			grad = diff.z / diff.x;
+			if( (pt.z - vertex[0].z) == ( (grad * pt.x) - vertex[0].x ) )
+				return true;
+		}
+		else if( diff.x == 0 ){//A Z-axis parallel line
+			if( pt.x == vertex[0].x  && (pt.z >= Math.Min(vertex[0].z, vertex[1].z) &&
+			                             pt.z <= Math.Max(vertex[0].z, vertex[1].z) ) )
+			   return true;
+		}
+		else if( diff.z == 0 ){//An x-axis parallel line
+			if( pt.z == vertex[0].z  && (pt.x >= Math.Min(vertex[0].x, vertex[1].x) &&
+			                             pt.x <= Math.Max(vertex[0].x, vertex[1].x) ) )
+			   return true;
+		}
+		return false;
+	}
 }
 class LineEqualityComparer : IEqualityComparer<Line>
 {
