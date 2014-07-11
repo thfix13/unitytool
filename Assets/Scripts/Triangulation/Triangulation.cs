@@ -257,7 +257,7 @@ public class Triangulation : MonoBehaviour
 				}
 			}
 		}
-
+//		mapBG.DrawGeometry (temp);
 		List<Geometry> finalPoly = new List<Geometry> ();//Contains all polygons that are fully insde the map
 		foreach ( Geometry g in obsGeos ) {
 			if( mapBG.GeometryIntersect( g ) && !mapBG.GeometryInside( g ) ){
@@ -322,14 +322,14 @@ public class Triangulation : MonoBehaviour
 					//A-Collision with final polygon
 					foreach( Line l in totalGeo.edges ){
 						if( l.LineIntersectMuntacEndPt( tempLine ) == 1 ){
-							if( iv == 16 && jv == 18 ){	
-								++vlcnt;
-								l.name = vlcnt.ToString();
-								l.DrawVector(temp);
-								tempLine.name = l.name + "DUP";
-								tempLine.DrawVector(temp);
-								Debug.Log("Here 1");
-							}
+//							if( iv == 16 && jv == 18 ){	
+//								++vlcnt;
+//								l.name = vlcnt.ToString();
+//								l.DrawVector(temp);
+//								tempLine.name = l.name + "DUP";
+//								tempLine.DrawVector(temp);
+//								Debug.Log("Here 1");
+//							}
 							collides = true;
 							break;
 						}

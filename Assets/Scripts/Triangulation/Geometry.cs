@@ -60,19 +60,20 @@ public class Geometry
 
 		//Now we check count the intersection
 		Vector3 mid = l.MidPoint(); 
-		//TODO: CHange this for finding the minimum
-		Line lray = new Line(mid, new Vector3(-100,-100)); 
-		int count = 0; 
-		foreach(Line myLine in edges)
-		{
-			if(myLine.LineIntersectMuntac(lray) > 0)
-			{
-				count++; 
-			}
-
-		}
-
-		return count%2 == 1; 
+		return PointInside (l.MidPoint ());
+//		//TODO: CHange this for finding the minimum
+//		Line lray = new Line(mid, new Vector3(-100,-100)); 
+//		int count = 0; 
+//		foreach(Line myLine in edges)
+//		{
+//			if(myLine.LineIntersectMuntac(lray) > 0)
+//			{
+//				count++; 
+//			}
+//
+//		}
+//
+//		return count%2 == 1; 
 	}
 
 	//TODO: Fix for lines colinear
@@ -158,59 +159,18 @@ public class Geometry
 
 	//Figures out the boundary of the geometry
 	public void BoundGeometry(Vector3[] boundary){
-		//Debug.Log (boundary [0] + " " + boundary [2]);
-		List<Vector3> newPts = new List<Vector3>();
 		List<Line> removeLines = new List<Line> ();
+		int i;
+		Debug.Log (boundary [0]);
+		Debug.Log (boundary [2]);
 		foreach (Line l in edges) {
-			Vector3 diff = l.vertex[1] - l.vertex[0];
-			float grad = 0, cx, cz;
-			if( diff.x != 0 ) grad = diff.z / diff.x;//A Z-axis parallel line
-			cx = (-l.vertex[1].x * grad) + l.vertex[1].z;
-			cz = -l.vertex[1].z + (l.vertex[1].x * grad);
-
-
-			bool bothPtsOut = true;
-			for( int i = 0; i < 2; i++ ){
-				if( (l.vertex[i].x > boundary[0].x || l.vertex[i].x < boundary[2].x) || (l.vertex[i].z > boundary[0].z && l.vertex[i].z < boundary[2].z) )
-					bothPtsOut = true;
-				else{
-					bothPtsOut = false;
-					break;
-				}
+			bool rem = false;
+			for( i = 0; i < 2; i++ ){
+				if( l.vertex[i].x > boundary[0].x + 0.01 || l.vertex[i].x < boundary[2].x  - 0.01 || l.vertex[i].z > boundary[0].z  + 0.01 || l.vertex[i].z < boundary[2].z  - 0.01)
+					rem = true;
 			}
-
-			if( bothPtsOut ){
+			if( rem )
 				removeLines.Add(l);
-				continue;
-			}
-
-			for( int i = 0; i < 2; i++ ){
-				bool xchanged = false;
-
-				if( l.vertex[i].x > boundary[0].x ){
-					l.vertex[i].x = boundary[0].x;
-					if( diff.x != 0 )
-						l.vertex[i].z = boundary[0].x * grad + cx;
-					break;
-				}
-				else if( l.vertex[i].x < boundary[2].x ){
-					l.vertex[i].x = boundary[2].x;
-					if( diff.x != 0 )
-						l.vertex[i].z = boundary[2].x * grad + cx;
-					break;
-				}
-
-				if( l.vertex[i].z > boundary[0].z ){
-					l.vertex[i].z = boundary[0].z;
-					if( diff.x != 0 && grad != 0 )
-						l.vertex[i].x = (boundary[0].z - cz) / grad;
-				}
-				else if( l.vertex[i].z < boundary[2].z ){
-					l.vertex[i].z = boundary[2].z;
-					if( diff.x != 0 && grad != 0 )
-						l.vertex[i].x = (boundary[2].z - cz) / grad;
-				}
-			}
 		}
 		foreach (Line l in removeLines)
 			edges.Remove (l);

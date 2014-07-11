@@ -397,6 +397,7 @@ public class Line
 		return false;
 	}
 }
+
 class LineEqualityComparer : IEqualityComparer<Line>
 {
 	
