@@ -320,42 +320,42 @@ public class Triangulation : MonoBehaviour
 					bool collides = false, essential = false;
 					Line tempLine = new Line(Va, Vb);
 					//A-Collision with final polygon
-//					foreach( Line l in totalGeo.edges ){
-//						if( l.LineIntersectMuntac( tempLine ) == 1 ){
-//							if( iv == 6 && jv == 4 ){	
-//								++vlcnt;
-//								l.name = vlcnt.ToString();
-//								l.DrawVector(temp);
-//								tempLine.name = l.name + "DUP";
-//								tempLine.DrawVector(temp);
-//								Debug.Log("Here 1");
-//							}
-//							collides = true;
-//							break;
-//						}
-//					}
-					foreach( Geometry g in geos ){
-							foreach( Line l in g.edges ){
-							if( l.LineIntersectMuntac( tempLine ) == 1 ){
-//								if( iv == 60 && jv == 63 ){	
-//									++vlcnt;
-//									l.name = vlcnt.ToString();
-//									l.DrawVector(temp);
-//									tempLine.name = l.name + "DUP";
-//									tempLine.DrawVector(temp);
-//									Debug.Log("Here 1");
-//								}
-								collides = true;
-								break;
+					foreach( Line l in totalGeo.edges ){
+						if( l.LineIntersectMuntacEndPt( tempLine ) == 1 ){
+							if( iv == 16 && jv == 18 ){	
+								++vlcnt;
+								l.name = vlcnt.ToString();
+								l.DrawVector(temp);
+								tempLine.name = l.name + "DUP";
+								tempLine.DrawVector(temp);
+								Debug.Log("Here 1");
 							}
+							collides = true;
+							break;
 						}
 					}
+//					foreach( Geometry g in geos ){
+//							foreach( Line l in g.edges ){
+//							if( l.LineIntersectMuntac( tempLine ) == 1 ){
+////								if( iv == 60 && jv == 63 ){	
+////									++vlcnt;
+////									l.name = vlcnt.ToString();
+////									l.DrawVector(temp);
+////									tempLine.name = l.name + "DUP";
+////									tempLine.DrawVector(temp);
+////									Debug.Log("Here 1");
+////								}
+//								collides = true;
+//								break;
+//							}
+//						}
+//					}
 
 					if( collides ) continue;
 
 					//B-Collision with existing lines
 					foreach( Line l in lines ){
-						if( l.LineIntersectMuntac( tempLine ) == 1 || l.Equals(tempLine) ){
+						if( l.LineIntersectMuntacEndPt( tempLine ) == 1 || l.Equals(tempLine) ){
 //							if( iv == 6 && jv == 7 ){	
 //								++vlcnt;
 //								l.name = vlcnt.ToString();
@@ -373,23 +373,25 @@ public class Triangulation : MonoBehaviour
 					//C-To avoid diagonals
 					foreach( Geometry g in geos ){
 						if( g.PointInside( tempLine.MidPoint() ) ){
-//							if( iv == 6 && jv == 7 ){	
+//							if( iv == 16 && jv == 18 ){	
 //								++vlcnt;
 //								tempLine.name = "DUP";
 //								tempLine.DrawVector(temp);
-////								g.DrawGeometry(temp);
+//								g.DrawGeometry(temp);
 //								Line lray = new Line(tempLine.MidPoint(), new Vector3(-100,-100)); 
 //								lray.name = "lray";
 //								lray.DrawVector(temp);
 //								Debug.Log("Here 3");
 //								Debug.Log (tempLine.MidPoint());
 //								foreach( Line l in g.edges ){
-////									if( l.LineIntersectMuntacEndPt(lray) > 0 ){
+//									//if( l.LineIntersectMuntacEndPt(lray) > 0 ){
 //										Debug.Log ("Line");
 //										Debug.Log( l.vertex[0] );
 //										Debug.Log( l.vertex[1] );
-////										Debug.Log (l.GetIntersectionPoint(lray));
-////									}
+//										Debug.Log (l.GetIntersectionPoint(lray));
+//										//if( l.GetIntersectionPoint(lray).Equals(tempLine.MidPoint() ) )
+//										Debug.Log ("INTERSECTS with " + tempLine.MidPoint());
+//									//}
 //								}
 //							}				
 							collides = true;

@@ -312,8 +312,13 @@ public class Line
 		double t = numerator2 / denom;
 		
 //		if ((s >= 0 && s <= 1) && (t >= 0 && t <= 1))
-		if ((s >= -0.0001f && s <= 1.0001f ) && (t >= -0.0001f && t <= 1.0001f ))
-			return 1;
+		if ((s >= -0.0001f && s <= 1.0001f) && (t >= -0.0001f && t <= 1.0001f)){
+			if( vertex[0].Equals(param.vertex[0]) || vertex[0].Equals(param.vertex[1])
+			   || vertex[1].Equals(param.vertex[0]) || vertex[1].Equals(param.vertex[1]))
+				return 0;
+			else
+				return 1;
+		}
 		
 		return 0; 
 	}
@@ -369,10 +374,15 @@ public class Line
 	public bool PointOnLine( Vector3 pt ){
 		Vector3 diff = vertex[1] - vertex[0];
 		float grad = 0, cx, cz;
+		float pa, pb;
 		if (diff.x != 0 && diff.y != 0) {
 			grad = diff.z / diff.x;
-			if( (pt.z - vertex[0].z) == ( (grad * pt.x) - vertex[0].x ) )
-				return true;
+//			if( (pt.z - vertex[0].z) == ( (grad * pt.x) - vertex[0].x ) )
+//				return true;
+			pa = pt.z - vertex[0].z;
+			pb = (grad * pt.x) - vertex[0].x;
+			if( Math.Abs(pa - pb) < 0.1f)
+			   return true;
 		}
 		else if( diff.x == 0 ){//A Z-axis parallel line
 			if( pt.x == vertex[0].x  && (pt.z >= Math.Min(vertex[0].z, vertex[1].z) &&

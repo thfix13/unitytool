@@ -81,12 +81,14 @@ public class Geometry
 		Line lray = new Line(pt, new Vector3(-100,-100)); 
 		int count = 0; 
 		foreach(Line myLine in edges){
-			if( myLine.LineIntersectMuntac(lray) > 0 )
+			if( myLine.LineIntersectMuntacEndPt(lray) > 0 ){
 				count++;
-			else if( myLine.LineIntersectMuntacEndPt(lray) > 0 )
-				return false;
-			if (myLine.PointOnLine (pt))
-				return false;
+				//Check if the intersection point is on the polygon edge
+				//Note: other checks tried but precision error kept coming up in cases
+				Vector3 vtemp = myLine.GetIntersectionPoint(lray);
+				if( Math.Abs( vtemp.x - pt.x ) < 0.01 && Math.Abs(vtemp.z - pt.z) < 0.01 )
+					return false;
+			}
 		}
 		return count%2 == 1; 
 	}
