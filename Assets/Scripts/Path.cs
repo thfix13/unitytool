@@ -24,7 +24,15 @@ namespace Common {
 		}
 		
 		public Path (List<Node> points) {
+			Debug.Log("Path without name");
 			this.points = points;
+			if (points == null)
+				throw new ArgumentNullException ("Points can't be null");
+		}
+		
+		public Path (List<Node> points, String name) {
+			this.points = points;
+			this.name = name;
 			if (points == null)
 				throw new ArgumentNullException ("Points can't be null");
 		}

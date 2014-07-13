@@ -54,22 +54,14 @@ namespace ClusteringSpace
         public void AddPath(Path p)
         {
             this.Add(p);
-            UpdateCentroid();
+			changed = true;
         }
 
-        public Path removePath(Path p)
-        {
-            Path removedPath = new Path(p.points);
-            this.Remove(p);
-            UpdateCentroid();
-
-            return (removedPath);
-        }
-		
         public Path RemovePath(Path p)
         {
-            Path removedPath = new Path(p.points);
+            Path removedPath = new Path(p.points, p.name);
             this.Remove(p);
+			changed = true;
 
             return (removedPath);
         }
@@ -162,14 +154,15 @@ namespace ClusteringSpace
 				for (int i = 0; i < this.Count; i ++)
 				{
 					double weightOfI = KMeans.weights[Convert.ToInt32(this[i].name)];
-				//	Debug.Log("Weight of i: " + weightOfI);
+				//	Debug.Log("Weight of i: " + weightOfI + ", index: " + Convert.ToInt32(this[i].name));
+					if (weightOfI != 1.0) Debug.Log("???");
 					double currentPathTotalMinDist = 0;
 					for (int j = 0; j < this.Count; j ++)
 					{
 						if (i == j) continue;
 
-//						currentPathTotalMinDist += (weightOfI * KMeans.FindDistance(this[i], this[j]));
-						currentPathTotalMinDist += (KMeans.FindDistance(this[i], this[j]));
+						currentPathTotalMinDist += (weightOfI * KMeans.FindDistance(this[i], this[j]));
+//						currentPathTotalMinDist += (KMeans.FindDistance(this[i], this[j]));
 					}
 					if (currentPathTotalMinDist < pathTotalMinDist)
 					{
@@ -185,8 +178,7 @@ namespace ClusteringSpace
 					return;
 				}
 			
-				Centroid = new Path(this[pIndex].points);
-				Centroid.name = this[pIndex].name;
+				Centroid = new Path(this[pIndex].points, this[pIndex].name);
 			}
         }
 		

@@ -45,8 +45,9 @@ namespace ClusteringSpace
 			init = false;
 		}
 		
-        private static List<PathCollection> initializeCentroids(List<Path> paths, int numClusters, double[] weights)
+        private static List<PathCollection> initializeCentroids(List<Path> paths, int numClusters, double[] weights_)
         { // based on https://www.planet-source-code.com/vb/scripts/ShowCode.asp?txtCodeId=7944&lngWId=10
+			weights = weights_;
 			numClusters --;
 			
 			List<PathCollection> clusters = new List<PathCollection>();
@@ -76,10 +77,7 @@ namespace ClusteringSpace
                         double minD = double.MaxValue;
                         for (int testK = 0; testK < clusters.Count(); testK++)
 						{
-                            minD = Math.Min(minD, FindDistance(paths[curPoint], clusters[testK].Centroid));
-     /*                       double dist = FindDistance(paths[curPoint], clusters[testK].Centroid);
-                            double weightedDist = clusterWeights[testK] * dist;
-                            minD = Math.Min(minD, weightedDist); */
+							minD = Math.Min(minD, FindDistance(paths[curPoint], clusters[testK].Centroid));
 						}
 
                         //See if this distance is farther than current farthest point
@@ -94,17 +92,27 @@ namespace ClusteringSpace
                 //Set the centroid
                 usedPoint[bestCentroid] = true;
 				clusters.Add(new PathCollection(paths[bestCentroid]));
-	//			clusters.Last().Add(new Path(paths[bestCentroid].points));
-	//			clusters.Last().Last().name = paths[bestCentroid].name;
+				clusters.Last().Add(paths[bestCentroid]);
 				clusterWeights[curK] = weights[bestCentroid];
             }
 			
 			for (int pathIndex = 0; pathIndex < paths.Count; pathIndex++)
             {
                 int nearestCluster = FindNearestCluster(clusters, paths[pathIndex]);
-		//		if (!clusters[nearestCluster].Contains(paths[pathIndex]))
-					clusters[nearestCluster].Add(paths[pathIndex]);
+				if (!clusters[nearestCluster].Contains(paths[pathIndex]))
+				{
+					clusters[nearestCluster].AddPath(paths[pathIndex]);
+				}
             }
+			
+			foreach(PathCollection cluster in clusters)
+			{
+	//			if (cluster.changed)
+	//			{
+					cluster.UpdateCentroid();
+					cluster.changed = false;
+	//			}
+			}
 			
 			return clusters;
         }
@@ -268,6 +276,7 @@ namespace ClusteringSpace
 						
 			for (int curPass = 0; curPass < numPasses; curPass ++)
 			{
+			//	return initializeCentroids(paths, clusterCount, weights);
 				List<PathCollection> allClusters = cluster(initializeCentroids(paths, clusterCount, weights), weights);
 				
                 // E is the sum of the distances between each centroid and that centroids assigned points.
@@ -314,20 +323,15 @@ namespace ClusteringSpace
 		public static List<PathCollection> cluster(List<PathCollection> allClusters, double[] weights_)
 		{ // based on http://codeding.com/articles/k-means-algorithm
 			weights = weights_;
-			/*
-            foreach(PathCollection cluster in allClusters)
-            {
-                cluster.UpdateCentroid();
-                cluster.changed = false;
-            }
-        	*/	
+
             int movements = 1;
 			int count = 0;
 			int[] previousMovements = new int[100];
             while (movements > 0)
             {
+				Debug.Log(count);
 				previousMovements[count] = movements;
-				if (count > 10)
+				if (count > 25)
 				{
 					int avgLastThree = (previousMovements[count-2] + previousMovements[count-1] + previousMovements[count]) / 3;
 					if (Math.Abs(avgLastThree - previousMovements[count]) <= 10)
@@ -338,7 +342,7 @@ namespace ClusteringSpace
 				}
 			
 				count ++;
-				MapperWindowEditor.updatePaths(allClusters);
+		//		MapperWindowEditor.updatePaths(allClusters);
 			
                 movements = 0;
 
@@ -354,11 +358,7 @@ namespace ClusteringSpace
 							if (allClusters[clusterIndex].Count > 1) //cluster shall have minimum one path
                             {
 								Path removedPath = allClusters[clusterIndex].RemovePath(path);
-								allClusters[clusterIndex].changed = true;
-                                allClusters[nearestCluster].Add(removedPath);
-								allClusters[nearestCluster].changed = true;
-//									Path removedPath = allClusters[clusterIndex].removePath(path);
-//	                                allClusters[nearestCluster].AddPath(removedPath);
+                                allClusters[nearestCluster].AddPath(removedPath);
                                 movements += 1;
                             }
                         }
@@ -369,6 +369,7 @@ namespace ClusteringSpace
 					if (cluster.changed)
 					{
 						cluster.UpdateCentroid();
+						movements += 1;
 						cluster.changed = false;
 					}
 				}
@@ -417,12 +418,7 @@ namespace ClusteringSpace
 				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(3));
 			}
 		}
-		
-		// source : http://www.win.tue.nl/~wmeulema/implementations.html
-		// Implementation by Wouter Meulemans
-		// based on paper by Buchin et al
-		// http://arxiv.org/abs/1306.5527
-		
+				
 		public static double FindDistance(Path path1, Path path2, int distMetric_)
 		{
 			setDistMetric(distMetric_);
@@ -452,6 +448,11 @@ namespace ClusteringSpace
 			
 			if (distMetric == (int)Metrics.FrechetL1 || distMetric == (int)Metrics.FrechetEuclidean || distMetric == (int)Metrics.FrechetL13D)
 			{
+				// source : http://www.win.tue.nl/~wmeulema/implementations.html
+				// Implementation by Wouter Meulemans
+				// based on paper by Buchin et al
+				// http://arxiv.org/abs/1306.5527
+				
 				double[][] curveA = new double[path1.points.Count][];
 				double[][] curveB = new double[path2.points.Count][];
 				

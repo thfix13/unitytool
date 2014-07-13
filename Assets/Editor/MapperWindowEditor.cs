@@ -30,9 +30,8 @@ namespace EditorArea {
 		public static String[] distMetrics = new String[] { "Frechet (L1) (fastest)", "Frechet (L1) 3D", "Frechet (Euclidean)", "Area (Interpolation) 3D", "Area (Triangulation)", "Time (no x,y)" };
 		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
 		public static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
-		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, /*curCluster = 0,*/ numPasses = 2;
+		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, numPasses = 1;
 		private static List<Path> clusterCentroids = new List<Path>();
-	//	private static List<PathCollection> clusters20 = new List<PathCollection>();
 		private static bool[] showPaths = new bool[colors.Count()];
 		private static bool autoSavePaths = true;
 		public static bool scaleTime = false, altCentroidComp = false;
@@ -1041,7 +1040,9 @@ namespace EditorArea {
 				
 					if (altCentroidComp) altCentroidComp = false;
 				
-					List<PathCollection> newClusters = KMeans.DoKMeans(tempCentroids, numClusters, distMetric, numPasses);
+					double[] weights = new double[paths.Count()];
+					for(int i = 0; i < paths.Count(); i ++) { weights[i] = 1.0; }
+					List<PathCollection> newClusters = KMeans.DoKMeans(tempCentroids, numClusters, distMetric, numPasses, weights);
 				
 					paths.Clear ();
 					ClearPathsRepresentation ();
@@ -1231,62 +1232,6 @@ namespace EditorArea {
 					paths.Add(p);
 				}
 			}
-			
-		/*	if (GUILayout.Button ("Cluster 20"))
-			{
-				KMeans.clustTime = new System.Diagnostics.Stopwatch();
-				KMeans.distTime = new System.Diagnostics.Stopwatch();
-				
-				clusters20 = KMeans.DoKMeans(paths, 50, distMetric);
-				
-				clusterCentroids.Clear();
-				foreach(PathCollection pc in clusters20)
-				{
-					clusterCentroids.Add(pc.Centroid);
-				}
-						
-				paths.Clear ();
-				deaths.Clear ();
-				ClearPathsRepresentation ();
-
-				for(int c = 0; c < clusters20.Count; c ++)
-				{
-					foreach(Path path in clusters20[c])
-					{
-						path.color = colors[c % colors.Count()];
-						if (path.Equals(clusters20[c].Centroid))
-						{
-							path.color.a = 0.5f;
-						}
-						paths.Add(path);
-						toggleStatus.Add(paths.Last (), true);
-					}
-				}
-				
-				Debug.Log ("Clust elapsed time: " + KMeans.clustTime.Elapsed);
-				Debug.Log ("Dist elapsed time: " + KMeans.distTime.Elapsed);
-				TimeSpan totalTime = KMeans.clustTime.Elapsed + KMeans.distTime.Elapsed;
-				Debug.Log ("Total: " + totalTime);
-			}
-			if (GUILayout.Button ("Next"))
-			{
-				//clusters20
-				foreach (Path p in paths)
-				{
-					p.color.a = 0;
-				}
-				foreach (Path clusterPath in clusters20[curCluster])
-				{
-					foreach (Path p in paths)
-					{
-						if (clusterPath == p)
-						{
-							p.color.a = 1;
-						}
-					}
-				}
-				curCluster = (curCluster + 1) % 100;
-			}*/
 
 			DirectoryInfo dir = new DirectoryInfo("clusteringdata/");
 			FileInfo[] info = dir.GetFiles("*.xml");
@@ -1310,8 +1255,15 @@ namespace EditorArea {
 				KMeans.reset();
 				
 				List<Path> pathsImported = PathBulk.LoadPathsFromFile ("clusteringdata/" + fileNames[chosenFileIndex]);
+								
+				clusterCentroids.Clear();
+				clusterCentroids = new List<Path>();				
 				
 				foreach (Path p in pathsImported) {
+					if (p.color.a == 0.5 && p.color.r == colors[clusterCentroids.Count()].r && p.color.g == colors[clusterCentroids.Count()].g && p.color.b == colors[clusterCentroids.Count()].b)
+					{
+						clusterCentroids.Add(p);
+					}
 					toggleStatus.Add (p, true);
 					paths.Add(p);
 				}
@@ -1404,7 +1356,7 @@ namespace EditorArea {
 				{
 					foreach (Path p in paths)
 					{
-						if (p.Equals(clusterCentroids[colorIndex]) || (p.color.a == 0.5 && p.color.Equals(colors[colorIndex])))
+						if (p.Equals(clusterCentroids[colorIndex]) || (p.color.a == 0.5 && p.color.r == colors[colorIndex].r && p.color.g == colors[colorIndex].g && p.color.b == colors[colorIndex].b))
 						{
 							p.color.a = 1;
 						}
