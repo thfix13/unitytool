@@ -375,6 +375,12 @@ namespace EditorArea {
 				}
 
 				// Debug.Log(summary);
+				
+				
+				for (int count = 0; count < paths.Count(); count ++)
+				{
+					paths[count].name = count.ToString();
+				}
 			}
 			
 			String nameFile = EditorApplication.currentScene;

@@ -154,8 +154,6 @@ namespace ClusteringSpace
 				for (int i = 0; i < this.Count; i ++)
 				{
 					double weightOfI = KMeans.weights[Convert.ToInt32(this[i].name)];
-				//	Debug.Log("Weight of i: " + weightOfI + ", index: " + Convert.ToInt32(this[i].name));
-					if (weightOfI != 1.0) Debug.Log("???");
 					double currentPathTotalMinDist = 0;
 					for (int j = 0; j < this.Count; j ++)
 					{

@@ -36,6 +36,7 @@ namespace ClusteringSpace
 		private static int[][] distances;
 		public static double[] weights;
 		private static bool init = false;
+		public static int numPaths = -1;
 		
 		public static void reset()
 		{
@@ -43,6 +44,7 @@ namespace ClusteringSpace
 			distMetric = -1;
 			clustVal = 0.0;
 			init = false;
+			numPaths = -1;
 		}
 		
         private static List<PathCollection> initializeCentroids(List<Path> paths, int numClusters, double[] weights_)
@@ -51,7 +53,6 @@ namespace ClusteringSpace
 			numClusters --;
 			
 			List<PathCollection> clusters = new List<PathCollection>();
-			double[] clusterWeights = new double[numClusters];
 			
             bool[] usedPoint = new bool[paths.Count()];
 
@@ -59,7 +60,6 @@ namespace ClusteringSpace
             int c1 = new System.Random().Next(0, paths.Count() - 1);
             usedPoint[c1] = true;
 			clusters.Add(new PathCollection(paths[c1]));
-			clusterWeights[0] = weights[c1];
 
             //Pick the rest of the centroids
             for (int curK = 0; curK < numClusters; curK++)
@@ -93,7 +93,6 @@ namespace ClusteringSpace
                 usedPoint[bestCentroid] = true;
 				clusters.Add(new PathCollection(paths[bestCentroid]));
 				clusters.Last().Add(paths[bestCentroid]);
-				clusterWeights[curK] = weights[bestCentroid];
             }
 			
 			for (int pathIndex = 0; pathIndex < paths.Count; pathIndex++)
@@ -107,11 +106,8 @@ namespace ClusteringSpace
 			
 			foreach(PathCollection cluster in clusters)
 			{
-	//			if (cluster.changed)
-	//			{
-					cluster.UpdateCentroid();
-					cluster.changed = false;
-	//			}
+				cluster.UpdateCentroid();
+				cluster.changed = false;
 			}
 			
 			return clusters;
@@ -167,7 +163,7 @@ namespace ClusteringSpace
 				currentClustCost = getClustCost(paths, centroids);
 			}
 			
-			double[] weights = new double[centroids.Count()];
+			double[] centroidWeights = new double[numPaths];
 			foreach (Path p in paths)
 			{
 				double minDist = Double.PositiveInfinity;
@@ -182,16 +178,16 @@ namespace ClusteringSpace
 					}
 				}
 				
-				weights[minIndex] ++;
+				centroidWeights[minIndex] ++;
 			}
 			
-			for (int i = 0; i < paths.Count(); i ++)
+			for (int i = 0; i < numPaths; i ++)
 			{
-				if (weights[i] == 0) weights[i] = 1;
-				else weights[i] = 1.0 / weights[i];
+				if (centroidWeights[i] == 0) centroidWeights[i] = 1;
+				else centroidWeights[i] = 1.0 / centroidWeights[i];
 			}
 			
-			List<PathCollection> clusters = cluster(initializeCentroids(centroids, numClusters+1, weights), weights);
+			List<PathCollection> clusters = cluster(initializeCentroids(centroids, numClusters+1, centroidWeights), centroidWeights);
 			for (int pathIndex = 0; pathIndex < paths.Count; pathIndex++)
             {
                 int nearestCluster = FindNearestCluster(clusters, paths[pathIndex]);
@@ -230,6 +226,7 @@ namespace ClusteringSpace
 			{
 				weights[i] = 1.0;
 			}
+			numPaths = paths.Count();
 			return DoKMeans(paths, clusterCount, distMetric_, numPasses, weights);
 		}
 		
@@ -276,8 +273,10 @@ namespace ClusteringSpace
 						
 			for (int curPass = 0; curPass < numPasses; curPass ++)
 			{
-			//	return initializeCentroids(paths, clusterCount, weights);
-				List<PathCollection> allClusters = cluster(initializeCentroids(paths, clusterCount, weights), weights);
+				Debug.Log("Pass " + curPass);
+
+//				List<PathCollection> allClusters = cluster(initializeCentroids(paths, clusterCount, weights), weights);
+				List<PathCollection> allClusters = cluster(initializeCentroidsScalable(paths, clusterCount), KMeans.weights);
 				
                 // E is the sum of the distances between each centroid and that centroids assigned points.
                 // The smaller the E value, the better the clustering . . .
@@ -290,7 +289,11 @@ namespace ClusteringSpace
 					}
 				}
 				Debug.Log("Pass " + curPass + ", val: " + E);
-                if (E < bestE || curPass == 0)
+				if (E < 0)
+				{
+					Debug.Log("Something has gone horribly wrong.");
+				}
+                else if (E < bestE || curPass == 0)
                 {
                     //If we found a better E, update the return variables with the current ones
                     bestE = E;
