@@ -296,7 +296,58 @@ namespace ClusteringSpace
 				else
 					allClusters = cluster(initializeCentroids(paths, clusterCount, weights), weights);
 				
-                // E is the sum of the distances between each centroid and that centroids assigned points.
+				// Davies-Bouldin index calculation
+				// ref : http://en.wikipedia.org/wiki/Cluster_analysis#Evaluation_and_assessment
+				// ref : http://en.wikipedia.org/wiki/Davies–Bouldin_index
+				
+				// get, for each cluster, the average distance of all elements in that cluster to the cluster centroid
+				double[] avgDists = new double[allClusters.Count()];
+				for (int i = 0; i < allClusters.Count(); i ++)
+				{
+					avgDists[i] = 0.0;
+					foreach (Path p in allClusters[i])
+					{
+						avgDists[i] += FindDistance(p, allClusters[i].Centroid);
+					}
+				}
+				
+				double sumMaxVals = 0.0;
+				for (int i = 0; i < allClusters.Count(); i ++)
+				{ // sum over all clusters
+					double maxVal = 0.0;					
+
+					for (int j = 0; j < allClusters.Count(); j ++)
+					{
+						if (i == j) continue;
+						
+						double clustVal = (avgDists[i] + avgDists[j]) / FindDistance(allClusters[i].Centroid, allClusters[j].Centroid);
+						
+						if (clustVal > maxVal)
+						{
+							maxVal = clustVal;
+						}
+					}
+					
+					sumMaxVals += maxVal;
+				}
+				double clusteringQuality = sumMaxVals / allClusters.Count(); // sum * 1/n
+				
+				// Silhouette metric
+				// ref : http://en.wikipedia.org/wiki/Silhouette_(clustering)
+				
+				double[] sVals = new double[allClusters.Count()];
+				
+				foreach (int i = 0; i < allClusters.Count(); i ++)
+				{
+					
+				}
+				
+				double sumSVals = 0.0;
+				foreach (double d in sVals) sumSVals += d;
+				
+				double clusteringQuality = sumSVals / allClusters.Count();
+				
+           /*   // E is the sum of the distances between each centroid and that centroids assigned points.
                 // The smaller the E value, the better the clustering . . .
                 double E = 0.0;
 				foreach (PathCollection c in allClusters)
@@ -305,16 +356,16 @@ namespace ClusteringSpace
 					{
 						E += FindDistance(path, c.Centroid);
 					}
-				}
-				Debug.Log("Pass " + curPass + ", val: " + E);
-				if (E <= 0)
+				} */
+				Debug.Log("Pass " + curPass + ", DB val: " + clusteringQuality);
+				if (clusteringQuality <= 0)
 				{
 					Debug.Log("Something has gone horribly wrong.");
 				}
-                else if (E < bestE || curPass == 0)
+                else if (clusteringQuality < bestE || curPass == 0)
                 {
                     //If we found a better E, update the return variables with the current ones
-                    bestE = E;
+                    bestE = clusteringQuality;
 					clustVal = bestE;
 					
 					bestClustering.Clear();
