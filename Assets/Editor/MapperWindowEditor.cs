@@ -27,14 +27,17 @@ namespace EditorArea {
 		private static int randomSeed = -1;
 		
 		// Clustering
-		public static String[] distMetrics = new String[] { "Frechet (L1) (fastest)", "Frechet (L1) 3D", "Frechet (Euclidean)", "Area (Interpolation) 3D", "Area (Triangulation)", "Time (no x,y)" };
-		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
-		public static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
+//		public static String[] distMetrics = new String[] { "Frechet (L1) (fastest)", "Frechet (L1) 3D", "Frechet (Euclidean)", "Area (Interpolation) 3D", "Area (Triangulation)", "Time (no x,y)" };
+		private static String[] distMetrics = new String[] { "Frechet", "Area (Triangulation)", "Area (Interpolation) 3D" };
+		private static String[] dimensions = new String[] { "X", "Y", "Time", "Danger" };
+		private static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
+		private static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
 		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, numPasses = 1;
-		private static List<Path> clusterCentroids = new List<Path>();
+		private static List<Path> clusterCentroids = new List<Path>(), origPaths = new List<Path>();
 		private static bool[] showPaths = new bool[colors.Count()];
+		public static bool[] dimensionEnabled = new bool[dimensions.Count()];
 		private static bool autoSavePaths = true;
-		public static bool scaleTime = false, altCentroidComp = false;
+		public static bool scaleTime = false, altCentroidComp = false, useScalable = false;
 		public int numberLines = 20; 
 		public float interpolationValue = 0.0f;
 		public float interpolationValueCheck = 0.0f; 
@@ -69,6 +72,7 @@ namespace EditorArea {
 			window.title = "Mapper";
 			window.ShowTab ();
 			KMeans.reset();
+			origPaths = new List<Path>();
 		}
 		
 		void OnGUI () {
@@ -415,6 +419,7 @@ namespace EditorArea {
 				ComputeHeatMap (paths, deaths);
 				SetupArrangedPaths (paths);
 				KMeans.reset();
+				origPaths = new List<Path>();
 				
 				for (int count = 0; count < paths.Count(); count ++)
 				{
@@ -687,7 +692,7 @@ namespace EditorArea {
 
 			numberLines =  EditorGUILayout.IntField("number of lines", numberLines); 
 
-			if (GUILayout.Button ("Draw lines of 2 random paths"))
+			if (GUILayout.Button ("Draw lines for 2 random paths"))
 			{
 				GameObject g = GameObject.Find("DataPath") as GameObject;
 				if (!g)
@@ -759,7 +764,7 @@ namespace EditorArea {
 				double area = AreaDist.areaFromInterpolation3D(data.paths[0], data.paths[1]);
 				Debug.Log("Area between paths: " + area);
 			}
-			if(GUILayout.Button("Triangulate 2 random curves"))
+			if (GUILayout.Button("Triangulate 2 random curves"))
 			{
 
 				GameObject k = GameObject.Find("DataPath") as GameObject;
@@ -780,216 +785,38 @@ namespace EditorArea {
 					tObject.ShowTriangulation(); 
 				}	
 			}
-			/*
-			//Draw multiple lines over the interpolation
-			if (GUILayout.Button ("Muliple Lines"))
-			{
-				GameObject lineHolder = GameObject.Find("LinesMulitple"); 
-				if(lineHolder)
-					DestroyImmediate(lineHolder); 
-				
-				lineHolder = new GameObject(); 
-				lineHolder.name = "LinesMulitple"; 
-				
-				
-				//Third line
-				Vector3 [] points3 = { new Vector3(1,3,14),new Vector3(8,7,4),new Vector3(8,7,4),new Vector3(8,3,6),
-					new Vector3(8,3,6),new Vector3(7,15,6)};
-				
-				VectorLine line3 = new VectorLine("3",points3,Color.cyan,null,10.0f);
-				
-				
-				line3.vectorObject.transform.parent = lineHolder.transform;
-				
 
-				
-				
-				line3.Draw3D(); 
-
-				int n = 50;
-				
-				List<Vector3> pairs = new List<Vector3>(); 
-
-				float lengthLine = 0; 
-				
-				for(int i =0; i<points3.Length; i+=2)
-				{
-					Vector3 t = points3[i]-points3[i+1];
-					lengthLine += t.magnitude; 
-				}
-
-				n = n-1; 
-
-				for(int j = 0; j<=n; j++)
-				{
-					float interpolation = (float)j/(float)n;
-
-					Vector3 pointToGo = Vector3.zero; 
-					
-
-					
-					//Find between which point the interpolation belongs
-					float lineAt = 0.0f;
-					for(int i =0; i<points3.Length; i+=2)
-					{
-						Vector3 t = points3[i]-points3[i+1];
-						
-						if(interpolation > (lineAt/lengthLine)  && interpolation <= (t.magnitude+lineAt)/lengthLine)
-						{
-							//We are int
-							float linter = interpolation *lengthLine;
-							linter-=lineAt;
-							float newInter = linter/t.magnitude;
-							
-							pointToGo  = points3[i] + (points3[i+1] - points3[i])*newInter   ;
-						}
-						lineAt+=t.magnitude; 
-					}
-					if(interpolation == 0)
-						pointToGo = points3[0];
-					if(interpolation >=1)
-						pointToGo = points3[points3.Length - 1];
-
-
-
-					pairs.Add(Vector3.zero);
-					pairs.Add(pointToGo); 
-
-				}
-
-				VectorLine line4 = new VectorLine("2",pairs.ToArray(),Color.blue,null,2.0f);
-
-				line4.vectorObject.transform.parent = lineHolder.transform;
-				
-				line4.Draw3D(); 
-				
-			
-			}
-
-
-			//Fun with line interpolation here
-			interpolationValue = EditorGUILayout.Slider("Interpolation",interpolationValue,0.0f,1.0f,null); 
-
-			if(interpolationValue != interpolationValueCheck)
-			{
-				interpolationValueCheck = interpolationValue; 
-
-
-				//clear the previous line
-				GameObject lineHolder = GameObject.Find("LinesTest"); 
-				if(lineHolder)
-					DestroyImmediate(lineHolder); 
-				
-				lineHolder = new GameObject(); 
-				lineHolder.name = "LinesTest"; 
-				
-
-				
-				//First line
-				Vector3[] points = {new Vector3(0,0,0),new Vector3(0,10,0)};
-				VectorLine line1 = new VectorLine("1",points,Color.red,null,10.0f);
-				
-				
-				line1.vectorObject.transform.parent = lineHolder.transform;
-				
-				//Second line
-				Vector3 [] points2 = { new Vector3(0,0,0),new Vector3(10,16,0)};
-				
-				VectorLine line2 = new VectorLine("2",points2,Color.blue,null,10.0f);
-				
-				
-				line2.vectorObject.transform.parent = lineHolder.transform;
-				//Draw the lines in between
-
-				//Third line
-				Vector3 [] points3 = { points[1],points2[1],points2[1],new Vector3(8,7,4),
-					new Vector3(8,7,4),new Vector3(3,15,2)};
-				
-				VectorLine line3 = new VectorLine("3",points3,Color.cyan,null,10.0f);
-				
-				
-				line3.vectorObject.transform.parent = lineHolder.transform;
-
-				//Third line
-
-
-				//Find the second point to go
-
-				int n = 100;
-
-				List<Vector3> pairs = new List<Vector3>(); 
-
-
-
-
-				Vector3 pointToGo = Vector3.zero; 
-
-				float lengthLine = 0; 
-				for(int i =0; i<points3.Length; i+=2)
-				{
-					Vector3 t = points3[i]-points3[i+1];
-					lengthLine += t.magnitude; 
-				}
-
-				//Find between which point the interpolation belongs
-				float lineAt = 0.0f;
-				for(int i =0; i<points3.Length; i+=2)
-				{
-					Vector3 t = points3[i]-points3[i+1];
-					
-					if(interpolationValue > (lineAt/lengthLine)  && interpolationValue <= (t.magnitude+lineAt)/lengthLine)
-					{
-						//We are int
-						float linter = interpolationValue *lengthLine;
-						linter-=lineAt;
-						float newInter = linter/t.magnitude;
-
-						pointToGo  = points3[i] + (points3[i+1] - points3[i])*newInter   ;
-					}
-					lineAt+=t.magnitude; 
-				}
-				if(interpolationValue == 0)
-					pointToGo = points3[0];
-				if(interpolationValue >=1)
-					pointToGo = points3[points3.Length - 1];
-
-
-				Vector3 [] points4 = { points[0],   pointToGo };
-				
-				VectorLine line4 = new VectorLine("4",points4,Color.gray,null,5.0f);
-				
-				
-				line4.vectorObject.transform.parent = lineHolder.transform;
-
-
-			
-				line3.Draw3D(lineHolder.transform);
-				line4.Draw3D(lineHolder.transform);
-
-
-
-
-
-			}
-			*/
 			EditorGUILayout.LabelField ("");
 			
 			numClusters = EditorGUILayout.IntSlider ("Number of clusters", numClusters, 1, 7);
 			numPasses = EditorGUILayout.IntSlider ("Number of passes", numPasses, 1, 500);
 			int prevMetric = distMetric;
+			scaleTime = EditorGUILayout.Toggle("Scale time", scaleTime);
+			useScalable = EditorGUILayout.Toggle("Use scalable version", useScalable);
+		//	altCentroidComp = EditorGUILayout.Toggle("Alt centroid computation", altCentroidComp);
 			distMetric = EditorGUILayout.Popup("Dist metric:", distMetric, distMetrics);
 			
 			if (prevMetric != distMetric)
 			{
 				KMeans.reset();
 				
-				if (distMetric == 1 || distMetric == 3 || distMetric == 5)
+	//			if (distMetric == 1 || distMetric == 3 || distMetric == 5)
+	//			{
+	//				scaleTime = true;
+	//			}
+			}
+			if (distMetric == 0)
+			{
+				for (int count = 0; count < dimensions.Count(); count ++)
 				{
-					scaleTime = true;
+					bool prevValue = dimensionEnabled[count];
+					dimensionEnabled[count] = EditorGUILayout.Toggle(dimensions[count], dimensionEnabled[count]);
+					if (prevValue != dimensionEnabled[count])
+					{
+						KMeans.reset();
+					}
 				}
 			}
-			scaleTime = EditorGUILayout.Toggle("Scale time", scaleTime);
-			altCentroidComp = EditorGUILayout.Toggle("Alt centroid computation", altCentroidComp);
 			
 			if (GUILayout.Button ("Cluster on path similarity"))
 			{
@@ -998,6 +825,31 @@ namespace EditorArea {
 					Debug.Log("You have less paths than you have desired clusters - either compute more paths or decrease cluster amount.");
 					return;
 				}
+
+				if (distMetric == 0)
+				{
+					int numSelected = 0;
+					for (int dim = 0; dim < dimensionEnabled.Count(); dim ++)
+					{
+						if (dimensionEnabled[dim])
+						{
+							numSelected ++;
+						}
+					}
+				
+					if (numSelected < 1)
+					{
+						Debug.Log("You must first select at least one dimension.");
+						return;
+					}
+				}
+				
+				if (origPaths.Count() == 0)
+				{
+					origPaths = new List<Path>(paths);
+				}
+				
+				paths = new List<Path>(origPaths);
 				
 				if (altCentroidComp)
 				{
@@ -1034,6 +886,7 @@ namespace EditorArea {
 
 				if (paths.Count > 99)
 				{
+					Debug.Log("Paths: " + paths.Count());
 					List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/20, distMetric, numPasses);
 					clustVal = KMeans.clustVal;
 				
@@ -1097,6 +950,10 @@ namespace EditorArea {
 				{
 					Debug.Log("<99 paths");
 					List<PathCollection> clusters = KMeans.DoKMeans(paths, numClusters, distMetric, numPasses);
+					for (int i = 0; i < clusters.Count(); i ++)
+					{
+						Debug.Log("Cluster #" + i + " has " + clusters[i].Count() + " paths");
+					}
 					clustVal = KMeans.clustVal;
 					
 					clusterCentroids.Clear();
@@ -1121,14 +978,15 @@ namespace EditorArea {
 							{
 								path.color.a = 0.5f;
 							}
-							paths.Add(path);
-							toggleStatus.Add(paths.Last (), true);
+							if (!paths.Contains(path))
+							{
+								paths.Add(path);
+								toggleStatus.Add(paths.Last (), true);
+							}
 						}
 					}
 				}
 				
-//				Debug.Log ("Clust elapsed time: " + KMeans.clustTime.Elapsed);
-//				Debug.Log ("Dist elapsed time: " + KMeans.distTime.Elapsed);
 				TimeSpan totalTime = KMeans.clustTime.Elapsed + KMeans.distTime.Elapsed;
 				Debug.Log ("Total: " + totalTime + ", clust val: " + clustVal);
 				
@@ -1146,7 +1004,7 @@ namespace EditorArea {
 				}
 			}
 			
-			if (GUILayout.Button ("Cluster with optimal k (2-7)"))
+	/*		if (GUILayout.Button ("Cluster with optimal k (2-7)"))
 			{
 				if (paths.Count() < 7)
 				{
@@ -1238,7 +1096,7 @@ namespace EditorArea {
 					paths.Add(p);
 				}
 			}
-
+	*/
 			DirectoryInfo dir = new DirectoryInfo("clusteringdata/");
 			FileInfo[] info = dir.GetFiles("*.xml");
 			
@@ -1259,6 +1117,7 @@ namespace EditorArea {
 				paths.Clear ();
 				ClearPathsRepresentation ();
 				KMeans.reset();
+				origPaths = new List<Path>();
 				
 				List<Path> pathsImported = PathBulk.LoadPathsFromFile ("clusteringdata/" + fileNames[chosenFileIndex]);
 								

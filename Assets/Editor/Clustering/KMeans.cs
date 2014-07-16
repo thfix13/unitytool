@@ -17,13 +17,19 @@ namespace ClusteringSpace
     {
 		public enum Metrics
 		{
-			FrechetL1 = 0,
-			FrechetL13D,
-			FrechetEuclidean,
-			AreaDistInterpolation3D,
+			Frechet = 0,
 			AreaDistTriangulation,
-			Time
+			AreaDistInterpolation3D
 		}
+		
+		public enum FrechetDimensions
+		{
+			X = 0,
+			Y,
+			Time,
+			Danger
+		}
+		public static int numSelectedDimensions = -1;
 		
 		public static Stopwatch distTime = new Stopwatch();
 		public static Stopwatch clustTime = new Stopwatch();
@@ -45,6 +51,7 @@ namespace ClusteringSpace
 			clustVal = 0.0;
 			init = false;
 			numPaths = -1;
+			numSelectedDimensions = -1;
 		}
 		
         private static List<PathCollection> initializeCentroids(List<Path> paths, int numClusters, double[] weights_)
@@ -126,7 +133,7 @@ namespace ClusteringSpace
             usedPoint[c1] = true;
 			centroids.Add(paths[c1]);
 				
-			double oversamplingFactor = numClusters*1.01;
+			double oversamplingFactor = numClusters*2 + 5;
 		
 			double initialClustCost = getClustCost(paths, centroids);
 			double currentClustCost = initialClustCost;
@@ -164,6 +171,7 @@ namespace ClusteringSpace
 			}
 			
 			double[] centroidWeights = new double[numPaths];
+			Debug.Log("Weights array has size" + centroidWeights.Count());
 			foreach (Path p in paths)
 			{
 				double minDist = Double.PositiveInfinity;
@@ -187,6 +195,7 @@ namespace ClusteringSpace
 				else centroidWeights[i] = 1.0 / centroidWeights[i];
 			}
 			
+			Debug.Log("Weights array now has size" + centroidWeights.Count());
 			List<PathCollection> clusters = cluster(initializeCentroids(centroids, numClusters+1, centroidWeights), centroidWeights);
 			for (int pathIndex = 0; pathIndex < paths.Count; pathIndex++)
             {
@@ -194,6 +203,12 @@ namespace ClusteringSpace
 				if (!clusters[nearestCluster].Contains(paths[pathIndex]))
 					clusters[nearestCluster].Add(paths[pathIndex]);
             }
+			
+			foreach(PathCollection cl in clusters)
+			{
+				cl.UpdateCentroid();
+				cl.changed = false;
+			}
 
 			return clusters;
 		}
@@ -275,8 +290,11 @@ namespace ClusteringSpace
 			{
 				Debug.Log("Pass " + curPass);
 
-//				List<PathCollection> allClusters = cluster(initializeCentroids(paths, clusterCount, weights), weights);
-				List<PathCollection> allClusters = cluster(initializeCentroidsScalable(paths, clusterCount), KMeans.weights);
+				List<PathCollection> allClusters = new List<PathCollection>();
+				if (MapperWindowEditor.useScalable)
+					allClusters = cluster(initializeCentroidsScalable(paths, clusterCount), KMeans.weights);
+				else
+					allClusters = cluster(initializeCentroids(paths, clusterCount, weights), weights);
 				
                 // E is the sum of the distances between each centroid and that centroids assigned points.
                 // The smaller the E value, the better the clustering . . .
@@ -289,7 +307,7 @@ namespace ClusteringSpace
 					}
 				}
 				Debug.Log("Pass " + curPass + ", val: " + E);
-				if (E < 0)
+				if (E <= 0)
 				{
 					Debug.Log("Something has gone horribly wrong.");
 				}
@@ -325,6 +343,10 @@ namespace ClusteringSpace
 		
 		public static List<PathCollection> cluster(List<PathCollection> allClusters, double[] weights_)
 		{ // based on http://codeding.com/articles/k-means-algorithm
+			for (int i = 0; i < allClusters.Count(); i ++)
+			{
+				if (allClusters[i].Count() == 0) Debug.Log("Empty cluster, #" + i);
+			}
 			weights = weights_;
 
             int movements = 1;
@@ -408,18 +430,24 @@ namespace ClusteringSpace
 		{
 			distMetric = distMetric_;
 			
-			if (distMetric == (int)Metrics.FrechetL1)
+			if (distMetric == (int)Metrics.Frechet)
 			{
-				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(2));
+				numSelectedDimensions = 0;
+				for (int dim = 0; dim < MapperWindowEditor.dimensionEnabled.Count(); dim ++)
+				{
+					if (MapperWindowEditor.dimensionEnabled[dim])
+					{
+						numSelectedDimensions ++;
+					}
+				}
+				
+				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(numSelectedDimensions));
 			}
-			else if (distMetric == (int)Metrics.FrechetEuclidean)
-			{
-				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.epsApproximation2D(1.1));
-			}
-			else if (distMetric == (int)Metrics.FrechetL13D)
-			{
-				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(3));
-			}
+			
+//			else if (distMetric == (int)Metrics.FrechetEuclidean)
+//			{
+//				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.epsApproximation2D(1.1));
+//			}
 		}
 				
 		public static double FindDistance(Path path1, Path path2, int distMetric_)
@@ -449,7 +477,7 @@ namespace ClusteringSpace
 
 			double result = 0.0;
 			
-			if (distMetric == (int)Metrics.FrechetL1 || distMetric == (int)Metrics.FrechetEuclidean || distMetric == (int)Metrics.FrechetL13D)
+			if (distMetric == (int)Metrics.Frechet)
 			{
 				// source : http://www.win.tue.nl/~wmeulema/implementations.html
 				// Implementation by Wouter Meulemans
@@ -459,50 +487,47 @@ namespace ClusteringSpace
 				double[][] curveA = new double[path1.points.Count][];
 				double[][] curveB = new double[path2.points.Count][];
 				
-				if (distMetric == (int)Metrics.FrechetL1 || distMetric == (int)Metrics.FrechetEuclidean)
+				for (int i = 0; i < path1.points.Count; i ++)
 				{
-					for (int i = 0; i < path1.points.Count; i ++)
+					double[] curve = new double[numSelectedDimensions];
+					int curvePos = 0;
+					for (int j = 0; j < MapperWindowEditor.dimensionEnabled.Count(); j ++)
 					{
-						curveA[i] = new double[] { path1.points[i].x, path1.points[i].y };
+						if (MapperWindowEditor.dimensionEnabled[j])
+						{
+							if (j == (int)FrechetDimensions.X) curve[curvePos] = path1.points[i].x;
+							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = path1.points[i].y;
+							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = path1.points[i].t;
+							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = path1.danger;
+							curvePos ++;
+						}
 					}
-					for (int i = 0; i < path2.points.Count; i ++)
-					{
-						curveB[i] = new double[] { path2.points[i].x, path2.points[i].y };
-					}
-				}
-				else if (distMetric == (int)Metrics.FrechetL13D)
-				{
-					for (int i = 0; i < path1.points.Count; i ++)
-					{
-						curveA[i] = new double[] { path1.points[i].x, path1.points[i].y, path1.points[i].t };
-					}
-					for (int i = 0; i < path2.points.Count; i ++)
-					{
-						curveB[i] = new double[] { path2.points[i].x, path2.points[i].y, path2.points[i].t };
-					}
+					curveA[i] = curve;
 				}
 				
-				result = frechet.computeDistance(curveA,curveB);
+				for (int i = 0; i < path2.points.Count; i ++)
+				{
+					double[] curve = new double[numSelectedDimensions];
+					int curvePos = 0;
+					for (int j = 0; j < MapperWindowEditor.dimensionEnabled.Count(); j ++)
+					{
+						if (MapperWindowEditor.dimensionEnabled[j])
+						{
+							if (j == (int)FrechetDimensions.X) curve[curvePos] = path2.points[i].x;
+							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = path2.points[i].y;
+							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = path2.points[i].t;
+							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = path2.danger;
+							curvePos ++;
+						}
+					}
+					curveB[i] = curve;
+				}
+				
+				result = frechet.computeDistance(curveA, curveB);
 			}
 			else if (distMetric == (int)Metrics.AreaDistTriangulation || distMetric == (int)Metrics.AreaDistInterpolation3D)
 			{
 				result = AreaDist.computeDistance(path1, path2, distMetric);
-			}
-			else if (distMetric == (int)Metrics.Time)
-			{
-				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(1));
-				double[][] curveA = new double[path1.points.Count][];
-				double[][] curveB = new double[path2.points.Count][];
-				
-				for (int i = 0; i < path1.points.Count; i ++)
-				{
-					curveA[i] = new double[] { path1.points[i].t };
-				}
-				for (int i = 0; i < path2.points.Count; i ++)
-				{
-					curveB[i] = new double[] { path2.points[i].t };
-				}
-				result = frechet.computeDistance(curveA,curveB);
 			}
 			else
 			{
