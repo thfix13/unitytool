@@ -20,7 +20,7 @@ namespace EditorArea {
 
 		// Parameters with default values
 		public static int gridSize = 60;
-		private static bool drawMap = true, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = false, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false;
+		private static bool drawMap = true, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = false, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false, successfulPaths = false;
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10, dangerLimit = 0f, losLimit = 0f;
 		private static int randomSeed = -1, timeSamples = 1200, attemps = 25000, iterations = 1, ticksBehind = 0, crazyLimit = 0;
 
@@ -199,6 +199,7 @@ namespace EditorArea {
 			attemps = EditorGUILayout.IntSlider ("Attempts", attemps, 1000, 100000);
 			iterations = EditorGUILayout.IntSlider ("Iterations", iterations, 1, 1500);
 			randomSeed = EditorGUILayout.IntSlider("Random Seed", randomSeed, -1, 10000);
+			successfulPaths = EditorGUILayout.Toggle ("Only Successful Paths", successfulPaths);
 			smoothPath = EditorGUILayout.Toggle ("Smooth path", smoothPath);
 			simulateCombat = EditorGUILayout.Toggle ("Simulate combat", simulateCombat);
 
@@ -290,7 +291,7 @@ namespace EditorArea {
 				}
 
 				List<Node> nodes = null;
-				for (int it = 0; it < iterations; it++) {
+				for (int it = 0; it < iterations; /* Increment now depends on 'successfulPaths' */ ) {
 
 					// Make a copy of the original map
 					fullMap = new Cell[original.Length][][];
@@ -337,6 +338,9 @@ namespace EditorArea {
 							paths.Add (new Path (nodes));
 							toggleStatus.Add (paths.Last (), true);
 							paths.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
+
+							if (successfulPaths)
+								it++;
 						}
 						// Grab the death list
 						foreach (List<Node> deathNodes in rrt.deathPaths) {
@@ -350,6 +354,10 @@ namespace EditorArea {
 						// We also cant just bring the check earlier since there's data to be copied (really really rare cases)
 						// The other case is yet unkown, but it's a conicidence by trying to insert a node in the tree that already exists (really rare cases)
 					}
+
+					// Do the incrementation
+					if (!successfulPaths)
+						it++;
 				}
 				// Set the map to be drawn
 				drawer.fullMap = fullMap;

@@ -52,7 +52,6 @@ namespace RRTController {
 			to.parent = p2;
 
 			if (path.crazy > limit) {
-				Debug.Log("Limit reached!");
 				return false;
 			}
 

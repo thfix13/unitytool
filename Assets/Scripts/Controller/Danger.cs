@@ -50,7 +50,6 @@ namespace RRTController {
 			to.parent = p2;
 
 			if (path.danger3 > limit) {
-				Debug.Log("Limit reached!");
 				return false;
 			}
 
