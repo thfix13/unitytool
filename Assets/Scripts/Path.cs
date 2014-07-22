@@ -37,9 +37,17 @@ namespace Common {
 				this.points.Add(new Node(n));
 			}
 			this.name = p.name;
+			this.time = p.time;
+			this.length2d = p.length2d;
+			this.length3d = p.length3d;
+			this.danger = p.danger;
+			this.los = p.los;
+			this.danger3 = p.danger3;
+			this.los3 = p.los3;
 			this.danger3Norm = p.danger3Norm;
 			this.los3Norm = p.los3Norm;
 			this.crazy = p.crazy;
+			this.velocity = p.velocity;
 			
 			if (points == null)
 				throw new ArgumentNullException ("Points can't be null");
