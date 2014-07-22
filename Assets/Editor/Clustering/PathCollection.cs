@@ -59,41 +59,12 @@ namespace ClusteringSpace
 
         public Path RemovePath(Path p)
         {
-            Path removedPath = new Path(p.points, p.name);
+            Path removedPath = new Path(p);
             this.Remove(p);
 			changed = true;
 
             return (removedPath);
         }
-
-/*        public Path GetPathNearestToCentroid()
-        {
-            double minimumDistance = 0.0;
-            int nearestPathIndex = -1;
-
-            foreach (Path p in this)
-            {
-
-				Debug.Log("GPNTC");
-                double distance = KMeans.FindDistance(p, Centroid);
-
-                if (this.IndexOf(p) == 0)
-                {
-                    minimumDistance = distance;
-                    nearestPathIndex = this.IndexOf(p);
-                }
-                else
-                {
-                    if (minimumDistance > distance)
-                    {
-                        minimumDistance = distance;
-                        nearestPathIndex = this.IndexOf(p);
-                    }
-                }
-            }
-
-            return (this[nearestPathIndex]);
-        }*/
 
         #endregion
 
@@ -120,7 +91,7 @@ namespace ClusteringSpace
             Centroid.X = (xSum / (double)this.Count);
             Centroid.Y = (ySum / (double)this.Count); */
 			
-			if (MapperWindowEditor.altCentroidComp)
+	/*		if (MapperWindowEditor.altCentroidComp)
 			{
 				Node[] nodes = new Node[this[0].points.Count()];
 				for (int count = 0; count < this[0].points.Count(); count ++)
@@ -146,9 +117,9 @@ namespace ClusteringSpace
 			//	Debug.Log("end centr");
 			
 				Centroid = new Path(new List<Node>(nodes));
-			}
-			else
-			{
+			}*/
+	//		else
+	//		{
 				double pathTotalMinDist = double.PositiveInfinity;
 				int pIndex = -1;
 				for (int i = 0; i < this.Count; i ++)
@@ -180,11 +151,11 @@ namespace ClusteringSpace
 					return;
 				}
 			
-				Centroid = new Path(this[pIndex].points, this[pIndex].name);
+				Centroid = new Path(this[pIndex]);
 			}
-        }
+ //       }
 		
-		public Path getCenterDistPath()
+	/*	public Path getCenterDistPath()
 		{
 			double pathTotalMinDist = double.PositiveInfinity;
 			int pIndex = -1;
@@ -211,7 +182,7 @@ namespace ClusteringSpace
 			}
 
 			return new Path(this[pIndex].points);
-		}
+		}*/
 
         #endregion
     }

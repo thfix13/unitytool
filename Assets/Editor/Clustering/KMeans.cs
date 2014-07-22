@@ -27,7 +27,9 @@ namespace ClusteringSpace
 			X = 0,
 			Y,
 			Time,
-			Danger
+			Danger,
+			LOS,
+			NearMiss
 		}
 		public static int numSelectedDimensions = -1;
 		
@@ -44,14 +46,19 @@ namespace ClusteringSpace
 		private static bool init = false;
 		public static int numPaths = -1;
 		
+		public static Path[] normalizedPaths;
+		
 		public static void reset()
 		{
-		//	distances.Clear();
 			distMetric = -1;
 			clustVal = 0.0;
 			init = false;
 			numPaths = -1;
 			numSelectedDimensions = -1;
+			if (distances != null)
+				Array.Clear(distances, 0, distances.Count());
+			if (normalizedPaths != null)
+				Array.Clear(normalizedPaths, 0, normalizedPaths.Count());
 		}
 		
         private static List<PathCollection> initializeCentroids(List<Path> paths, int numClusters, double[] weights_)
@@ -253,6 +260,8 @@ namespace ClusteringSpace
 				return null;
 			}
 			
+			setDistMetric(distMetric_);
+			
 			if (!init)
 			{
 				distances = new int[paths.Count()][];
@@ -265,11 +274,58 @@ namespace ClusteringSpace
 					}
 				}
 				
+				normalizedPaths = new Path[paths.Count()];
+				// get max vals for x,y,t,d3norm,los3norm,crazy.
+				float maxX = -1f, maxY = -1f, maxT = -1f, maxD3Norm = -1f, maxLOS3Norm = -1f, maxCrazy = -1f;
+				float minX = Single.PositiveInfinity, minY = Single.PositiveInfinity, minT = Single.PositiveInfinity, minD3Norm = Single.PositiveInfinity, minLOS3Norm = Single.PositiveInfinity, minCrazy = Single.PositiveInfinity;
+				foreach (Path p in paths)
+				{
+					if (p.danger3Norm > maxD3Norm) maxD3Norm = p.danger3Norm;
+					if (p.los3Norm > maxLOS3Norm) maxLOS3Norm = p.los3Norm;
+					if (p.crazy > maxCrazy) maxCrazy = p.crazy;
+					
+					if (p.danger3Norm < minD3Norm) minD3Norm = p.danger3Norm;
+					if (p.los3Norm < minLOS3Norm) minLOS3Norm = p.los3Norm;
+					if (p.crazy < minCrazy) minCrazy = p.crazy;
+					
+					foreach (Node n in p.points)
+					{
+						if (n.x > maxX) maxX = n.x;
+						if (n.y > maxY) maxY = n.y;
+						if (n.t > maxT) maxT = n.t;
+						
+						if (n.x < minX) minX = n.x;
+						if (n.y < minY) minY = n.y;
+						if (n.t < minT) minT = n.t;
+					}					
+				}
+				
+				float maxVal = 500f;
+				
+				for (int count = 0; count < paths.Count(); count ++)
+				{
+					int index = Convert.ToInt32(paths[count].name);
+					normalizedPaths[index] = new Path(paths[count]);
+
+					if (numSelectedDimensions > 1)
+					{ // normalize data.
+						normalizedPaths[index].danger3Norm = ((normalizedPaths[index].danger3Norm - minD3Norm) * maxVal) / (maxD3Norm - minD3Norm);
+	//					Debug.Log("Path " + index + ": " + normalizedPaths[index].danger3Norm);
+						normalizedPaths[index].los3Norm = ((normalizedPaths[index].los3Norm - minLOS3Norm) * maxVal) / (maxLOS3Norm - minLOS3Norm);
+						normalizedPaths[index].crazy = ((normalizedPaths[index].crazy - minCrazy) * maxVal) / (maxCrazy - minCrazy);
+					
+						foreach (Node n in normalizedPaths[index].points)
+						{
+							n.x = (int)(((n.x - minX) * maxVal) / (maxX - minX));
+							n.y = (int)(((n.y - minY) * maxVal) / (maxY - minY));
+							n.t = (int)(((n.t - minT) * maxVal) / (maxT - minT));
+						}						
+					}
+				}
+				
 				init = true;
 			}
 						
-			setDistMetric(distMetric_);
-			
 			for (int count = 0; count < paths.Count(); count ++)
 			{
 				if (MapperWindowEditor.scaleTime)
@@ -332,31 +388,17 @@ namespace ClusteringSpace
 				}
 				double clusteringQuality = sumMaxVals / allClusters.Count(); // sum * 1/n
 				
-				// Silhouette metric
-				// ref : http://en.wikipedia.org/wiki/Silhouette_(clustering)
-				
-				double[] sVals = new double[allClusters.Count()];
-				
-				foreach (int i = 0; i < allClusters.Count(); i ++)
-				{
-					
-				}
-				
-				double sumSVals = 0.0;
-				foreach (double d in sVals) sumSVals += d;
-				
-				double clusteringQuality = sumSVals / allClusters.Count();
-				
            /*   // E is the sum of the distances between each centroid and that centroids assigned points.
                 // The smaller the E value, the better the clustering . . .
-                double E = 0.0;
+                double clusteringQuality = 0.0;
 				foreach (PathCollection c in allClusters)
 				{
 					foreach (Path path in c)
 					{
-						E += FindDistance(path, c.Centroid);
+						clusteringQuality += FindDistance(path, c.Centroid);
 					}
 				} */
+				
 				Debug.Log("Pass " + curPass + ", DB val: " + clusteringQuality);
 				if (clusteringQuality <= 0)
 				{
@@ -523,6 +565,9 @@ namespace ClusteringSpace
 			if (distances[p1num][p2num] != -1) return distances[p1num][p2num];
 			if (distances[p2num][p1num] != -1) return distances[p2num][p1num];
 			
+			Path normP1 = normalizedPaths[p1num];
+			Path normP2 = normalizedPaths[p2num];
+			
 			clustTime.Stop();
 			distTime.Start();
 
@@ -535,10 +580,10 @@ namespace ClusteringSpace
 				// based on paper by Buchin et al
 				// http://arxiv.org/abs/1306.5527
 				
-				double[][] curveA = new double[path1.points.Count][];
-				double[][] curveB = new double[path2.points.Count][];
+				double[][] curveA = new double[normP1.points.Count][];
+				double[][] curveB = new double[normP2.points.Count][];
 				
-				for (int i = 0; i < path1.points.Count; i ++)
+				for (int i = 0; i < normP1.points.Count; i ++)
 				{
 					double[] curve = new double[numSelectedDimensions];
 					int curvePos = 0;
@@ -546,17 +591,19 @@ namespace ClusteringSpace
 					{
 						if (MapperWindowEditor.dimensionEnabled[j])
 						{
-							if (j == (int)FrechetDimensions.X) curve[curvePos] = path1.points[i].x;
-							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = path1.points[i].y;
-							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = path1.points[i].t;
-							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = path1.danger;
+							if (j == (int)FrechetDimensions.X) curve[curvePos] = normP1.points[i].x;
+							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = normP1.points[i].y;
+							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = normP1.points[i].t;
+							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = normP1.danger3Norm+(normP1.danger3Norm/(10+i));
+							else if (j == (int)FrechetDimensions.LOS) curve[curvePos] = normP1.los3Norm+(normP1.los3Norm/(10+i));
+							else if (j == (int)FrechetDimensions.NearMiss) curve[curvePos] = normP1.crazy+(normP1.crazy/(10+i));
 							curvePos ++;
 						}
 					}
 					curveA[i] = curve;
 				}
 				
-				for (int i = 0; i < path2.points.Count; i ++)
+				for (int i = 0; i < normP2.points.Count; i ++)
 				{
 					double[] curve = new double[numSelectedDimensions];
 					int curvePos = 0;
@@ -564,10 +611,12 @@ namespace ClusteringSpace
 					{
 						if (MapperWindowEditor.dimensionEnabled[j])
 						{
-							if (j == (int)FrechetDimensions.X) curve[curvePos] = path2.points[i].x;
-							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = path2.points[i].y;
-							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = path2.points[i].t;
-							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = path2.danger;
+							if (j == (int)FrechetDimensions.X) curve[curvePos] = normP2.points[i].x;
+							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = normP2.points[i].y;
+							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = normP2.points[i].t;
+							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = normP2.danger3Norm+(normP2.danger3Norm/(10+i));
+							else if (j == (int)FrechetDimensions.LOS) curve[curvePos] = normP2.los3Norm+(normP2.los3Norm/(10+i));
+							else if (j == (int)FrechetDimensions.NearMiss) curve[curvePos] = normP2.crazy+(normP2.crazy/(10+i));
 							curvePos ++;
 						}
 					}
@@ -578,7 +627,7 @@ namespace ClusteringSpace
 			}
 			else if (distMetric == (int)Metrics.AreaDistTriangulation || distMetric == (int)Metrics.AreaDistInterpolation3D)
 			{
-				result = AreaDist.computeDistance(path1, path2, distMetric);
+				result = AreaDist.computeDistance(normP1, normP2, distMetric);
 			}
 			else
 			{
@@ -590,7 +639,7 @@ namespace ClusteringSpace
 			clustTime.Start();
 			
 			distances[p1num][p2num] = (int)result;
-			distances[p1num][p2num] = (int)result;
+			distances[p2num][p1num] = (int)result;
 						
 			return result;
         }

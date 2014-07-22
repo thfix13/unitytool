@@ -30,9 +30,17 @@ namespace Common {
 				throw new ArgumentNullException ("Points can't be null");
 		}
 		
-		public Path (List<Node> points, String name) {
-			this.points = points;
-			this.name = name;
+		public Path (Path p) {
+			this.points = new List<Node>();
+			foreach (Node n in p.points)
+			{
+				this.points.Add(new Node(n));
+			}
+			this.name = p.name;
+			this.danger3Norm = p.danger3Norm;
+			this.los3Norm = p.los3Norm;
+			this.crazy = p.crazy;
+			
 			if (points == null)
 				throw new ArgumentNullException ("Points can't be null");
 		}

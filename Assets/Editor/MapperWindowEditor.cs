@@ -29,7 +29,9 @@ namespace EditorArea {
 		// Clustering
 //		public static String[] distMetrics = new String[] { "Frechet (L1) (fastest)", "Frechet (L1) 3D", "Frechet (Euclidean)", "Area (Interpolation) 3D", "Area (Triangulation)", "Time (no x,y)" };
 		private static String[] distMetrics = new String[] { "Frechet", "Area (Triangulation)", "Area (Interpolation) 3D" };
-		private static String[] dimensions = new String[] { "X", "Y", "Time", "Danger" };
+		private static String[] distMetricsShort = new String[] { "FRE", "TRI", "INTPOL" };
+		private static String[] dimensions = new String[] { "X", "Y", "Time", "Danger", "LOS", "Near Miss" };
+		private static String[] dimensionsShort = new String[] { "X", "Y", "T", "DNG", "LOS", "NM" };
 		private static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
 		private static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
 		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, numPasses = 1;
@@ -851,7 +853,7 @@ namespace EditorArea {
 				
 				paths = new List<Path>(origPaths);
 				
-				if (altCentroidComp)
+		/*		if (altCentroidComp)
 				{
 					for (int i = 0; i < paths.Count; i ++)
 					{ // make each path have same # of points
@@ -877,7 +879,7 @@ namespace EditorArea {
 						}
 						paths[i] = new Path(nodes);
 					}
-				}
+				} */
 
 				KMeans.clustTime = new System.Diagnostics.Stopwatch();
 				KMeans.distTime = new System.Diagnostics.Stopwatch();
@@ -893,11 +895,12 @@ namespace EditorArea {
 					List<Path> tempCentroids = new List<Path>();
 					foreach(PathCollection pc in clusters)
 					{
-						if (altCentroidComp) tempCentroids.Add(pc.getCenterDistPath());
-						else tempCentroids.Add(pc.Centroid);
+				//		if (altCentroidComp) tempCentroids.Add(pc.getCenterDistPath());
+				//		else
+							tempCentroids.Add(pc.Centroid);
 					}
 				
-					if (altCentroidComp) altCentroidComp = false;
+			//		if (altCentroidComp) altCentroidComp = false;
 				
 					double[] weights = new double[paths.Count()];
 					for(int i = 0; i < paths.Count(); i ++) { weights[i] = 1.0; }
@@ -960,8 +963,9 @@ namespace EditorArea {
 					foreach(PathCollection pc in clusters)
 					{
 //						clusterCentroids.Add(pc.Centroid);
-						if (altCentroidComp) clusterCentroids.Add(pc.getCenterDistPath());
-						else clusterCentroids.Add(pc.Centroid);
+				//		if (altCentroidComp) clusterCentroids.Add(pc.getCenterDistPath());
+				//		else
+							clusterCentroids.Add(pc.Centroid);
 					}
 								
 					paths.Clear ();
@@ -995,7 +999,21 @@ namespace EditorArea {
 					String currentTime = System.DateTime.Now.ToString("s");
 					currentTime = currentTime.Replace(':', '-');
 					String totalTimeStr = new DateTime(Math.Abs(totalTime.Ticks)).ToString("HHmmss");
-					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetric + "d-" + paths.Count() + "p-" + (int)clustVal + "v-" + totalTimeStr + "t@" + currentTime + ".xml", paths);
+					
+					String distMetricStr = distMetricsShort[distMetric];
+					if (distMetric == 0)
+					{ // frechet
+						distMetricStr += "-";
+						for (int dim = 0; dim < dimensionEnabled.Count(); dim ++)
+						{
+							if (dimensionEnabled[dim])
+							{
+								distMetricStr += dimensionsShort[dim];
+							}
+						}
+					}
+					
+					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetricStr + "-" + paths.Count() + "p-" + (int)clustVal + "v-" + totalTimeStr + "t@" + currentTime + ".xml", paths);
 				}
 				
 				for (int color = 0; color < colors.Count(); color ++)

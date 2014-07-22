@@ -37,7 +37,7 @@ public class Triangulation : MonoBehaviour
 		return; 
 		//Debug.Log(colours.Count);
 		//Debug.Log(points.Count);
-		var i = 0;
+/*		var i = 0;
 		foreach(Vector3 v in points)
 		{
 
@@ -46,7 +46,7 @@ public class Triangulation : MonoBehaviour
 			Gizmos.DrawSphere (v, 0.25f);
 			i++; 
 		}
-
+*/
 		//Gizmos.color = Color.red;
 		//Gizmos.DrawSphere (new Vector3(0,2,0), 1);
 	}
@@ -76,12 +76,12 @@ public class Triangulation : MonoBehaviour
 			{	
 
 				tt.DrawDebug();
-				foreach(Vector3 v in tt.getVertexMiddle())
+	//			foreach(Vector3 v in tt.getVertexMiddle())
 				{
 				//	points.Add(v);
 				}
 
-				foreach(Color v in tt.colourVertex)
+	//			foreach(Color v in tt.colourVertex)
 				{
 				//	colours.Add(v);
 				}
@@ -132,7 +132,7 @@ public class Triangulation : MonoBehaviour
 	public void ShowTriangulation()
 	{
 		GameObject dataCurve = GameObject.Find("DataPath");
-		GameObject temp = GameObject.Find("temp");
+//		GameObject temp = GameObject.Find("temp");
 		
 
 		
@@ -501,7 +501,7 @@ public class Triangulation : MonoBehaviour
 		
 		
 		//Floor
-		Vector3[] f = new Vector3[4];
+//		Vector3[] f = new Vector3[4];
 		MeshFilter mesh = (MeshFilter)(floor.GetComponent ("MeshFilter"));
 		Vector3[] t = mesh.sharedMesh.vertices; 
 		
@@ -571,10 +571,10 @@ public class Triangulation : MonoBehaviour
 			
 		}
 		
-		foreach (Line l in lines) {
+//		foreach (Line l in lines) {
 			//Debug.DrawLine(l.vertex[0],l.vertex[1],Color.blue);
 			
-		}
+//		}
 		//Lines are also the one added. 
 		
 		//Compare each point to every point 
@@ -587,7 +587,7 @@ public class Triangulation : MonoBehaviour
 					
 					for (int z = 0; z<geos[j].vertex.Length; z++) {
 						
-						List<Line> toAdd = new List<Line> (); 
+//						List<Line> toAdd = new List<Line> (); 
 						
 						Boolean foundBreak = false; 
 						
@@ -694,12 +694,12 @@ public class Triangulation : MonoBehaviour
 		//Debug.Log(d); 
 		
 		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
-		Vector2 p0 = new Vector2 (a.x, a.z);
-		Vector2 p1 = new Vector2 (b.x, b.z); 
+//		Vector2 p0 = new Vector2 (a.x, a.z);
+//		Vector2 p1 = new Vector2 (b.x, b.z); 
 		
 		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
-		Vector2 q0 = new Vector2 (c.x, c.z);
-		Vector2 q1 = new Vector2 (d.x, d.z);
+//		Vector2 q0 = new Vector2 (c.x, c.z);
+//		Vector2 q1 = new Vector2 (d.x, d.z);
 		
 		Vector2 w = new Vector2 (a.x, a.z) - new Vector2 (d.x, d.z);
 		
@@ -726,12 +726,12 @@ public class Triangulation : MonoBehaviour
 		//Debug.Log(d); 
 		
 		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
-		Vector2 p0 = new Vector2 (a.x, a.z);
-		Vector2 p1 = new Vector2 (b.x, b.z); 
+//		Vector2 p0 = new Vector2 (a.x, a.z);
+//		Vector2 p1 = new Vector2 (b.x, b.z); 
 		
 		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
-		Vector2 q0 = new Vector2 (c.x, c.z);
-		Vector2 q1 = new Vector2 (d.x, d.z);
+//		Vector2 q0 = new Vector2 (c.x, c.z);
+//		Vector2 q1 = new Vector2 (d.x, d.z);
 		
 		Vector2 w = new Vector2 (a.x, a.z) - new Vector2 (d.x, d.z);
 		
@@ -740,7 +740,7 @@ public class Triangulation : MonoBehaviour
 		//	return true;
 		
 		double s = (v.y * w.x - v.x * w.y) / (v.x * u.y - v.y * u.x);
-		double t = (u.x * w.y - u.y * w.x) / (u.x * v.y - u.y * v.x); 
+//		double t = (u.x * w.y - u.y * w.x) / (u.x * v.y - u.y * v.x); 
 		//Debug.Log(s); 
 		//Debug.Log(t); 
 		

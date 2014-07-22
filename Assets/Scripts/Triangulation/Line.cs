@@ -132,10 +132,10 @@ public class Line
 		//Debug.Log(d); 
 		
 		Vector2 u = new Vector2(b.x,b.z) - new Vector2(a.x,a.z);
-		Vector2 p0 = new Vector2(a.x,a.z); Vector2 p1 = new Vector2(b.x,b.z); 
+//		Vector2 p0 = new Vector2(a.x,a.z); Vector2 p1 = new Vector2(b.x,b.z); 
 		
 		Vector2 v = new Vector2(d.x,d.z) - new Vector2(c.x,c.z);
-		Vector2 q0 = new Vector2(c.x,c.z); Vector2 q1 = new Vector2(d.x,d.z);
+//		Vector2 q0 = new Vector2(c.x,c.z); Vector2 q1 = new Vector2(d.x,d.z);
 		
 		Vector2 w = new Vector2(a.x,a.z) - new Vector2(d.x,d.z);
 		

@@ -30,11 +30,13 @@ namespace Common {
 		
 		public Node() { }
 		
-		public Node(int x_, int y_, int t_)
+		public Node(Node n)
 		{
-			x = x_;
-			y = y_;
-			t = t_;
+			x = n.x;
+			y = n.y;
+			t = n.t;
+			parent = n.parent;
+			cell = n.cell;
 		}
 
 		public float DistanceFrom (Node n) {
