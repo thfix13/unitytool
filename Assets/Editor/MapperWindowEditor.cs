@@ -1115,6 +1115,44 @@ namespace EditorArea {
 				}
 			}
 	*/
+			
+			if (GUILayout.Button("Generate graph"))
+			{
+				ClustersRoot root = new ClustersRoot ();
+				for (int n = 0; n < clusterCentroids.Count(); n ++)
+				{
+					MetricsRoot cluster = new MetricsRoot ();
+					cluster.number = n + "";
+					
+					foreach (Path p in paths)
+					{
+						if (p.color.r == clusterCentroids[n].color.r
+							&& p.color.g == clusterCentroids[n].color.g
+							&& p.color.b == clusterCentroids[n].color.b)
+						{
+							cluster.everything.Add(new PathResults(p, null));
+						}
+					}
+					
+					root.everything.Add (cluster);
+				}
+				
+				XmlSerializer ser = new XmlSerializer (typeof(ClustersRoot), new Type[] {
+					typeof(MetricsRoot),
+					typeof(PathResults),
+					typeof(PathValue),
+					typeof(Value)
+				});
+				
+				using (FileStream stream = new FileStream ("clusterresults.xml", FileMode.Create)) {
+					ser.Serialize (stream, root);
+					stream.Flush ();
+					stream.Close ();
+				}
+				
+				System.Diagnostics.Process.Start(Application.dataPath + "/graphgen");
+			}
+			
 			DirectoryInfo dir = new DirectoryInfo("clusteringdata/");
 			FileInfo[] info = dir.GetFiles("*.xml");
 			
@@ -1143,7 +1181,10 @@ namespace EditorArea {
 				clusterCentroids = new List<Path>();				
 				
 				foreach (Path p in pathsImported) {
-					if (p.color.a == 0.5 && p.color.r == colors[clusterCentroids.Count()].r && p.color.g == colors[clusterCentroids.Count()].g && p.color.b == colors[clusterCentroids.Count()].b)
+					if (p.color.a == 0.5
+						&& p.color.r == colors[clusterCentroids.Count()].r
+						&& p.color.g == colors[clusterCentroids.Count()].g
+						&& p.color.b == colors[clusterCentroids.Count()].b)
 					{
 						clusterCentroids.Add(p);
 					}
