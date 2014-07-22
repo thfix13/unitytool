@@ -1151,6 +1151,20 @@ namespace EditorArea {
 				}
 				
 				System.Diagnostics.Process.Start(Application.dataPath + "/graphgen");
+				
+				while(!System.IO.File.Exists("graphlog.txt"))
+				{
+					// wait...
+				}
+				
+				String text = System.IO.File.ReadAllText("graphlog.txt");
+				System.IO.File.Delete("graphlog.txt");
+				
+				String[] lines = text.Split(new char[] {'\n'});
+				foreach (String line in lines)
+				{
+					Debug.Log(line);
+				}
 			}
 			
 			DirectoryInfo dir = new DirectoryInfo("clusteringdata/");
