@@ -24,6 +24,12 @@ public class Triangulation : MonoBehaviour
 	public bool drawRoadMap = false; 
 	private bool drawMinSpanTree = false;
 	public bool stopAll = false;
+	public List<int>[] G = new List<int>[110];
+	public int[] colorG = new int[110];
+	public bool[] visitedG = new bool[110];
+	public const int red = 1;
+	public const int green = 2;
+	public const int blue = 3;
 
 	public void Start(){
 	
@@ -268,12 +274,6 @@ public class Triangulation : MonoBehaviour
 				finalPoly.Add(g);
 		}
 
-		//Drawing merged polygons and modified map
-//		foreach (Geometry g in finalPoly) {
-//			g.DrawGeometry(GameObject.Find("temp"));
-//		}
-//		mapBG.DrawGeometry (GameObject.Find ("temp"));
-
 		List<Vector3> allVertex = new List<Vector3>();
 		List<Vector3> tempVertex = new List<Vector3>();
 		Geometry totalGeo = new Geometry ();
@@ -294,15 +294,15 @@ public class Triangulation : MonoBehaviour
 			totalGeo.edges.Add(l);
 
 		int vlcnt = 0;
-		foreach(Vector3 v in allVertex)
-		{
-			GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-			inter.transform.position = v;
-			inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
-			inter.transform.parent = temp.transform;
-			inter.gameObject.name = vlcnt.ToString();
-			++vlcnt;
-		}
+//		foreach(Vector3 v in allVertex)
+//		{
+//			GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+//			inter.transform.position = v;
+//			inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
+//			inter.transform.parent = temp.transform;
+//			inter.gameObject.name = vlcnt.ToString();
+//			++vlcnt;
+//		}
 
 		lines.Clear ();
 
@@ -334,36 +334,12 @@ public class Triangulation : MonoBehaviour
 							break;
 						}
 					}
-//					foreach( Geometry g in geos ){
-//							foreach( Line l in g.edges ){
-//							if( l.LineIntersectMuntac( tempLine ) == 1 ){
-////								if( iv == 60 && jv == 63 ){	
-////									++vlcnt;
-////									l.name = vlcnt.ToString();
-////									l.DrawVector(temp);
-////									tempLine.name = l.name + "DUP";
-////									tempLine.DrawVector(temp);
-////									Debug.Log("Here 1");
-////								}
-//								collides = true;
-//								break;
-//							}
-//						}
-//					}
 
 					if( collides ) continue;
 
 					//B-Collision with existing lines
 					foreach( Line l in lines ){
 						if( l.LineIntersectMuntacEndPt( tempLine ) == 1 || l.Equals(tempLine) ){
-//							if( iv == 6 && jv == 7 ){	
-//								++vlcnt;
-//								l.name = vlcnt.ToString();
-//								l.DrawVector(temp);
-//								tempLine.name = l.name + "DUP";
-//								tempLine.DrawVector(temp);
-//								Debug.Log("Here 2");
-//							}							
 							collides = true;
 							break;
 						}
@@ -373,27 +349,6 @@ public class Triangulation : MonoBehaviour
 					//C-To avoid diagonals
 					foreach( Geometry g in geos ){
 						if( g.PointInside( tempLine.MidPoint() ) ){
-//							if( iv == 16 && jv == 18 ){	
-//								++vlcnt;
-//								tempLine.name = "DUP";
-//								tempLine.DrawVector(temp);
-//								g.DrawGeometry(temp);
-//								Line lray = new Line(tempLine.MidPoint(), new Vector3(-100,-100)); 
-//								lray.name = "lray";
-//								lray.DrawVector(temp);
-//								Debug.Log("Here 3");
-//								Debug.Log (tempLine.MidPoint());
-//								foreach( Line l in g.edges ){
-//									//if( l.LineIntersectMuntacEndPt(lray) > 0 ){
-//										Debug.Log ("Line");
-//										Debug.Log( l.vertex[0] );
-//										Debug.Log( l.vertex[1] );
-//										Debug.Log (l.GetIntersectionPoint(lray));
-//										//if( l.GetIntersectionPoint(lray).Equals(tempLine.MidPoint() ) )
-//										Debug.Log ("INTERSECTS with " + tempLine.MidPoint());
-//									//}
-//								}
-//							}				
 							collides = true;
 							break;
 						}
@@ -403,56 +358,12 @@ public class Triangulation : MonoBehaviour
 					lines.Add( tempLine );
 				}
 			}
-//			break;
 		}
 
-		foreach (Line L in lines)
-			L.DrawVector(temp);
-		Debug.Log (lines.Count);
-//		totalGeo.DrawGeometry (temp);
-		//Debug.Log (allVertex.Count);
-//		foreach (Geometry g in geos)
-//			g.DrawGeometry (temp);
-//		mapBG.DrawGeometry (temp);
-
-		///Uncomment the following later
-
-		//Lines are also the one added. 
-
-		//Compare each point to every point 
-
-//
-//		for (int i = 0; i < geos.Count; i++) {
-//			
-//			for (int j = i+1; j < geos.Count; j++) {
-//				
-//				for (int w = 0; w<geos[i].vertex.Length; w++) {
-//					
-//					for (int z = 0; z<geos[j].vertex.Length; z++) {
-//						
-//						List<Line> toAdd = new List<Line> (); 
-//						
-//						Boolean foundBreak = false; 
-//						
-//						foreach (Line l in lines) {
-//							
-//							if (LineIntersection (geos [i].vertex [w], geos [j].vertex [z],
-//							                      l.vertex [0], l.vertex [1])) {
-//								
-//								foundBreak = true; 
-//								break; 
-//							}								
-//							
-//						}
-//						if (!foundBreak) {	
-//							//Debug.DrawLine(geos[i].vertex[w], geos[j].vertex[z], Color.blue);
-//							lines.Add (new Line (geos [i].vertex [w], geos [j].vertex [z])); 		
-//						}	
-//					}
-//				}
-//			}
-//		}
-		
+//		foreach (Line L in lines)
+//			L.DrawVector(temp);
+//		Debug.Log ("Total Lines" + lines.Count);
+				
 		//Find the centers 
 		List<Triangle> triangles = new List<Triangle> (); 
 		//Well why be efficient when you can be not efficient
@@ -526,7 +437,120 @@ public class Triangulation : MonoBehaviour
 		triangulation.triangles = triangles;
 
 
+		List<Vector3> verts = new List<Vector3> ();
+		foreach (Line L in lines) {
+			if( !verts.Contains(L.vertex[0]) )
+				verts.Add(L.vertex[0]);
+			if( !verts.Contains(L.vertex[1]) )
+				verts.Add(L.vertex[1]);
+		}
+		for (int i = 0; i < 100; i++)
+			G [i] = new List<int> ();
+		foreach (Line L in lines) {
+			int indU = FindIndexManual( verts, L.vertex[0] );
+			int indV = FindIndexManual( verts, L.vertex[1] );
+			G[indU].Add(indV);
+			G[indV].Add(indU);
+		}
+		int total = 0;
+		for (int i = 0; i < 100; i++) {
+			if( G[i].Count == 0 ) break;
+			total += G[i].Count;
+		}
+		Debug.Log ("Total: " + total);
+		Debug.Log ("Lines: " + lines.Count);
+		colorG = new int[110];
+		visitedG = new bool[110];
+		for (int i = 0; i < 100; i++) {
+			colorG [i] = -1;
+			visitedG[i] = false;
+		}
+		TriColor ( 0 );
+		//DrawVertices ( temp );
+//		Debug.Log (verts.Count);
+//		for (int i = 0; i < verts.Count; i++) {
+//			GameObject inter = GameObject.CreatePrimitive (PrimitiveType.Sphere);
+//			inter.transform.position = verts[i];
+//			if( colorG[i] == red )
+//				inter.transform.renderer.material.color = Color.red;
+//			else if( colorG[i] == green )
+//				inter.transform.renderer.material.color = Color.green;
+//			else
+//				inter.transform.renderer.material.color = Color.blue;
+//			inter.transform.localScale = new Vector3 (0.3f, 0.3f, 0.3f); 
+//			inter.transform.parent = temp.transform;
+//		}
+		int numRed = 0, numGreen = 0, numBlue = 0;
+		for (int i = 0; i < verts.Count; i++) {
+			if( colorG[i] == red ) numRed++;
+			else if( colorG[i] == green ) numGreen++;
+			else numBlue++;
+		}
+		int minColor;
+		if (numRed <= numGreen && numRed <= numBlue)
+			minColor = red;
+		else if (numGreen <= numRed && numGreen <= numBlue)
+			minColor = green;
+		else
+			minColor = blue;
+		for (int i = 0; i < verts.Count; i++) {
+			//if( colorG[i] != minColor )
+			//	continue;
+			GameObject inter = GameObject.CreatePrimitive (PrimitiveType.Sphere);
+			inter.transform.position = verts[i];
+			inter.transform.localScale = new Vector3 (0.3f, 0.3f, 0.3f); 
+			if( colorG[i] == minColor ){
+				inter.transform.renderer.material.color = Color.red;
+				inter.transform.localScale = new Vector3 (0.7f, 0.7f, 0.7f); 
+			}
+			else
+				inter.transform.renderer.material.color = Color.green;
+
+			inter.transform.parent = temp.transform;
+		}
 	}
+
+	void TriColor( int source ){
+		if( colorG[source] == -1 )
+			colorG[source] = red;
+		int u = source;
+		visitedG [u] = true;
+		foreach (int v in G[source]) {
+			if( colorG[v] == -1 )
+				colorVertex( v );
+		}
+		foreach (int v in G[source]) {
+			if( visitedG[v] == false )
+				TriColor( v );
+		}
+	}
+
+	void colorVertex( int node ){
+		for (int currColor = 1; currColor <= 3; currColor++) {
+			bool available = true;
+			foreach( int v in G[node] ){
+				if( colorG[v] == currColor ){
+					available = false;
+					break;
+				}
+			}
+			if( available ){
+				colorG[node] = currColor;
+				break;
+			}
+		}
+	}
+
+	int FindIndexManual( List<Vector3> L, Vector3 V ){
+		int ind = -1;
+		foreach( Vector3 X in L ){
+			++ind;
+			if( X == V )
+				break;
+		}
+		return ind;
+	}
+
 
 	private Vector3 LineIntersectVect (Vector3 a, Vector3 b, Vector3 c, Vector3 d)
 	{
