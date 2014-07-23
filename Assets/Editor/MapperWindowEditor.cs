@@ -1116,7 +1116,7 @@ namespace EditorArea {
 			}
 	*/
 			
-			if (GUILayout.Button("Generate graph"))
+			if (GUILayout.Button("Generate graph (Mac only)"))
 			{
 				ClustersRoot root = new ClustersRoot ();
 				for (int n = 0; n < clusterCentroids.Count(); n ++)

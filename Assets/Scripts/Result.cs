@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEngine;
 
 namespace Common {
+	
 	[Serializable]
 	public class ResultsRoot {
 		public List<ResultBatch> everything = new List<ResultBatch> ();
@@ -49,8 +50,16 @@ namespace Common {
 		public string name;
 		[XmlElement("total-results")]
 		public List<Value> totalPerPath;
+		[XmlElement("path-info")]
+		public List<StrValue> pathInfo;
 		[XmlArray("timestamp-results")]
 		public List<PathValue> values;
+		
+		string ColorToHex(Color32 color)
+		{ // src : http://wiki.unity3d.com/index.php?title=HexConverter
+			string hex = color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2");
+			return hex;
+		}
 		
 		// Serialization only
 		public PathResults () {
@@ -60,6 +69,7 @@ namespace Common {
 			this.name = path.name;
 			this.values = new List<PathValue> ();
 			this.totalPerPath = new List<Value> ();
+			this.pathInfo = new List<StrValue> ();
 			for (int ttime = 0; ttime < path.points[path.points.Count - 1].t; ttime++)
 				if (input != null)
 					this.values.Add (new PathValue (input, ttime));
@@ -72,6 +82,7 @@ namespace Common {
 				this.totalPerPath.Add (new Value ("Los", path.los));
 				this.totalPerPath.Add (new Value ("Los3", path.los3));
 				this.totalPerPath.Add (new Value ("Los3Norm", path.los3Norm));
+				this.pathInfo.Add (new StrValue ("HexColor", ColorToHex(path.color)));
 			}
 		}
 	}
@@ -82,6 +93,8 @@ namespace Common {
 		public int time;
 		[XmlElement("metric")]
 		public List<Value> values;
+		[XmlElement("info")]
+		public List<StrValue> strValues;
 		
 		// Serialization only
 		public PathValue () {
@@ -114,6 +127,23 @@ namespace Common {
 		public Value (string name, float v) {
 			this.metricName = name;
 			this.metricvalue = v;
+		}
+	}
+	
+	[Serializable]
+	public class StrValue {
+		[XmlAttribute("name")]
+		public string metricName;
+		[XmlText]
+		public string strvalue;
+		
+		// Serialization only
+		public StrValue () {
+		}
+		
+		public StrValue (string name, string s) {
+			this.metricName = name;
+			this.strvalue = s;
 		}
 	}
 	

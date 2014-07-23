@@ -276,16 +276,16 @@ namespace ClusteringSpace
 				
 				normalizedPaths = new Path[paths.Count()];
 				// get max vals for x,y,t,d3norm,los3norm,crazy.
-				float maxX = -1f, maxY = -1f, maxT = -1f, maxD3Norm = -1f, maxLOS3Norm = -1f, maxCrazy = -1f;
-				float minX = Single.PositiveInfinity, minY = Single.PositiveInfinity, minT = Single.PositiveInfinity, minD3Norm = Single.PositiveInfinity, minLOS3Norm = Single.PositiveInfinity, minCrazy = Single.PositiveInfinity;
+				float maxX = -1f, maxY = -1f, maxT = -1f, maxD3 = -1f, maxLOS3 = -1f, maxCrazy = -1f;
+				float minX = Single.PositiveInfinity, minY = Single.PositiveInfinity, minT = Single.PositiveInfinity, minD3 = Single.PositiveInfinity, minLOS3 = Single.PositiveInfinity, minCrazy = Single.PositiveInfinity;
 				foreach (Path p in paths)
 				{
-					if (p.danger3Norm > maxD3Norm) maxD3Norm = p.danger3Norm;
-					if (p.los3Norm > maxLOS3Norm) maxLOS3Norm = p.los3Norm;
+					if (p.danger3 > maxD3) maxD3 = p.danger3;
+					if (p.los3 > maxLOS3) maxLOS3 = p.los3;
 					if (p.crazy > maxCrazy) maxCrazy = p.crazy;
 					
-					if (p.danger3Norm < minD3Norm) minD3Norm = p.danger3Norm;
-					if (p.los3Norm < minLOS3Norm) minLOS3Norm = p.los3Norm;
+					if (p.danger3 < minD3) minD3 = p.danger3;
+					if (p.los3 < minLOS3) minLOS3 = p.los3;
 					if (p.crazy < minCrazy) minCrazy = p.crazy;
 					
 					foreach (Node n in p.points)
@@ -309,9 +309,9 @@ namespace ClusteringSpace
 
 					if (numSelectedDimensions > 1)
 					{ // normalize data.
-						normalizedPaths[index].danger3Norm = ((normalizedPaths[index].danger3Norm - minD3Norm) * maxVal) / (maxD3Norm - minD3Norm);
+						normalizedPaths[index].danger3 = ((normalizedPaths[index].danger3 - minD3) * maxVal) / (maxD3 - minD3);
 	//					Debug.Log("Path " + index + ": " + normalizedPaths[index].danger3Norm);
-						normalizedPaths[index].los3Norm = ((normalizedPaths[index].los3Norm - minLOS3Norm) * maxVal) / (maxLOS3Norm - minLOS3Norm);
+						normalizedPaths[index].los3 = ((normalizedPaths[index].los3 - minLOS3) * maxVal) / (maxLOS3 - minLOS3);
 						normalizedPaths[index].crazy = ((normalizedPaths[index].crazy - minCrazy) * maxVal) / (maxCrazy - minCrazy);
 					
 						foreach (Node n in normalizedPaths[index].points)
@@ -594,8 +594,8 @@ namespace ClusteringSpace
 							if (j == (int)FrechetDimensions.X) curve[curvePos] = normP1.points[i].x;
 							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = normP1.points[i].y;
 							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = normP1.points[i].t;
-							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = normP1.danger3Norm+(normP1.danger3Norm/(10+i));
-							else if (j == (int)FrechetDimensions.LOS) curve[curvePos] = normP1.los3Norm+(normP1.los3Norm/(10+i));
+							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = normP1.danger3+(normP1.danger3/(10+i));
+							else if (j == (int)FrechetDimensions.LOS) curve[curvePos] = normP1.los3+(normP1.los3/(10+i));
 							else if (j == (int)FrechetDimensions.NearMiss) curve[curvePos] = normP1.crazy+(normP1.crazy/(10+i));
 							curvePos ++;
 						}
@@ -614,8 +614,8 @@ namespace ClusteringSpace
 							if (j == (int)FrechetDimensions.X) curve[curvePos] = normP2.points[i].x;
 							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = normP2.points[i].y;
 							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = normP2.points[i].t;
-							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = normP2.danger3Norm+(normP2.danger3Norm/(10+i));
-							else if (j == (int)FrechetDimensions.LOS) curve[curvePos] = normP2.los3Norm+(normP2.los3Norm/(10+i));
+							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = normP2.danger3+(normP2.danger3/(10+i));
+							else if (j == (int)FrechetDimensions.LOS) curve[curvePos] = normP2.los3+(normP2.los3/(10+i));
 							else if (j == (int)FrechetDimensions.NearMiss) curve[curvePos] = normP2.crazy+(normP2.crazy/(10+i));
 							curvePos ++;
 						}
