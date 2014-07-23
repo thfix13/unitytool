@@ -38,7 +38,7 @@ namespace EditorArea {
 		private static List<Path> clusterCentroids = new List<Path>(), origPaths = new List<Path>();
 		private static bool[] showPaths = new bool[colors.Count()];
 		public static bool[] dimensionEnabled = new bool[dimensions.Count()];
-		private static bool autoSavePaths = true;
+		private static bool autoSavePaths = true, drawHeatMapColored = false;
 		public static bool scaleTime = false, altCentroidComp = false, useScalable = false;
 		public int numberLines = 20; 
 		public float interpolationValue = 0.0f;
@@ -46,7 +46,7 @@ namespace EditorArea {
 
 		// Computed parameters
 		private static int[,] heatMap, deathHeatMap, combatHeatMap;
-		private static int[][,] heatMap3d, deathHeatMap3d;
+		private static int[][,] heatMap3d, deathHeatMap3d, heatMapColored;
 		private static GameObject start = null, end = null, floor = null, playerPrefab = null;
 		private static Dictionary<Path, bool> toggleStatus = new Dictionary<Path, bool> ();
 		private static Dictionary<Path, GameObject> players = new Dictionary<Path, GameObject> ();
@@ -444,6 +444,7 @@ namespace EditorArea {
 			drawNeverSeen = EditorGUILayout.Toggle ("- Draw safe places", drawNeverSeen);
 			drawFoVOnly = EditorGUILayout.Toggle ("- Draw only fields of view", drawFoVOnly);
 			drawHeatMap = EditorGUILayout.Toggle ("- Draw heat map", drawHeatMap);
+			drawHeatMapColored = EditorGUILayout.Toggle ("- Draw colored heat map", drawHeatMapColored);
 			drawCombatHeatMap = EditorGUILayout.Toggle ("-> Draw combat heat map", drawCombatHeatMap);
 			drawHeatMap3d = EditorGUILayout.Toggle ("-> Draw heat map 3d", drawHeatMap3d);
 			drawDeathHeatMap = EditorGUILayout.Toggle ("-> Draw death heat map", drawDeathHeatMap);
@@ -474,6 +475,10 @@ namespace EditorArea {
 
 					else
 						drawer.heatMap = heatMap;
+				}
+				if (drawHeatMapColored)
+				{
+					drawer.heatMapColored = heatMapColored;
 				}
 			}
 			
@@ -801,11 +806,6 @@ namespace EditorArea {
 			if (prevMetric != distMetric)
 			{
 				KMeans.reset();
-				
-	//			if (distMetric == 1 || distMetric == 3 || distMetric == 5)
-	//			{
-	//				scaleTime = true;
-	//			}
 			}
 			if (distMetric == 0)
 			{
@@ -1206,6 +1206,30 @@ namespace EditorArea {
 					paths.Add(p);
 				}
 				
+				heatMapColored = Analyzer.Compute2DHeatMapColored (paths, gridSize, gridSize, out maxHeatMap);
+				drawer.heatMapColored = heatMapColored;
+				drawer.heatMapMax = maxHeatMap;
+				drawer.tileSize.Set (SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y);
+				
+				List<Color> pathColors = new List<Color>();
+				foreach (Path path in paths)
+				{
+					Color c = new Color(path.color.r, path.color.g, path.color.b, 0.0f);
+					if (path.color.a == 0.5 && !pathColors.Contains(c))
+					{
+						pathColors.Add(new Color(path.color.r, path.color.g, path.color.b, 0.0f));
+					}
+				}
+				List<Color> darkerColors = new List<Color>();
+				foreach(Color c in pathColors)
+				{ // src: http://stackoverflow.com/questions/737217/how-do-i-adjust-the-brightness-of-a-color
+					darkerColors.Add(new Color((c.r*0.5f), (c.g*0.5f), (c.b*0.5f), 1.0f));
+					Debug.Log(darkerColors[darkerColors.Count-1]);
+				}				
+				
+				drawer.colors = pathColors;
+				drawer.darkerColors = darkerColors;
+				
 				for (int count = 0; count < paths.Count(); count ++)
 				{
 					paths[count].name = count.ToString();
@@ -1348,6 +1372,7 @@ namespace EditorArea {
 			if (drawer != null) {
 				drawer.timeSlice = timeSlice;
 				drawer.drawHeatMap = drawHeatMap;
+				drawer.drawHeatMapColored = drawHeatMapColored;
 				drawer.drawMap = drawMap;
 				drawer.drawFoVOnly = drawFoVOnly;
 				drawer.drawNeverSeen = drawNeverSeen;
@@ -1497,6 +1522,7 @@ namespace EditorArea {
 		
 		private void ComputeHeatMap (List<Path> paths, List<Path> deaths = null) {
 			heatMap = Analyzer.Compute2DHeatMap (paths, gridSize, gridSize, out maxHeatMap);
+
 			drawer.heatMapMax = maxHeatMap;
 			drawer.heatMap = heatMap;
 
@@ -1934,6 +1960,7 @@ namespace EditorArea {
 			
 				window.drawer.timeSlice = timeSlice;
 				window.drawer.drawHeatMap = drawHeatMap;
+				window.drawer.drawHeatMapColored = drawHeatMapColored;
 				window.drawer.drawMap = drawMap;
 				window.drawer.drawFoVOnly = drawFoVOnly;
 				window.drawer.drawNeverSeen = drawNeverSeen;

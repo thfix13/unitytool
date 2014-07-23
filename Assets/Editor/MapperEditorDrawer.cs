@@ -10,7 +10,7 @@ namespace EditorArea {
 	public class MapperEditorDrawer : MonoBehaviour {
 		
 		// Options
-		public bool drawMap = true, drawNeverSeen = false, drawHeatMap = true, drawPath = false, editGrid = false, drawFoVOnly = false, drawCombatLines = false;
+		public bool drawMap = true, drawNeverSeen = false, drawHeatMap = true, drawHeatMapColored = false, drawPath = false, editGrid = false, drawFoVOnly = false, drawCombatLines = false;
 		
 		// Caller must set these up
 		public Cell[][][] fullMap;
@@ -27,6 +27,7 @@ namespace EditorArea {
 		// We are just maintaning a bunch of maps so we can color them accordinlly
 		public int[,] heatMap, deathHeatMap, combatHeatMap;
 		public int[][,] heatMap3d, deathHeatMap3d;
+		public int[][,] heatMapColored;
 		
 		// Auxiliary values for the maps above
 		public float heatMapMax, deathHeatMapMax, combatHeatMap2dMax;
@@ -34,6 +35,8 @@ namespace EditorArea {
 		
 		// Fixed values
 		private Color orange = new Color (1.0f, 0.64f, 0f, 1f), transparent = new Color (1f, 1f, 1f, 0f);
+		
+		public List<Color> colors, darkerColors;
 		
 		public void Start () {
 			hideFlags = HideFlags.HideInInspector;
@@ -79,56 +82,83 @@ namespace EditorArea {
 					 0.0f,
 					 tileSize.y - tileSize.y * 0.05f));
 				}
-			} else if (drawMap && fullMap != null) {
-				for (int x = 0; x < fullMap[timeSlice].Length; x++)
-				for (int y = 0; y < fullMap[timeSlice][x].Length; y++) {
-					Cell c = fullMap [timeSlice] [x] [y];
+			}
+			else if (drawMap && fullMap != null)
+			{	
+				if (drawHeatMapColored && heatMapColored != null)
+				{					
+					for (int color = 0; color < colors.Count; color ++)
+					{
+						for (int x = 0; x < fullMap[timeSlice].Length; x++)
+						{
+							for (int y = 0; y < fullMap[timeSlice][x].Length; y++)
+							{
+								Cell c = fullMap [timeSlice] [x] [y];
 					
-					if (drawHeatMap) {
-						if (heatMap != null)
-							Gizmos.color = Color.Lerp (Color.white, Color.black, (float)heatMap [x, y] / (heatMapMax * 6f / 8f));
-						else if (combatHeatMap != null)
-							Gizmos.color = Color.Lerp (Color.white, Color.black, (float)combatHeatMap [x, y] / (combatHeatMap2dMax * 6f / 8f));
-						else if (heatMap3d != null)
-							Gizmos.color = Color.Lerp (Color.white, Color.black, heatMapMax3d [timeSlice] != 0 ? (float)heatMap3d [timeSlice] [x, y] / (float)heatMapMax3d [timeSlice] : 0f);
-						else if (deathHeatMap != null)
-							Gizmos.color = Color.Lerp (Color.white, Color.black, (float)deathHeatMap [x, y] / (deathHeatMapMax * 6f / 8f));
-						else if (deathHeatMap3d != null)
-							Gizmos.color = Color.Lerp (Color.white, Color.black, deathHeatMapMax3d [timeSlice] != 0 ? (float)deathHeatMap3d [timeSlice] [x, y] / (float)deathHeatMapMax3d [timeSlice] : 0f);
-					} else {
-						if (drawFoVOnly) {
-							if (c.seen)
-								Gizmos.color = orange;
-							else
-								Gizmos.color = transparent;
-						} else {
-							if (c.safe)
-								Gizmos.color = Color.blue;
-							else if (c.blocked)
-								Gizmos.color = Color.red;
-							else if (c.seen)
-								Gizmos.color = orange;
-							else if (c.noisy)
-								Gizmos.color = Color.yellow;
-							else if (c.waypoint)
-								Gizmos.color = Color.cyan;
-							else if (c.cluster > 0)
-								Gizmos.color = Color.white;
-							else if (drawNeverSeen)
-								Gizmos.color = Color.Lerp (Color.green, Color.magenta, seenNeverSeen [x] [y] / (seenNeverSeenMax * 3f / 8f));
-							else
-								Gizmos.color = Color.green;
+								if (heatMapColored[color][x, y] > 0)
+								{
+									Gizmos.color = Color.Lerp (colors[color], darkerColors[color], (float)heatMapColored[color][x, y] / (heatMapMax * 6f / 8f));
+									Gizmos.DrawCube (new Vector3(x * tileSize.x + zero.x + tileSize.x / 2f, 0.1f, y * tileSize.y + zero.y + tileSize.y / 2f), new Vector3(tileSize.x - tileSize.x * 0.05f, 0.0f, tileSize.y - tileSize.y * 0.05f));
+								}
+							}
 						}
 					}
+				}
+				else
+				{
+					for (int x = 0; x < fullMap[timeSlice].Length; x++)
+					{
+						for (int y = 0; y < fullMap[timeSlice][x].Length; y++)
+						{
+							Cell c = fullMap [timeSlice] [x] [y];
 					
-					Gizmos.DrawCube (new Vector3
-					                 (x * tileSize.x + zero.x + tileSize.x / 2f,
-					 0.1f,
-					 y * tileSize.y + zero.y + tileSize.y / 2f),
-					                 new Vector3
-					                 (tileSize.x - tileSize.x * 0.05f,
-					 0.0f,
-					 tileSize.y - tileSize.y * 0.05f));
+							if (drawHeatMap) {
+								if (heatMap != null)
+									Gizmos.color = Color.Lerp (Color.white, Color.black, (float)heatMap [x, y] / (heatMapMax * 6f / 8f));
+								else if (combatHeatMap != null)
+									Gizmos.color = Color.Lerp (Color.white, Color.black, (float)combatHeatMap [x, y] / (combatHeatMap2dMax * 6f / 8f));
+								else if (heatMap3d != null)
+									Gizmos.color = Color.Lerp (Color.white, Color.black, heatMapMax3d [timeSlice] != 0 ? (float)heatMap3d [timeSlice] [x, y] / (float)heatMapMax3d [timeSlice] : 0f);
+								else if (deathHeatMap != null)
+									Gizmos.color = Color.Lerp (Color.white, Color.black, (float)deathHeatMap [x, y] / (deathHeatMapMax * 6f / 8f));
+								else if (deathHeatMap3d != null)
+									Gizmos.color = Color.Lerp (Color.white, Color.black, deathHeatMapMax3d [timeSlice] != 0 ? (float)deathHeatMap3d [timeSlice] [x, y] / (float)deathHeatMapMax3d [timeSlice] : 0f);
+							} else {
+								if (drawFoVOnly) {
+									if (c.seen)
+										Gizmos.color = orange;
+									else
+										Gizmos.color = transparent;
+								} else {
+									if (c.safe)
+										Gizmos.color = Color.blue;
+									else if (c.blocked)
+										Gizmos.color = Color.red;
+									else if (c.seen)
+										Gizmos.color = orange;
+									else if (c.noisy)
+										Gizmos.color = Color.yellow;
+									else if (c.waypoint)
+										Gizmos.color = Color.cyan;
+									else if (c.cluster > 0)
+										Gizmos.color = Color.white;
+									else if (drawNeverSeen)
+										Gizmos.color = Color.Lerp (Color.green, Color.magenta, seenNeverSeen [x] [y] / (seenNeverSeenMax * 3f / 8f));
+									else
+										Gizmos.color = Color.green;
+								}
+							}
+					
+							Gizmos.DrawCube (new Vector3
+							                 (x * tileSize.x + zero.x + tileSize.x / 2f,
+							 0.1f,
+							 y * tileSize.y + zero.y + tileSize.y / 2f),
+							                 new Vector3
+							                 (tileSize.x - tileSize.x * 0.05f,
+							 0.0f,
+							 tileSize.y - tileSize.y * 0.05f));
+						}
+					}
 				}
 			}
 			

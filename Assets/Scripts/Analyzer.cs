@@ -687,6 +687,156 @@ namespace Extra {
 			
 			return heatMap;
 		}
+		
+		public static int[][,] Compute2DHeatMapColored (List<Path> paths, int sizeX, int sizeY, out int maxN) {
+			maxN = -1;
+			
+			// get num of colors
+			List<Color> colors = new List<Color>();
+			foreach (Path path in paths)
+			{
+				if (path.color.a != 0.5 && !colors.Contains(path.color))
+				{
+					colors.Add(path.color);
+				}
+			}
+			
+			int[][,] heatMaps = new int[colors.Count][,];
+			for (int i = 0; i < colors.Count; i ++)
+			{
+				heatMaps[i] = new int[sizeX, sizeY];
+			}
+			
+//			int[,] heatMap = new int[sizeX, sizeY];
+			
+			foreach (Path path in paths) {
+				int[,] hm = new int[sizeX, sizeY];
+				
+				foreach (Node node in path.points) {
+					if (node.parent == null || node.parent == node) {
+						hm [node.x, node.y] += 10;
+						continue;
+					}
+					
+					// Perform the DDA line algorithm
+					// Based on http://lodev.org/cgtutor/raycasting.html
+					
+					Vector2 pos = new Vector2 (node.x, node.y);
+					Vector2 p = new Vector2 (node.parent.x, node.parent.y);
+					Vector2 res = (p - pos).normalized;
+									
+					//which box of the map we're in
+					int mapX = Mathf.FloorToInt (node.x);
+					int mapY = Mathf.FloorToInt (node.y);
+	       
+					//length of ray from current position to next x or y-side
+					float sideDistX;
+					float sideDistY;
+	       
+					//length of ray from one x or y-side to next x or y-side
+					float deltaDistX = Mathf.Sqrt (1 + (res.y * res.y) / (res.x * res.x));
+					float deltaDistY = Mathf.Sqrt (1 + (res.x * res.x) / (res.y * res.y));
+	       
+					//what direction to step in x or y-direction (either +1 or -1)
+					int stepX;
+					int stepY;
+									
+					//calculate step and initial sideDist
+					if (res.x < 0) {
+						stepX = -1;
+						sideDistX = (pos.x - mapX) * deltaDistX;
+					} else {
+						stepX = 1;
+						sideDistX = (mapX + 1 - pos.x) * deltaDistX;
+					}
+					if (res.y < 0) {
+						stepY = -1;
+						sideDistY = (pos.y - mapY) * deltaDistY;
+					} else {
+						stepY = 1;
+						sideDistY = (mapY + 1 - pos.y) * deltaDistY;
+					}
+									
+					bool done = false;
+					//perform DDA
+					while (!done) {
+						
+						hm [mapX, mapY] += 10;
+						
+						//jump to next map square, OR in x-direction, OR in y-direction
+						if (sideDistX <= sideDistY) {
+							sideDistX += deltaDistX;
+							mapX += stepX;
+						} else {
+							sideDistY += deltaDistY;
+							mapY += stepY;
+						}
+						
+						for (int x = mapX - 1; x <= mapX + 1; x++)
+							for (int y = mapY - 1; y <= mapY + 1; y++)
+								if (!(x < 0 || y < 0 || x >= sizeX || y >= sizeY))
+									hm [x, y]++;
+						
+						// Check map boundaries
+						if (stepX == 1) {
+							if (mapX > node.parent.x)
+								done = true;
+						} else if (mapX < node.parent.x)
+							done = true;
+						
+						if (stepY == 1) {
+							if (mapY > node.parent.y)
+								done = true;
+						} else if (mapY < node.parent.y)
+							done = true;
+						
+						if (node.parent.x == mapX && node.parent.y == mapY) {
+							// End the algorithm
+							done = true;
+						}
+					}
+				}
+				
+				// Get the color of the current path and find the corresponding
+				// index in the colors array.
+				int colorIndex = -1;
+				for (int c = 0; c < colors.Count; c ++)
+				{
+					if (path.color.r == colors[c].r && path.color.g == colors[c].g && path.color.b == colors[c].b)
+					{
+						colorIndex = c;
+						break;
+					}
+				}
+				if (colorIndex == -1)
+				{
+					Debug.Log("Color not found in colors array!");
+					return null;
+				}
+				
+				// Pass to the global heatmap
+				for (int x = 0; x < sizeX; x++) {
+					for (int y = 0; y < sizeY; y++) {
+						heatMaps[colorIndex][x, y] += hm [x, y];
+					}
+				}
+			}
+			
+			for (int c = 0; c < colors.Count; c ++)
+			{
+				for (int y = 0; y < sizeX; y++) {
+					String s = "";
+					for (int x = 0; x < sizeY; x++) {
+						s += "" + heatMaps[c] [x, y] + " ";
+						if (maxN < heatMaps[c] [x, y])
+							maxN = heatMaps[c] [x, y];
+					}
+				}
+			}
+			
+			
+			return heatMaps;
+		}
 
 		public static int[,] Compute2DCombatHeatMap (List<Path> paths, List<Path> deaths, int sizeX, int sizeY, out int maxN) {
 			List<Path> all = new List<Path>(paths);
