@@ -447,7 +447,8 @@ public class Triangulation : MonoBehaviour
 		for (int i = 0; i < 100; i++)
 			G [i] = new List<int> ();
 		foreach (Line L in lines) {
-			int indU = FindIndexManual( verts, L.vertex[0] );
+			//int indU = FindIndexManual( verts, L.vertex[0] );
+			int indU = verts.IndexOf(L.vertex[0]);
 			int indV = FindIndexManual( verts, L.vertex[1] );
 			G[indU].Add(indV);
 			G[indV].Add(indU);
