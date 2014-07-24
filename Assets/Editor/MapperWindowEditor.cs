@@ -207,7 +207,7 @@ namespace EditorArea {
 			dangerLimit = EditorGUILayout.Slider ("- Danger limit", dangerLimit, 0, 1);
 			losLimit = EditorGUILayout.Slider ("- LineOfSight limit", losLimit, 0, 1);
 
-			if (GUILayout.Button ("(WIP) Compute 3D A* Path")) {
+			if (GUILayout.Button ("Compute 3D A* Path")) {
 				float playerSpeed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
 				
 				//Check the start and the end and get them from the editor. 
@@ -403,6 +403,23 @@ namespace EditorArea {
 				paths.Clear ();
 				ClearPathsRepresentation ();
 				List<Path> pathsImported = PathBulk.LoadPathsFromFile ("pathtest.xml");
+				foreach (Path p in pathsImported) {
+					if (p.points.Last().playerhp <= 0) {
+						deaths.Add(p);
+					} else {
+						p.name = "Imported " + (++imported);
+						p.color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
+						toggleStatus.Add (p, true);
+					}
+				}
+				ComputeHeatMap (paths, deaths);
+				SetupArrangedPaths (paths);
+			}
+
+			if (GUILayout.Button ("(DEBUG) Import Player  Paths")) {
+				paths.Clear ();
+				ClearPathsRepresentation ();
+				List<Path> pathsImported = PathBulk.LoadPathsFromFile ("playerPath.xml");
 				foreach (Path p in pathsImported) {
 					if (p.points.Last().playerhp <= 0) {
 						deaths.Add(p);

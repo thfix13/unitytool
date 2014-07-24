@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Common;
 using Objects;
 using Extra;
+using Vectrosity;
 
 public class RuntimeController : MonoBehaviour, NodeProvider {
 	
@@ -12,6 +13,8 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 	public float stepSize = 0.1f;
 	public int ticksBehind = 0;
 	public bool smoothPlayerPath = false;
+	public int playerHP = 1;
+	public Material blockedMaterial;
 	//
 	private Mapper mapper;
 	private Cell[][] obstaclesMap;
@@ -48,6 +51,48 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 				enemies [i].forwards = new Vector3[10000];
 				enemies [i].rotations = new Quaternion[10000];
 				enemies [i].cells = new Vector2[10000][];
+
+				// -------- Mesh calculation
+				float dist = enemies[i].fovDistance;
+				Vector3 p1 = Quaternion.Euler(0f, -enemies[i].fovAngle, 0f) * new Vector3(0,0,dist);
+				Vector3 p2 = Quaternion.Euler(0f, enemies[i].fovAngle, 0f) * new Vector3(0f,0f,dist);
+
+				Mesh mesh = new Mesh();
+
+				Vector3[] vert = new Vector3[3];
+				vert[0] = new Vector3();
+				vert[1] = p1;
+				vert[2] = p2;
+
+				int[] tris = new int[3 * (vert.Length - 2)];
+				tris[0] = 0;
+				tris[1] = 1;
+				tris[2] = 2;
+
+				Vector2[] uv = new Vector2[vert.Length];
+				uv[0] = new Vector2();
+				uv[1] = new Vector2();
+				uv[2] = new Vector2();
+
+				mesh.vertices = vert;
+				mesh.uv = uv;
+				mesh.triangles = tris;
+
+				mesh.RecalculateBounds();
+				mesh.RecalculateNormals();
+				mesh.Optimize();
+
+				GameObject go = new GameObject("FOV");
+
+				go.AddComponent<MeshFilter>();
+				go.GetComponent<MeshFilter>().mesh = mesh;
+
+				go.AddComponent<MeshRenderer>();
+				go.renderer.material = blockedMaterial;
+
+				go.transform.parent = enemies[i].transform;
+				go.transform.localPosition = new Vector3();
+				go.transform.localRotation = new Quaternion();
 			}
 			
 			cells = new List<List<Vector2>> ();
@@ -64,6 +109,8 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 			player = GameObject.FindGameObjectWithTag ("Player");
 			if (player == null)
 				player = GameObject.FindGameObjectWithTag ("AI");
+
+			player.GetComponent<Player>().maxHp = playerHP;
 			
 			playerPath = new Path (new List<Node> ());
 			playerPoints = new List<Vector3> ();
@@ -86,6 +133,8 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 	// Update is called once per frame
 	void Update () {
 	}
+
+
 	
 	private float acc = 0f;
 	private Node last;
@@ -118,6 +167,7 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 			curr.y = mapY;
 			curr.cell = fullMap [curr.t] [curr.x] [curr.y];
 			curr.parent = last;
+			curr.playerhp = playerHP;
 			last = curr;
 			
 			playerPath.points.Add (last);
@@ -154,6 +204,8 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 		paths.Add (playerPath);
 		PathBulk.SavePathsToFile ("playerPath.xml", paths);
 		new PathML (SpaceState.Running).SavePathsToFile ("playerML.xml", playerPoints);
+
+		new FileUpload().UploadFile();
 	}
 
 	public Node GetNode (int t, int x, int y) {

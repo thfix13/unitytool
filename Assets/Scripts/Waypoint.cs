@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using UnityEditor;
 
 namespace Objects {
 	public class Waypoint : MonoBehaviour {
