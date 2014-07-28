@@ -38,6 +38,13 @@ namespace Common {
 			parent = n.parent;
 			cell = n.cell;
 		}
+		
+		public Node(int x_, int y_, int t_)
+		{
+			x = x_;
+			y = y_;
+			t = t_;
+		}
 
 		public float DistanceFrom (Node n) {
 			Vector2 v1, v2;

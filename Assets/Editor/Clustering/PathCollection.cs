@@ -70,6 +70,71 @@ namespace ClusteringSpace
 
         #region Internal-Methods
 
+		public Path getAveragedCentroid()
+		{
+			// first, make a copy of all the paths in the cluster...
+			List<Path> interpolatedPaths = new List<Path>();
+			foreach (Path p in this)
+			{
+				interpolatedPaths.Add(new Path(p)); // make a copy
+			}
+
+			double maxTime = Double.NegativeInfinity;
+			foreach (Path p in this)
+			{ // find the highest time value over all paths in this cluster
+				foreach (Node n in p.points)
+				{
+					if (n.t > maxTime)
+					{
+						maxTime = n.t;
+					}
+				}
+			}
+			
+			for (int i = 0; i < interpolatedPaths.Count; i ++)
+			{ // make each path have same # of points
+				Vector3[] set1 = MapperWindowEditor.GetSetPointsWithN(interpolatedPaths[i].getPoints3D(), (int)(Math.Sqrt(maxTime)), false);
+	//			Debug.Log("Paths now have " + Math.Sqrt(maxTime) + " points.");
+				interpolatedPaths[i].points = new List<Node>();
+				foreach(Vector3 v in set1)
+				{
+					if (v.x == 0 && v.y == 0 && v.z == 0) continue;
+					interpolatedPaths[i].points.Add(new Node((int)v.x, (int)v.z, (int)v.y));
+				}
+			}
+			
+//			return interpolatedPaths[0];
+			
+			Node[] averagedNodes = new Node[interpolatedPaths[0].points.Count()];
+			for (int count = 0; count < interpolatedPaths[0].points.Count(); count ++)
+			{
+				averagedNodes[count] = new Node(0, 0, 0);
+				if (count > 0) averagedNodes[count].parent = averagedNodes[count-1];
+			}
+			foreach (Path p in interpolatedPaths)
+			{
+				for (int count = 0; count < p.points.Count; count ++)
+				{
+					averagedNodes[count].x += Math.Abs(p.points[count].x);
+					averagedNodes[count].y += Math.Abs(p.points[count].y);
+					averagedNodes[count].t += Math.Abs(p.points[count].t);
+				}
+			}
+//			for (int count = 0; count < interpolatedPaths[0].points.Count(); count ++)
+//			{
+//				Debug.Log("cnx:"+averagedNodes[count].x+",y:"+averagedNodes[count].y+",t:"+averagedNodes[count].t);
+//			}
+			foreach(Node n in averagedNodes)
+			{
+				n.x /= interpolatedPaths.Count;
+				n.y /= interpolatedPaths.Count;
+				n.t /= interpolatedPaths.Count;
+			}
+		//	Debug.Log("end centr");
+		
+			return new Path(new List<Node>(averagedNodes));
+		}
+
         public void UpdateCentroid()
         {
 		/*	double xSum = 0.0;

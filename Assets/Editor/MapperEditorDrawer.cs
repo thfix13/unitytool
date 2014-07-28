@@ -93,7 +93,7 @@ namespace EditorArea {
 						{
 							for (int y = 0; y < fullMap[timeSlice][x].Length; y++)
 							{
-								Cell c = fullMap [timeSlice] [x] [y];
+//								Cell c = fullMap [timeSlice] [x] [y];
 					
 								if (heatMapColored[color][x, y] > 0)
 								{

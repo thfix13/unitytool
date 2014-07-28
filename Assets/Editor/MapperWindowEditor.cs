@@ -853,6 +853,16 @@ namespace EditorArea {
 				
 				paths = new List<Path>(origPaths);
 				
+				// scan the paths and remove any avg. centroid paths that were computed
+				foreach (Path p in paths)
+				{
+					if (p.name == "AvgCentroid")
+					{
+						Debug.Log("Removing avg. centroid");
+						paths.Remove(p);
+					}
+				}
+				
 		/*		if (altCentroidComp)
 				{
 					for (int i = 0; i < paths.Count; i ++)
@@ -921,8 +931,9 @@ namespace EditorArea {
 						if (!paths.Contains(centroid))
 						{
 							paths.Add(centroid);
-							toggleStatus.Add(paths.Last(), true);							
+							toggleStatus.Add(paths.Last(), true);
 						}
+								
 						cluster ++;
 					}
 
@@ -1206,6 +1217,8 @@ namespace EditorArea {
 					paths.Add(p);
 				}
 				
+				ComputeHeatMap(paths, deaths);
+				
 				heatMapColored = Analyzer.Compute2DHeatMapColored (paths, gridSize, gridSize, out maxHeatMap);
 				drawer.heatMapColored = heatMapColored;
 				drawer.heatMapMax = maxHeatMap;
@@ -1323,6 +1336,45 @@ namespace EditorArea {
 							p.color.a = 1;
 						}
 						else p.color.a = 0;
+					}
+				}
+			}
+			if (GUILayout.Button ("Show avg. centroid for current color"))
+			{
+				int colorIndex = -1;
+				int numSelectedColors = 0;
+				for (int color = 0; color < colors.Count(); color ++)
+				{
+					if (showPaths[color])
+					{
+						numSelectedColors ++;
+						colorIndex = color;
+					}
+				}
+				
+				if (colorIndex == -1 || numSelectedColors > 1)
+				{
+					Debug.Log("You must first select exactly one color above.");
+				}
+				else
+				{
+					PathCollection coloredPaths = new PathCollection();
+					foreach (Path p in paths)
+					{
+						if (p.color.r == colors[colorIndex].r && p.color.g == colors[colorIndex].g && p.color.b == colors[colorIndex].b)
+						{
+							coloredPaths.Add(new Path(p));
+						}
+						p.color.a = 0; // set all paths to be invisible.
+					}
+					
+					Path avgCentroid = coloredPaths.getAveragedCentroid();
+					avgCentroid.color = colors[colorIndex];
+					avgCentroid.name = "AvgCentroid";
+					if (!paths.Contains(avgCentroid))
+					{
+						paths.Add(avgCentroid);
+						toggleStatus.Add(paths.Last(), true);
 					}
 				}
 			}

@@ -300,7 +300,7 @@ namespace ClusteringSpace
 					}					
 				}
 				
-				float maxVal = 500f;
+				float maxVal = 1000f;
 				
 				for (int count = 0; count < paths.Count(); count ++)
 				{
@@ -357,13 +357,23 @@ namespace ClusteringSpace
 				// ref : http://en.wikipedia.org/wiki/Davies–Bouldin_index
 				
 				// get, for each cluster, the average distance of all elements in that cluster to the cluster centroid
+				
+				Path[] averageCentroids = new Path[allClusters.Count()];
+				for (int i = 0; i < allClusters.Count(); i ++)
+				{
+					averageCentroids[i] = allClusters[i].getAveragedCentroid();
+					int newIndex = paths.Count() + 1000 + i;
+                    averageCentroids[i].name = newIndex.ToString();
+//					averageCentroids[i] = allClusters[i].Centroid;
+				}
+				
 				double[] avgDists = new double[allClusters.Count()];
 				for (int i = 0; i < allClusters.Count(); i ++)
 				{
 					avgDists[i] = 0.0;
 					foreach (Path p in allClusters[i])
 					{
-						avgDists[i] += FindDistance(p, allClusters[i].Centroid);
+						avgDists[i] += FindDistance(p, averageCentroids[i]);
 					}
 				}
 				
@@ -376,7 +386,8 @@ namespace ClusteringSpace
 					{
 						if (i == j) continue;
 						
-						double clustVal = (avgDists[i] + avgDists[j]) / FindDistance(allClusters[i].Centroid, allClusters[j].Centroid);
+                        double distBetweenCentroids = FindDistance(averageCentroids[i], averageCentroids[j]);
+                        double clustVal = (avgDists[i] + avgDists[j]) / distBetweenCentroids;
 						
 						if (clustVal > maxVal)
 						{
@@ -549,24 +560,39 @@ namespace ClusteringSpace
 			return FindDistance(path1, path2);
 		}
 		
-        public static double FindDistance(Path path1, Path path2)
+        public static double FindDistance(Path path1_, Path path2_)
         {
-			if (path1.points == null) { Debug.Log("P1NULL"); return -1; }
-			else if (path2.points == null) { Debug.Log("P2NULL"); return -1; }
+			if (path1_.points == null) { Debug.Log("P1NULL"); return -1; }
+			else if (path2_.points == null) { Debug.Log("P2NULL"); return -1; }
 			
-			if (path1.name == path2.name)
+			if (path1_.name == path2_.name)
 			{ // same path
 				return 0.0;
 			}
 			
-			int p1num = Convert.ToInt32(path1.name);
-			int p2num = Convert.ToInt32(path2.name);
+			int p1num = Convert.ToInt32(path1_.name);
+			int p2num = Convert.ToInt32(path2_.name);
 			
-			if (distances[p1num][p2num] != -1) return distances[p1num][p2num];
-			if (distances[p2num][p1num] != -1) return distances[p2num][p1num];
+			Path path1, path2;
 			
-			Path normP1 = normalizedPaths[p1num];
-			Path normP2 = normalizedPaths[p2num];
+			bool saveDistances = false;
+			if (p1num <= distances.Count() && p2num <= distances.Count())
+			{
+				if (distances[p1num][p2num] != -1) return distances[p1num][p2num];
+				if (distances[p2num][p1num] != -1) return distances[p2num][p1num];
+				
+				path1 = normalizedPaths[p1num];
+				path2 = normalizedPaths[p2num];
+				
+				saveDistances = true;
+			}
+			else
+			{
+				Debug.Log("Note - not storing this distance.");
+				
+				path1 = path1_;
+				path2 = path2_;
+			}
 			
 			clustTime.Stop();
 			distTime.Start();
@@ -580,10 +606,10 @@ namespace ClusteringSpace
 				// based on paper by Buchin et al
 				// http://arxiv.org/abs/1306.5527
 				
-				double[][] curveA = new double[normP1.points.Count][];
-				double[][] curveB = new double[normP2.points.Count][];
+				double[][] curveA = new double[path1.points.Count][];
+				double[][] curveB = new double[path2.points.Count][];
 				
-				for (int i = 0; i < normP1.points.Count; i ++)
+				for (int i = 0; i < path1.points.Count; i ++)
 				{
 					double[] curve = new double[numSelectedDimensions];
 					int curvePos = 0;
@@ -591,19 +617,19 @@ namespace ClusteringSpace
 					{
 						if (MapperWindowEditor.dimensionEnabled[j])
 						{
-							if (j == (int)FrechetDimensions.X) curve[curvePos] = normP1.points[i].x;
-							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = normP1.points[i].y;
-							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = normP1.points[i].t;
-							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = normP1.danger3+(normP1.danger3/(10+i));
-							else if (j == (int)FrechetDimensions.LOS) curve[curvePos] = normP1.los3+(normP1.los3/(10+i));
-							else if (j == (int)FrechetDimensions.NearMiss) curve[curvePos] = normP1.crazy+(normP1.crazy/(10+i));
+							if (j == (int)FrechetDimensions.X) curve[curvePos] = path1.points[i].x;
+							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = path1.points[i].y;
+							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = path1.points[i].t;
+							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = path1.danger3+(path1.danger3/(10+i));
+							else if (j == (int)FrechetDimensions.LOS) curve[curvePos] = path1.los3+(path1.los3/(10+i));
+							else if (j == (int)FrechetDimensions.NearMiss) curve[curvePos] = path1.crazy+(path1.crazy/(10+i));
 							curvePos ++;
 						}
 					}
 					curveA[i] = curve;
 				}
 				
-				for (int i = 0; i < normP2.points.Count; i ++)
+				for (int i = 0; i < path2.points.Count; i ++)
 				{
 					double[] curve = new double[numSelectedDimensions];
 					int curvePos = 0;
@@ -611,12 +637,12 @@ namespace ClusteringSpace
 					{
 						if (MapperWindowEditor.dimensionEnabled[j])
 						{
-							if (j == (int)FrechetDimensions.X) curve[curvePos] = normP2.points[i].x;
-							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = normP2.points[i].y;
-							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = normP2.points[i].t;
-							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = normP2.danger3+(normP2.danger3/(10+i));
-							else if (j == (int)FrechetDimensions.LOS) curve[curvePos] = normP2.los3+(normP2.los3/(10+i));
-							else if (j == (int)FrechetDimensions.NearMiss) curve[curvePos] = normP2.crazy+(normP2.crazy/(10+i));
+							if (j == (int)FrechetDimensions.X) curve[curvePos] = path2.points[i].x;
+							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = path2.points[i].y;
+							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = path2.points[i].t;
+							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = path2.danger3+(path2.danger3/(10+i));
+							else if (j == (int)FrechetDimensions.LOS) curve[curvePos] = path2.los3+(path2.los3/(10+i));
+							else if (j == (int)FrechetDimensions.NearMiss) curve[curvePos] = path2.crazy+(path2.crazy/(10+i));
 							curvePos ++;
 						}
 					}
@@ -627,7 +653,7 @@ namespace ClusteringSpace
 			}
 			else if (distMetric == (int)Metrics.AreaDistTriangulation || distMetric == (int)Metrics.AreaDistInterpolation3D)
 			{
-				result = AreaDist.computeDistance(normP1, normP2, distMetric);
+				result = AreaDist.computeDistance(path1, path2, distMetric);
 			}
 			else
 			{
@@ -638,8 +664,11 @@ namespace ClusteringSpace
 			distTime.Stop();
 			clustTime.Start();
 			
-			distances[p1num][p2num] = (int)result;
-			distances[p2num][p1num] = (int)result;
+			if (saveDistances)
+			{
+				distances[p1num][p2num] = (int)result;
+				distances[p2num][p1num] = (int)result;
+			}
 						
 			return result;
         }
