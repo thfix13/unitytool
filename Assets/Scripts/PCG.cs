@@ -11,67 +11,73 @@ public class PCG : MonoBehaviour
 	public static List<GameObject> eos = new List<GameObject> (), cos = new List<GameObject> (), pos = new List<GameObject> (), aos = new List<GameObject> (), oos = new List<GameObject> ();
 	public static int numOfEnemies = 0, numOfCameras = 0, numOfRegionsForEnemies = 0, numOfRegionsForCameras = 0, numOfGuards = 0;
 	public static int[] maxAreaIndexHolderE = null, maxAreaIndexHolderC = null;
-	
+    
 	// VoronoiDiagram instances
 	public static VoronoiDiagram vEnemy = new VoronoiDiagram ();
 	public static VoronoiDiagram vCamera = new VoronoiDiagram ();
-	
+    
 	// Skeleton instance
 	public static Skeletonization sBoundary = new Skeletonization ();
-	
+    
 	// Forming a path from startIndex to endIndex
 	public static List<Enemy> listOfEnemies = new List<Enemy> ();
 	public static List<List<int>> templistOfPath = new List<List<int>> ();
 	public static List<List<int>> listOfPath = new List<List<int>> ();
 	public static List<List<Waypoint>> listOfSequence = new List<List<Waypoint>> ();
 	public static List<List<GameObject>> listOfWaypoints = new List<List<GameObject>> ();
-	
+		
+	// For time-preserving
+	public static float speedConstant = 0.05f;
+	public static int maxTimeStamps = 0;
+	public static int timeThreshold = 80;
+	public static List<Enemy2> listOfEnemies2 = new List<Enemy2> ();
+    
 	// File
 	private static string filepath = null;
-	
+    
 	// Use this for initialization
 	void Start ()
 	{
-	
+    
 	}
-	
+    
 	// Update is called once per frame
 	void Update ()
 	{
-	
+    
 	}
 
 	public static void Initialize (GameObject enmPrefab, GameObject wpPrefab, Cell[][] obs)
 	{
 		enemyPrefab = enmPrefab;
 		waypointPrefab = wpPrefab;
-		
+        
 		// Initialize two voronoi diagrams' instances
 		vEnemy.obs = new Cell[obs.Length][];
 		vCamera.obs = new Cell [obs.Length][];
 		for (int x = 0; x < obs.Length; x++) {
-			vEnemy.obs [x] = new Cell [obs [x].Length];	
+			vEnemy.obs [x] = new Cell [obs [x].Length]; 
 			vCamera.obs [x] = new Cell [obs [x].Length];
 		}
-		
+        
 		// Passing as value NOT as reference
 		for (int i = 0; i < obs.Length; i++) {
 			for (int j = 0; j < obs [i].Length; j++) {
 				vEnemy.obs [i] [j] = obs [i] [j].Copy ();
-				vCamera.obs [i] [j] = obs [i] [j].Copy ();	
+				vCamera.obs [i] [j] = obs [i] [j].Copy ();   
 			}
 		}
 	}
-	
+    
 	public static void ResetEnemiesObs ()
 	{
 		for (int i = 0; i < vEnemy.obs.Length; i++) {
 			for (int j = 0; j < vEnemy.obs [i].Length; j++) {
 				vEnemy.obs [i] [j].nearestVoronoiCentre = -1;
 			}
-		}	
+		}   
 	}
-	
+    
 	public static void ResetCamerasObs ()
 	{
 		for (int i = 0; i < vCamera.obs.Length; i++) {
@@ -80,9 +86,9 @@ public class PCG : MonoBehaviour
 				vCamera.obs [i] [j].isNextToWall = -1;
 				vCamera.obs [i] [j].isVoronoiBoundary = -1;
 			}
-		}	
+		}   
 	}
-	
+    
 	// Guards
 	public static List<GameObject> PopulateEnemies (GameObject floor)
 	{
@@ -100,7 +106,7 @@ public class PCG : MonoBehaviour
 		}
 		return eos;
 	}
-	
+    
 	public static List<GameObject> PathInVoronoiRegion (GameObject floor, Cell[][] obs, int iterations)
 	{
 		for (int m = 0; m < numOfEnemies; m++) {
@@ -117,11 +123,11 @@ public class PCG : MonoBehaviour
 						do {
 							randomPos1 = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));
 						} while (obs[(int)((randomPos1.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos1.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true ||
-							obs[(int)((randomPos1.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos1.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].nearestVoronoiCentre != maxAreaIndexHolderE[m]);
+                            obs[(int)((randomPos1.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos1.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].nearestVoronoiCentre != maxAreaIndexHolderE[m]);
 						do {
-							randomPos2 = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));	
+							randomPos2 = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z)); 
 						} while (obs[(int)((randomPos2.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos2.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true ||
-							obs[(int)((randomPos2.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos2.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].nearestVoronoiCentre != maxAreaIndexHolderE[m]);
+                            obs[(int)((randomPos2.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos2.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].nearestVoronoiCentre != maxAreaIndexHolderE[m]);
 						tempDist = Vector3.Distance (randomPos1, randomPos2);
 						dir = new Vector3 (randomPos2.x - randomPos1.x, randomPos2.y - randomPos1.y, randomPos2.z - randomPos1.z);
 					} while ((tempDist <= maxDis) || (Physics.Raycast(randomPos1, dir, tempDist) == true));
@@ -137,16 +143,16 @@ public class PCG : MonoBehaviour
 						do {
 							randomPos1 = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));
 						} while (obs[(int)((randomPos1.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos1.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true ||
-							obs[(int)((randomPos1.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos1.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].nearestVoronoiCentre != maxAreaIndexHolderE[m]);
+                            obs[(int)((randomPos1.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos1.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].nearestVoronoiCentre != maxAreaIndexHolderE[m]);
 						do {
-							randomPos2 = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z));	
+							randomPos2 = new Vector3 (UnityEngine.Random.Range (floor.collider.bounds.min.x, floor.collider.bounds.max.x), 0.3f, UnityEngine.Random.Range (floor.collider.bounds.min.z, floor.collider.bounds.max.z)); 
 						} while (obs[(int)((randomPos2.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos2.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].blocked == true ||
-							obs[(int)((randomPos2.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos2.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].nearestVoronoiCentre != maxAreaIndexHolderE[m]);
+                            obs[(int)((randomPos2.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x)][(int)((randomPos2.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y)].nearestVoronoiCentre != maxAreaIndexHolderE[m]);
 						tempDist = Vector3.Distance (randomPos1, randomPos2);
 						dir = new Vector3 (randomPos2.x - randomPos1.x, randomPos2.y - randomPos1.y, randomPos2.z - randomPos1.z);
 					} while (Physics.Raycast(randomPos1, dir, tempDist) == true);
 					if (tempDist <= maxDis) {
-						continue;	
+						continue;   
 					} else {
 						node1.x = randomPos1.x;
 						node1.y = randomPos1.y;
@@ -162,10 +168,10 @@ public class PCG : MonoBehaviour
 			// (int)((node1.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y) + "] To: [" + 
 			// (int)((node2.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x) + "][" + 
 			// (int)((node2.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y) + "]. ");
-				
+                
 			// Debug.Log("The longest path is from" + node1 + "to" + node2 + ".");
 			// Debug.Log ("The longest path is " + maxDis);
-			
+            
 			//Move between two nodes
 			Vector3 p1 = new Vector3 (node1.x, node1.y, node1.z);
 			Vector3 p2 = new Vector3 (node2.x, node2.y, node2.z);
@@ -179,14 +185,14 @@ public class PCG : MonoBehaviour
 			wpScript2.next = wpScript1;
 			wpScript1.type = 1;
 			wpScript2.type = 1;
-			
+            
 			// Debug.Log ("GameObject[" + maxAreaIndexHolderE [m] + "]");
 			//Set the new patrol path
 			eos [maxAreaIndexHolderE [m]].GetComponent<Enemy> ().moveSpeed = 0.5f;
 			eos [maxAreaIndexHolderE [m]].GetComponent<Enemy> ().rotationSpeed = 10;
 			eos [maxAreaIndexHolderE [m]].GetComponent<Enemy> ().target = wpScript2;
 			eos [maxAreaIndexHolderE [m]].transform.position = new Vector3 (wp1.transform.position.x, 
-				wp1.transform.position.y, wp1.transform.position.z);
+                wp1.transform.position.y, wp1.transform.position.z);
 		}
 		var intersection = GameObject.FindGameObjectsWithTag ("Waypoint").ToArray ().Except (aos);
 		foreach (GameObject p in intersection) {
@@ -194,7 +200,7 @@ public class PCG : MonoBehaviour
 		}
 		return pos;
 	}
-	
+    
 	// Cameras
 	public static List<GameObject> PopulateCameras (GameObject floor)
 	{
@@ -212,7 +218,7 @@ public class PCG : MonoBehaviour
 		}
 		return cos;
 	}
-	
+    
 	public static List<GameObject> RotationInVoronoiRegion (GameObject floor, Cell[][] obs, int iterations)
 	{
 		foreach (GameObject cameraObject in cos) {
@@ -220,7 +226,7 @@ public class PCG : MonoBehaviour
 				float maxSumOfDistance = 0.0f;
 				int maxIndex = 0, maxIndex2 = 0;
 				Vector3 finalPos = new Vector3 ();
-				
+                
 				List<Vector3> lookingDirVec = new List<Vector3> ();
 				lookingDirVec.Add (new Vector3 (0.0f, 0.0f, 1.0f));
 				lookingDirVec.Add (new Vector3 (1.0f, 0.0f, 1.0f));
@@ -230,10 +236,10 @@ public class PCG : MonoBehaviour
 				lookingDirVec.Add (new Vector3 (-1.0f, 0.0f, -1.0f));
 				lookingDirVec.Add (new Vector3 (-1.0f, 0.0f, 0.0f));
 				lookingDirVec.Add (new Vector3 (-1.0f, 0.0f, 1.0f));
-				
+                
 				Enemy rcScript;
 				rcScript = cameraObject.GetComponent ("Enemy") as Enemy;
-				
+                
 				for (int iter = 1; iter < iterations + 1; iter++) {
 					// Bind to walls
 					// ...
@@ -244,25 +250,25 @@ public class PCG : MonoBehaviour
 					do {
 						random = UnityEngine.Random.Range (0, vCamera.boundaryArray [centreBelongTo].Count - 1);
 						defaultPos = new Vector3 (vCamera.boundaryXArray [centreBelongTo].ElementAt (random) * SpaceState.TileSize.x + floor.collider.bounds.min.x, 
-								position.y, vCamera.boundaryZArray [centreBelongTo].ElementAt (random) * SpaceState.TileSize.y + floor.collider.bounds.min.z);
+                                position.y, vCamera.boundaryZArray [centreBelongTo].ElementAt (random) * SpaceState.TileSize.y + floor.collider.bounds.min.z);
 					} while (vCamera.boundaryArray [centreBelongTo].ElementAt (random).isNextToWall != 1);
-					
+                    
 					// Find aiming position
 					// rangeArray[0] = minX, rangeArray[1] = minY, rangeArray[2] = maxX, rangeArray[3] = maxY;
 					float[] rangeArray = new float[4];
-					
+                    
 					List<float> distanceList = new List<float> ();
-					
+                    
 					// Foreach direction in 8 directions
 					foreach (Vector3 vdir in lookingDirVec) {
 						// Eliminate the possibility that a stationary guard could see the goal postion or starting postion
 						rangeArray = PCG.CalculateRange (vdir, defaultPos, rcScript.fovDistance, rcScript.fovAngle);
 						if (((GameObject.FindGameObjectWithTag ("End").transform.position.x < rangeArray [0] || GameObject.FindGameObjectWithTag ("End").transform.position.x > rangeArray [2]
-														|| GameObject.FindGameObjectWithTag ("End").transform.position.y < rangeArray [1] || GameObject.FindGameObjectWithTag ("End").transform.position.y > rangeArray [3])
-														&& (GameObject.FindGameObjectWithTag ("Start").transform.position.x < rangeArray [0] || GameObject.FindGameObjectWithTag ("Start").transform.position.x > rangeArray [2]
-														|| GameObject.FindGameObjectWithTag ("Start").transform.position.y < rangeArray [1] || GameObject.FindGameObjectWithTag ("Start").transform.position.y > rangeArray [3]))
-														|| (Physics.Raycast (defaultPos, new Vector3 (GameObject.FindGameObjectWithTag ("End").transform.position.x - defaultPos.x, 0.0f, GameObject.FindGameObjectWithTag ("End").transform.position.z - defaultPos.z), rcScript.fovDistance)
-														|| Physics.Raycast (defaultPos, new Vector3 (GameObject.FindGameObjectWithTag ("Start").transform.position.x - defaultPos.x, 0.0f, GameObject.FindGameObjectWithTag ("Start").transform.position.z - defaultPos.z), rcScript.fovDistance))) {
+							|| GameObject.FindGameObjectWithTag ("End").transform.position.y < rangeArray [1] || GameObject.FindGameObjectWithTag ("End").transform.position.y > rangeArray [3])
+							&& (GameObject.FindGameObjectWithTag ("Start").transform.position.x < rangeArray [0] || GameObject.FindGameObjectWithTag ("Start").transform.position.x > rangeArray [2]
+							|| GameObject.FindGameObjectWithTag ("Start").transform.position.y < rangeArray [1] || GameObject.FindGameObjectWithTag ("Start").transform.position.y > rangeArray [3]))
+							|| (Physics.Raycast (defaultPos, new Vector3 (GameObject.FindGameObjectWithTag ("End").transform.position.x - defaultPos.x, 0.0f, GameObject.FindGameObjectWithTag ("End").transform.position.z - defaultPos.z), rcScript.fovDistance)
+							|| Physics.Raycast (defaultPos, new Vector3 (GameObject.FindGameObjectWithTag ("Start").transform.position.x - defaultPos.x, 0.0f, GameObject.FindGameObjectWithTag ("Start").transform.position.z - defaultPos.z), rcScript.fovDistance))) {
 							RaycastHit hit;
 							float solution = 0.0f;
 							if (Physics.Raycast (defaultPos, vdir, out hit)) {
@@ -321,7 +327,7 @@ public class PCG : MonoBehaviour
 							distanceList.Add (-1.0f);
 						}
 					}
-					
+                    
 					int cnt = 0;
 					int maxIndexTemp = 0;
 					float maxDistance = 0.0f;
@@ -332,7 +338,7 @@ public class PCG : MonoBehaviour
 						}
 						cnt++;
 					}
-					
+                    
 					int cnt2 = 0;
 					int maxIndexTemp2 = 0;
 					float maxDistance2 = 0.0f;
@@ -343,23 +349,23 @@ public class PCG : MonoBehaviour
 						}
 						cnt2++;
 					}
-					
+                    
 					float tempSumOfDistance = maxDistance + maxDistance2;
 					if (tempSumOfDistance > maxSumOfDistance) {
 						maxSumOfDistance = tempSumOfDistance;
 						maxIndex = maxIndexTemp;
 						maxIndex2 = maxIndexTemp2;
 						finalPos = new Vector3 (defaultPos.x, defaultPos.y, defaultPos.z);
-					}	
+					}   
 				}
-				
+                
 				// Bring it to the new position
 				cameraObject.transform.position = finalPos;
 				// Create rotation waypoint aimed at
 				Vector3 rwpPos1 = new Vector3 (finalPos.x + lookingDirVec.ElementAt (maxIndex).x * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex).x * lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex).z * lookingDirVec.ElementAt (maxIndex).z), 0.0f,
-					finalPos.z + lookingDirVec.ElementAt (maxIndex).z * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex).x * lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex).z * lookingDirVec.ElementAt (maxIndex).z));
+                    finalPos.z + lookingDirVec.ElementAt (maxIndex).z * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex).x * lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex).z * lookingDirVec.ElementAt (maxIndex).z));
 				Vector3 rwpPos2 = new Vector3 (finalPos.x + lookingDirVec.ElementAt (maxIndex2).x * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex2).x * lookingDirVec.ElementAt (maxIndex2).x + lookingDirVec.ElementAt (maxIndex2).z * lookingDirVec.ElementAt (maxIndex2).z), 0.0f,
-					finalPos.z + lookingDirVec.ElementAt (maxIndex2).z * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex2).x * lookingDirVec.ElementAt (maxIndex2).x + lookingDirVec.ElementAt (maxIndex2).z * lookingDirVec.ElementAt (maxIndex2).z));
+                    finalPos.z + lookingDirVec.ElementAt (maxIndex2).z * rcScript.fovDistance / Mathf.Sqrt (lookingDirVec.ElementAt (maxIndex2).x * lookingDirVec.ElementAt (maxIndex2).x + lookingDirVec.ElementAt (maxIndex2).z * lookingDirVec.ElementAt (maxIndex2).z));
 				if (CheckAcute (finalPos, lookingDirVec.ElementAt (maxIndex), lookingDirVec.ElementAt (maxIndex2))) {
 					GameObject rwp1 = GameObject.Instantiate (waypointPrefab, rwpPos1, Quaternion.identity) as GameObject;
 					GameObject rwp2 = GameObject.Instantiate (waypointPrefab, rwpPos2, Quaternion.identity) as GameObject;
@@ -428,7 +434,7 @@ public class PCG : MonoBehaviour
 						rcScript.transform.LookAt (rwpPos1);
 					} else {
 						rwpPos3 = new Vector3 (finalPos.x + (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x) * rcScript.fovDistance / Mathf.Sqrt ((lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) * (lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) + (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z) * (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z)), 0.0f,
-						finalPos.z + (- lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z) * rcScript.fovDistance / Mathf.Sqrt ((lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) * (lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) + (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z) * (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z)));
+                        finalPos.z + (- lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z) * rcScript.fovDistance / Mathf.Sqrt ((lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) * (lookingDirVec.ElementAt (maxIndex).x + lookingDirVec.ElementAt (maxIndex2).x) + (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z) * (lookingDirVec.ElementAt (maxIndex).z + lookingDirVec.ElementAt (maxIndex2).z)));
 						GameObject rwp1 = GameObject.Instantiate (waypointPrefab, rwpPos1, Quaternion.identity) as GameObject;
 						GameObject rwp2 = GameObject.Instantiate (waypointPrefab, rwpPos2, Quaternion.identity) as GameObject;
 						GameObject rwp3 = GameObject.Instantiate (waypointPrefab, rwpPos3, Quaternion.identity) as GameObject;
@@ -460,9 +466,9 @@ public class PCG : MonoBehaviour
 						rwpScript1.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex).x, lookingDirVec.ElementAt (maxIndex).y, lookingDirVec.ElementAt (maxIndex).z);
 						rwpScript2.lookDir = new Vector3 (lookingDirVec.ElementAt (maxIndex2).x, lookingDirVec.ElementAt (maxIndex2).y, lookingDirVec.ElementAt (maxIndex2).z);
 						rwpScript3.lookDir = new Vector3 (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x,
-							- lookingDirVec.ElementAt (maxIndex).y - lookingDirVec.ElementAt (maxIndex2).y, - lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z);
+                            - lookingDirVec.ElementAt (maxIndex).y - lookingDirVec.ElementAt (maxIndex2).y, - lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z);
 						rwpScript4.lookDir = new Vector3 (- lookingDirVec.ElementAt (maxIndex).x - lookingDirVec.ElementAt (maxIndex2).x,
-							- lookingDirVec.ElementAt (maxIndex).y - lookingDirVec.ElementAt (maxIndex2).y, - lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z);
+                            - lookingDirVec.ElementAt (maxIndex).y - lookingDirVec.ElementAt (maxIndex2).y, - lookingDirVec.ElementAt (maxIndex).z - lookingDirVec.ElementAt (maxIndex2).z);
 						rwpScript1.center = rcScript;
 						rwpScript2.center = rcScript;
 						rwpScript3.center = rcScript;
@@ -480,7 +486,7 @@ public class PCG : MonoBehaviour
 		}
 		return aos;
 	}
-	
+    
 	public static void InitializeSkeleton (Cell[][] obs)
 	{
 		sBoundary.obs = new Cell[obs.Length][];
@@ -494,12 +500,12 @@ public class PCG : MonoBehaviour
 			}
 		}
 	}
-	
+    
 	public static List<GameObject> PopulateGuardsInGraph (GameObject enmPrefab, GameObject wpPrefab, GameObject floor)
 	{
 		enemyPrefab = enmPrefab;
 		waypointPrefab = wpPrefab;
-		
+        
 		for (int i = 0; i < numOfEnemies; i++) {
 			int startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count - 1);
 			// Should modify the finalGraphNodesList first
@@ -515,7 +521,7 @@ public class PCG : MonoBehaviour
 			Vector3 position = startVec + dir * factor;
 			GameObject enemy = GameObject.Instantiate (enemyPrefab, position, Quaternion.identity) as GameObject;
 			enemy.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);
-			
+            
 			//Move between two waypoints wp1, wp2;
 			GameObject wp1 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
 			GameObject wp2 = GameObject.Instantiate (waypointPrefab, endVec, Quaternion.identity) as GameObject;
@@ -526,12 +532,12 @@ public class PCG : MonoBehaviour
 			wpScript2.next = wpScript1;
 			wpScript1.type = 1;
 			wpScript2.type = 1;
-			
+            
 			enemy.GetComponent<Enemy> ().moveSpeed = 0.5f;
 			enemy.GetComponent<Enemy> ().rotationSpeed = 10;
 			enemy.GetComponent<Enemy> ().target = wpScript2;
 		}
-		
+        
 		for (int i = 0; i < numOfCameras; i++) {
 			int startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count - 1);
 			// Should modify the finalGraphNodesList first
@@ -547,13 +553,13 @@ public class PCG : MonoBehaviour
 			Vector3 position = startVec + dir * factor;
 			GameObject enemy = GameObject.Instantiate (enemyPrefab, position, Quaternion.identity) as GameObject;
 			enemy.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);
-			
+            
 			// Swipe 360 degree
 			Vector3 n1 = Vector3.Cross (dir, new Vector3 (0.0f, 1.0f, 0.0f));
 			Vector3 n2 = Vector3.Cross (new Vector3 (0.0f, 1.0f, 0.0f), dir);
-			
+            
 			Enemy rcScript = enemy.GetComponent ("Enemy") as Enemy;
-			
+            
 			GameObject rwp1 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
 			GameObject rwp2 = GameObject.Instantiate (waypointPrefab, endVec, Quaternion.identity) as GameObject;
 			GameObject rwp3 = GameObject.Instantiate (waypointPrefab, n1, Quaternion.identity) as GameObject;
@@ -582,7 +588,7 @@ public class PCG : MonoBehaviour
 			rwpScript1.lookDir = startVec;
 			rwpScript2.lookDir = endVec;
 			rwpScript3.lookDir = n1;
-			rwpScript4.lookDir = n2;		
+			rwpScript4.lookDir = n2;        
 			//rwpScript1.type = 2;
 			//rwpScript2.type = 2;
 			//rwpScript3.type = 2;
@@ -595,24 +601,24 @@ public class PCG : MonoBehaviour
 			rcScript.rotationSpeed = 7;
 			rcScript.transform.LookAt (startVec);
 		}
-		
+        
 		var enemies = GameObject.FindGameObjectsWithTag ("Enemy").OrderBy (go => go.transform.position.x).ToArray ();
 		foreach (GameObject g in enemies) {
 			oos.Add (g);
 		}
-		
+        
 		var waypoints = GameObject.FindGameObjectsWithTag ("Waypoint").ToArray ();
 		foreach (GameObject w in waypoints) {
 			oos.Add (w);
 		}
 		return oos;
 	}
-	
+    
 	public static void PopulateGuardsWithRhythms (GameObject enmPrefab, GameObject wpPrefab, GameObject floor)
-	{		
+	{       
 		enemyPrefab = enmPrefab;
 		waypointPrefab = wpPrefab;
-		
+        
 		for (int i = 0; i < numOfGuards; i++) {
 			int startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
 			while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0) {
@@ -627,8 +633,8 @@ public class PCG : MonoBehaviour
 			Vector3 position = startVec + dir * factor;
 			GameObject enemy = GameObject.Instantiate (enemyPrefab, position, Quaternion.identity) as GameObject;
 			enemy.transform.localScale = new Vector3 (0.4f, 0.4f, 0.4f);
-			enemy.GetComponent<Enemy> ().moveSpeed = 1.0f;
-			enemy.GetComponent<Enemy> ().rotationSpeed = 7.0f;
+			enemy.GetComponent<Enemy> ().moveSpeed = 0.5f;
+			enemy.GetComponent<Enemy> ().rotationSpeed = 10.0f;
 
 			FSM currentFSM = enemy.AddComponent<FSM> () as FSM;
 
@@ -643,22 +649,22 @@ public class PCG : MonoBehaviour
 			FSMController.FSMList.Add (currentFSM);
 		}
 	}
-	
+    
 	public static List<GameObject> PopulateGuardsWithBehaviours (GameObject enmPrefab, GameObject wpPrefab, GameObject floor, int iterations, int pLine, int pDot, int pSplit, int pZigZag, int pPause, int pSwipe, int pFullRotate, int pNinety)
 	{
 		enemyPrefab = enmPrefab;
 		waypointPrefab = wpPrefab;
-		
+        
 		// A flag for starting position not being seen 
 		bool notSeen = false;
-		
+        
 		for (int i = 0; i < numOfGuards; i++) {
 
 			Vector3 finalInitialPos = new Vector3 (0.0f, 0.0f, 0.0f);
 
 			while (!notSeen) {
 				int startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
-				
+                
 				// Don't need to check duplication for the first node
 				if (i != 0) {
 					// Non-duplicated starting index
@@ -681,7 +687,7 @@ public class PCG : MonoBehaviour
 					}
 				} else {
 					while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0) {
-						startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);	
+						startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);  
 					}
 				}
 
@@ -723,18 +729,18 @@ public class PCG : MonoBehaviour
 				} else {
 					finalInitialPos = initialPos;
 				}
-			}		
-			
+			}       
+            
 			GameObject enemy = GameObject.Instantiate (enemyPrefab, finalInitialPos, Quaternion.identity) as GameObject;
 			Enemy enemyScript;
 			enemyScript = enemy.GetComponent ("Enemy") as Enemy;
 			enemyScript.moveSpeed = 0.5f;
-			enemyScript.rotationSpeed = 10;
+			enemyScript.rotationSpeed = 10.0f;
 			listOfEnemies.Add (enemyScript);
-			
+            
 			notSeen = false;
 		}
-		
+        
 		// Initialize the sequence
 		InitializeSequence (floor);
 
@@ -749,7 +755,7 @@ public class PCG : MonoBehaviour
 				}
 				List<GameObject> tempWaypoints = new List<GameObject> ();
 				for (int cnt = 0; cnt < listOfWaypoints.ElementAt (size).Count; cnt++) {
-					tempWaypoints.Add (listOfWaypoints.ElementAt (size).ElementAt (cnt));	
+					tempWaypoints.Add (listOfWaypoints.ElementAt (size).ElementAt (cnt));  
 				}
 				//
 				foreach (GameObject currentWaypoint in listOfWaypoints.ElementAt (size)) {
@@ -793,85 +799,85 @@ public class PCG : MonoBehaviour
 									}
 								}
 								if (index > 0) {
-									tempSequence.ElementAt (index - 1).next = wpScript;	
+									tempSequence.ElementAt (index - 1).next = wpScript;  
 									wpScript.prev = tempSequence.ElementAt (index - 1);
-		
+        
 								} else {
 									tempSequence.Last ().next = wpScript;
 									wpScript.prev = tempSequence.Last ();
 								}
 							} 
 							// Swiping 180 degree
-//							if (r2 >= pPause && r2 < pPause + pSwipe) {
-//								int index = tempWaypoints.IndexOf (currentWaypoint);
-//								tempSequence.RemoveAt (index);
-//								Vector3 startVec = tempWaypoints.ElementAt (index).transform.position;
-//								Vector3 endVec1, endVec2, dir1, dir2;
-//								if (index != tempWaypoints.Count - 1) {
-//									endVec2 = tempWaypoints.ElementAt (index + 1).transform.position;
-//								} else {
-//									endVec2 = tempWaypoints.ElementAt (index).transform.position - tempWaypoints.ElementAt (index - 1).transform.position + tempWaypoints.ElementAt (index).transform.position;
-//								}
-//								dir2 = endVec2 - startVec;
-//								dir1 = - dir2;
-//								endVec1 = startVec + dir1;
-//								GameObject rwp = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
-//								GameObject rwp1 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
-//								GameObject rwp2 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
-//								GameObject rwp3 = tempWaypoints.ElementAt (index);
-//								rwp1.AddComponent ("RotationWaypoint");
-//								rwp2.AddComponent ("RotationWaypoint");
-//								rwp3.AddComponent ("RotationWaypoint");
-//								DestroyImmediate (rwp1.GetComponent ("Waypoint"));
-//								DestroyImmediate (rwp2.GetComponent ("Waypoint"));
-//								DestroyImmediate (rwp3.GetComponent ("Waypoint"));
-//								Waypoint wpScript;
-//								RotationWaypoint rwpScript1;
-//								RotationWaypoint rwpScript2;
-//								RotationWaypoint rwpScript3;
-//								wpScript = rwp.GetComponent ("Waypoint") as Waypoint;
-//								rwpScript1 = rwp1.GetComponent ("Waypoint") as RotationWaypoint;
-//								rwpScript2 = rwp2.GetComponent ("Waypoint") as RotationWaypoint;
-//								rwpScript3 = rwp3.GetComponent ("Waypoint") as RotationWaypoint;
-//								tempSequence.Insert (index, rwpScript3);
-//								rwpScript1.lookDir = dir2;
-//								rwpScript2.lookDir = dir1;
-//								rwpScript3.lookDir = dir2;
-//								wpScript.next = rwpScript1;
-//								rwpScript1.next = rwpScript2;
-//								rwpScript2.next = rwpScript3;
-//								rwpScript3.prev = rwpScript2;
-//								rwpScript2.prev = rwpScript1;
-//								rwpScript1.prev = wpScript;
-//								if (index < tempSequence.Count - 1) {
-//									if (tempWaypoints.ElementAt (index + 1).GetComponent ("WaitingWaypoint") == null && tempWaypoints.ElementAt (index + 1).GetComponent ("RotationWaypoint") == null) {
-//										rwpScript3.next = tempSequence.ElementAt (index + 1);
-//										tempSequence.ElementAt (index + 1).prev = rwpScript3;
-//									} else {
-//										rwpScript3.next = tempSequence.ElementAt (index + 1).prev;
-//										tempSequence.ElementAt (index + 1).prev.prev = rwpScript3;
-//									}
-//								} else {
-//									if (tempWaypoints.First ().GetComponent ("WaitingWaypoint") == null && tempWaypoints.First ().GetComponent ("RotationWaypoint") == null) {
-//										rwpScript3.next = tempSequence.First ();
-//										tempSequence.First ().prev = rwpScript3;
-//									} else {
-//										rwpScript3.next = tempSequence.First ().prev;
-//										tempSequence.First ().prev.prev = rwpScript3;
-//									}
-//								}
-//								if (index > 0) {
-//									tempSequence.ElementAt (index - 1).next = wpScript;	
-//									wpScript.prev = tempSequence.ElementAt (index - 1);
-//								} else {
-//									tempSequence.Last ().next = wpScript;
-//									wpScript.prev = tempSequence.Last ();
-//								}
-//								tempWaypoints.Insert (index, rwp2);
-//								tempWaypoints.Insert (index, rwp1);
-//								tempSequence.Insert (index, rwpScript2);
-//								tempSequence.Insert (index, rwpScript1);
-//							} 
+							if (r2 >= pPause && r2 < pPause + pSwipe) {
+								int index = tempWaypoints.IndexOf (currentWaypoint);
+								tempSequence.RemoveAt (index);
+								Vector3 startVec = tempWaypoints.ElementAt (index).transform.position;
+								Vector3 endVec1, endVec2, dir1, dir2;
+								if (index != tempWaypoints.Count - 1) {
+									endVec2 = tempWaypoints.ElementAt (index + 1).transform.position;
+								} else {
+									endVec2 = tempWaypoints.ElementAt (index).transform.position - tempWaypoints.ElementAt (index - 1).transform.position + tempWaypoints.ElementAt (index).transform.position;
+								}
+								dir2 = endVec2 - startVec;
+								dir1 = - dir2;
+								endVec1 = startVec + dir1;
+								GameObject rwp = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
+								GameObject rwp1 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
+								GameObject rwp2 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
+								GameObject rwp3 = tempWaypoints.ElementAt (index);
+								rwp1.AddComponent ("RotationWaypoint");
+								rwp2.AddComponent ("RotationWaypoint");
+								rwp3.AddComponent ("RotationWaypoint");
+								DestroyImmediate (rwp1.GetComponent ("Waypoint"));
+								DestroyImmediate (rwp2.GetComponent ("Waypoint"));
+								DestroyImmediate (rwp3.GetComponent ("Waypoint"));
+								Waypoint wpScript;
+								RotationWaypoint rwpScript1;
+								RotationWaypoint rwpScript2;
+								RotationWaypoint rwpScript3;
+								wpScript = rwp.GetComponent ("Waypoint") as Waypoint;
+								rwpScript1 = rwp1.GetComponent ("Waypoint") as RotationWaypoint;
+								rwpScript2 = rwp2.GetComponent ("Waypoint") as RotationWaypoint;
+								rwpScript3 = rwp3.GetComponent ("Waypoint") as RotationWaypoint;
+								tempSequence.Insert (index, rwpScript3);
+								rwpScript1.lookDir = dir2;
+								rwpScript2.lookDir = dir1;
+								rwpScript3.lookDir = dir2;
+								wpScript.next = rwpScript1;
+								rwpScript1.next = rwpScript2;
+								rwpScript2.next = rwpScript3;
+								rwpScript3.prev = rwpScript2;
+								rwpScript2.prev = rwpScript1;
+								rwpScript1.prev = wpScript;
+								if (index < tempSequence.Count - 1) {
+									if (tempWaypoints.ElementAt (index + 1).GetComponent ("WaitingWaypoint") == null && tempWaypoints.ElementAt (index + 1).GetComponent ("RotationWaypoint") == null) {
+										rwpScript3.next = tempSequence.ElementAt (index + 1);
+										tempSequence.ElementAt (index + 1).prev = rwpScript3;
+									} else {
+										rwpScript3.next = tempSequence.ElementAt (index + 1).prev;
+										tempSequence.ElementAt (index + 1).prev.prev = rwpScript3;
+									}
+								} else {
+									if (tempWaypoints.First ().GetComponent ("WaitingWaypoint") == null && tempWaypoints.First ().GetComponent ("RotationWaypoint") == null) {
+										rwpScript3.next = tempSequence.First ();
+										tempSequence.First ().prev = rwpScript3;
+									} else {
+										rwpScript3.next = tempSequence.First ().prev;
+										tempSequence.First ().prev.prev = rwpScript3;
+									}
+								}
+								if (index > 0) {
+									tempSequence.ElementAt (index - 1).next = wpScript;  
+									wpScript.prev = tempSequence.ElementAt (index - 1);
+								} else {
+									tempSequence.Last ().next = wpScript;
+									wpScript.prev = tempSequence.Last ();
+								}
+								tempWaypoints.Insert (index, rwp2);
+								tempWaypoints.Insert (index, rwp1);
+								tempSequence.Insert (index, rwpScript2);
+								tempSequence.Insert (index, rwpScript1);
+							} 
 							// Fully rotating 360 degree
 							if (r2 >= pPause + pSwipe && r2 < pPause + pSwipe + pFullRotate) {
 								int index = tempWaypoints.IndexOf (currentWaypoint);
@@ -939,7 +945,7 @@ public class PCG : MonoBehaviour
 										tempSequence.ElementAt (index + 1).prev.prev = rwpScript5;
 									}
 								} else {
-									if (tempWaypoints.First ().GetComponent ("WaitingWaypoint") == null && tempWaypoints.ElementAt (index + 1).GetComponent ("RotationWaypoint") == null) {
+									if (tempWaypoints.First ().GetComponent ("WaitingWaypoint") == null && tempWaypoints.First ().GetComponent ("RotationWaypoint") == null) {
 										rwpScript5.next = tempSequence.First ();
 										tempSequence.First ().prev = rwpScript5;
 									} else {
@@ -948,7 +954,7 @@ public class PCG : MonoBehaviour
 									}
 								}
 								if (index > 0) {
-									tempSequence.ElementAt (index - 1).next = wpScript;	
+									tempSequence.ElementAt (index - 1).next = wpScript;  
 									wpScript.prev = tempSequence.ElementAt (index - 1);
 								} else {
 									tempSequence.Last ().next = wpScript;
@@ -998,7 +1004,7 @@ public class PCG : MonoBehaviour
 								rwpScript3 = rwp3.GetComponent ("Waypoint") as RotationWaypoint;
 								tempSequence.Insert (index, rwpScript3);
 								rwpScript1.lookDir = dir;
-								
+                                
 								// Choose a random one from two normal directions
 								int nr = UnityEngine.Random.Range (0, 2);
 								if (nr == 0) {
@@ -1031,10 +1037,10 @@ public class PCG : MonoBehaviour
 									}
 								}
 								if (index > 0) {
-									tempSequence.ElementAt (index - 1).next = wpScript;	
+									tempSequence.ElementAt (index - 1).next = wpScript;  
 									wpScript.prev = tempSequence.ElementAt (index - 1);
 								} else {
-									tempSequence.Last ().next = wpScript;	
+									tempSequence.Last ().next = wpScript;    
 									wpScript.prev = tempSequence.Last ();
 								}
 								tempWaypoints.Insert (index, rwp2);
@@ -1042,9 +1048,9 @@ public class PCG : MonoBehaviour
 								tempSequence.Insert (index, rwpScript2);
 								tempSequence.Insert (index, rwpScript1);
 							}
-						}							
+						}                           
 					}
-					
+                    
 					if (tempWaypoints.IndexOf (currentWaypoint) != tempWaypoints.Count - 1) {
 						if (currentWaypoint.transform.position != tempWaypoints.ElementAt (tempWaypoints.IndexOf (currentWaypoint) + 1).transform.position) {
 							int r3 = UnityEngine.Random.Range (0, 100);
@@ -1059,7 +1065,7 @@ public class PCG : MonoBehaviour
 										Vector3 startVec = tempWaypoints.ElementAt (index).transform.position;
 										Vector3 endVec = tempWaypoints.ElementAt (index + 1).transform.position;
 										Vector3 dir = endVec - startVec;
-										float ratio = UnityEngine.Random.Range (0.0f, 1.0f);
+										float ratio = UnityEngine.Random.Range (0.1f, 1.0f);
 										Vector3 pos = startVec + new Vector3 (dir.x * ratio, dir.y * ratio, dir.z * ratio);
 										GameObject wp = GameObject.Instantiate (waypointPrefab, pos, Quaternion.identity) as GameObject;
 										Waypoint wpScript;
@@ -1113,7 +1119,7 @@ public class PCG : MonoBehaviour
 						}
 					}
 				}
-				
+                
 				listOfSequence.ElementAt (size).Clear ();
 				listOfWaypoints.ElementAt (size).Clear ();
 				for (int cnt = 0; cnt < tempWaypoints.Count; cnt++) {
@@ -1124,40 +1130,40 @@ public class PCG : MonoBehaviour
 				}
 			}
 		}
-		
+        
 		for (int i = 0; i < listOfEnemies.Count; i++) {
 			listOfEnemies.ElementAt (i).target = listOfSequence.ElementAt (i).ElementAt (0);
 			listOfEnemies.ElementAt (i).transform.LookAt (listOfSequence.ElementAt (i).ElementAt (1).gameObject.transform.position);
 		}
-		
+        
 		var enemies = GameObject.FindGameObjectsWithTag ("Enemy").OrderBy (go => go.transform.position.x).ToArray ();
 		foreach (GameObject g in enemies) {
 			oos.Add (g);
 		}
-		
+        
 		var waypoints = GameObject.FindGameObjectsWithTag ("Waypoint").ToArray ();
 		foreach (GameObject w in waypoints) {
 			oos.Add (w);
 		}
-		
+        
 		return oos;
 	}
-	
+    
 	public static List<GameObject> PopulateGuardsWithBehavioursAndSaveToFile (GameObject enmPrefab, GameObject wpPrefab, GameObject floor, int iterations, int pLine, int pDot, int pSplit, int pZigZag, int pPause, int pSwipe, int pFullRotate, int pNinety)
 	{
 		enemyPrefab = enmPrefab;
 		waypointPrefab = wpPrefab;
-		
+        
 		// A flag for starting position not being seen 
 		bool notSeen = false;
-		
+        
 		for (int i = 0; i < numOfGuards; i++) {
 
 			Vector3 finalInitialPos = new Vector3 (0.0f, 0.0f, 0.0f);
 
 			while (!notSeen) {
 				int startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
-				
+                
 				// Don't need to check duplication for the first node
 				if (i != 0) {
 					// Non-duplicated starting index
@@ -1180,7 +1186,7 @@ public class PCG : MonoBehaviour
 					}
 				} else {
 					while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0) {
-						startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);	
+						startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);  
 					}
 				}
 
@@ -1222,21 +1228,21 @@ public class PCG : MonoBehaviour
 				} else {
 					finalInitialPos = initialPos;
 				}
-			}		
-			
+			}       
+            
 			GameObject enemy = GameObject.Instantiate (enemyPrefab, finalInitialPos, Quaternion.identity) as GameObject;
 			Enemy enemyScript;
 			enemyScript = enemy.GetComponent ("Enemy") as Enemy;
 			enemyScript.moveSpeed = 0.5f;
 			enemyScript.rotationSpeed = 10;
 			listOfEnemies.Add (enemyScript);
-			
+            
 			notSeen = false;
 		}
-		
+        
 		// Save the paths to a file
 		SavePathsToFile (iterations);
-		
+        
 		// Initialize the sequence
 		InitializeSequence (floor);
 
@@ -1251,7 +1257,7 @@ public class PCG : MonoBehaviour
 				}
 				List<GameObject> tempWaypoints = new List<GameObject> ();
 				for (int cnt = 0; cnt < listOfWaypoints.ElementAt (size).Count; cnt++) {
-					tempWaypoints.Add (listOfWaypoints.ElementAt (size).ElementAt (cnt));	
+					tempWaypoints.Add (listOfWaypoints.ElementAt (size).ElementAt (cnt));  
 				}
 				//
 				foreach (GameObject currentWaypoint in listOfWaypoints.ElementAt (size)) {
@@ -1281,9 +1287,9 @@ public class PCG : MonoBehaviour
 									wwpScript.next = tempSequence.First ();
 								}
 								if (index > 0) {
-									tempSequence.ElementAt (index - 1).next = wpScript;	
+									tempSequence.ElementAt (index - 1).next = wpScript;  
 								} else {
-									tempSequence.Last ().next = wpScript;	
+									tempSequence.Last ().next = wpScript;    
 								}
 							} 
 							// Swiping 180 degree
@@ -1303,7 +1309,7 @@ public class PCG : MonoBehaviour
 									endVec2 = tempWaypoints.ElementAt (index).transform.position - tempWaypoints.ElementAt (index - 1).transform.position + tempWaypoints.ElementAt (index).transform.position;
 								}
 								if (endVec1 == endVec2) {
-									endVec2 = startVec - endVec1 + startVec;	
+									endVec2 = startVec - endVec1 + startVec;    
 								}
 								dir1 = endVec1 - startVec;
 								dir2 = endVec2 - startVec;
@@ -1335,12 +1341,12 @@ public class PCG : MonoBehaviour
 								if (index < tempSequence.Count - 1) {
 									rwpScript3.next = tempSequence.ElementAt (index + 1);
 								} else {
-									rwpScript3.next = tempSequence.ElementAt (0);	
+									rwpScript3.next = tempSequence.ElementAt (0);    
 								}
 								if (index > 0) {
-									tempSequence.ElementAt (index - 1).next = wpScript;	
+									tempSequence.ElementAt (index - 1).next = wpScript;  
 								} else {
-									tempSequence.Last ().next = wpScript;	
+									tempSequence.Last ().next = wpScript;    
 								}
 								tempWaypoints.Insert (index, rwp2);
 								tempWaypoints.Insert (index, rwp1);
@@ -1403,12 +1409,12 @@ public class PCG : MonoBehaviour
 								if (index < tempSequence.Count - 1) {
 									rwpScript5.next = tempSequence.ElementAt (index + 1);
 								} else {
-									rwpScript5.next = tempSequence.ElementAt (0);	
+									rwpScript5.next = tempSequence.ElementAt (0);    
 								}
 								if (index > 0) {
-									tempSequence.ElementAt (index - 1).next = wpScript;	
+									tempSequence.ElementAt (index - 1).next = wpScript;  
 								} else {
-									tempSequence.Last ().next = wpScript;	
+									tempSequence.Last ().next = wpScript;    
 								}
 								tempWaypoints.Insert (index, rwp4);
 								tempWaypoints.Insert (index, rwp3);
@@ -1454,7 +1460,7 @@ public class PCG : MonoBehaviour
 								rwpScript3 = rwp3.GetComponent ("Waypoint") as RotationWaypoint;
 								tempSequence.Insert (index, rwpScript3);
 								rwpScript1.lookDir = dir;
-								
+                                
 								// Choose a random one from two normal directions
 								int nr = UnityEngine.Random.Range (0, 2);
 								if (nr == 0) {
@@ -1469,21 +1475,21 @@ public class PCG : MonoBehaviour
 								if (index < tempSequence.Count - 1) {
 									rwpScript3.next = tempSequence.ElementAt (index + 1);
 								} else {
-									rwpScript3.next = tempSequence.ElementAt (0);	
+									rwpScript3.next = tempSequence.ElementAt (0);    
 								}
 								if (index > 0) {
-									tempSequence.ElementAt (index - 1).next = wpScript;	
+									tempSequence.ElementAt (index - 1).next = wpScript;  
 								} else {
-									tempSequence.Last ().next = wpScript;	
+									tempSequence.Last ().next = wpScript;    
 								}
 								tempWaypoints.Insert (index, rwp2);
 								tempWaypoints.Insert (index, rwp1);
 								tempSequence.Insert (index, rwpScript2);
 								tempSequence.Insert (index, rwpScript1);
 							}
-						}							
+						}                           
 					}
-					
+                    
 					if (tempWaypoints.IndexOf (currentWaypoint) != tempWaypoints.Count - 1) {
 						if (currentWaypoint.transform.position != tempWaypoints.ElementAt (tempWaypoints.IndexOf (currentWaypoint) + 1).transform.position) {
 							int r3 = UnityEngine.Random.Range (0, 100);
@@ -1498,7 +1504,7 @@ public class PCG : MonoBehaviour
 										Vector3 startVec = tempWaypoints.ElementAt (index).transform.position;
 										Vector3 endVec = tempWaypoints.ElementAt (index + 1).transform.position;
 										Vector3 dir = endVec - startVec;
-										float ratio = UnityEngine.Random.Range (0.0f, 1.0f);
+										float ratio = UnityEngine.Random.Range (0.1f, 1.0f);
 										Vector3 pos = startVec + new Vector3 (dir.x * ratio, dir.y * ratio, dir.z * ratio);
 										GameObject wp = GameObject.Instantiate (waypointPrefab, pos, Quaternion.identity) as GameObject;
 										Waypoint wpScript;
@@ -1535,7 +1541,7 @@ public class PCG : MonoBehaviour
 						}
 					}
 				}
-				
+                
 				listOfSequence.ElementAt (size).Clear ();
 				listOfWaypoints.ElementAt (size).Clear ();
 				for (int cnt = 0; cnt < tempWaypoints.Count; cnt++) {
@@ -1546,45 +1552,45 @@ public class PCG : MonoBehaviour
 				}
 			}
 		}
-		
+        
 		for (int i = 0; i < listOfEnemies.Count; i++) {
 			listOfEnemies.ElementAt (i).target = listOfSequence.ElementAt (i).ElementAt (0);
 			listOfEnemies.ElementAt (i).transform.LookAt (listOfSequence.ElementAt (i).ElementAt (1).gameObject.transform.position);
 		}
-		
+        
 		var enemies = GameObject.FindGameObjectsWithTag ("Enemy").OrderBy (go => go.transform.position.x).ToArray ();
 		foreach (GameObject g in enemies) {
 			oos.Add (g);
 		}
-		
+        
 		var waypoints = GameObject.FindGameObjectsWithTag ("Waypoint").ToArray ();
 		foreach (GameObject w in waypoints) {
 			oos.Add (w);
 		}
-		
+        
 		return oos;
 	}
-	
+    
 	public static List<GameObject> PopulateGuardsWithBehavioursFromLoadedPath (GameObject enmPrefab, GameObject wpPrefab, GameObject floor, int iterations, int pLine, int pDot, int pSplit, int pZigZag, int pPause, int pSwipe, int pFullRotate, int pNinety)
 	{
 		enemyPrefab = enmPrefab;
 		waypointPrefab = wpPrefab;
-		
+        
 		listOfEnemies.Clear ();
 		templistOfPath.Clear ();
 		listOfPath.Clear ();
 		listOfSequence.Clear ();
 		listOfWaypoints.Clear ();
-		
+        
 		// Loaded paths from the file
 		LoadPathsFromFile ();
-		
+        
 		for (int i = 0; i < numOfGuards; i++) {
 			// Retrieve the first index
 			int startIndex = listOfPath.ElementAt (i).ElementAt (0);
 			Debug.Log (startIndex);
-			Vector3 finalInitialPos = sBoundary.finalGraphNodesList.ElementAt (startIndex).Pos (floor);	
-			
+			Vector3 finalInitialPos = sBoundary.finalGraphNodesList.ElementAt (startIndex).Pos (floor);   
+            
 			// Initiate an enemy instance
 			GameObject enemy = GameObject.Instantiate (enemyPrefab, finalInitialPos, Quaternion.identity) as GameObject;
 			Enemy enemyScript;
@@ -1593,7 +1599,7 @@ public class PCG : MonoBehaviour
 			enemyScript.rotationSpeed = 10;
 			listOfEnemies.Add (enemyScript);
 		}
-		
+        
 		// Initialize the sequence
 		InitializeSequence (floor);
 
@@ -1608,7 +1614,7 @@ public class PCG : MonoBehaviour
 				}
 				List<GameObject> tempWaypoints = new List<GameObject> ();
 				for (int cnt = 0; cnt < listOfWaypoints.ElementAt (size).Count; cnt++) {
-					tempWaypoints.Add (listOfWaypoints.ElementAt (size).ElementAt (cnt));	
+					tempWaypoints.Add (listOfWaypoints.ElementAt (size).ElementAt (cnt));  
 				}
 				//
 				foreach (GameObject currentWaypoint in listOfWaypoints.ElementAt (size)) {
@@ -1638,9 +1644,9 @@ public class PCG : MonoBehaviour
 									wwpScript.next = tempSequence.First ();
 								}
 								if (index > 0) {
-									tempSequence.ElementAt (index - 1).next = wpScript;	
+									tempSequence.ElementAt (index - 1).next = wpScript;  
 								} else {
-									tempSequence.Last ().next = wpScript;	
+									tempSequence.Last ().next = wpScript;    
 								}
 							} 
 							// Swiping 180 degree
@@ -1660,7 +1666,7 @@ public class PCG : MonoBehaviour
 									endVec2 = tempWaypoints.ElementAt (index).transform.position - tempWaypoints.ElementAt (index - 1).transform.position + tempWaypoints.ElementAt (index).transform.position;
 								}
 								if (endVec1 == endVec2) {
-									endVec2 = startVec - endVec1 + startVec;	
+									endVec2 = startVec - endVec1 + startVec;    
 								}
 								dir1 = endVec1 - startVec;
 								dir2 = endVec2 - startVec;
@@ -1692,12 +1698,12 @@ public class PCG : MonoBehaviour
 								if (index < tempSequence.Count - 1) {
 									rwpScript3.next = tempSequence.ElementAt (index + 1);
 								} else {
-									rwpScript3.next = tempSequence.ElementAt (0);	
+									rwpScript3.next = tempSequence.ElementAt (0);    
 								}
 								if (index > 0) {
-									tempSequence.ElementAt (index - 1).next = wpScript;	
+									tempSequence.ElementAt (index - 1).next = wpScript;  
 								} else {
-									tempSequence.Last ().next = wpScript;	
+									tempSequence.Last ().next = wpScript;    
 								}
 								tempWaypoints.Insert (index, rwp2);
 								tempWaypoints.Insert (index, rwp1);
@@ -1760,12 +1766,12 @@ public class PCG : MonoBehaviour
 								if (index < tempSequence.Count - 1) {
 									rwpScript5.next = tempSequence.ElementAt (index + 1);
 								} else {
-									rwpScript5.next = tempSequence.ElementAt (0);	
+									rwpScript5.next = tempSequence.ElementAt (0);    
 								}
 								if (index > 0) {
-									tempSequence.ElementAt (index - 1).next = wpScript;	
+									tempSequence.ElementAt (index - 1).next = wpScript;  
 								} else {
-									tempSequence.Last ().next = wpScript;	
+									tempSequence.Last ().next = wpScript;    
 								}
 								tempWaypoints.Insert (index, rwp4);
 								tempWaypoints.Insert (index, rwp3);
@@ -1811,7 +1817,7 @@ public class PCG : MonoBehaviour
 								rwpScript3 = rwp3.GetComponent ("Waypoint") as RotationWaypoint;
 								tempSequence.Insert (index, rwpScript3);
 								rwpScript1.lookDir = dir;
-								
+                                
 								// Choose a random one from two normal directions
 								int nr = UnityEngine.Random.Range (0, 2);
 								if (nr == 0) {
@@ -1826,21 +1832,21 @@ public class PCG : MonoBehaviour
 								if (index < tempSequence.Count - 1) {
 									rwpScript3.next = tempSequence.ElementAt (index + 1);
 								} else {
-									rwpScript3.next = tempSequence.ElementAt (0);	
+									rwpScript3.next = tempSequence.ElementAt (0);    
 								}
 								if (index > 0) {
-									tempSequence.ElementAt (index - 1).next = wpScript;	
+									tempSequence.ElementAt (index - 1).next = wpScript;  
 								} else {
-									tempSequence.Last ().next = wpScript;	
+									tempSequence.Last ().next = wpScript;    
 								}
 								tempWaypoints.Insert (index, rwp2);
 								tempWaypoints.Insert (index, rwp1);
 								tempSequence.Insert (index, rwpScript2);
 								tempSequence.Insert (index, rwpScript1);
 							}
-						}							
+						}                           
 					}
-					
+                    
 					if (tempWaypoints.IndexOf (currentWaypoint) != tempWaypoints.Count - 1) {
 						if (currentWaypoint.transform.position != tempWaypoints.ElementAt (tempWaypoints.IndexOf (currentWaypoint) + 1).transform.position) {
 							int r3 = UnityEngine.Random.Range (0, 100);
@@ -1855,7 +1861,7 @@ public class PCG : MonoBehaviour
 										Vector3 startVec = tempWaypoints.ElementAt (index).transform.position;
 										Vector3 endVec = tempWaypoints.ElementAt (index + 1).transform.position;
 										Vector3 dir = endVec - startVec;
-										float ratio = UnityEngine.Random.Range (0.0f, 1.0f);
+										float ratio = UnityEngine.Random.Range (0.1f, 1.0f);
 										Vector3 pos = startVec + new Vector3 (dir.x * ratio, dir.y * ratio, dir.z * ratio);
 										GameObject wp = GameObject.Instantiate (waypointPrefab, pos, Quaternion.identity) as GameObject;
 										Waypoint wpScript;
@@ -1892,7 +1898,7 @@ public class PCG : MonoBehaviour
 						}
 					}
 				}
-				
+                
 				listOfSequence.ElementAt (size).Clear ();
 				listOfWaypoints.ElementAt (size).Clear ();
 				for (int cnt = 0; cnt < tempWaypoints.Count; cnt++) {
@@ -1903,25 +1909,752 @@ public class PCG : MonoBehaviour
 				}
 			}
 		}
-		
+        
 		for (int i = 0; i < listOfEnemies.Count; i++) {
 			listOfEnemies.ElementAt (i).target = listOfSequence.ElementAt (i).ElementAt (0);
 			listOfEnemies.ElementAt (i).transform.LookAt (listOfSequence.ElementAt (i).ElementAt (1).gameObject.transform.position);
 		}
-		
+        
 		var enemies = GameObject.FindGameObjectsWithTag ("Enemy").OrderBy (go => go.transform.position.x).ToArray ();
 		foreach (GameObject g in enemies) {
 			oos.Add (g);
 		}
-		
+        
 		var waypoints = GameObject.FindGameObjectsWithTag ("Waypoint").ToArray ();
 		foreach (GameObject w in waypoints) {
 			oos.Add (w);
 		}
-		
+        
 		return oos;
 	}
+
+	public static int InitializeGuardsWithBehavioursOverTimePreserving (GameObject enmPrefab, GameObject wpPrefab, GameObject floor)
+	{
+		enemyPrefab = enmPrefab;
+		waypointPrefab = wpPrefab;
+        
+		// A flag for starting position not being seen 
+		bool notSeen = false;
+        
+		for (int i = 0; i < numOfGuards; i++) {
+            
+			Vector3 finalInitialPos = new Vector3 (0.0f, 0.0f, 0.0f);
+            
+			while (!notSeen) {
+				int startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
+                
+				// Don't need to check duplication for the first node
+				if (i != 0) {
+					// Non-duplicated starting index
+					bool isDuplicated = false;
+					for (int k = 0; k < i; k++) {
+						if (startIndex == listOfPath.ElementAt (k).First ()) {
+							isDuplicated = true;
+							break;
+						}
+					}
+					while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0 || isDuplicated) {
+						isDuplicated = false;
+						startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
+						for (int k = 0; k < i; k++) {
+							if (startIndex == listOfPath.ElementAt (k).First ()) {
+								isDuplicated = true;
+								break;
+							}
+						}
+					}
+				} else {
+					while (sBoundary.finalGraphNodesList.ElementAt (startIndex).neighbors.Count == 0) {
+						startIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);  
+					}
+				}
+                
+				// Ending index
+				int endIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
+				while (sBoundary.finalGraphNodesList.ElementAt (endIndex).neighbors.Count == 0 || endIndex == startIndex) {
+					endIndex = UnityEngine.Random.Range (0, sBoundary.finalGraphNodesList.Count);
+				}
+                
+				// Retrieve a path from startIndex to endIndex
+				foreach (GraphNode g in sBoundary.finalGraphNodesList) {
+					g.isVisited = false;
+				}
+				List<int> path = new List<int> ();
+				listOfPath.Add (path);
+				List<int> tempPath = new List<int> ();
+				templistOfPath.Add (tempPath);
+				FindPath (startIndex, endIndex, i);
+				// listOfPath.Add (PCG.FindShortestPath (startIndex, endIndex));
+                
+				// Make sure that the starting point is not in the range of initial FOV
+				Vector3 initialPos = sBoundary.finalGraphNodesList.ElementAt (startIndex).Pos (floor);
+				Vector3 aimingPos = sBoundary.finalGraphNodesList.ElementAt (listOfPath.ElementAt (i).ElementAt (1)).Pos (floor);
+				Vector3 initialDir = aimingPos - initialPos;
+				Vector3 startPos = GameObject.FindGameObjectWithTag ("Start").transform.position;
+				Vector3 dir = startPos - initialPos;
+				if (Vector3.Angle (dir, initialDir) > 30.0f) {
+					notSeen = true;
+				} else {
+					if (!Physics.Raycast (initialPos, dir, Vector3.Distance (startPos, initialPos))) {
+						notSeen = true;
+					} else {
+						notSeen = false;
+					}
+				}
+				if (!notSeen) {
+					listOfPath.Remove (path);
+					templistOfPath.Remove (tempPath);
+				} else {
+					finalInitialPos = initialPos;
+				}
+			}       
+            
+			GameObject enemy = GameObject.Instantiate (enemyPrefab, finalInitialPos, Quaternion.identity) as GameObject;
+			Enemy2 enemyScript;
+			enemyScript = enemy.GetComponent ("Enemy2") as Enemy2;
+			listOfEnemies2.Add (enemyScript);
+            
+			notSeen = false;
+		}
+        
+		// Initialize the sequence
+		InitializeSequence (floor);
+				
+		// Calculate the time stamps needed
+		return CalculateTravelingTime (floor);
+	}
 	
+	public static List<GameObject> PopulateGuardsWithBehavioursOverTimePreserving (int timeSamples, int iterations, int pLine, int pDot, int pSplit, int pZigZag, int pPause, int pSwipe, int pFullRotate, int pNinety)
+	{	
+		maxTimeStamps = timeSamples;
+		
+		// Initialize the dictionaries
+		for (int i = 0; i < listOfEnemies2.Count; i++) {
+			// Note that maxTimeStamps = travelingTime / stepSize
+			for (int j = 0; j < maxTimeStamps; j++) {
+				Enemy2.MoveSpeed currentMoveSpeed = new Enemy2.MoveSpeed ();
+				currentMoveSpeed.moveSpeed = speedConstant;
+				listOfEnemies2.ElementAt (i).moveSpeedDictionary.Add (j, currentMoveSpeed);
+				Enemy2.RotationSpeed currentRotationSpeed = new Enemy2.RotationSpeed ();
+				currentRotationSpeed.rotationSpeed = 10.0f;
+				listOfEnemies2.ElementAt (i).rotationSpeedDictionary.Add (j, currentRotationSpeed);
+			}
+		}
+				
+		// Assign waypoints to time stamps
+		for (int i = 0; i < listOfWaypoints.Count; i++) {
+			float distanceTraveled = 0.0f;
+			int timeStampsTraveled = 0;
+			
+			for (int segmentID = 0; segmentID < listOfWaypoints.ElementAt (i).Count; segmentID++) {
+				if (segmentID != 0) {
+					Vector3 pos2 = listOfWaypoints.ElementAt (i).ElementAt (segmentID).transform.position;
+					Vector3 pos1 = listOfWaypoints.ElementAt (i).ElementAt (segmentID - 1).transform.position;
+					distanceTraveled += Vector3.Distance (pos2, pos1);
+					timeStampsTraveled += (int)(Vector3.Distance (pos2, pos1) / speedConstant) * 10;
+					listOfEnemies2.ElementAt (i).moveSpeedDictionary [timeStampsTraveled].referredWp = listOfWaypoints.ElementAt (i).ElementAt (segmentID);
+					listOfEnemies2.ElementAt (i).rotationSpeedDictionary [timeStampsTraveled].referredWp = listOfWaypoints.ElementAt (i).ElementAt (segmentID);
+					// Reverse
+					listOfEnemies2.ElementAt (i).reverseMoveSpeedDictionary.Add (listOfWaypoints.ElementAt (i).ElementAt (segmentID), timeStampsTraveled);
+					listOfEnemies2.ElementAt (i).reverseRotationSpeedDictionary.Add (listOfWaypoints.ElementAt (i).ElementAt (segmentID), timeStampsTraveled); 
+				} else {
+					listOfEnemies2.ElementAt (i).moveSpeedDictionary [0].referredWp = listOfWaypoints.ElementAt (i).ElementAt (0);
+					listOfEnemies2.ElementAt (i).rotationSpeedDictionary [0].referredWp = listOfWaypoints.ElementAt (i).ElementAt (0);
+					listOfEnemies2.ElementAt (i).reverseMoveSpeedDictionary.Add (listOfWaypoints.ElementAt (i).ElementAt (0), 0);
+					listOfEnemies2.ElementAt (i).reverseRotationSpeedDictionary.Add (listOfWaypoints.ElementAt (i).ElementAt (0), 0); 
+				}
+			}
+		}
+
+        
+		// Procedurally increment of behaviours
+		for (int iter = 0; iter < iterations; iter++) {
+			// Foreach guard
+			for (int size = 0; size < listOfSequence.Count; size++) {
+				// Keep a copy
+				List<Waypoint> tempSequence = new List<Waypoint> ();
+				for (int cnt = 0; cnt < listOfSequence.ElementAt (size).Count; cnt++) {
+					tempSequence.Add (listOfSequence.ElementAt (size).ElementAt (cnt));
+				}
+				List<GameObject> tempWaypoints = new List<GameObject> ();
+				for (int cnt = 0; cnt < listOfWaypoints.ElementAt (size).Count; cnt++) {
+					tempWaypoints.Add (listOfWaypoints.ElementAt (size).ElementAt (cnt));  
+				}
+				//
+				foreach (GameObject currentWaypoint in listOfWaypoints.ElementAt (size)) {
+					// Apply "dot" rule
+					if (currentWaypoint.GetComponent ("WaitingWaypoint") == null && currentWaypoint.GetComponent ("RotationWaypoint") == null) {
+						int r1 = UnityEngine.Random.Range (0, 100);
+						// The possibility of changing a waypoint into a waiting waypoint or rotation waypoint
+						if (r1 < pDot) {
+							int r2 = UnityEngine.Random.Range (0, 100);
+							// Waiting
+							if (r2 < pPause) {
+								int index = tempWaypoints.IndexOf (currentWaypoint);
+								// Skip generating a waiting waypoint due to limit of time stamps
+								if (index < tempWaypoints.Count - 1) {
+									Vector3 pos1 = tempWaypoints.ElementAt (index).transform.position;
+									Vector3 pos2 = tempWaypoints.ElementAt (index + 1).transform.position;
+									float segDist = Vector3.Distance (pos1, pos2);
+									int timeElapseBefore = (int)(segDist / (listOfEnemies2.ElementAt (size).moveSpeedDictionary [listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index)]].moveSpeed)) * 10;
+									if (timeElapseBefore <= timeThreshold) {
+										continue;
+									}
+								} 
+								tempSequence.RemoveAt (index);
+								GameObject wp = GameObject.Instantiate (waypointPrefab, tempWaypoints.ElementAt (index).transform.position, Quaternion.identity) as GameObject;
+								GameObject wwp = currentWaypoint;
+								wwp.AddComponent ("WaitingWaypoint");
+								DestroyImmediate (wwp.GetComponent ("Waypoint"));
+								Waypoint wpScript;
+								WaitingWaypoint wwpScript;
+								wpScript = wp.GetComponent ("Waypoint") as Waypoint;
+								wwpScript = wwp.GetComponent ("Waypoint") as WaitingWaypoint;
+								wpScript.next = wwpScript;
+								wwpScript.prev = wpScript;
+								wwpScript.waitingTime = 2.0f;
+								tempSequence.Insert (index, wwpScript);
+								if (index < tempSequence.Count - 1) {
+									if (tempWaypoints.ElementAt (index + 1).GetComponent ("WaitingWaypoint") == null && tempWaypoints.ElementAt (index + 1).GetComponent ("RotationWaypoint") == null) {
+										wwpScript.next = tempSequence.ElementAt (index + 1);
+										tempSequence.ElementAt (index + 1).prev = wwpScript;
+									} else {
+										wwpScript.next = tempSequence.ElementAt (index + 1).prev;
+										tempSequence.ElementAt (index + 1).prev.prev = wwpScript;
+									}
+								} else {
+									if (tempWaypoints.First ().GetComponent ("WaitingWaypoint") == null && tempWaypoints.First ().GetComponent ("RotationWaypoint") == null) {
+										wwpScript.next = tempSequence.First ();
+										tempSequence.First ().prev = wwpScript;
+									} else {
+										wwpScript.next = tempSequence.First ().prev;
+										tempSequence.First ().prev.prev = wwpScript;
+									}
+								}
+								if (index > 0) {
+									tempSequence.ElementAt (index - 1).next = wpScript;  
+									wpScript.prev = tempSequence.ElementAt (index - 1);
+								} else {
+									tempSequence.Last ().next = wpScript;
+									wpScript.prev = tempSequence.Last ();
+								}
+								
+								// Time-preserving
+								if (index < tempWaypoints.Count - 1) {
+									int waitingElapse = 2 * 10;
+									Vector3 pos1 = tempWaypoints.ElementAt (index).transform.position;
+									Vector3 pos2 = tempWaypoints.ElementAt (index + 1).transform.position;
+									float segDist = Vector3.Distance (pos1, pos2);
+									int timeElapseBefore = (int)(segDist / (listOfEnemies2.ElementAt (size).moveSpeedDictionary [listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index)]].moveSpeed)) * 10;
+									int timeElapseAfter = timeElapseBefore - waitingElapse;
+									// In case time being used up
+									if (timeElapseAfter < timeThreshold) {
+										timeElapseAfter = timeThreshold;
+										// Change waitingTime or cancel waiting behaviour
+										wwpScript.waitingTime = (float)((timeElapseBefore - timeElapseAfter) / 10);
+									}
+									// Assign new movement speed
+									float newMovingSpeed = (float)(segDist / (timeElapseAfter / 10));	
+									for (int t = listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index)]; t < listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 1)]; t++) {
+										listOfEnemies2.ElementAt (size).moveSpeedDictionary [t].moveSpeed = newMovingSpeed;
+									}
+								}											
+							} 
+							// Swiping 180 degree
+							if (r2 >= pPause && r2 < pPause + pSwipe) {
+								int index = tempWaypoints.IndexOf (currentWaypoint);
+								// Skip generating a waiting waypoint due to limit of time stamps
+								if (index < tempWaypoints.Count - 1) {
+									Vector3 pos1 = tempWaypoints.ElementAt (index).transform.position;
+									Vector3 pos2 = tempWaypoints.ElementAt (index + 1).transform.position;
+									float segDist = Vector3.Distance (pos1, pos2);
+									int timeElapseBefore = (int)(segDist / (listOfEnemies2.ElementAt (size).moveSpeedDictionary [listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index)]].moveSpeed)) * 10;
+									if (timeElapseBefore <= timeThreshold) {
+										continue;
+									}
+								}
+								tempSequence.RemoveAt (index);
+								Vector3 startVec = tempWaypoints.ElementAt (index).transform.position;
+								Vector3 endVec1, endVec2, dir1, dir2;
+								if (index != tempWaypoints.Count - 1) {
+									endVec2 = tempWaypoints.ElementAt (index + 1).transform.position;
+								} else {
+									endVec2 = tempWaypoints.ElementAt (index).transform.position - tempWaypoints.ElementAt (index - 1).transform.position + tempWaypoints.ElementAt (index).transform.position;
+								}
+								dir2 = endVec2 - startVec;
+								dir1 = - dir2;
+								endVec1 = startVec + dir1;
+								GameObject rwp = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
+								GameObject rwp1 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
+								GameObject rwp2 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
+								GameObject rwp3 = tempWaypoints.ElementAt (index);
+								rwp1.AddComponent ("RotationWaypoint");
+								rwp2.AddComponent ("RotationWaypoint");
+								rwp3.AddComponent ("RotationWaypoint");
+								DestroyImmediate (rwp1.GetComponent ("Waypoint"));
+								DestroyImmediate (rwp2.GetComponent ("Waypoint"));
+								DestroyImmediate (rwp3.GetComponent ("Waypoint"));
+								Waypoint wpScript;
+								RotationWaypoint rwpScript1;
+								RotationWaypoint rwpScript2;
+								RotationWaypoint rwpScript3;
+								wpScript = rwp.GetComponent ("Waypoint") as Waypoint;
+								rwpScript1 = rwp1.GetComponent ("Waypoint") as RotationWaypoint;
+								rwpScript2 = rwp2.GetComponent ("Waypoint") as RotationWaypoint;
+								rwpScript3 = rwp3.GetComponent ("Waypoint") as RotationWaypoint;
+								tempSequence.Insert (index, rwpScript3);
+								rwpScript1.lookDir = dir2;
+								rwpScript2.lookDir = dir1;
+								rwpScript3.lookDir = dir2;
+								wpScript.next = rwpScript1;
+								rwpScript1.next = rwpScript2;
+								rwpScript2.next = rwpScript3;
+								rwpScript3.prev = rwpScript2;
+								rwpScript2.prev = rwpScript1;
+								rwpScript1.prev = wpScript;
+								if (index < tempSequence.Count - 1) {
+									if (tempWaypoints.ElementAt (index + 1).GetComponent ("WaitingWaypoint") == null && tempWaypoints.ElementAt (index + 1).GetComponent ("RotationWaypoint") == null) {
+										rwpScript3.next = tempSequence.ElementAt (index + 1);
+										tempSequence.ElementAt (index + 1).prev = rwpScript3;
+									} else {
+										rwpScript3.next = tempSequence.ElementAt (index + 1).prev;
+										tempSequence.ElementAt (index + 1).prev.prev = rwpScript3;
+									}
+								} else {
+									if (tempWaypoints.First ().GetComponent ("WaitingWaypoint") == null && tempWaypoints.First ().GetComponent ("RotationWaypoint") == null) {
+										rwpScript3.next = tempSequence.First ();
+										tempSequence.First ().prev = rwpScript3;
+									} else {
+										rwpScript3.next = tempSequence.First ().prev;
+										tempSequence.First ().prev.prev = rwpScript3;
+									}
+								}
+								if (index > 0) {
+									tempSequence.ElementAt (index - 1).next = wpScript;  
+									wpScript.prev = tempSequence.ElementAt (index - 1);
+								} else {
+									tempSequence.Last ().next = wpScript;
+									wpScript.prev = tempSequence.Last ();
+								}
+								tempWaypoints.Insert (index, rwp2);
+								tempWaypoints.Insert (index, rwp1);
+								tempSequence.Insert (index, rwpScript2);
+								tempSequence.Insert (index, rwpScript1);
+
+								// Time-preserving
+								if (index < tempWaypoints.Count - 3) {
+									listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary.Add (tempWaypoints.ElementAt (index), listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 2)]);
+									listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary.Add (tempWaypoints.ElementAt (index + 1), listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 2)]);
+									
+									int rotatingElapse = 360;
+									Vector3 pos1 = tempWaypoints.ElementAt (index).transform.position;
+									Vector3 pos2 = tempWaypoints.ElementAt (index + 3).transform.position;
+									float segDist = Vector3.Distance (pos1, pos2);
+									int timeElapseBefore = (int)(segDist / (listOfEnemies2.ElementAt (size).moveSpeedDictionary [listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 2)]].moveSpeed)) * 10;
+									int timeElapseAfter = timeElapseBefore - rotatingElapse;
+									if (timeElapseAfter < timeThreshold) {
+										timeElapseAfter = timeThreshold;
+										// Change the rotating elapse
+										rotatingElapse = timeElapseBefore - timeElapseAfter;
+									}
+									// Update moving speed
+									float newMovingSpeed = (float)(segDist / (timeElapseAfter / 10));		
+									for (int t = listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 2)]; t < listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 3)]; t++) {
+										listOfEnemies2.ElementAt (size).moveSpeedDictionary [t].moveSpeed = newMovingSpeed;
+									}
+									// Update rotating speed
+									int rotatingElapseExpected = CalculateRotationSpeed (size, tempSequence.ElementAt (index));
+									float newRotatingSpeed = 10.0f * (float)(rotatingElapseExpected / rotatingElapse);
+									for (int t = listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 2)]; t < listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 3)]; t++) {
+										listOfEnemies2.ElementAt (size).rotationSpeedDictionary [t].rotationSpeed = newRotatingSpeed;
+									}
+								}																
+							} 
+							// Fully rotating 360 degree
+							if (r2 >= pPause + pSwipe && r2 < pPause + pSwipe + pFullRotate) {
+								int index = tempWaypoints.IndexOf (currentWaypoint);
+								// Skip generating a waiting waypoint due to limit of time stamps
+								if (index < tempWaypoints.Count - 1) {
+									Vector3 pos1 = tempWaypoints.ElementAt (index).transform.position;
+									Vector3 pos2 = tempWaypoints.ElementAt (index + 1).transform.position;
+									float segDist = Vector3.Distance (pos1, pos2);
+									int timeElapseBefore = (int)(segDist / (listOfEnemies2.ElementAt (size).moveSpeedDictionary [listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index)]].moveSpeed)) * 10;
+									if (timeElapseBefore <= timeThreshold) {
+										continue;
+									}
+								}
+								
+								tempSequence.RemoveAt (index);
+								Vector3 startVec = tempWaypoints.ElementAt (index).transform.position;
+								Vector3 endVec, dir, n1, n2;
+								if (index != tempWaypoints.Count - 1) {
+									endVec = tempWaypoints.ElementAt (index + 1).transform.position;
+								} else {
+									endVec = tempWaypoints.ElementAt (index).transform.position - tempWaypoints.ElementAt (index - 1).transform.position + tempWaypoints.ElementAt (index).transform.position;
+								}
+								dir = endVec - startVec;
+								n1 = Vector3.Cross (dir, new Vector3 (0.0f, 1.0f, 0.0f));
+								n2 = Vector3.Cross (new Vector3 (0.0f, 1.0f, 0.0f), dir);
+								GameObject rwp = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
+								GameObject rwp1 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
+								GameObject rwp2 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
+								GameObject rwp3 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
+								GameObject rwp4 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
+								GameObject rwp5 = tempWaypoints.ElementAt (index);
+								rwp1.AddComponent ("RotationWaypoint");
+								rwp2.AddComponent ("RotationWaypoint");
+								rwp3.AddComponent ("RotationWaypoint");
+								rwp4.AddComponent ("RotationWaypoint");
+								rwp5.AddComponent ("RotationWaypoint");
+								DestroyImmediate (rwp1.GetComponent ("Waypoint"));
+								DestroyImmediate (rwp2.GetComponent ("Waypoint"));
+								DestroyImmediate (rwp3.GetComponent ("Waypoint"));
+								DestroyImmediate (rwp4.GetComponent ("Waypoint"));
+								DestroyImmediate (rwp5.GetComponent ("Waypoint"));
+								Waypoint wpScript;
+								RotationWaypoint rwpScript1;
+								RotationWaypoint rwpScript2;
+								RotationWaypoint rwpScript3;
+								RotationWaypoint rwpScript4;
+								RotationWaypoint rwpScript5;
+								wpScript = rwp.GetComponent ("Waypoint") as Waypoint;
+								rwpScript1 = rwp1.GetComponent ("Waypoint") as RotationWaypoint;
+								rwpScript2 = rwp2.GetComponent ("Waypoint") as RotationWaypoint;
+								rwpScript3 = rwp3.GetComponent ("Waypoint") as RotationWaypoint;
+								rwpScript4 = rwp4.GetComponent ("Waypoint") as RotationWaypoint;
+								rwpScript5 = rwp5.GetComponent ("Waypoint") as RotationWaypoint;
+								tempSequence.Insert (index, rwpScript5);
+								rwpScript1.lookDir = dir;
+								rwpScript2.lookDir = n1;
+								rwpScript3.lookDir = -dir;
+								rwpScript4.lookDir = n2;
+								rwpScript5.lookDir = dir;
+								wpScript.next = rwpScript1;
+								rwpScript1.next = rwpScript2;
+								rwpScript2.next = rwpScript3;
+								rwpScript3.next = rwpScript4;
+								rwpScript4.next = rwpScript5;
+								rwpScript5.prev = rwpScript4;
+								rwpScript4.prev = rwpScript3;
+								rwpScript3.prev = rwpScript2;
+								rwpScript2.prev = rwpScript1;
+								rwpScript1.prev = wpScript;
+								if (index < tempSequence.Count - 1) {
+									if (tempWaypoints.ElementAt (index + 1).GetComponent ("WaitingWaypoint") == null && tempWaypoints.ElementAt (index + 1).GetComponent ("RotationWaypoint") == null) {
+										rwpScript5.next = tempSequence.ElementAt (index + 1);
+										tempSequence.ElementAt (index + 1).prev = rwpScript5;
+									} else {
+										rwpScript5.next = tempSequence.ElementAt (index + 1).prev;
+										tempSequence.ElementAt (index + 1).prev.prev = rwpScript5;
+									}
+								} else {
+									if (tempWaypoints.First ().GetComponent ("WaitingWaypoint") == null && tempWaypoints.First ().GetComponent ("RotationWaypoint") == null) {
+										rwpScript5.next = tempSequence.First ();
+										tempSequence.First ().prev = rwpScript5;
+									} else {
+										rwpScript5.next = tempSequence.First ().prev;
+										tempSequence.First ().prev.prev = rwpScript5;
+									}
+								}
+								if (index > 0) {
+									tempSequence.ElementAt (index - 1).next = wpScript;  
+									wpScript.prev = tempSequence.ElementAt (index - 1);
+								} else {
+									tempSequence.Last ().next = wpScript;
+									wpScript.prev = tempSequence.Last ();
+								}
+								tempWaypoints.Insert (index, rwp4);
+								tempWaypoints.Insert (index, rwp3);
+								tempWaypoints.Insert (index, rwp2);
+								tempWaypoints.Insert (index, rwp1);
+								tempSequence.Insert (index, rwpScript4);
+								tempSequence.Insert (index, rwpScript3);
+								tempSequence.Insert (index, rwpScript2);
+								tempSequence.Insert (index, rwpScript1);
+								
+								// Time-preserving
+								if (index < tempWaypoints.Count - 5) {
+									listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary.Add (tempWaypoints.ElementAt (index), listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 4)]);
+									listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary.Add (tempWaypoints.ElementAt (index + 1), listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 4)]);
+									listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary.Add (tempWaypoints.ElementAt (index + 2), listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 4)]);
+									listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary.Add (tempWaypoints.ElementAt (index + 3), listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 4)]);
+									
+									int rotatingElapse = 360;
+									Vector3 pos1 = tempWaypoints.ElementAt (index).transform.position;
+									Vector3 pos2 = tempWaypoints.ElementAt (index + 5).transform.position;
+									float segDist = Vector3.Distance (pos1, pos2);
+									int timeElapseBefore = (int)(segDist / (listOfEnemies2.ElementAt (size).moveSpeedDictionary [listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 4)]].moveSpeed)) * 10;
+									int timeElapseAfter = timeElapseBefore - rotatingElapse;
+									if (timeElapseAfter < timeThreshold) {
+										timeElapseAfter = timeThreshold;
+										// Change the rotating elapse
+										rotatingElapse = timeElapseBefore - timeElapseAfter;
+									}
+									// Update moving speed
+									float newMovingSpeed = (float)(segDist / (timeElapseAfter / 10));		
+									for (int t = listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 4)]; t < listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 5)]; t++) {
+										listOfEnemies2.ElementAt (size).moveSpeedDictionary [t].moveSpeed = newMovingSpeed;
+									}
+									// Update rotating speed
+									int rotatingElapseExpected = CalculateRotationSpeed (size, tempSequence.ElementAt (index));
+									float newRotatingSpeed = 10.0f * (float)(rotatingElapseExpected / rotatingElapse);
+									for (int t = listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 4)]; t < listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 5)]; t++) {
+										listOfEnemies2.ElementAt (size).rotationSpeedDictionary [t].rotationSpeed = newRotatingSpeed;
+									}
+								}
+							} 
+														
+							// Ninety-degree rotating
+							if (r2 >= pPause + pSwipe + pFullRotate && r2 < 100) {
+								int index = tempWaypoints.IndexOf (currentWaypoint);
+								// Skip generating a waiting waypoint due to limit of time stamps
+								if (index < tempWaypoints.Count - 1) {
+									Vector3 pos1 = tempWaypoints.ElementAt (index).transform.position;
+									Vector3 pos2 = tempWaypoints.ElementAt (index + 1).transform.position;
+									float segDist = Vector3.Distance (pos1, pos2);
+									int timeElapseBefore = (int)(segDist / (listOfEnemies2.ElementAt (size).moveSpeedDictionary [listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index)]].moveSpeed)) * 10;
+									if (timeElapseBefore <= timeThreshold) {
+										continue;
+									}
+								}
+								
+								tempSequence.RemoveAt (index);
+								Vector3 startVec = tempWaypoints.ElementAt (index).transform.position;
+								Vector3 endVec, dir, n1, n2;
+								if (index != tempWaypoints.Count - 1) {
+									endVec = tempWaypoints.ElementAt (index + 1).transform.position;
+								} else {
+									endVec = tempWaypoints.ElementAt (index).transform.position - tempWaypoints.ElementAt (index - 1).transform.position + tempWaypoints.ElementAt (index).transform.position;
+								}
+								dir = endVec - startVec;
+								// Two normal directions
+								n1 = Vector3.Cross (dir, new Vector3 (0.0f, 1.0f, 0.0f));
+								n2 = Vector3.Cross (new Vector3 (0.0f, 1.0f, 0.0f), dir);
+								GameObject rwp = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
+								GameObject rwp1 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
+								GameObject rwp2 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
+								GameObject rwp3 = tempWaypoints.ElementAt (index);
+								rwp1.AddComponent ("RotationWaypoint");
+								rwp2.AddComponent ("RotationWaypoint");
+								rwp3.AddComponent ("RotationWaypoint");
+								DestroyImmediate (rwp1.GetComponent ("Waypoint"));
+								DestroyImmediate (rwp2.GetComponent ("Waypoint"));
+								DestroyImmediate (rwp3.GetComponent ("Waypoint"));
+								Waypoint wpScript;
+								RotationWaypoint rwpScript1;
+								RotationWaypoint rwpScript2;
+								RotationWaypoint rwpScript3;
+								wpScript = rwp.GetComponent ("Waypoint") as Waypoint;
+								rwpScript1 = rwp1.GetComponent ("Waypoint") as RotationWaypoint;
+								rwpScript2 = rwp2.GetComponent ("Waypoint") as RotationWaypoint;
+								rwpScript3 = rwp3.GetComponent ("Waypoint") as RotationWaypoint;
+								tempSequence.Insert (index, rwpScript3);
+								rwpScript1.lookDir = dir;
+                                
+								// Choose a random one from two normal directions
+								int nr = UnityEngine.Random.Range (0, 2);
+								if (nr == 0) {
+									rwpScript2.lookDir = n1;
+								} else {
+									rwpScript2.lookDir = n2;
+								}
+								rwpScript3.lookDir = dir;
+								wpScript.next = rwpScript1;
+								rwpScript1.next = rwpScript2;
+								rwpScript2.next = rwpScript3;
+								rwpScript3.prev = rwpScript2;
+								rwpScript2.prev = rwpScript1;
+								rwpScript1.prev = wpScript;
+								if (index < tempSequence.Count - 1) {
+									if (tempWaypoints.ElementAt (index + 1).GetComponent ("WaitingWaypoint") == null && tempWaypoints.ElementAt (index + 1).GetComponent ("RotationWaypoint") == null) {
+										rwpScript3.next = tempSequence.ElementAt (index + 1);
+										tempSequence.ElementAt (index + 1).prev = rwpScript3;
+									} else {
+										rwpScript3.next = tempSequence.ElementAt (index + 1).prev;
+										tempSequence.ElementAt (index + 1).prev.prev = rwpScript3;
+									}
+								} else {
+									if (tempWaypoints.First ().GetComponent ("WaitingWaypoint") == null && tempWaypoints.First ().GetComponent ("RotationWaypoint") == null) {
+										rwpScript3.next = tempSequence.First ();
+										tempSequence.First ().prev = rwpScript3;
+									} else {
+										rwpScript3.next = tempSequence.First ().prev;
+										tempSequence.First ().prev.prev = rwpScript3;
+									}
+								}
+								if (index > 0) {
+									tempSequence.ElementAt (index - 1).next = wpScript;  
+									wpScript.prev = tempSequence.ElementAt (index - 1);
+								} else {
+									tempSequence.Last ().next = wpScript;    
+									wpScript.prev = tempSequence.Last ();
+								}
+								tempWaypoints.Insert (index, rwp2);
+								tempWaypoints.Insert (index, rwp1);
+								tempSequence.Insert (index, rwpScript2);
+								tempSequence.Insert (index, rwpScript1);
+								
+								// Time-preserving
+								if (index < tempWaypoints.Count - 3) {
+								
+									listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary.Add (tempWaypoints.ElementAt (index), listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 2)]);
+									listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary.Add (tempWaypoints.ElementAt (index + 1), listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 2)]);
+									
+									int rotatingElapse = 360;
+									Vector3 pos1 = tempWaypoints.ElementAt (index).transform.position;
+									Vector3 pos2 = tempWaypoints.ElementAt (index + 3).transform.position;
+									float segDist = Vector3.Distance (pos1, pos2);
+									int timeElapseBefore = (int)(segDist / (listOfEnemies2.ElementAt (size).moveSpeedDictionary [listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 2)]].moveSpeed)) * 10;
+									int timeElapseAfter = timeElapseBefore - rotatingElapse;
+									if (timeElapseAfter < timeThreshold) {
+										timeElapseAfter = timeThreshold;
+										// Change the rotating elapse
+										rotatingElapse = timeElapseBefore - timeElapseAfter;
+									}
+																		// Update moving speed
+									float newMovingSpeed = (float)(segDist / (timeElapseAfter / 10));		
+									for (int t = listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 2)]; t < listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 3)]; t++) {
+										listOfEnemies2.ElementAt (size).moveSpeedDictionary [t].moveSpeed = newMovingSpeed;
+									}
+									// Update rotating speed
+									int rotatingElapseExpected = CalculateRotationSpeed (size, tempSequence.ElementAt (index));
+									//Debug.Log ("wocao" + rotatingElapseExpected);
+									float newRotatingSpeed = 10.0f * (float)(rotatingElapseExpected / rotatingElapse);
+									//Debug.Log ("wokao" + newRotatingSpeed);
+									for (int t = listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 2)]; t < listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 3)]; t++) {
+										listOfEnemies2.ElementAt (size).rotationSpeedDictionary [t].rotationSpeed = newRotatingSpeed;
+									}
+								}	
+							}
+						}                           
+					}
+
+					// Applying "Segment" Rule
+					if (tempWaypoints.IndexOf (currentWaypoint) != tempWaypoints.Count - 1) {
+						if (currentWaypoint.transform.position != tempWaypoints.ElementAt (tempWaypoints.IndexOf (currentWaypoint) + 1).transform.position) {
+							int r3 = UnityEngine.Random.Range (0, 100);
+							// pLine possibility of adding a new waypoint or doing forwarding-returning-forwarding
+							if (r3 < pLine) {
+								int r4 = UnityEngine.Random.Range (0, 100);
+								// Separating
+								if (r4 < pSplit) {
+									int index = tempWaypoints.IndexOf (currentWaypoint);
+									// No separating if this is the last node
+									if (index != tempWaypoints.Count - 1) {
+										Vector3 startVec = tempWaypoints.ElementAt (index).transform.position;
+										Vector3 endVec = tempWaypoints.ElementAt (index + 1).transform.position;
+										Vector3 dir = endVec - startVec;
+										float ratio = UnityEngine.Random.Range (0.1f, 1.0f);
+										Vector3 pos = startVec + new Vector3 (dir.x * ratio, dir.y * ratio, dir.z * ratio);
+										GameObject wp = GameObject.Instantiate (waypointPrefab, pos, Quaternion.identity) as GameObject;
+										Waypoint wpScript;
+										wpScript = wp.GetComponent ("Waypoint") as Waypoint;
+										tempSequence.ElementAt (index).next = wpScript;
+										wpScript.prev = tempSequence.ElementAt (index);
+										// Make sure to point to a normal waypoint
+										if (tempWaypoints.ElementAt (index + 1).GetComponent ("WaitingWaypoint") == null && tempWaypoints.ElementAt (index + 1).GetComponent ("RotationWaypoint") == null) {
+											wpScript.next = tempSequence.ElementAt (index + 1);
+											tempSequence.ElementAt (index + 1).prev = wpScript;
+										} else {
+											wpScript.next = tempSequence.ElementAt (index + 1).prev;
+											tempSequence.ElementAt (index + 1).prev.prev = wpScript;
+										}
+										tempSequence.Insert (index + 1, wpScript);
+										tempWaypoints.Insert (index + 1, wp);
+																		
+										// Time-preserving
+										float offset = Vector3.Distance (startVec, pos);
+										int timeElapse = (int)(offset / (listOfEnemies2.ElementAt (size).moveSpeedDictionary [listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index)]].moveSpeed)) * 10;
+										listOfEnemies2.ElementAt (size).moveSpeedDictionary [timeElapse].referredWp = wp;
+										listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary.Add (wp, timeElapse);	
+										listOfEnemies2.ElementAt (size).rotationSpeedDictionary [timeElapse].referredWp = wp;
+										listOfEnemies2.ElementAt (size).reverseRotationSpeedDictionary.Add (wp, timeElapse);
+									}
+								} 
+								// Returning and Forwarding
+								if (r4 >= pSplit) {
+									int index = tempWaypoints.IndexOf (currentWaypoint);
+									// No returning and forwarding if this is the last node
+									if (index != tempWaypoints.Count - 1) {
+										Vector3 startVec = tempWaypoints.ElementAt (index).transform.position;
+										Vector3 endVec = tempWaypoints.ElementAt (index + 1).transform.position;
+										GameObject wp1 = GameObject.Instantiate (waypointPrefab, endVec, Quaternion.identity) as GameObject;
+										GameObject wp2 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
+										Waypoint wpScript1;
+										Waypoint wpScript2;
+										wpScript1 = wp1.GetComponent ("Waypoint") as Waypoint;
+										wpScript2 = wp2.GetComponent ("Waypoint") as Waypoint;
+										tempSequence.ElementAt (index).next = wpScript1;
+										wpScript1.prev = tempSequence.ElementAt (index);
+										wpScript1.next = wpScript2;
+										wpScript2.prev = wpScript1;
+										// Make sure to point to a normal waypoint
+										if (tempWaypoints.ElementAt (index + 1).GetComponent ("WaitingWaypoint") == null && tempWaypoints.ElementAt (index + 1).GetComponent ("RotationWaypoint") == null) {
+											wpScript2.next = tempSequence.ElementAt (index + 1);
+											tempSequence.ElementAt (index + 1).prev = wpScript2;
+										} else {
+											wpScript2.next = tempSequence.ElementAt (index + 1).prev;
+											tempSequence.ElementAt (index + 1).prev.prev = wpScript2;
+										}
+										tempSequence.Insert (index + 1, wpScript1);
+										tempSequence.Insert (index + 2, wpScript2);
+										tempWaypoints.Insert (index + 1, wp1);
+										tempWaypoints.Insert (index + 2, wp2);
+																				
+										// Time-preserving
+										int startingTime = listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index)];
+										int endingTime = listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 3)];
+										int deltaTime = endingTime - startingTime;
+										int t1 = deltaTime / 3, t2 = 2 * deltaTime / 3;
+										listOfEnemies2.ElementAt (size).moveSpeedDictionary [startingTime + t1].referredWp = tempWaypoints.ElementAt (index + 1);
+										listOfEnemies2.ElementAt (size).moveSpeedDictionary [startingTime + t2].referredWp = tempWaypoints.ElementAt (index + 2);
+										listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary.Add (tempWaypoints.ElementAt (index + 1), startingTime + t1);
+										listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary.Add (tempWaypoints.ElementAt (index + 2), startingTime + t2);
+										listOfEnemies2.ElementAt (size).rotationSpeedDictionary [startingTime + t1].referredWp = tempWaypoints.ElementAt (index + 1);
+										listOfEnemies2.ElementAt (size).rotationSpeedDictionary [startingTime + t2].referredWp = tempWaypoints.ElementAt (index + 2);
+										listOfEnemies2.ElementAt (size).reverseRotationSpeedDictionary.Add (tempWaypoints.ElementAt (index + 1), startingTime + t1);
+										listOfEnemies2.ElementAt (size).reverseRotationSpeedDictionary.Add (tempWaypoints.ElementAt (index + 2), startingTime + t2);
+										
+										// Movement speed during the segment is tripled								
+										for (int t = startingTime; t < endingTime; t++) {
+											listOfEnemies2.ElementAt (size).moveSpeedDictionary [t].moveSpeed *= 3;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+                
+				listOfSequence.ElementAt (size).Clear ();
+				listOfWaypoints.ElementAt (size).Clear ();
+				for (int cnt = 0; cnt < tempWaypoints.Count; cnt++) {
+					listOfWaypoints.ElementAt (size).Add (tempWaypoints.ElementAt (cnt));
+				}
+				for (int cnt = 0; cnt < tempSequence.Count; cnt++) {
+					listOfSequence.ElementAt (size).Add (tempSequence.ElementAt (cnt));
+				}
+			}
+		}
+        
+		for (int i = 0; i < listOfEnemies2.Count; i++) {
+			listOfEnemies2.ElementAt (i).target = listOfSequence.ElementAt (i).ElementAt (0);
+			listOfEnemies2.ElementAt (i).transform.LookAt (listOfSequence.ElementAt (i).ElementAt (1).gameObject.transform.position);
+		}
+        
+		var enemies = GameObject.FindGameObjectsWithTag ("Enemy").OrderBy (go => go.transform.position.x).ToArray ();
+		foreach (GameObject g in enemies) {
+			oos.Add (g);
+		}
+        
+		var waypoints = GameObject.FindGameObjectsWithTag ("Waypoint").ToArray ();
+		foreach (GameObject w in waypoints) {
+			oos.Add (w);
+		}
+        
+		return oos;
+	}
+    
 	public static void DestroyVoronoiCentreForEnemies ()
 	{
 		//Destroy other voronoi centres and complete the scene
@@ -1931,12 +2664,12 @@ public class PCG : MonoBehaviour
 					break;
 				}
 				if (n == numOfEnemies - 1) {
-					GameObject.DestroyImmediate (e);		
+					GameObject.DestroyImmediate (e);     
 				}
 			}
 		}
 	}
-	
+    
 	public static void DestroyVoronoiCentreForCameras ()
 	{
 		//Destroy other voronoi centres and complete the scene
@@ -1946,57 +2679,57 @@ public class PCG : MonoBehaviour
 					break;
 				}
 				if (n == numOfCameras - 1) {
-					GameObject.DestroyImmediate (c);		
+					GameObject.DestroyImmediate (c);     
 				}
 			}
 		}
 	}
-	
+    
 	public static void ClearUpEnemies (GameObject[] eos)
 	{
 		if (eos != null) {
 			foreach (GameObject e in eos) {
-				DestroyImmediate (e);	
+				DestroyImmediate (e);    
 			}
 		}
 		PCG.eos.Clear ();
 	}
-	
+    
 	public static void ClearUpPaths (GameObject[] pos)
 	{
 		if (pos != null) {
 			foreach (GameObject p in pos) {
-				DestroyImmediate (p);	
+				DestroyImmediate (p);    
 			}
 		}
 		PCG.pos.Clear ();
 	}
-	
+    
 	public static void ClearUpCameras (GameObject[] cos)
 	{
 		if (cos != null) {
 			foreach (GameObject c in cos) {
-				DestroyImmediate (c);	
+				DestroyImmediate (c);    
 			}
 		}
 		PCG.cos.Clear ();
 	}
-	
+    
 	public static void ClearUpAngles (GameObject[] aos)
 	{
 		if (aos != null) {
 			foreach (GameObject a in aos) {
-				DestroyImmediate (a);	
+				DestroyImmediate (a);    
 			}
 		}
 		PCG.aos.Clear ();
 	}
-	
+    
 	public static void ClearUpObjects (GameObject[] oos)
-	{	
+	{   
 		if (oos != null) {
 			foreach (GameObject o in oos) {
-				DestroyImmediate (o);	
+				DestroyImmediate (o);    
 			}
 		}
 		PCG.oos.Clear ();
@@ -2011,7 +2744,7 @@ public class PCG : MonoBehaviour
 		listOfSequence.Clear ();
 		listOfWaypoints.Clear ();
 	}
-	
+    
 	// Calculate range
 	private static float[] CalculateRange (Vector3 vdir, Vector3 defaultPos, float fovDistance, float fovAngle)
 	{
@@ -2021,7 +2754,7 @@ public class PCG : MonoBehaviour
 		Vector2 pA, pB, pC, dir;
 		pC = new Vector2 (defaultPos.x, defaultPos.z);
 		dir = new Vector2 (vdir.x, vdir.z);
-		
+        
 		cosTheta = dir.x / Mathf.Sqrt (dir.x * dir.x + dir.y * dir.y);
 		sinTheta = dir.y / Mathf.Sqrt (dir.x * dir.x + dir.y * dir.y);
 		x = fovDistance;
@@ -2032,21 +2765,21 @@ public class PCG : MonoBehaviour
 		yB = sinTheta * x - cosTheta * y + pC.y;
 		pA = new Vector2 (xA, yA);
 		pB = new Vector2 (xB, yB);
-		
+        
 		// min and max
 		maxX = Mathf.Max (Mathf.Max (pA.x, pB.x), pC.x);
 		minX = Mathf.Min (Mathf.Min (pA.x, pB.x), pC.x);
 		maxY = Mathf.Max (Mathf.Max (pA.y, pB.y), pC.y);
 		minY = Mathf.Min (Mathf.Min (pA.y, pB.y), pC.y);
-		
+        
 		range [0] = minX;
 		range [1] = minY;
 		range [2] = maxX;
 		range [3] = maxY;
-		
+        
 		return range;
 	}
-	
+    
 	private static bool CheckAcute (Vector3 pos, Vector3 v1, Vector3 v2)
 	{
 		Vector3 midDir1 = new Vector3 (v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
@@ -2057,15 +2790,15 @@ public class PCG : MonoBehaviour
 			d1 = hit1.distance;
 		}
 		if (Physics.Raycast (pos, midDir2, out hit2)) {
-			d2 = hit2.distance;	
+			d2 = hit2.distance; 
 		}
 		if (d1 >= d2 && !midDir1.Equals (midDir2)) {
 			return true;
 		} else {
-			return false;	
+			return false;   
 		}
 	}
-	
+    
 	private static bool CheckFlat (Vector3 pos, Vector3 v1, Vector3 v2, ref Vector3 rwpPos3)
 	{
 		Vector3 midDir1 = new Vector3 (v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
@@ -2080,28 +2813,28 @@ public class PCG : MonoBehaviour
 			}
 			return true;
 		} else {
-			return false;	
+			return false;   
 		}
 	}
-					
+                    
 	private static bool CheckFlatDir (Vector3 pos, Vector3 mv1, Vector3 mv2)
 	{
 		float d1 = float.MaxValue, d2 = float.MaxValue;
-		RaycastHit hit1, hit2;			
+		RaycastHit hit1, hit2;          
 		if (Physics.Raycast (pos, mv1, out hit1)) {
 			d1 = hit1.distance;
 		}
 		if (Physics.Raycast (pos, mv2, out hit2)) {
-			d2 = hit2.distance;	
+			d2 = hit2.distance; 
 		}
-		if (d1 >= d2) {	
+		if (d1 >= d2) {   
 			return true;
 		} else {
-			return false;	
+			return false;   
 		}
 	}
 
-	
+    
 	// Find path using depth-first-search
 	private static bool FindPath (int currentIndex, int endIndex, int guardIndex)
 	{
@@ -2109,11 +2842,11 @@ public class PCG : MonoBehaviour
 		templistOfPath.ElementAt (guardIndex).Add (currentIndex);
 		if (currentIndex == endIndex) {
 			for (int i = 0; i < templistOfPath.ElementAt (guardIndex).Count; i++) {
-				listOfPath.ElementAt (guardIndex).Add (templistOfPath.ElementAt (guardIndex).ElementAt (i));	
+				listOfPath.ElementAt (guardIndex).Add (templistOfPath.ElementAt (guardIndex).ElementAt (i));    
 			}
 			return true;
 		}
-		
+        
 		foreach (GraphNode gn in sBoundary.finalGraphNodesList.ElementAt (currentIndex).neighbors) {
 			if (gn.neighbors.Count != 0 && gn.isVisited == false) {
 				bool flag = FindPath (sBoundary.finalGraphNodesList.IndexOf (gn), endIndex, guardIndex);
@@ -2126,7 +2859,7 @@ public class PCG : MonoBehaviour
 		templistOfPath.ElementAt (guardIndex).Remove (currentIndex);
 		return false;
 	}
-	
+    
 	// Find shortest path with minimum nodes using breadth-first-search
 	private static List<int> FindShortestPath (int startIndex, int endIndex)
 	{
@@ -2141,7 +2874,7 @@ public class PCG : MonoBehaviour
 		queue.Enqueue (startIndex);
 		sBoundary.finalGraphNodesList.ElementAt (startIndex).isVisited = true;
 		tempIndex = queue.Dequeue ();
-		
+        
 		// Breadth-first-search
 		while (tempIndex != endIndex) {
 			foreach (GraphNode g in sBoundary.finalGraphNodesList.ElementAt (tempIndex).neighbors) {
@@ -2155,7 +2888,7 @@ public class PCG : MonoBehaviour
 			tempIndex = queue.Dequeue ();
 			// Debug.Log ("Dequeue: " + tempIndex);
 		}
-		
+        
 		// Trace back
 		GraphNode tempgn = sBoundary.finalGraphNodesList.ElementAt (endIndex);
 		while (tempgn !=sBoundary.finalGraphNodesList.ElementAt (startIndex)) {
@@ -2163,12 +2896,12 @@ public class PCG : MonoBehaviour
 			tempgn = tempgn.prev;
 		}
 		shortestpath.Insert (0, startIndex);
-	
+    
 		queue.Clear ();
 
 		return shortestpath;
 	}
-	
+    
 	private static void InitializeSequence (GameObject floor)
 	{
 		for (int size = 0; size < listOfPath.Count; size++) {
@@ -2194,7 +2927,7 @@ public class PCG : MonoBehaviour
 			}
 			// Next and Prev info
 			for (int i = 0; i < sequence.Count - 1; i++) {
-				sequence.ElementAt (i).next = sequence.ElementAt (i + 1);	
+				sequence.ElementAt (i).next = sequence.ElementAt (i + 1); 
 				sequence.ElementAt (i + 1).prev = sequence.ElementAt (i);
 			}
 			sequence.ElementAt (sequence.Count - 1).next = sequence.ElementAt (0);
@@ -2203,7 +2936,46 @@ public class PCG : MonoBehaviour
 			listOfWaypoints.Add (wpList);
 		}
 	}
+
+	private static int CalculateTravelingTime (GameObject floor)
+	{
+		float longestDist = 0.0f;
+		for (int size = 0; size < listOfPath.Count; size++) {
+			// Calculate Total Distance
+			float totalDist = 0.0f;
+			for (int i = 0; i < listOfPath.ElementAt (size).Count - 1; i++) {
+				Vector3 pos1 = sBoundary.finalGraphNodesList.ElementAt (listOfPath.ElementAt (size).ElementAt (i)).Pos (floor);
+				Vector3 pos2 = sBoundary.finalGraphNodesList.ElementAt (listOfPath.ElementAt (size).ElementAt (i + 1)).Pos (floor);
+				float segmentDist = Vector3.Distance (pos1, pos2);
+				totalDist += segmentDist;
+			}
+			totalDist *= 2;
+			if (totalDist > longestDist) {
+				longestDist = totalDist;
+			}
+		}
+		// Set Max TimeStamps
+		int maxTime = (int)(longestDist / speedConstant);
+					
+		return maxTime;
+	}
 	
+	private static int CalculateRotationSpeed (int enemyIndex, Waypoint waypoint)
+	{
+		RotationWaypoint r = (RotationWaypoint)waypoint;
+		Quaternion lookDir = Quaternion.LookRotation (r.lookDir);
+		Quaternion rotation = listOfEnemies2.ElementAt (enemyIndex).transform.rotation;
+		
+		float step = 0.1f;
+		int count = 1;
+		while ((lookDir.eulerAngles - rotation.eulerAngles).magnitude > 0.1f) {
+			rotation = Quaternion.RotateTowards (rotation, lookDir, step);
+			count ++;
+		}
+		// Double the count since swiping cw and ccw respectively
+		return count * 10 * 2;
+	}
+    
 	private static void SavePathsToFile (int iterations)
 	{
 		filepath = "_" + numOfGuards + "_guards_" + iterations + "_iterations_saved_path.txt";
@@ -2220,7 +2992,7 @@ public class PCG : MonoBehaviour
 			}
 		}
 	}
-	
+    
 	private static void LoadPathsFromFile ()
 	{
 		filepath = "LongestPaths.txt";

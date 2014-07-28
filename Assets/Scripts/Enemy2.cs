@@ -1,17 +1,37 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-public class Enemy : MonoBehaviour
+public class Enemy2 : MonoBehaviour
 {
+	public class MoveSpeed
+	{
+		public float moveSpeed = 0.0f;
+		public GameObject referredWp;
+	};
+	
+	public class RotationSpeed
+	{
+		public float rotationSpeed = 0.0f;
+		public GameObject referredWp;
+	};
 	
 	public Waypoint target;
-	public float moveSpeed = 0.2f;
-	public float rotationSpeed = 10.0f;
 	public float fovAngle = 33;
 	public float fovDistance = 5;
 	public float radius = 0.5f;
+
+	// The changeable movement speed and rotation speed
+	public MoveSpeed currentMoveSpeed;
+	public RotationSpeed currentRotationSpeed;
+	public MoveSpeed[] moveSpeeds;
+	public RotationSpeed[] rotationSpeeds;
+	public Dictionary<int, MoveSpeed> moveSpeedDictionary = new Dictionary<int, MoveSpeed> ();
+	public Dictionary<GameObject, int> reverseMoveSpeedDictionary = new Dictionary<GameObject, int> ();
+	public Dictionary<int, RotationSpeed> rotationSpeedDictionary = new Dictionary<int, RotationSpeed> ();
+	public Dictionary<GameObject, int> reverseRotationSpeedDictionary = new Dictionary<GameObject, int> ();
+
 	// The first index is always the time span you want to peek
 	public Vector3[] positions;
 	public Vector3[] forwards;
@@ -25,12 +45,15 @@ public class Enemy : MonoBehaviour
 	private Vector3[] dummyPositions;
 	private Quaternion dummyRotations;
 	//
+	private MoveSpeed initialMoveSpeed;
+	private RotationSpeed initialRotationSpeed;
 	private Vector3 initialPosition;
 	private Quaternion initialRotation;
 	private Waypoint initialTarget;
 	public Color LineForFOV = new Color (1.0f, 0.3f, 0.0f, 1f);
 	
 	// This moves the enemy in the game running environment
+	// Obsolete
 	void Update ()
 	{
 		//return; 
@@ -38,11 +61,14 @@ public class Enemy : MonoBehaviour
 		Quaternion outRot;
 		Waypoint outWay;
 		
-		EnemyMover.Solve (gameObject.GetHashCode (), dummyPosition, dummyRotation, moveSpeed, rotationSpeed, Time.deltaTime, dummyTarget, 0.05f, out outPos, out outRot, out outWay);
+		EnemyMover.Solve (gameObject.GetHashCode (), dummyPosition, dummyRotation, currentMoveSpeed.moveSpeed, currentRotationSpeed.rotationSpeed, Time.deltaTime, dummyTarget, 0.05f, out outPos, out outRot, out outWay);
 		
 		transform.position = outPos;
 		transform.rotation = outRot;
 		target = outWay;
+
+		currentMoveSpeed = GetNextMoveSpeed (0);
+		currentRotationSpeed = GetNextRotationSpeed (0);
 	}
 	
 	// Reset back the dummy and actual gameobject back to the initial position
@@ -51,10 +77,14 @@ public class Enemy : MonoBehaviour
 		transform.position = initialPosition;
 		transform.rotation = initialRotation;
 		target = initialTarget;
-		
+//		initialMoveSpeed = new MoveSpeed ();
+//		initialRotationSpeed = new RotationSpeed ();
+
 		dummyPosition = transform.position;
 		dummyRotation = transform.rotation;
 		dummyTarget = target;
+		currentMoveSpeed = initialMoveSpeed;
+		currentRotationSpeed = initialRotationSpeed;
 	}
 	
 	// Sets the initial position with the current transform coordinates
@@ -63,63 +93,30 @@ public class Enemy : MonoBehaviour
 		initialTarget = target;
 		initialPosition = transform.position;
 		initialRotation = transform.rotation;
-		
+		initialMoveSpeed = new MoveSpeed ();
+		initialRotationSpeed = new RotationSpeed ();
+
 		ResetSimulation ();
 	}
 	
 	// This siumulates the enemy's movement based on the actual enemy movement
-	public void Simulate (float time)
+	public void SimulateOverTimePreserving (float time, int currentTimeStamp)
 	{
 		Vector3 outPos;
 		Quaternion outRot;
 		Waypoint outWay;
 		
-		EnemyMover.Solve (gameObject.GetHashCode (), dummyPosition, dummyRotation, moveSpeed, rotationSpeed, time, dummyTarget, 0.05f, out outPos, out outRot, out outWay);
+		EnemyMover.Solve (gameObject.GetHashCode (), dummyPosition, dummyRotation, currentMoveSpeed.moveSpeed, currentRotationSpeed.rotationSpeed, time, dummyTarget, 0.13f, out outPos, out outRot, out outWay);
 		
 		dummyPosition = outPos;
 		dummyRotation = outRot;
 		dummyTarget = outWay;
+
+		currentMoveSpeed = GetNextMoveSpeed (currentTimeStamp);
+		currentRotationSpeed = GetNextRotationSpeed (currentTimeStamp);
 	}
 	
-	// Reset back the dummy and actual gameobject back to the initial position
-	public void ResetSimulationOverRhythm ()
-	{
-		transform.position = initialPosition;
-		transform.rotation = initialRotation;
-		target = initialTarget;
-		
-		dummyPosition = transform.position;
-		dummyRotation = transform.rotation;
-		dummyTarget = target;
-	}
-	
-	// Sets the initial position with the current transform coordinates within a time interval
-	public void SetInitialPositionOverRhythm (int elapseIndex)
-	{
-		initialTarget = gameObject.GetComponent <FSM> ().sequence.ElementAt (elapseIndex).ElementAt (0);
-		initialPosition = transform.position;
-		initialRotation = transform.rotation;
-		
-		ResetSimulationOverRhythm ();
-	}
-	
-	
-	// This siumulates the enemy's movement based on the actual enemy movement for different intervals
-	public void SimulateOverRhythm (float time, int elapseIndex)
-	{
-		dummyTarget = gameObject.GetComponent <FSM> ().sequence.ElementAt (elapseIndex).ElementAt (0);
-		
-		Vector3 outPos;
-		Quaternion outRot;
-		Waypoint outWay;	
-		
-		EnemyMover.Solve (gameObject.GetHashCode (), dummyPosition, dummyRotation, moveSpeed, rotationSpeed, time, dummyTarget, 0.05f, out outPos, out outRot, out outWay);
-		
-		dummyPosition = outPos;
-		dummyRotation = outRot;
-		dummyTarget = outWay;
-	}
-	
+
 	public void OnDrawGizmos ()
 	{
 		if (transform.FindChild ("FOV") != null) {
@@ -142,10 +139,10 @@ public class Enemy : MonoBehaviour
 				
 				mesh.vertices = vertices.ToArray ();
 				mesh.uv = new Vector2[] {
-										new Vector2 (0, 0),
-										new Vector2 (0, 1),
-										new Vector2 (1, 1)
-								};
+					new Vector2 (0, 0),
+					new Vector2 (0, 1),
+					new Vector2 (1, 1)
+				};
 				mesh.triangles = new int[] {2, 1, 0};
 				
 				//Normal
@@ -178,5 +175,23 @@ public class Enemy : MonoBehaviour
 	public Quaternion GetSimulatedRotation ()
 	{
 		return dummyRotation;
+	}
+
+	public MoveSpeed GetNextMoveSpeed (int timeStamp)
+	{
+		if (!moveSpeedDictionary.ContainsKey (timeStamp + 1)) {
+			return null;
+		} else {
+			return moveSpeedDictionary [timeStamp + 1];
+		}
+	}
+
+	public RotationSpeed GetNextRotationSpeed (int timeStamp)
+	{
+		if (!rotationSpeedDictionary.ContainsKey (timeStamp + 1)) {
+			return null;
+		} else {
+			return rotationSpeedDictionary [timeStamp + 1];
+		}
 	}
 }

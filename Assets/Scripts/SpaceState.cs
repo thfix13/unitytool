@@ -23,6 +23,7 @@ public class SpaceState
 	#region Mapper initialization
 	// PrecomputeMaps
 	public Enemy[] enemies;
+	public Enemy2[] enemies2;
 	
 	// PrecomputeMaps
 	public Cell[][][] fullMap;
@@ -37,6 +38,10 @@ public class SpaceState
 	
 	public static Enemy[] Enemies {
 		get { return Instance.enemies; }
+	}
+
+	public static Enemy2[] Enemies2 {
+		get { return Instance.enemies2; }
 	}
 	
 	public static Cell[][][] FullMap {

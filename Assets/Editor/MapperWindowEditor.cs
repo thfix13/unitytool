@@ -15,17 +15,17 @@ public class MapperWindowEditor : EditorWindow
 	public static List<Path> paths = new List<Path> ();
 	public static List<Node> mostDanger = null, shortest = null, lengthiest = null, fastest = null, longest = null;
 	// Parameters
-	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 75, ticksBehind = 0, numOfEnemies = 0, numOfRegionsForEnemies = 0, numOfCameras = 0, numOfRegionsForCameras = 0, iterations2 = 5, iterations3 = 5, noeB = 0, nocB = 0, noreB = 0, norcB = 0, numOfGuards = 0, iterations4 = 3, nogB = 2, noiB = 4;
-	public static int pLine = 50, pDot = 50, pSplit = 50, pZigZag = 50, pPause = 25, pSwipe = 25, pFullRotate = 25, pNinety = 25;
+	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 75, ticksBehind = 0, numOfEnemies = 0, numOfRegionsForEnemies = 0, numOfCameras = 0, numOfRegionsForCameras = 0, iterations2 = 5, iterations3 = 5, noeB = 0, nocB = 0, noreB = 0, norcB = 0, numOfGuards = 0, numOfGuards2 = 1, iterations4 = 3, iterations5 = 2, nogB = 2, noiB = 4;
+	public static int pLine = 50, pDot = 50, pSplit = 50, pZigZag = 50, pPause = 25, pSwipe = 25, pFullRotate = 25, pNinety = 25, pLine2 = 50, pDot2 = 50, pSplit2 = 50, pZigZag2 = 50, pPause2 = 25, pSwipe2 = 25, pFullRotate2 = 25, pNinety2 = 25;
 	public static bool drawMap = true, drawMoveMap = false, drawMoveUnits = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = false, 
-				drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawBoundaries = false, drawRoadmaps = false, drawRoadmaps2 = false, drawRoadmaps3 = false, drawGraph = false, drawGraph2 = false,
-				smoothPath = true, drawShortestPath = false, drawLongestPath = false, drawLengthiestPath = false, drawFastestPath = false, drawMostDangerousPath = false, drawFoVOnly = true, seeByTime = false, seeByLength = false, seeByDanger = false, seeByLoS = false, seeByDanger3 = false, seeByLoS3 = false, seeByDanger3Norm = false, seeByLoS3Norm = false, seeByCrazy = false, seeByVelocity = false;
+		drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawBoundaries = false, drawRoadmaps = false, drawRoadmaps2 = false, drawRoadmaps3 = false, drawGraph = false, drawGraph2 = false,
+		smoothPath = true, drawShortestPath = false, drawLongestPath = false, drawLengthiestPath = false, drawFastestPath = false, drawMostDangerousPath = false, drawFoVOnly = true, seeByTime = false, seeByLength = false, seeByDanger = false, seeByLoS = false, seeByDanger3 = false, seeByLoS3 = false, seeByDanger3Norm = false, seeByLoS3Norm = false, seeByCrazy = false, seeByVelocity = false;
 	public static bool randomOpEnables = false, setPathOpEnables = false, setRotationOpEnables = false, boundariesFloodingOpEnables = false, extractRoadmapOpEnables = false, initializeGraphOpEnables = false, mergeOpEnables = false, moreStepsBtnEnables = false, shortcutBtnEnables = false, behaviorOpEnables = false;
-	public static bool setEnemiesFoldout = false, setCameraFoldout = false, queryeVoronoiDiagramFoldout = false, querycVoronoiDiagramFoldout = false, computePathFoldout = false, setEnemiesFoldout2 = false, setGraphFoldout = false, setShortcutFoldout = false, setRhythmsFoldout = false, setMultipleBehavioursFoldout = false, setPossibilitiesFoldout = false, default1 = true, default2 = true, default3 = true, default4 = true, default5 = true, default6 = true, default7 = false, default8 = true, default9 = true, default10 = false, default11 = true, default12 = true;
+	public static bool setEnemiesFoldout = false, setCameraFoldout = false, queryeVoronoiDiagramFoldout = false, querycVoronoiDiagramFoldout = false, computePathFoldout = false, setEnemiesFoldout2 = false, setGraphFoldout = false, setShortcutFoldout = false, setRhythmsFoldout = false, setMultipleBehavioursFoldout = false, setPossibilitiesFoldout = false, setMultipleBehavioursFoldout2 = false, setPossibilitiesFoldout2 = false, default1 = true, default2 = true, default3 = true, default4 = true, default5 = true, default6 = true, default7 = false, default8 = true, default9 = true, default10 = false, default11 = true, default12 = true, default13 = true, default14 = true;
 	public static bool moreStepsClicked = false, shortcutClicked = false;
 	public static float stepSize = 1 / 10f, crazySeconds = 5f;
 	public static int[,] heatMap;
-	public static GameObject start = null, end = null, floor = null, playerPrefab = null, enemyPrefab = null, waypointPrefab = null;
+	public static GameObject start = null, end = null, floor = null, playerPrefab = null, enemyPrefab = null, waypointPrefab = null, enemyPrefab2 = null;
 	public static List<GameObject> waypoints = new List<GameObject> ();
 	public static Dictionary<Path, bool> toggleStatus = new Dictionary<Path, bool> ();
 	public static Dictionary<Path, GameObject> players = new Dictionary<Path, GameObject> ();
@@ -155,6 +155,53 @@ public class MapperWindowEditor : EditorWindow
 			moreStepsClicked = false;
 			shortcutClicked = false;
 		} 
+		
+		if (GUILayout.Button ("Precompute Maps Over Time-Preserving")) {
+			
+			//Find this is the view
+			if (playerPrefab == null) {
+				//Debug.Log("No playerPrefab"); 
+				//playerPrefab = (GameObject)(Resources.Load( "../Prefab/Player.prefab", typeof(GameObject)));
+				playerPrefab = GameObject.Find ("Player"); 
+			}
+			if (floor == null) {
+				floor = (GameObject)GameObject.Find ("Floor");
+				
+				gridSize = EditorGUILayout.IntSlider ("Grid size", gridSize, 10, 300);
+				
+				if (mapper == null) {
+					mapper = floor.GetComponent<Mapper> ();
+					
+					if (mapper == null)
+						mapper = floor.AddComponent<Mapper> ();
+					
+				}
+				drawer = floor.gameObject.GetComponent<MapperEditorDrawer> ();
+				if (drawer == null) {
+					drawer = floor.gameObject.AddComponent<MapperEditorDrawer> ();
+					drawer.hideFlags = HideFlags.HideInInspector;
+				}
+			}
+			
+			if (!simulated) {
+				StorePositionsOverTimePreserving ();
+				simulated = true;
+			}
+			
+			fullMap = mapper.PrecomputeMapsOverTimePreserving (floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind);
+			drawer.fullMap = fullMap;
+			float maxSeenGrid;
+			drawer.seenNeverSeen = Analyzer.ComputeSeenValuesGrid (fullMap, out maxSeenGrid);
+			drawer.seenNeverSeenMax = maxSeenGrid;
+			drawer.tileSize = SpaceState.TileSize;
+			drawer.zero.Set (floor.collider.bounds.min.x, floor.collider.bounds.min.z);
+			
+			ResetAIOverTimePreserving ();
+			
+			moreStepsClicked = false;
+			shortcutClicked = false;
+		} 
+		
 		EditorGUILayout.LabelField ("");
 		
 		#endregion
@@ -523,6 +570,18 @@ public class MapperWindowEditor : EditorWindow
 				enemyPrefab = GameObject.FindGameObjectWithTag ("Enemy");
 				if (enemyPrefab != null) {
 					Debug.Log ("Loading enemy prefab from scene successfully!");	
+				}
+			}
+		}
+		
+		if (enemyPrefab2 == null) {
+			enemyPrefab2 = Resources.Load ("Enemy2") as GameObject;
+			if (enemyPrefab2 != null) {
+				Debug.Log ("Loading enemy prefab 2 from resources folder successfully!");	
+			} else {
+				enemyPrefab2 = GameObject.FindGameObjectWithTag ("Enemy");
+				if (enemyPrefab2 != null) {
+					Debug.Log ("Loading enemy prefab 2 from scene successfully!");	
 				}
 			}
 		}
@@ -1290,6 +1349,110 @@ public class MapperWindowEditor : EditorWindow
 		
 		#endregion
 		
+		#region Behaviours with Time-preserving
+		
+		EditorGUILayout.LabelField ("");
+		EditorGUILayout.LabelField ("12. Behaviours with Time-preserving");
+		
+		GUI.enabled = behaviorOpEnables;
+		
+		if (default13 == true) {
+			default13 = false;
+			setMultipleBehavioursFoldout2 = EditorGUILayout.Foldout (true, "Set Behaviours with Time-preserving");
+		} else {
+			setMultipleBehavioursFoldout2 = EditorGUILayout.Foldout (setMultipleBehavioursFoldout2, "Set Behaviours with Time-preserving");
+		}
+		
+		if (setMultipleBehavioursFoldout2) {
+			enemyPrefab2 = (GameObject)EditorGUILayout.ObjectField ("Enemy Prefab", enemyPrefab2, typeof(GameObject), false);
+			numOfGuards2 = EditorGUILayout.IntField ("Number of guards", numOfGuards2);
+			iterations5 = EditorGUILayout.IntSlider ("Iterations", iterations5, 0, 10);
+			
+			if (default14 == true) {
+				default14 = false;
+				setPossibilitiesFoldout2 = EditorGUILayout.Foldout (true, "Possibility Controller");
+			} else {
+				setPossibilitiesFoldout2 = EditorGUILayout.Foldout (setPossibilitiesFoldout2, "Possibility Controller");
+			}
+			
+			// Possibility controller
+			if (setPossibilitiesFoldout2) {
+				pLine2 = EditorGUILayout.IntSlider ("P1", pLine2, 0, 100);
+				pDot2 = EditorGUILayout.IntSlider ("P2", pDot2, 0, 100);
+				pSplit2 = EditorGUILayout.IntSlider ("P3", 100 - pZigZag2, 0, 100);
+				pZigZag2 = EditorGUILayout.IntSlider ("P4", 100 - pSplit2, 0, 100);
+				pPause2 = EditorGUILayout.IntSlider ("P5", 100 - pSwipe2 - pFullRotate2 - pNinety2, 0, 100);
+				pSwipe2 = EditorGUILayout.IntSlider ("P6", 100 - pPause2 - pFullRotate2 - pNinety2, 0, 100);
+				pFullRotate2 = EditorGUILayout.IntSlider ("P6", 100 - pPause2 - pSwipe2 - pNinety2, 0, 100);
+				pNinety2 = EditorGUILayout.IntSlider ("P7", 100 - pPause2 - pSwipe2 - pFullRotate2, 0, 100);
+			}
+			
+			// Populate guards with multiple behaviours along their routes
+			if (GUILayout.Button ("Populate Guards with Time-preserving")) {
+				PCG.ClearBehaviours ();
+				PCG.ClearUpObjects (enemypathObjects);
+				PCG.numOfGuards = numOfGuards2;
+				timeSamples = (int) (PCG.InitializeGuardsWithBehavioursOverTimePreserving (enemyPrefab2, waypointPrefab, floor) / stepSize);
+				enemypathObjects = PCG.PopulateGuardsWithBehavioursOverTimePreserving (timeSamples, iterations5, pLine2, pDot2, pSplit2, pZigZag2, pPause2, pSwipe2, pFullRotate2, pNinety2).ToArray ();
+				StorePositionsOverTimePreserving ();
+			}
+			
+			if (GUILayout.Button ("Clear Behaviours")) {
+				PCG.ClearBehaviours ();
+				PCG.ClearUpObjects (enemypathObjects);
+			}
+		}
+		
+		GUI.enabled = true;
+		
+		if (GUILayout.Button ("Reset")) {
+			PCG.ClearUpObjects (enemypathObjects);
+			
+			fullMap = null;
+			drawer.fullMap = fullMap;
+			simulated = false;
+			
+			foreach (GameObject p in playerObjects) {
+				DestroyImmediate (p);
+			}
+			players.Clear ();
+			playing = false;
+			ResetAIOverTimePreserving ();
+			
+			obs = null;
+			PCG.vEnemy.obs = null;
+			drawer.eVoronoiGrid = PCG.vEnemy.obs;
+			PCG.vCamera.obs = null;
+			drawer.cVoronoiGrid = PCG.vCamera.obs;
+			
+			numOfEnemies = 0;
+			numOfCameras = 0;
+			numOfRegionsForEnemies = 0;
+			numOfRegionsForCameras = 0;
+			setPathOpEnables = false;
+			setRotationOpEnables = false;
+			
+			boundariesFloodingOpEnables = false;
+			extractRoadmapOpEnables = false;
+			initializeGraphOpEnables = false;
+			mergeOpEnables = false;
+			
+			PCG.sBoundary.clearGraph ();
+			drawer.sBoundaryGrid = PCG.sBoundary.obs;
+			drawer.roadmapNodesList.Clear ();
+			drawer.graphNodesList.Clear ();
+			
+			PCG.ClearBehaviours ();
+			
+			behaviorOpEnables = false;
+			randomOpEnables = false;
+			shortcutClicked = false;
+			moreStepsClicked = false;
+			shortcutBtnEnables = false;
+			moreStepsBtnEnables = false;
+		}		
+		#endregion
+		
 		#region Flows and Cuts
 	
 		EditorGUILayout.LabelField ("");
@@ -1924,18 +2087,29 @@ public class MapperWindowEditor : EditorWindow
 			ob.GetComponent<Enemy> ().ResetSimulation ();
 	}
 	
+	public void ResetAIOverTimePreserving ()
+	{
+		GameObject[] objs = GameObject.FindGameObjectsWithTag ("AI") as GameObject[];
+		foreach (GameObject ob in objs)
+			ob.GetComponent<Player> ().ResetSimulation ();
+		
+		objs = GameObject.FindGameObjectsWithTag ("Enemy") as GameObject[];
+		foreach (GameObject ob in objs) 
+			ob.GetComponent<Enemy2> ().ResetSimulation ();
+	}
+	
 	// Updates everyone's position to the current timeslice
 	public void UpdatePositions (int t, Mapper mapper)
 	{
-		for (int i = 0; i < SpaceState.Enemies.Length; i++) {
-			if (SpaceState.Enemies [i] == null)
+		for (int i = 0; i < SpaceState.Enemies2.Length; i++) {
+			if (SpaceState.Enemies2 [i] == null)
 				continue;
 			
-			Vector3 pos = SpaceState.Enemies [i].positions [t];
+			Vector3 pos = SpaceState.Enemies2 [i].positions [t];
 			if (drawMoveUnits)
 				pos.y = t;
-			SpaceState.Enemies [i].transform.position = pos;
-			SpaceState.Enemies [i].transform.rotation = SpaceState.Enemies [i].rotations [t];
+			SpaceState.Enemies2 [i].transform.position = pos;
+			SpaceState.Enemies2 [i].transform.rotation = SpaceState.Enemies2 [i].rotations [t];
 		}
 		
 		/*GameObject[] objs = GameObject.FindGameObjectsWithTag ("AI") as GameObject[];
@@ -2017,5 +2191,17 @@ public class MapperWindowEditor : EditorWindow
 		for (int i = 0; i < objs.Length; i++) {
 			objs [i].GetComponent<Player> ().SetInitialPosition ();
 		}	
+	}
+	
+	public void StorePositionsOverTimePreserving ()
+	{
+		GameObject[] objs = GameObject.FindGameObjectsWithTag ("Enemy") as GameObject[];
+		for (int i = 0; i < objs.Length; i++) {
+			objs [i].GetComponent<Enemy2> ().SetInitialPosition ();
+		}
+		objs = GameObject.FindGameObjectsWithTag ("AI") as GameObject[];
+		for (int i = 0; i < objs.Length; i++) {
+			objs [i].GetComponent<Player> ().SetInitialPosition ();
+		}
 	}
 }
