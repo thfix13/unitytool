@@ -29,7 +29,8 @@ DistMedian = []
 
 DistTemp = []
 
-hists = [[0 for j in range(6)] for i in range(6)]
+hists = []
+#hists = [[0 for j in range(6)] for i in range(6)]
 colors = []
 clustNumber = 0;
 
@@ -54,6 +55,7 @@ for i, l in enumerate(o.readlines()):
 		crazyTemp = []
 		LOSTemp = []
 		DistTemp = []
+		hists.append([])
 	
 	if("Crazyness" in l):
 		#clear

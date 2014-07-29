@@ -302,7 +302,7 @@ namespace ClusteringSpace
 				
 				float maxVal = 1000f;
 				
-				for (int count = 0; count < paths.Count(); count ++)
+				for (int count = 0; count < paths.Count; count ++)
 				{
 					int index = Convert.ToInt32(paths[count].name);
 					normalizedPaths[index] = new Path(paths[count]);

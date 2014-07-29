@@ -38,7 +38,7 @@ namespace EditorArea {
 		private static List<Path> clusterCentroids = new List<Path>(), origPaths = new List<Path>();
 		private static bool[] showPaths = new bool[colors.Count()];
 		public static bool[] dimensionEnabled = new bool[dimensions.Count()];
-		private static bool autoSavePaths = true, drawHeatMapColored = false;
+		private static bool autoSavePaths = true, drawHeatMapColored = false, discardHighDangerPaths = false;
 		public static bool scaleTime = false, altCentroidComp = false, useScalable = false;
 		public int numberLines = 20; 
 		public float interpolationValue = 0.0f;
@@ -801,7 +801,27 @@ namespace EditorArea {
 			scaleTime = EditorGUILayout.Toggle("Scale time", scaleTime);
 			useScalable = EditorGUILayout.Toggle("Use scalable version", useScalable);
 		//	altCentroidComp = EditorGUILayout.Toggle("Alt centroid computation", altCentroidComp);
+			if (distMetric == 0)
+				discardHighDangerPaths = EditorGUILayout.Toggle("Discard high danger paths", discardHighDangerPaths);
 			distMetric = EditorGUILayout.Popup("Dist metric:", distMetric, distMetrics);
+			
+			if (discardHighDangerPaths)
+			{
+				for (int c = 0; c < paths.Count(); c ++)
+				{
+					if (paths[c].danger3 > 0.0014)
+					{
+						paths.Remove(paths[c]);
+					}
+				}
+
+				origPaths = new List<Path>();
+				
+				for (int count = 0; count < paths.Count(); count ++)
+				{
+					paths[count].name = count.ToString();
+				}
+			}
 			
 			if (prevMetric != distMetric)
 			{
@@ -852,6 +872,8 @@ namespace EditorArea {
 				}
 				
 				paths = new List<Path>(origPaths);
+				
+				
 				
 				// scan the paths and remove any avg. centroid paths that were computed
 				foreach (Path p in paths)
@@ -1203,15 +1225,19 @@ namespace EditorArea {
 				List<Path> pathsImported = PathBulk.LoadPathsFromFile ("clusteringdata/" + fileNames[chosenFileIndex]);
 								
 				clusterCentroids.Clear();
-				clusterCentroids = new List<Path>();				
+				clusterCentroids = new List<Path>();
+				
+				int curColor = 0;
 				
 				foreach (Path p in pathsImported) {
 					if (p.color.a == 0.5
-						&& p.color.r == colors[clusterCentroids.Count()].r
-						&& p.color.g == colors[clusterCentroids.Count()].g
-						&& p.color.b == colors[clusterCentroids.Count()].b)
+						&& curColor < colors.Count()
+						&& p.color.r == colors[curColor].r
+						&& p.color.g == colors[curColor].g
+						&& p.color.b == colors[curColor].b)
 					{
 						clusterCentroids.Add(p);
+						curColor ++;
 					}
 					toggleStatus.Add (p, true);
 					paths.Add(p);
