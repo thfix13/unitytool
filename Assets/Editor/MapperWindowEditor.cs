@@ -1277,6 +1277,38 @@ namespace EditorArea {
 				chosenFileIndex = -1;
 			}
 			
+			if (GUILayout.Button("Import Platformer Paths"))
+			{
+				paths.Clear ();
+				ClearPathsRepresentation ();
+				KMeans.reset();
+				clusterCentroids.Clear();
+				origPaths = new List<Path>();
+				
+				XmlSerializer ser = new XmlSerializer (typeof(PlatformerPathBridge));
+			
+				PlatformerPathBridge loaded = null;
+				using (FileStream stream = new FileStream ("pos.xml", FileMode.Open)) {
+					loaded = (PlatformerPathBridge)ser.Deserialize (stream);
+					stream.Close ();
+				}
+				
+				List<Path> pathsImported = new List<Path>();
+				
+				//List<Path> pathsImported = PathBulk.LoadPathsFromFile ("clusteringdata/" + fileNames[chosenFileIndex]);
+				
+				foreach (Path p in pathsImported)
+				{
+					toggleStatus.Add (p, true);
+					paths.Add(p);
+				}
+				
+				for (int count = 0; count < paths.Count(); count ++)
+				{
+					paths[count].name = count.ToString();
+				}
+			}
+			
 			EditorGUILayout.LabelField ("");
 			for (int count = 0; count < colors.Count(); count ++)
 			{
