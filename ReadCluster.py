@@ -79,10 +79,10 @@ for i, l in enumerate(o.readlines()):
 		
 		DistTemp.append(float(l))
 		
-		v = 0.0016
+		#v = 0.0014
         
-		if(float(l) < v):
-			hists[clustNumber].append(float(l))
+		#if(float(l) < v):
+		hists[clustNumber].append(float(l))
 	
 	if("HexColor" in l):
 		#clear
@@ -129,11 +129,11 @@ print (DistMedian)
 import json
 
 f = open('graphlog.txt', 'w');
-f.write("NM Avg: ");
+f.write("Dist Avg: ");
 json.dump(DistAV, f);
-f.write("\nNM SD: ");
+f.write("\nDist SD: ");
 json.dump(DistSD, f);
-f.write("\nNM Median: ");
+f.write("\nDist Median: ");
 json.dump(DistMedian, f);
 f.close();
 
@@ -146,8 +146,12 @@ from matplotlib.ticker import FuncFormatter
 a = 0.5
 b = 100
 
-for i in range(6):
-    n, bins, patches = P.hist(hists[i], color = colors[i], bins = b,cumulative=False, normed=False,alpha=a)
+n, bins, patches = P.hist(hists, color = colors, bins = b,cumulative=False, normed=False,alpha=a)
+
+#for i in range(clustNumber):
+#   n, bins, patches = P.hist(hists[i], color = colors[i], bins = b,cumulative=False, normed=False,alpha=a)
+
+#    n, bins, patches = P.hist(hists[i], color = colors[i], bins = b,cumulative=False, normed=False,alpha=a, histtype='stepfilled')
 
 #n, bins, patches = P.hist(hists[0], color = '#ff0000', bins = b,cumulative=False, normed=False,alpha=a)
 #n, bins, patches = P.hist(hists[1], color = '#0000ff', bins = b,normed=False,alpha=a)

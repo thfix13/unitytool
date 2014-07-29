@@ -111,8 +111,12 @@ namespace ClusteringSpace
 				averagedNodes[count] = new Node(0, 0, 0);
 				if (count > 0) averagedNodes[count].parent = averagedNodes[count-1];
 			}
+            float avgDanger = 0f, avgLOS = 0f, avgNM = 0f;
 			foreach (Path p in interpolatedPaths)
 			{
+                avgDanger += p.danger3;
+                avgLOS += p.los3;
+                avgNM += p.crazy;
 				for (int count = 0; count < p.points.Count; count ++)
 				{
 					averagedNodes[count].x += Math.Abs(p.points[count].x);
@@ -130,9 +134,17 @@ namespace ClusteringSpace
 				n.y /= interpolatedPaths.Count;
 				n.t /= interpolatedPaths.Count;
 			}
+            avgDanger /= interpolatedPaths.Count;
+            avgLOS /= interpolatedPaths.Count;
+            avgNM /= interpolatedPaths.Count;
 		//	Debug.Log("end centr");
+        
+            Path averagedPath = new Path(new List<Node>(averagedNodes));
+            averagedPath.danger3 = avgDanger;
+            averagedPath.los3 = avgLOS;
+            averagedPath.crazy = avgNM;
 		
-			return new Path(new List<Node>(averagedNodes));
+			return averagedPath;
 		}
 
         public void UpdateCentroid()

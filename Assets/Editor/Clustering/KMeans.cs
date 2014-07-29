@@ -41,7 +41,7 @@ namespace ClusteringSpace
 		
 		public static double clustVal = 0.0;
 				
-		private static int[][] distances;
+		private static double[][] distances;
 		public static double[] weights;
 		private static bool init = false;
 		public static int numPaths = -1;
@@ -264,10 +264,10 @@ namespace ClusteringSpace
 			
 			if (!init)
 			{
-				distances = new int[paths.Count()][];
+				distances = new double[paths.Count()][];
 				for (int count = 0; count < paths.Count(); count ++)
 				{
-					distances[count] = new int[paths.Count()];
+					distances[count] = new double[paths.Count()];
 					for (int count2 = 0; count2 < paths.Count(); count2 ++)
 					{
 						distances[count][count2] = -1;
@@ -387,8 +387,14 @@ namespace ClusteringSpace
 						if (i == j) continue;
 						
                         double distBetweenCentroids = FindDistance(averageCentroids[i], averageCentroids[j]);
-                        double clustVal = (avgDists[i] + avgDists[j]) / distBetweenCentroids;
+                        double clustVal = 0.0;
+                        if (avgDists[i] + avgDists[j] != 0.0) clustVal = (avgDists[i] + avgDists[j]) / distBetweenCentroids;
 						
+                        if (Double.IsInfinity(clustVal))
+                        {
+                            clustVal = 10000.0;
+                        }
+                        
 						if (clustVal > maxVal)
 						{
 							maxVal = clustVal;
@@ -620,9 +626,9 @@ namespace ClusteringSpace
 							if (j == (int)FrechetDimensions.X) curve[curvePos] = path1.points[i].x;
 							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = path1.points[i].y;
 							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = path1.points[i].t;
-							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = path1.danger3+(path1.danger3/(10+i));
-							else if (j == (int)FrechetDimensions.LOS) curve[curvePos] = path1.los3+(path1.los3/(10+i));
-							else if (j == (int)FrechetDimensions.NearMiss) curve[curvePos] = path1.crazy+(path1.crazy/(10+i));
+							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = path1.danger3;//+(path1.danger3/(10+i));
+							else if (j == (int)FrechetDimensions.LOS) curve[curvePos] = path1.los3;//+(path1.los3/(10+i));
+							else if (j == (int)FrechetDimensions.NearMiss) curve[curvePos] = path1.crazy;//+(path1.crazy/(10+i));
 							curvePos ++;
 						}
 					}
@@ -640,9 +646,9 @@ namespace ClusteringSpace
 							if (j == (int)FrechetDimensions.X) curve[curvePos] = path2.points[i].x;
 							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = path2.points[i].y;
 							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = path2.points[i].t;
-							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = path2.danger3+(path2.danger3/(10+i));
-							else if (j == (int)FrechetDimensions.LOS) curve[curvePos] = path2.los3+(path2.los3/(10+i));
-							else if (j == (int)FrechetDimensions.NearMiss) curve[curvePos] = path2.crazy+(path2.crazy/(10+i));
+							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = path2.danger3;//+(path2.danger3/(10+i));
+							else if (j == (int)FrechetDimensions.LOS) curve[curvePos] = path2.los3;//+(path2.los3/(10+i));
+							else if (j == (int)FrechetDimensions.NearMiss) curve[curvePos] = path2.crazy;//+(path2.crazy/(10+i));
 							curvePos ++;
 						}
 					}
@@ -666,10 +672,12 @@ namespace ClusteringSpace
 			
 			if (saveDistances)
 			{
-				distances[p1num][p2num] = (int)result;
-				distances[p2num][p1num] = (int)result;
+				distances[p1num][p2num] = result;
+				distances[p2num][p1num] = result;
 			}
-						
+			
+//            Debug.Log("Dist between " + path1.danger3 + " and " + path2.danger3 + " is " + result);
+            
 			return result;
         }
     }
