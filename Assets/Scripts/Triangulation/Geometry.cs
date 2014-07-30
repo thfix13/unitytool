@@ -7,10 +7,12 @@ using Objects;
 
 public class Geometry
 {
-	//public Vector3 [] vertex = new Vector3[4]; 
 	public List<Line> edges = new List<Line> ();
-	
 
+	//Added for MST Code
+	public List<Geometry> voisins = new List<Geometry>();  
+	public List<Line> voisinsLine = new List<Line>();
+	public bool visited = false; 	
 
 	public void DrawGeometry(GameObject parent)
 	{
@@ -41,6 +43,16 @@ public class Geometry
 		return false; 
 	}
 
+	public bool LineCollision(Line Lparam){
+		if( this.PointInside( Lparam.MidPoint() ) )
+		   return true;
+		foreach(Line l1 in edges){
+			if( Lparam.LineIntersectMuntac(l1) == 1 )
+				return true;
+		}
+		return false; 
+	}
+
 	//TODO: Switch to lineintmuntac
 	public bool LineInside(Line l)
 	{
@@ -61,19 +73,6 @@ public class Geometry
 		//Now we check count the intersection
 		Vector3 mid = l.MidPoint(); 
 		return PointInside (l.MidPoint ());
-//		//TODO: CHange this for finding the minimum
-//		Line lray = new Line(mid, new Vector3(-100,-100)); 
-//		int count = 0; 
-//		foreach(Line myLine in edges)
-//		{
-//			if(myLine.LineIntersectMuntac(lray) > 0)
-//			{
-//				count++; 
-//			}
-//
-//		}
-//
-//		return count%2 == 1; 
 	}
 
 	//TODO: Fix for lines colinear
@@ -219,9 +218,6 @@ public class Geometry
 			if(!G1.LineInside(l) && !G2.LineInside(l))
 				toReturn.edges.Add(l);
 		}
-//		this.edges.Clear ();
-//		foreach (Line l in toReturn.edges)
-//			this.edges.Add (l);
 		return toReturn;
 	}
 	//Used only for merging polygons with the map boundary
@@ -273,6 +269,7 @@ public class Geometry
 		return toReturn;
 	}
 
+	//Check if two geometries intersect
 	public bool GeometryIntersect( Geometry G2 ){
 		if (GeometryInside (G2))
 			return true;
@@ -302,19 +299,119 @@ public class Geometry
 		return true;
 	}
 
-	public bool GeometryLineIntersect( Line param ){
-		foreach (Line L in edges) {
-			if( L.LineIntersectMuntac( param ) > 0 )
-				return true;
+	//ported code. src:"Triangulation"
+	public void SetVoisins(List<Geometry> geos)
+	{
+		foreach(Geometry g in geos)
+		{
+			if( g == this ) continue;
+			Line voisinConnect = this.GetClosestLine(g,geos);
+			if(voisinConnect != null)
+			{
+				voisins.Add (g);
+				voisinsLine.Add(voisinConnect);
+			}
 		}
-		return false;
 	}
 
-	public bool GeometryLineIntersectNoCol( Line param ){
-		foreach (Line L in edges) {
-			if( L.LineIntersectMuntac( param ) == 1 )
-				return true;
+	//ported code. src:"Triangulation"
+	public Line GetClosestLine(Geometry g, List<Geometry> geos)
+	{
+		Line toReturn = null;
+		float dist = 1000000; 
+		
+		foreach(Vector3 v1 in this.GetVertex())
+		{
+			foreach(Vector3 v2 in g.GetVertex())
+			{
+				Line l = new Line(v1,v2);
+				
+				//Check collision
+				bool collisionFree = true;
+				
+				foreach(Geometry gCollision in geos)
+				{
+					
+					if(gCollision.LineCollision(l))
+						collisionFree = false; 
+				}
+				
+				if(!collisionFree)
+				{
+					continue; 
+				}
+				
+				if(l.Magnitude()<dist)
+				{
+					toReturn = l; 
+					dist = l.Magnitude(); 
+				}
+			}
 		}
-		return false;
+		return toReturn; 
+	}
+
+	//ported code. src:"Triangulation"
+	public Line GetClosestLine(Vector3 v,Geometry g, List<Geometry> geos)
+	{
+		Line toReturn = null;
+		float dist = 1000000; 
+		
+		
+		foreach(Vector3 v2 in g.GetVertex())
+		{
+			Line l = new Line(v,v2);
+			
+			//Check collision
+			bool collisionFree = true;
+			
+			foreach(Geometry gCollision in geos)
+			{
+				if(this == gCollision)
+					continue; 
+				if(gCollision.LineCollision(l))
+					collisionFree = false; 
+			}
+			
+			if(!collisionFree)
+			{
+				continue; 
+			}
+			
+			if(l.Magnitude()<dist)
+			{
+				toReturn = l; 
+				dist = l.Magnitude(); 
+			}
+		}
+		
+		return toReturn; 
+	}
+
+	//ported code. src:"Triangulation"
+	public Geometry findClosestQuad(Vector3 v,List<Geometry> geos,List<Geometry> already)
+	{
+		Geometry toReturn = null; 
+		float dist = 100000000; 
+		
+		foreach(Geometry g in geos)
+		{
+			if(g == this || already.Contains(g))
+				continue;
+			
+			Line l = this.GetClosestLine(v,g,geos); 
+			
+			if(l == null)
+				continue;
+			
+			if( l.Magnitude() < dist)
+			{
+				toReturn = g; 
+				dist = l.Magnitude (); 
+			}
+		}
+		
+		return toReturn; 
+		
 	}
 }

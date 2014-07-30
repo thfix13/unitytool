@@ -22,7 +22,7 @@ public class Triangulation : MonoBehaviour
 
 	public bool drawTriangles = false; 
 	public bool drawRoadMap = false; 
-	private bool drawMinSpanTree = false;
+	public bool drawMinSpanTree = false;
 	public bool stopAll = false;
 	public List<int>[] G = new List<int>[110];
 	public int[] colorG = new int[110];
@@ -79,9 +79,12 @@ public class Triangulation : MonoBehaviour
 
 		if(drawMinSpanTree)
 		{
+			GameObject temp = GameObject.Find("temp"); 
 			foreach(Line l in linesMinSpanTree)
 			{
-				l.DrawLine(Color.blue); 
+				//l.DrawLine(Color.blue); 
+				//l.DrawVector( temp );
+				Debug.DrawLine(l.vertex[0], l.vertex[1],Color.red);
 			}
 		}
 
@@ -264,6 +267,7 @@ public class Triangulation : MonoBehaviour
 			}
 		}
 //		mapBG.DrawGeometry (temp);
+
 		List<Geometry> finalPoly = new List<Geometry> ();//Contains all polygons that are fully insde the map
 		foreach ( Geometry g in obsGeos ) {
 			if( mapBG.GeometryIntersect( g ) && !mapBG.GeometryInside( g ) ){
@@ -283,7 +287,7 @@ public class Triangulation : MonoBehaviour
 			tempVertex = g.GetVertex();
 			foreach( Vector3 v in tempVertex )
 				allVertex.Add(v);
-			foreach( Line l in g.edges ) 
+			foreach( Line l in g.edges )
 				totalGeo.edges.Add(l);
 		}
 
@@ -292,30 +296,92 @@ public class Triangulation : MonoBehaviour
 			allVertex.Add(v);
 		foreach( Line l in mapBG.edges )
 			totalGeo.edges.Add(l);
+		lines.Clear ();
+		//-----------START MST CODE------------------//
+		//We will use "mapBG" and "finalPoly"
+		//finalPoly contains the "quadrilaters"
+		//get all lines from quadrilaters/finalPoly and put them in "lines" || We use "obsLines"
+		List<Line> obsLines = new List<Line> ();
+		List<Geometry> toCheck = new List<Geometry> ();
+		foreach (Geometry g in finalPoly) {
+			foreach( Line l in g.edges )
+				obsLines.Add( l );
+			toCheck.Add(g);
+		}
+		//set links with neighbors for each quadrilater (send list of all obstacles as a paramter)
+		foreach (Geometry g in toCheck) {
+			g.SetVoisins( toCheck );		
+		}
+		//keep a list of the edges (graph where obstaceles are the nodes) in a list of lines called "linesLinking"
+		List<Vector3> mapVertices = mapBG.GetVertex();
+
+		//Possible redundancy here
+		Geometry start = mapBG.findClosestQuad (mapVertices[0], toCheck, new List<Geometry> ());
+		List<Line> linesLinking = new List<Line> ();
+		linesLinking.Add (mapBG.GetClosestLine (start, toCheck));
+		start.visited = true;
+
+		List<Geometry> toCheckNode = new List<Geometry> (); 
+		toCheckNode.Add (start); 
+		Line LinetoAdd = start.voisinsLine [0];
+
+		//Straight Porting//
+		while (LinetoAdd != null) {
+			LinetoAdd = null; 
+			Geometry qToAdd = null; 
+			
+			//Check all 
+			foreach (Geometry q in toCheckNode) {
+				
+				for (int i = 0; i<q.voisins.Count; i++) {
+					if (! q.voisins [i].visited) {
+						if (LinetoAdd != null) {
+							//get the shortest line
+							if (LinetoAdd.Magnitude () >= q.voisinsLine [i].Magnitude ()) {
+								LinetoAdd = q.voisinsLine [i];
+								qToAdd = q.voisins [i]; 
+								
+							}
+						} else {
+							qToAdd = q.voisins [i]; 
+							LinetoAdd = q.voisinsLine [i];
+						}
+					} else {
+						continue; 
+					}
+				}
+			}
+			if (LinetoAdd != null) {
+				linesLinking.Add (LinetoAdd); 
+				qToAdd.visited = true; 
+				toCheckNode.Add (qToAdd); 
+			}
+		}
+		
+		
+		
+		foreach (Line l in linesLinking) {
+			triangulation.linesMinSpanTree.Add (l); 
+		}
+		//END porting
+
+		//-----------END MST CODE--------------------//
+
 
 		int vlcnt = 0;
-//		foreach(Vector3 v in allVertex)
-//		{
-//			GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-//			inter.transform.position = v;
-//			inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
-//			inter.transform.parent = temp.transform;
-//			inter.gameObject.name = vlcnt.ToString();
-//			++vlcnt;
-//		}
-
 		lines.Clear ();
-
 		//Constructing "lines" for triangulation
-
-		Debug.Log (allVertex.Count);
-		int iv = -1, jv;
-		vlcnt = 0;
+		//First add lines that are in MST
+		foreach (Line l in linesMinSpanTree)
+			lines.Add (l);
+//		Debug.Log (allVertex.Count);
+//		int iv = -1, jv;
+//		vlcnt = 0;
 		foreach (Vector3 Va in allVertex) {
-			++iv;
-			jv = -1;
+//			++iv;
+//			jv = -1;
 			foreach(Vector3 Vb in allVertex){
-				++jv;
+//				++jv;
 				if( Va != Vb ){
 					bool collides = false, essential = false;
 					Line tempLine = new Line(Va, Vb);
@@ -365,7 +431,7 @@ public class Triangulation : MonoBehaviour
 //		Debug.Log ("Total Lines" + lines.Count);
 				
 		//Find the centers 
-		List<Triangle> triangles = new List<Triangle> (); 
+		List<Triangle> triangles = new List<Triangle> ();
 		//Well why be efficient when you can be not efficient
 		foreach (Line l in lines) {
 			Vector3 v1 = l.vertex [0]; 
@@ -435,234 +501,6 @@ public class Triangulation : MonoBehaviour
 		}
 		
 		triangulation.triangles = triangles;
-
-
-		List<Vector3> verts = new List<Vector3> ();
-		foreach (Line L in lines) {
-			if( !verts.Contains(L.vertex[0]) )
-				verts.Add(L.vertex[0]);
-			if( !verts.Contains(L.vertex[1]) )
-				verts.Add(L.vertex[1]);
-		}
-		for (int i = 0; i < 100; i++)
-			G [i] = new List<int> ();
-		foreach (Line L in lines) {
-			//int indU = FindIndexManual( verts, L.vertex[0] );
-			int indU = verts.IndexOf(L.vertex[0]);
-			int indV = FindIndexManual( verts, L.vertex[1] );
-			G[indU].Add(indV);
-			G[indV].Add(indU);
-		}
-		int total = 0;
-		for (int i = 0; i < 100; i++) {
-			if( G[i].Count == 0 ) break;
-			total += G[i].Count;
-		}
-		Debug.Log ("Total: " + total);
-		Debug.Log ("Lines: " + lines.Count);
-		colorG = new int[110];
-		visitedG = new bool[110];
-		for (int i = 0; i < 100; i++) {
-			colorG [i] = -1;
-			visitedG[i] = false;
-		}
-		TriColor ( 0 );
-		//DrawVertices ( temp );
-//		Debug.Log (verts.Count);
-//		for (int i = 0; i < verts.Count; i++) {
-//			GameObject inter = GameObject.CreatePrimitive (PrimitiveType.Sphere);
-//			inter.transform.position = verts[i];
-//			if( colorG[i] == red )
-//				inter.transform.renderer.material.color = Color.red;
-//			else if( colorG[i] == green )
-//				inter.transform.renderer.material.color = Color.green;
-//			else
-//				inter.transform.renderer.material.color = Color.blue;
-//			inter.transform.localScale = new Vector3 (0.3f, 0.3f, 0.3f); 
-//			inter.transform.parent = temp.transform;
-//		}
-		int numRed = 0, numGreen = 0, numBlue = 0;
-		for (int i = 0; i < verts.Count; i++) {
-			if( colorG[i] == red ) numRed++;
-			else if( colorG[i] == green ) numGreen++;
-			else numBlue++;
-		}
-		int minColor;
-		if (numRed <= numGreen && numRed <= numBlue)
-			minColor = red;
-		else if (numGreen <= numRed && numGreen <= numBlue)
-			minColor = green;
-		else
-			minColor = blue;
-		for (int i = 0; i < verts.Count; i++) {
-			//if( colorG[i] != minColor )
-			//	continue;
-			GameObject inter = GameObject.CreatePrimitive (PrimitiveType.Sphere);
-			inter.transform.position = verts[i];
-			inter.transform.localScale = new Vector3 (0.3f, 0.3f, 0.3f); 
-			if( colorG[i] == minColor ){
-				inter.transform.renderer.material.color = Color.red;
-				inter.transform.localScale = new Vector3 (0.7f, 0.7f, 0.7f); 
-			}
-			else
-				inter.transform.renderer.material.color = Color.green;
-
-			inter.transform.parent = temp.transform;
-		}
 	}
 
-	void TriColor( int source ){
-		if( colorG[source] == -1 )
-			colorG[source] = red;
-		int u = source;
-		visitedG [u] = true;
-		foreach (int v in G[source]) {
-			if( colorG[v] == -1 )
-				colorVertex( v );
-		}
-		foreach (int v in G[source]) {
-			if( visitedG[v] == false )
-				TriColor( v );
-		}
-	}
-
-	void colorVertex( int node ){
-		for (int currColor = 1; currColor <= 3; currColor++) {
-			bool available = true;
-			foreach( int v in G[node] ){
-				if( colorG[v] == currColor ){
-					available = false;
-					break;
-				}
-			}
-			if( available ){
-				colorG[node] = currColor;
-				break;
-			}
-		}
-	}
-
-	int FindIndexManual( List<Vector3> L, Vector3 V ){
-		int ind = -1;
-		foreach( Vector3 X in L ){
-			++ind;
-			if( X == V )
-				break;
-		}
-		return ind;
-	}
-
-
-	private Vector3 LineIntersectVect (Vector3 a, Vector3 b, Vector3 c, Vector3 d)
-	{
-		//Debug.Log(a); 
-		//Debug.Log(b); 
-		//Debug.Log(c); 
-		//Debug.Log(d); 
-		
-		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
-		Vector2 p0 = new Vector2 (a.x, a.z);
-		Vector2 p1 = new Vector2 (b.x, b.z); 
-		
-		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
-		Vector2 q0 = new Vector2 (c.x, c.z);
-		Vector2 q1 = new Vector2 (d.x, d.z);
-		
-		Vector2 w = new Vector2 (a.x, a.z) - new Vector2 (d.x, d.z);
-		
-		
-		//if (u.x * v.y - u.y*v.y == 0)
-		//	return true;
-		
-		double s = (v.y * w.x - v.x * w.y) / (v.x * u.y - v.y * u.x);
-		double t = (u.x * w.y - u.y * w.x) / (u.x * v.y - u.y * v.x); 
-		//Debug.Log(s); 
-		//Debug.Log(t); 
-		
-		//if ((s > 0 && s < 1) || (t > 0 && t < 1))
-		//{
-		//Interpolation
-		Vector3 r = a + (b-a)*(float)s; 
-		return r; 
-		//}
-		
-		
-		
-		//return Vector3.zero; 
-	}
-	/*private Boolean LineIntersection (Vector3 a, Vector3 b, Vector3 c, Vector3 d)
-	{
-		
-		
-		
-		// a-b
-		// c-d
-		//if the same lines
-		
-		//When share a point use the other algo
-		if (a.Equals (c) || a.Equals (d) || b.Equals (c) || b.Equals (d))
-			return LineIntersect (a, b, c, d); 
-		
-		
-		
-		
-		return CounterClockWise (a, c, d) != CounterClockWise (b, c, d) && 
-			CounterClockWise (a, b, c) != CounterClockWise (a, b, d);
-		
-		//if( CounterClockWise(a,c,d) == CounterClockWise(b,c,d))
-		//	return false;
-		//else if (CounterClockWise(a,b,c) == CounterClockWise(a,b,d))
-		//	return false; 
-		//else 
-		//	return true; 
-		
-		
-	}*/
-
-	//Checks if two edges are meeting regularly at a vertex of the polygon or if they are intersecting
-	//in other manners
-
-
-	private Boolean CounterClockWise (Vector3 v1, Vector3 v2, Vector3 v3)
-	{
-		//v1 = a,b
-		//v2 = c,d
-		//v3 = e,f
-		
-		float a = v1.x, b = v1.z;  
-		float c = v2.x, d = v2.z;  
-		float e = v3.x, f = v3.z;  
-		
-		if ((f - b) * (c - a) > (d - b) * (e - a))
-			return true;
-		else
-			return false; 
-	}
-
-	public class sortPointsX : IComparer<Vector3>
-	{
-		public int Compare(Vector3 a, Vector3 b)
-		{
-			if (a.x > b.x) return 1;
-			else if (a.x < b.x) return -1;
-			else return 0;
-		}
-	}
-
-	public class sortPointsY : IComparer<Vector3>
-	{
-		public int Compare(Vector3 a, Vector3 b)
-		{
-			if (a.y > b.y) return 1;
-			else if (a.y < b.y) return -1;
-			else return 0;
-		}
-	}
-
-	private static void Swap<Vector3>(ref Vector3 lhs, ref Vector3 rhs){
-		Vector3 temp;
-		temp = lhs;
-		lhs = rhs;
-		rhs = temp;
-	}
 }
