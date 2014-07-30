@@ -1285,20 +1285,44 @@ namespace EditorArea {
 				clusterCentroids.Clear();
 				origPaths = new List<Path>();
 				
-				XmlSerializer ser = new XmlSerializer (typeof(PlatformerPathBridge));
+				DirectoryInfo batchDir = new DirectoryInfo("batchpaths/");
+				FileInfo[] batchInfo = batchDir.GetFiles("*.xml");
 			
-				PlatformerPathBridge loaded = null;
-				using (FileStream stream = new FileStream ("pos.xml", FileMode.Open)) {
-					loaded = (PlatformerPathBridge)ser.Deserialize (stream);
-					stream.Close ();
+				List<String> pathFilenames = new List<String>();
+				for (int count = 0; count < batchInfo.Count(); count ++)
+				{
+					pathFilenames.Add(batchInfo[count].Name);
 				}
 				
 				List<Path> pathsImported = new List<Path>();
+				foreach (String file in pathFilenames)
+				{
+					XmlSerializer ser = new XmlSerializer (typeof(PlatformerPathBridge));
+					PlatformerPathBridge loaded = null;
+					using (FileStream stream = new FileStream ("batchpaths/" + file, FileMode.Open)) {
+						loaded = (PlatformerPathBridge)ser.Deserialize (stream);
+						stream.Close ();
+					}
+					
+					List<Node> pathPoints = new List<Node>();
+					foreach(PosPositionsPosition point in loaded.positionsField)
+					{
+						pathPoints.Add(new Node((int)point.xField, (int)point.yField, (int)point.zField));
+					}
+					
+					pathsImported.Add(new Path(pathPoints));
+				}
 				
-				//List<Path> pathsImported = PathBulk.LoadPathsFromFile ("clusteringdata/" + fileNames[chosenFileIndex]);
-				
+				// Setup parenting
+				foreach (Path p in pathsImported) {
+					for (int i = p.points.Count - 1; i > 0; i--) {
+						p.points [i].parent = p.points [i - 1];
+					}
+				}
+					
 				foreach (Path p in pathsImported)
 				{
+					p.color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
 					toggleStatus.Add (p, true);
 					paths.Add(p);
 				}

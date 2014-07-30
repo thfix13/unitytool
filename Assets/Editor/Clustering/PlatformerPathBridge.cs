@@ -30,7 +30,7 @@ namespace ClusteringSpace {
         
         private int keyPressesField;
         
-        private PosPositionsPosition[] positionsField;
+        public PosPositionsPosition[] positionsField;
         
         private PosStartLoc startLocField;
         
@@ -87,11 +87,11 @@ namespace ClusteringSpace {
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     public partial class PosPositionsPosition {
         
-        private double xField;
+        public double xField;
         
-        private double yField;
+        public double yField;
         
-        private double zField;
+        public double zField;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
@@ -134,11 +134,11 @@ namespace ClusteringSpace {
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     public partial class PosStartLoc {
         
-        private double xField1;
+        public double xField1;
         
-        private double yField1;
+        public double yField1;
         
-        private double zField1;
+        public double zField1;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
