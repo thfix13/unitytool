@@ -10,6 +10,7 @@ namespace Common {
 	// Structure that holds the information used in the AStar cells
 		public class Node : Priority_Queue.PriorityQueueNode {
 		public int x, y, t;
+		public double xD, yD, tD;
 		public float playerhp;
 		[XmlIgnore]
 		public Dictionary<Enemy, float> enemyhp;
@@ -35,15 +36,28 @@ namespace Common {
 			x = n.x;
 			y = n.y;
 			t = n.t;
+			xD = n.xD;
+			yD = n.yD;
+			tD = n.tD;
 			parent = n.parent;
 			cell = n.cell;
 		}
 		
 		public Node(int x_, int y_, int t_)
 		{
-			x = x_;
-			y = y_;
-			t = t_;
+			xD = x = x_;
+			yD = y = y_;
+			tD = t = t_;
+		}
+		
+		public Node(double x_, double y_, double t_)
+		{
+			xD = x_;
+			x = (int)xD;
+			yD = y_;
+			y = (int)yD;
+			tD = t_;
+			t = (int)tD;
 		}
 
 		public float DistanceFrom (Node n) {

@@ -907,7 +907,7 @@ namespace EditorArea {
 						foreach(Vector3 v in set1)
 						{
 							if (v.x == 0 && v.y == 0 && v.z == 0) continue;
-							nodes.Add(new Node((int)v.x, (int)v.z, (int)v.y));
+							nodes.Add(new Node(v.x, v.z, v.y));
 						}
 						paths[i] = new Path(nodes);
 					}
@@ -1307,7 +1307,7 @@ namespace EditorArea {
 					List<Node> pathPoints = new List<Node>();
 					foreach(PosPositionsPosition point in loaded.positionsField)
 					{
-						pathPoints.Add(new Node((int)point.xField, (int)point.yField, (int)point.zField));
+						pathPoints.Add(new Node(point.xField, point.yField, point.zField));
 					}
 					
 					pathsImported.Add(new Path(pathPoints));

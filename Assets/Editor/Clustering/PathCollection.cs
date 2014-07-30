@@ -84,9 +84,9 @@ namespace ClusteringSpace
 			{ // find the highest time value over all paths in this cluster
 				foreach (Node n in p.points)
 				{
-					if (n.t > maxTime)
+					if (n.tD > maxTime)
 					{
-						maxTime = n.t;
+						maxTime = n.tD;
 					}
 				}
 			}
@@ -99,7 +99,7 @@ namespace ClusteringSpace
 				foreach(Vector3 v in set1)
 				{
 					if (v.x == 0 && v.y == 0 && v.z == 0) continue;
-					interpolatedPaths[i].points.Add(new Node((int)v.x, (int)v.z, (int)v.y));
+					interpolatedPaths[i].points.Add(new Node(v.x, v.z, v.y));
 				}
 			}
 			
@@ -122,6 +122,9 @@ namespace ClusteringSpace
 					averagedNodes[count].x += Math.Abs(p.points[count].x);
 					averagedNodes[count].y += Math.Abs(p.points[count].y);
 					averagedNodes[count].t += Math.Abs(p.points[count].t);
+					averagedNodes[count].xD += Math.Abs(p.points[count].xD);
+					averagedNodes[count].yD += Math.Abs(p.points[count].yD);
+					averagedNodes[count].tD += Math.Abs(p.points[count].tD);
 				}
 			}
 //			for (int count = 0; count < interpolatedPaths[0].points.Count(); count ++)
@@ -133,6 +136,9 @@ namespace ClusteringSpace
 				n.x /= interpolatedPaths.Count;
 				n.y /= interpolatedPaths.Count;
 				n.t /= interpolatedPaths.Count;
+				n.xD /= interpolatedPaths.Count;
+				n.yD /= interpolatedPaths.Count;
+				n.tD /= interpolatedPaths.Count;
 			}
             avgDanger /= interpolatedPaths.Count;
             avgLOS /= interpolatedPaths.Count;

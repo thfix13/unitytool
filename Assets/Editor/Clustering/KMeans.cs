@@ -290,13 +290,13 @@ namespace ClusteringSpace
 					
 					foreach (Node n in p.points)
 					{
-						if (n.x > maxX) maxX = n.x;
-						if (n.y > maxY) maxY = n.y;
-						if (n.t > maxT) maxT = n.t;
+						if (n.x > maxX) maxX = (float)n.xD;
+						if (n.y > maxY) maxY = (float)n.yD;
+						if (n.t > maxT) maxT = (float)n.tD;
 						
-						if (n.x < minX) minX = n.x;
-						if (n.y < minY) minY = n.y;
-						if (n.t < minT) minT = n.t;
+						if (n.x < minX) minX = (float)n.xD;
+						if (n.y < minY) minY = (float)n.yD;
+						if (n.t < minT) minT = (float)n.tD;
 					}					
 				}
 				
@@ -316,9 +316,13 @@ namespace ClusteringSpace
 					
 						foreach (Node n in normalizedPaths[index].points)
 						{
-							n.x = (int)(((n.x - minX) * maxVal) / (maxX - minX));
-							n.y = (int)(((n.y - minY) * maxVal) / (maxY - minY));
-							n.t = (int)(((n.t - minT) * maxVal) / (maxT - minT));
+							n.xD = (((n.xD - minX) * maxVal) / (maxX - minX));
+							n.yD = (((n.yD - minY) * maxVal) / (maxY - minY));
+							n.tD = (((n.tD - minT) * maxVal) / (maxT - minT));
+							
+							n.x = (int)n.xD;
+							n.y = (int)n.yD;
+							n.t = (int)n.tD;
 						}						
 					}
 				}
@@ -623,9 +627,9 @@ namespace ClusteringSpace
 					{
 						if (MapperWindowEditor.dimensionEnabled[j])
 						{
-							if (j == (int)FrechetDimensions.X) curve[curvePos] = path1.points[i].x;
-							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = path1.points[i].y;
-							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = path1.points[i].t;
+							if (j == (int)FrechetDimensions.X) curve[curvePos] = path1.points[i].xD;
+							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = path1.points[i].yD;
+							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = path1.points[i].tD;
 							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = path1.danger3;//+(path1.danger3/(10+i));
 							else if (j == (int)FrechetDimensions.LOS) curve[curvePos] = path1.los3;//+(path1.los3/(10+i));
 							else if (j == (int)FrechetDimensions.NearMiss) curve[curvePos] = path1.crazy;//+(path1.crazy/(10+i));
@@ -643,9 +647,9 @@ namespace ClusteringSpace
 					{
 						if (MapperWindowEditor.dimensionEnabled[j])
 						{
-							if (j == (int)FrechetDimensions.X) curve[curvePos] = path2.points[i].x;
-							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = path2.points[i].y;
-							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = path2.points[i].t;
+							if (j == (int)FrechetDimensions.X) curve[curvePos] = path2.points[i].xD;
+							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = path2.points[i].yD;
+							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = path2.points[i].tD;
 							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = path2.danger3;//+(path2.danger3/(10+i));
 							else if (j == (int)FrechetDimensions.LOS) curve[curvePos] = path2.los3;//+(path2.los3/(10+i));
 							else if (j == (int)FrechetDimensions.NearMiss) curve[curvePos] = path2.crazy;//+(path2.crazy/(10+i));
