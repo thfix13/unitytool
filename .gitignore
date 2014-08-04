@@ -20,5 +20,8 @@ SvgToPdf.py
 *.userprefs
 
 Output.pdf
+Hist.pdf
 
 Assets/Levels/Human Study.meta
+
+batchpaths/
