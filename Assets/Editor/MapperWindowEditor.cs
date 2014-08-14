@@ -32,17 +32,18 @@ namespace EditorArea {
 		private static String[] distMetricsShort = new String[] { "FRE", "TRI", "INTPOL" };
 		private static String[] dimensions = new String[] { "X", "Y", "Time", "Danger", "LOS", "Near Miss" };
 		private static String[] dimensionsShort = new String[] { "X", "Y", "T", "DNG", "LOS", "NM" };
-		private static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
+		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
 		private static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
-		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, numPasses = 1;
+		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, numPasses = 1, rdpTolerance = 4;
 		private static List<Path> clusterCentroids = new List<Path>(), origPaths = new List<Path>();
 		private static bool[] showPaths = new bool[colors.Count()];
 		public static bool[] dimensionEnabled = new bool[dimensions.Count()];
-		private static bool autoSavePaths = true, drawHeatMapColored = false, discardHighDangerPaths = false;
+		private static bool autoSavePaths = true, discardHighDangerPaths = false, drawHeatMapColored = false;
 		public static bool scaleTime = false, altCentroidComp = false, useScalable = false;
 		public int numberLines = 20; 
 		public float interpolationValue = 0.0f;
 		public float interpolationValueCheck = 0.0f; 
+		public static bool[] drawHeatMapColors = new bool[MapperWindowEditor.colors.Count()];
 
 		// Computed parameters
 		private static int[,] heatMap, deathHeatMap, combatHeatMap;
@@ -444,7 +445,6 @@ namespace EditorArea {
 			drawNeverSeen = EditorGUILayout.Toggle ("- Draw safe places", drawNeverSeen);
 			drawFoVOnly = EditorGUILayout.Toggle ("- Draw only fields of view", drawFoVOnly);
 			drawHeatMap = EditorGUILayout.Toggle ("- Draw heat map", drawHeatMap);
-			drawHeatMapColored = EditorGUILayout.Toggle ("- Draw colored heat map", drawHeatMapColored);
 			drawCombatHeatMap = EditorGUILayout.Toggle ("-> Draw combat heat map", drawCombatHeatMap);
 			drawHeatMap3d = EditorGUILayout.Toggle ("-> Draw heat map 3d", drawHeatMap3d);
 			drawDeathHeatMap = EditorGUILayout.Toggle ("-> Draw death heat map", drawDeathHeatMap);
@@ -475,10 +475,6 @@ namespace EditorArea {
 
 					else
 						drawer.heatMap = heatMap;
-				}
-				if (drawHeatMapColored)
-				{
-					drawer.heatMapColored = heatMapColored;
 				}
 			}
 			
@@ -1250,33 +1246,20 @@ namespace EditorArea {
 				drawer.heatMapMax = maxHeatMap;
 				drawer.tileSize.Set (SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y);
 				
-				List<Color> pathColors = new List<Color>();
-				foreach (Path path in paths)
-				{
-					Color c = new Color(path.color.r, path.color.g, path.color.b, 0.0f);
-					if (path.color.a == 0.5 && !pathColors.Contains(c))
-					{
-						pathColors.Add(new Color(path.color.r, path.color.g, path.color.b, 0.0f));
-					}
-				}
-				List<Color> darkerColors = new List<Color>();
-				foreach(Color c in pathColors)
-				{ // src: http://stackoverflow.com/questions/737217/how-do-i-adjust-the-brightness-of-a-color
-					darkerColors.Add(new Color((c.r*0.5f), (c.g*0.5f), (c.b*0.5f), 1.0f));
-					Debug.Log(darkerColors[darkerColors.Count-1]);
-				}				
-				
-				drawer.colors = pathColors;
-				drawer.darkerColors = darkerColors;
-				
 				for (int count = 0; count < paths.Count(); count ++)
 				{
 					paths[count].name = count.ToString();
 				}
 				
+				for (int color = 0; color < colors.Count(); color ++)
+				{
+					showPaths[color] = (color < curColor) ? true : false;
+				}
+				
 				chosenFileIndex = -1;
 			}
 			
+			rdpTolerance = EditorGUILayout.IntField("RDP Tolerance", rdpTolerance);
 			if (GUILayout.Button("Import Platformer Paths"))
 			{
 				paths.Clear ();
@@ -1305,12 +1288,13 @@ namespace EditorArea {
 					}
 					
 					List<Node> pathPoints = new List<Node>();
-					foreach(PosPositionsPosition point in loaded.positionsField)
+					for (int count = 0; count < loaded.positionsField.Count(); count ++)
 					{
-						pathPoints.Add(new Node(point.xField, point.yField, point.zField));
+						pathPoints.Add(new Node(loaded.positionsField[count].xField, loaded.positionsField[count].yField, count));
 					}
+					if (pathPoints.Count() <= 3) continue;
 					
-					pathsImported.Add(new Path(pathPoints));
+					pathsImported.Add(new Path(LineReduction.DouglasPeuckerReduction(pathPoints, rdpTolerance)));
 				}
 				
 				// Setup parenting
@@ -1338,31 +1322,28 @@ namespace EditorArea {
 			{
 				showPaths[count] = EditorGUILayout.Toggle(colorStrings[count], showPaths[count]);
 			}
-			if (GUILayout.Button ("Show selected colors"))
+			List<Color> selectedColors = new List<Color>();
+			for (int color = 0; color < colors.Count(); color ++)
 			{
-				List<Color> selectedColors = new List<Color>();
-				for (int color = 0; color < colors.Count(); color ++)
+				if (showPaths[color])
 				{
-					if (showPaths[color])
+					selectedColors.Add(colors[color]);
+				}
+			}
+			foreach (Path p in paths)
+			{
+				bool contained = false;
+				foreach (Color color in selectedColors)
+				{
+					if (p.color.r == color.r && p.color.g == color.g && p.color.b == color.b)
 					{
-						selectedColors.Add(colors[color]);
+						p.color.a = 1;
+						contained = true;
+						break;
 					}
 				}
-				foreach (Path p in paths)
-				{
-					bool contained = false;
-					foreach (Color color in selectedColors)
-					{
-						if (p.color.r == color.r && p.color.g == color.g && p.color.b == color.b)
-						{
-							p.color.a = 1;
-							contained = true;
-							break;
-						}
-					}
-					
-					if (!contained) p.color.a = 0;
-				}
+				
+				if (!contained) p.color.a = 0;
 			}
 			if (GUILayout.Button ("Show all colors"))
 			{
@@ -1460,6 +1441,34 @@ namespace EditorArea {
 					}
 				}
 			}
+			if (!drawHeatMapColored)
+			{
+				if (GUILayout.Button ("Show heat map for current colors"))
+				{
+					drawHeatMapColored = true;
+					drawer.drawMap = drawMap = true;
+					drawer.drawPath = drawPath = false;
+					
+					for (int i = 0; i < colors.Count(); i ++)
+					{
+						drawHeatMapColors[i] = showPaths[i];
+					}
+				}
+			}
+			else
+			{
+				if (GUILayout.Button ("Hide heat map"))
+				{
+					drawHeatMapColored = false;
+					drawer.drawMap = drawMap = false;
+					drawer.drawPath = drawPath = true;
+					
+					for (int i = 0; i < colors.Count(); i ++)
+					{
+						drawHeatMapColors[i] = false;
+					}
+				}
+			}
 			
 			#endregion
 			
@@ -1506,7 +1515,6 @@ namespace EditorArea {
 			if (drawer != null) {
 				drawer.timeSlice = timeSlice;
 				drawer.drawHeatMap = drawHeatMap;
-				drawer.drawHeatMapColored = drawHeatMapColored;
 				drawer.drawMap = drawMap;
 				drawer.drawFoVOnly = drawFoVOnly;
 				drawer.drawNeverSeen = drawNeverSeen;
@@ -1514,7 +1522,6 @@ namespace EditorArea {
 				drawer.drawCombatLines = drawCombatLines;
 				drawer.paths = toggleStatus;
 				drawer.textDraw = textDraw;
-				
 			}
 			
 			if (original != null && lastTime != timeSlice) {
@@ -2094,7 +2101,6 @@ namespace EditorArea {
 			
 				window.drawer.timeSlice = timeSlice;
 				window.drawer.drawHeatMap = drawHeatMap;
-				window.drawer.drawHeatMapColored = drawHeatMapColored;
 				window.drawer.drawMap = drawMap;
 				window.drawer.drawFoVOnly = drawFoVOnly;
 				window.drawer.drawNeverSeen = drawNeverSeen;

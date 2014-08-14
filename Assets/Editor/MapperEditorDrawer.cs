@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using Common;
 using Extra;
+using System.Linq;
 
 namespace EditorArea {
 	
@@ -10,7 +11,7 @@ namespace EditorArea {
 	public class MapperEditorDrawer : MonoBehaviour {
 		
 		// Options
-		public bool drawMap = true, drawNeverSeen = false, drawHeatMap = true, drawHeatMapColored = false, drawPath = false, editGrid = false, drawFoVOnly = false, drawCombatLines = false;
+		public bool drawMap = true, drawNeverSeen = false, drawHeatMap = true, drawPath = false, editGrid = false, drawFoVOnly = false, drawCombatLines = false;
 		
 		// Caller must set these up
 		public Cell[][][] fullMap;
@@ -36,7 +37,7 @@ namespace EditorArea {
 		// Fixed values
 		private Color orange = new Color (1.0f, 0.64f, 0f, 1f), transparent = new Color (1f, 1f, 1f, 0f);
 		
-		public List<Color> colors, darkerColors;
+		//public List<Color> colors; //, darkerColors;
 		
 		public void Start () {
 			hideFlags = HideFlags.HideInInspector;
@@ -84,11 +85,17 @@ namespace EditorArea {
 				}
 			}
 			else if (drawMap && fullMap != null)
-			{	
-				if (drawHeatMapColored && heatMapColored != null)
-				{					
-					for (int color = 0; color < colors.Count; color ++)
+			{
+				// check if one of the heat maps is requested to be in color
+				int numColors = 0;
+				foreach (bool b in MapperWindowEditor.drawHeatMapColors) if (b) numColors ++;
+				
+				if (numColors > 0 && heatMapColored != null)
+				{
+					for (int color = 0; color < MapperWindowEditor.colors.Count(); color ++)
 					{
+						if (!MapperWindowEditor.drawHeatMapColors[color]) continue;
+						
 						for (int x = 0; x < fullMap[timeSlice].Length; x++)
 						{
 							for (int y = 0; y < fullMap[timeSlice][x].Length; y++)
@@ -97,7 +104,8 @@ namespace EditorArea {
 					
 								if (heatMapColored[color][x, y] > 0)
 								{
-									Gizmos.color = Color.Lerp (colors[color], darkerColors[color], (float)heatMapColored[color][x, y] / (heatMapMax * 6f / 8f));
+									Color regColor = MapperWindowEditor.colors[color];
+									Gizmos.color = Color.Lerp (new Color(regColor.r, regColor.g, regColor.b, 0.0f), Color.black, (float)heatMapColored[color][x, y] / (heatMapMax * 6f / 8f));
 									Gizmos.DrawCube (new Vector3(x * tileSize.x + zero.x + tileSize.x / 2f, 0.1f, y * tileSize.y + zero.y + tileSize.y / 2f), new Vector3(tileSize.x - tileSize.x * 0.05f, 0.0f, tileSize.y - tileSize.y * 0.05f));
 								}
 							}
