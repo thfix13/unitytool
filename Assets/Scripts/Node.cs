@@ -12,6 +12,7 @@ namespace Common {
 		public int x, y, t;
 		public double xD, yD, tD;
 		public float playerhp;
+		public float danger, danger3, danger3Norm;
 		[XmlIgnore]
 		public Dictionary<Enemy, float> enemyhp;
 		[XmlIgnore]
@@ -41,10 +42,14 @@ namespace Common {
 			tD = n.tD;
 			parent = n.parent;
 			cell = n.cell;
+			danger = n.danger;
+			danger3 = n.danger3;
+			danger3Norm = n.danger3Norm;
 		}
 		
 		public Node(int x_, int y_, int t_)
 		{
+			Debug.Log("no d");
 			xD = x = x_;
 			yD = y = y_;
 			tD = t = t_;
@@ -52,6 +57,7 @@ namespace Common {
 		
 		public Node(double x_, double y_, double t_)
 		{
+			Debug.Log("no d(d)");
 			xD = x_;
 			x = (int)xD;
 			yD = y_;

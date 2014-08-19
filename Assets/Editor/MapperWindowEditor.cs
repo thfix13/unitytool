@@ -32,14 +32,14 @@ namespace EditorArea {
 		private static String[] distMetricsShort = new String[] { "FRE", "TRI", "INTPOL" };
 		private static String[] dimensions = new String[] { "X", "Y", "Time", "Danger", "LOS", "Near Miss" };
 		private static String[] dimensionsShort = new String[] { "X", "Y", "T", "DNG", "LOS", "NM" };
+		public static bool[] dimensionEnabled = new bool[] { true, true, true, false, false, false };
 		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
 		private static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
 		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, numPasses = 1, rdpTolerance = 4;
 		private static List<Path> clusterCentroids = new List<Path>(), origPaths = new List<Path>();
 		private static bool[] showPaths = new bool[colors.Count()];
-		public static bool[] dimensionEnabled = new bool[dimensions.Count()];
-		private static bool autoSavePaths = true, discardHighDangerPaths = false, drawHeatMapColored = false;
-		public static bool scaleTime = false, altCentroidComp = false, useScalable = false;
+		private static bool autoSavePaths = true, discardHighDangerPaths = true, drawHeatMapColored = false;
+		public static bool /*scaleTime = false,*/ altCentroidComp = false, useScalable = false;
 		public int numberLines = 20; 
 		public float interpolationValue = 0.0f;
 		public float interpolationValueCheck = 0.0f; 
@@ -428,6 +428,16 @@ namespace EditorArea {
 				{
 					paths[count].name = count.ToString();
 				}
+
+				foreach (Path p in paths)
+				{ // check if x != xD, etc.
+					foreach (Node n in p.points)
+					{
+						if (n.x != 0 && n.xD == 0) n.xD = n.x;
+						if (n.y != 0 && n.yD == 0) n.yD = n.y;
+						if (n.t != 0 && n.tD == 0) n.tD = n.t;
+					}
+				}
 			}
 			
 			EditorGUILayout.LabelField ("");
@@ -525,6 +535,11 @@ namespace EditorArea {
 				//Analyzer.ComputePathsVelocityValues (paths);
 				
 				SetupArrangedPaths (paths);
+			}
+			
+			if (GUILayout.Button ("Compute node danger values"))
+			{
+				Analyzer.ComputeNodeDangerValues (paths, SpaceState.Editor.enemies, floor.collider.bounds.min, SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y, original, drawer.seenNeverSeen, drawer.seenNeverSeenMax);
 			}
 			
 			if (GUILayout.Button ("(DEBUG) Export Analysis")) {
@@ -794,7 +809,7 @@ namespace EditorArea {
 			numClusters = EditorGUILayout.IntSlider ("Number of clusters", numClusters, 1, 7);
 			numPasses = EditorGUILayout.IntSlider ("Number of passes", numPasses, 1, 500);
 			int prevMetric = distMetric;
-			scaleTime = EditorGUILayout.Toggle("Scale time", scaleTime);
+		//	scaleTime = EditorGUILayout.Toggle("Scale time", scaleTime);
 			useScalable = EditorGUILayout.Toggle("Use scalable version", useScalable);
 		//	altCentroidComp = EditorGUILayout.Toggle("Alt centroid computation", altCentroidComp);
 			if (distMetric == 0)
@@ -1330,20 +1345,23 @@ namespace EditorArea {
 					selectedColors.Add(colors[color]);
 				}
 			}
-			foreach (Path p in paths)
-			{
-				bool contained = false;
-				foreach (Color color in selectedColors)
+			if (clusterCentroids.Count > 0)
+			{ // paths have been clustered, or results imported, so enforce color checkboxes.
+				foreach (Path p in paths)
 				{
-					if (p.color.r == color.r && p.color.g == color.g && p.color.b == color.b)
+					bool contained = false;
+					foreach (Color color in selectedColors)
 					{
-						p.color.a = 1;
-						contained = true;
-						break;
+						if (p.color.r == color.r && p.color.g == color.g && p.color.b == color.b)
+						{
+							p.color.a = 1;
+							contained = true;
+							break;
+						}
 					}
-				}
 				
-				if (!contained) p.color.a = 0;
+					if (!contained) p.color.a = 0;
+				}
 			}
 			if (GUILayout.Button ("Show all colors"))
 			{

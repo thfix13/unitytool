@@ -333,6 +333,83 @@ namespace Extra {
 			}
 		}
 		
+		public static void ComputeNodeDangerValues (List<Path> paths, Enemy[] enemies, Vector3 min, float tileSizeX, float tileSizeZ, Cell[][][] fullMap, float[][] dangerCells, float maxDanger) {
+			Heuristic[] values = (Heuristic[])Enum.GetValues (typeof(Analyzer.Heuristic));
+			
+			pathMap.Clear ();
+			
+			foreach (Path path in paths) {
+				if (!(pathMap.ContainsKey (path))) {
+					pathMap.Add (path, new float[Enum.GetValues (typeof(Analyzer.Heuristic)).Length][]);
+				}
+				
+				foreach (Heuristic metric in values)
+					pathMap [path] [(int)metric] = new float[path.points [path.points.Count - 1].t];
+			}
+			
+			AStar astar = new AStar ();
+			foreach (Path currentPath in paths) {
+				if (currentPath.length3d == 0)
+					currentPath.length3d = ComputeLength3D (currentPath.points);
+					
+				Node cur = currentPath.points [currentPath.points.Count - 1];
+				Node par = cur.parent;
+				while (cur.parent != null) {
+						
+			//		Vector3 p1 = cur.GetVector3 ();
+					Vector3 pos = par.GetVector3 ();
+			//		Vector3 pd = p1 - p2;
+						
+				//	float pt = (cur.t - par.t);
+						
+					// Navigate through time to find the right cells to start from
+			//		for (int t = 0; t < pt; t++) {
+							
+//						float delta = ((float)t) / pt;
+							
+			//			Vector3 pos = p2 + pd * delta;
+							
+						foreach (Enemy each in enemies) {
+							Vector3 enemy = each.positions [par.t];
+							
+							int startX = (int)pos.x;
+							int startY = (int)pos.z;
+							int endX = (int)((enemy.x - min.x) / tileSizeX);
+							int endY = (int)((enemy.z - min.z) / tileSizeZ);
+								
+							// Do A* from the player to the enemy to compute the cost
+							List<Node> astarpath = astar.Compute (startX, startY, endX, endY, fullMap [par.t], true);
+							if (astarpath.Count > 0) {
+								float l = ComputeLength3D (astarpath);
+
+								float ld = 1 / (l * l);
+								float ld3 = 1 / (l * l * l);
+								float ld3n = (1 / (l * l * l)) * (dangerCells [startX] [startY] / maxDanger);
+								
+				//				currentPath.danger += ld;
+				//				currentPath.danger3 += ld3;
+				//				currentPath.danger3Norm += ld3n;
+
+								if (pathMap.ContainsKey(currentPath)) {
+									// Store in 'per-time' metric
+									par.danger = ld;
+									par.danger3 = ld3;
+									par.danger3Norm = ld3n;
+									
+									pathMap [currentPath] [(int)Heuristic.Danger] [par.t] = ld;
+									pathMap [currentPath] [(int)Heuristic.Danger3] [par.t] = ld3;
+									pathMap [currentPath] [(int)Heuristic.Danger3Norm] [par.t] = ld3n;
+								}
+							}
+						}
+			//		}
+						
+					cur = par;
+					par = par.parent;
+				}
+			}
+		}
+		
 		public static void ComputeCrazyness (List<Path> paths, Cell[][][] fullMap, int stepsBehind) {
 			foreach (Path currentPath in paths) {
 					

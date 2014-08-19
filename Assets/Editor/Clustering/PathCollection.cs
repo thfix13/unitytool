@@ -131,6 +131,10 @@ namespace ClusteringSpace
 //			{
 //				Debug.Log("cnx:"+averagedNodes[count].x+",y:"+averagedNodes[count].y+",t:"+averagedNodes[count].t);
 //			}
+
+            avgDanger /= interpolatedPaths.Count;
+            avgLOS /= interpolatedPaths.Count;
+            avgNM /= interpolatedPaths.Count;
 			foreach(Node n in averagedNodes)
 			{
 				n.x /= interpolatedPaths.Count;
@@ -139,10 +143,8 @@ namespace ClusteringSpace
 				n.xD /= interpolatedPaths.Count;
 				n.yD /= interpolatedPaths.Count;
 				n.tD /= interpolatedPaths.Count;
+				n.danger3 = avgDanger;
 			}
-            avgDanger /= interpolatedPaths.Count;
-            avgLOS /= interpolatedPaths.Count;
-            avgNM /= interpolatedPaths.Count;
 		//	Debug.Log("end centr");
         
             Path averagedPath = new Path(new List<Node>(averagedNodes));
@@ -154,26 +156,7 @@ namespace ClusteringSpace
 		}
 
         public void UpdateCentroid()
-        {
-		/*	double xSum = 0.0;
-			double ySum = 0.0;
-			
-			for (int i = 0; i < this.Count; i ++)
-			{
-				double xSump = 0.0;
-				double ySump = 0.0;
-				for (int j = 0; j < this[i].points.Count; j++) xSump += this[i].points[j].x;
-				for (int j = 0; j < this[i].points.Count; j++) ySump += this[i].points[j].y;
-				
-				xSum += (xSump / this[i].points.Count);
-				ySum += (ySump / this[i].points.Count);
-			}
-			
-            double xSum = (from p in this select p.X).Sum();
-            double ySum = (from p in this select p.Y).Sum();
-            Centroid.X = (xSum / (double)this.Count);
-            Centroid.Y = (ySum / (double)this.Count); */
-			
+        {	
 	/*		if (MapperWindowEditor.altCentroidComp)
 			{
 				Node[] nodes = new Node[this[0].points.Count()];
