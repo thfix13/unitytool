@@ -38,7 +38,7 @@ namespace EditorArea {
 		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, numPasses = 1, rdpTolerance = 4;
 		private static List<Path> clusterCentroids = new List<Path>(), origPaths = new List<Path>();
 		private static bool[] showPaths = new bool[colors.Count()];
-		private static bool autoSavePaths = true, discardHighDangerPaths = true, drawHeatMapColored = false;
+		private static bool autoSavePaths = true, discardHighDangerPaths = true, drawHeatMapColored = false, useColors = false;
 		public static bool /*scaleTime = false,*/ altCentroidComp = false, useScalable = false;
 		public int numberLines = 20; 
 		public float interpolationValue = 0.0f;
@@ -257,6 +257,8 @@ namespace EditorArea {
 			}
 
 			if (GUILayout.Button ("Compute Path")) {
+				useColors = false;
+				
 				float playerSpeed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
 				float playerMaxHp = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().maxHp;
 				
@@ -404,6 +406,7 @@ namespace EditorArea {
 			}
 			
 			if (GUILayout.Button ("(DEBUG) Import Paths")) {
+				useColors = false;
 				paths.Clear ();
 				ClearPathsRepresentation ();
 				
@@ -884,7 +887,7 @@ namespace EditorArea {
 				
 				paths = new List<Path>(origPaths);
 				
-				
+				useColors = true;
 				
 				// scan the paths and remove any avg. centroid paths that were computed
 				foreach (Path p in paths)
@@ -1232,6 +1235,7 @@ namespace EditorArea {
 				ClearPathsRepresentation ();
 				KMeans.reset();
 				origPaths = new List<Path>();
+				useColors = true;
 				
 				List<Path> pathsImported = PathBulk.LoadPathsFromFile ("clusteringdata/" + fileNames[chosenFileIndex]);
 								
@@ -1337,16 +1341,17 @@ namespace EditorArea {
 			{
 				showPaths[count] = EditorGUILayout.Toggle(colorStrings[count], showPaths[count]);
 			}
-			List<Color> selectedColors = new List<Color>();
-			for (int color = 0; color < colors.Count(); color ++)
-			{
-				if (showPaths[color])
-				{
-					selectedColors.Add(colors[color]);
-				}
-			}
-			if (clusterCentroids.Count > 0)
+			if (useColors)
 			{ // paths have been clustered, or results imported, so enforce color checkboxes.
+				List<Color> selectedColors = new List<Color>();
+				for (int color = 0; color < colors.Count(); color ++)
+				{
+					if (showPaths[color])
+					{
+						selectedColors.Add(colors[color]);
+					}
+				}
+				
 				foreach (Path p in paths)
 				{
 					bool contained = false;
@@ -1401,6 +1406,7 @@ namespace EditorArea {
 					{
 						numSelectedColors ++;
 						colorIndex = color;
+						showPaths[color] = false;
 					}
 				}
 				
@@ -1430,6 +1436,7 @@ namespace EditorArea {
 					{
 						numSelectedColors ++;
 						colorIndex = color;
+						showPaths[color] = false;
 					}
 				}
 				

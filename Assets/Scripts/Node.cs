@@ -49,7 +49,6 @@ namespace Common {
 		
 		public Node(int x_, int y_, int t_)
 		{
-			Debug.Log("no d");
 			xD = x = x_;
 			yD = y = y_;
 			tD = t = t_;
@@ -57,7 +56,6 @@ namespace Common {
 		
 		public Node(double x_, double y_, double t_)
 		{
-			Debug.Log("no d(d)");
 			xD = x_;
 			x = (int)xD;
 			yD = y_;

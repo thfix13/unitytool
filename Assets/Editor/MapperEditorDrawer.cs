@@ -180,9 +180,9 @@ namespace EditorArea {
 			//			Debug.Log("color: " + Gizmos.color);
 						if (n.parent != null) {
 							if (n.yD == 0.0 && n.xD == 0.0)
-								Gizmos.DrawLine (new Vector3(n.x * tileSize.x + zero.x, 0.1f, (n.y * tileSize.x + zero.y)), new Vector3(n.parent.x * tileSize.y + zero.x, 0.1f + (n.danger3*100), (n.parent.y * tileSize.y + zero.y)));
+								Gizmos.DrawLine (new Vector3(n.x * tileSize.x + zero.x, 0.1f + (n.danger3*100), (n.y * tileSize.x + zero.y)), new Vector3(n.parent.x * tileSize.y + zero.x, 0.1f + (n.parent.danger3*100), (n.parent.y * tileSize.y + zero.y)));
 							else
-								Gizmos.DrawLine (new Vector3((System.Convert.ToSingle(n.xD) * tileSize.x + zero.x), 0.1f, (System.Convert.ToSingle(n.yD) * tileSize.x + zero.y)), new Vector3((float)(n.parent.xD * tileSize.y + zero.x), 0.1f + (n.danger3*100), (float)(n.parent.yD * tileSize.y + zero.y)));
+								Gizmos.DrawLine (new Vector3((System.Convert.ToSingle(n.xD) * tileSize.x + zero.x), 0.1f + (n.danger3*100), (System.Convert.ToSingle(n.yD) * tileSize.x + zero.y)), new Vector3((float)(n.parent.xD * tileSize.y + zero.x), 0.1f + (n.parent.danger3*100), (float)(n.parent.yD * tileSize.y + zero.y)));
 							
 							if (drawCombatLines && n.parent.fighting != null && n.parent.fighting.Count > 0 && n.t >= timeSlice && n.parent.t <= timeSlice) {
 								Gizmos.color = Color.red;
