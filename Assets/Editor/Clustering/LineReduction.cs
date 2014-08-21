@@ -11,12 +11,7 @@ namespace ClusteringSpace
 {
 	public class LineReduction
 	{
-		/// <span class="code-SummaryComment"><summary></span>
-		/// Uses the Douglas Peucker algorithm to reduce the number of points.
-		/// <span class="code-SummaryComment"></summary></span>
-		/// <span class="code-SummaryComment"><param name="Points">The points.</param></span>
-		/// <span class="code-SummaryComment"><param name="Tolerance">The tolerance.</param></span>
-		/// <span class="code-SummaryComment"><returns></returns></span>
+		// Uses the Douglas Peucker algorithm to reduce the number of points.
 		public static List<Node> DouglasPeuckerReduction(List<Node> Points, Double Tolerance)
 		{
 		    if (Points == null || Points.Count < 3)
@@ -36,8 +31,7 @@ namespace ClusteringSpace
 		        lastPoint--;
 		    }
 
-		    DouglasPeuckerReduction(Points, firstPoint, lastPoint, 
-		    Tolerance, ref pointIndexsToKeep);
+		    DouglasPeuckerReduction(Points, firstPoint, lastPoint, Tolerance, ref pointIndexsToKeep);
 
 		    List<Node> returnPoints = new List<Node>();
 		    pointIndexsToKeep.Sort();
@@ -49,14 +43,6 @@ namespace ClusteringSpace
 		    return returnPoints;
 		}
     
-		/// <span class="code-SummaryComment"><summary></span>
-		/// Douglases the peucker reduction.
-		/// <span class="code-SummaryComment"></summary></span>
-		/// <span class="code-SummaryComment"><param name="points">The points.</param></span>
-		/// <span class="code-SummaryComment"><param name="firstPoint">The first point.</param></span>
-		/// <span class="code-SummaryComment"><param name="lastPoint">The last point.</param></span>
-		/// <span class="code-SummaryComment"><param name="tolerance">The tolerance.</param></span>
-		/// <span class="code-SummaryComment"><param name="pointIndexsToKeep">The point index to keep.</param></span>
 		private static void DouglasPeuckerReduction(List<Node> points, Int32 firstPoint, Int32 lastPoint, Double tolerance, ref List<Int32> pointIndexsToKeep)
 		{
 		    Double maxDistance = 0;
@@ -64,8 +50,7 @@ namespace ClusteringSpace
     
 		    for (Int32 index = firstPoint; index < lastPoint; index++)
 		    {
-		        Double distance = PerpendicularDistance
-		            (points[firstPoint], points[lastPoint], points[index]);
+		        Double distance = PerpendicularDistance(points[firstPoint], points[lastPoint], points[index]);
 		        if (distance > maxDistance)
 		        {
 		            maxDistance = distance;
@@ -78,22 +63,17 @@ namespace ClusteringSpace
 		        //Add the largest point that exceeds the tolerance
 		        pointIndexsToKeep.Add(indexFarthest);
     
-		        DouglasPeuckerReduction(points, firstPoint, 
-		        indexFarthest, tolerance, ref pointIndexsToKeep);
-		        DouglasPeuckerReduction(points, indexFarthest, 
-		        lastPoint, tolerance, ref pointIndexsToKeep);
+		        DouglasPeuckerReduction(points, firstPoint, indexFarthest, tolerance, ref pointIndexsToKeep);
+		        DouglasPeuckerReduction(points, indexFarthest, lastPoint, tolerance, ref pointIndexsToKeep);
 		    }
+			else if (maxDistance < tolerance)
+			{
+				// todo...
+			}
 		}
 
-		/// <span class="code-SummaryComment"><summary></span>
 		/// The distance of a point from a line made from point1 and point2.
-		/// <span class="code-SummaryComment"></summary></span>
-		/// <span class="code-SummaryComment"><param name="pt1">The PT1.</param></span>
-		/// <span class="code-SummaryComment"><param name="pt2">The PT2.</param></span>
-		/// <span class="code-SummaryComment"><param name="p">The p.</param></span>
-		/// <span class="code-SummaryComment"><returns></returns></span>
-		public static Double PerpendicularDistance
-		    (Node Point1, Node Point2, Node Point)
+		public static Double PerpendicularDistance(Node Point1, Node Point2, Node Point)
 		{
 		    //Area = |(1/2)(x1y2 + x2y3 + x3y1 - x2y1 - x3y2 - x1y3)|   *Area of triangle
 		    //Base = v((x1-x2)²+(x1-x2)²)                               *Base of Triangle*
