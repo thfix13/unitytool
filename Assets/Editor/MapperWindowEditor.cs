@@ -27,7 +27,6 @@ namespace EditorArea {
 		private static int randomSeed = -1;
 		
 		// Clustering
-//		public static String[] distMetrics = new String[] { "Frechet (L1) (fastest)", "Frechet (L1) 3D", "Frechet (Euclidean)", "Area (Interpolation) 3D", "Area (Triangulation)", "Time (no x,y)" };
 		private static String[] distMetrics = new String[] { "Frechet", "Area (Triangulation)", "Area (Interpolation) 3D" };
 		private static String[] distMetricsShort = new String[] { "FRE", "TRI", "INTPOL" };
 		private static String[] dimensions = new String[] { "X", "Y", "Time", "Danger", "LOS", "Near Miss" };
@@ -39,7 +38,7 @@ namespace EditorArea {
 		private static List<Path> clusterCentroids = new List<Path>(), origPaths = new List<Path>();
 		private static bool[] showPaths = new bool[colors.Count()];
 		private static bool autoSavePaths = true, discardHighDangerPaths = true, drawHeatMapColored = false, useColors = false;
-		public static bool /*scaleTime = false,*/ altCentroidComp = false, useScalable = false;
+		public static bool altCentroidComp = false, useScalable = false;
 		public int numberLines = 20; 
 		public float interpolationValue = 0.0f;
 		public float interpolationValueCheck = 0.0f; 
@@ -203,6 +202,8 @@ namespace EditorArea {
 				drawer.seenNeverSeenMax = maxSeenGrid;
 				drawer.tileSize = SpaceState.Editor.tileSize;
 				drawer.zero.Set (floor.collider.bounds.min.x, floor.collider.bounds.min.z);
+				LineReduction.tileSize = SpaceState.Editor.tileSize;
+				LineReduction.zero.Set(floor.collider.bounds.min.x, floor.collider.bounds.min.z);
 				
 				ResetAI ();
 				previous = DateTime.Now;
@@ -1286,6 +1287,7 @@ namespace EditorArea {
 				KMeans.reset();
 				clusterCentroids.Clear();
 				origPaths = new List<Path>();
+				LineReduction reducer = new LineReduction();
 				
 				DirectoryInfo batchDir = new DirectoryInfo("batchpaths/");
 				FileInfo[] batchInfo = batchDir.GetFiles("*.xml");
@@ -1293,6 +1295,7 @@ namespace EditorArea {
 				List<String> pathFilenames = new List<String>();
 				for (int count = 0; count < batchInfo.Count(); count ++)
 				{
+					if (batchInfo[count].Name == "levelinfo.xml") continue;
 					pathFilenames.Add(batchInfo[count].Name);
 				}
 				
@@ -1313,7 +1316,7 @@ namespace EditorArea {
 					}
 					if (pathPoints.Count() <= 3) continue;
 					
-					pathsImported.Add(new Path(LineReduction.DouglasPeuckerReduction(pathPoints, rdpTolerance)));
+					pathsImported.Add(new Path(reducer.DouglasPeuckerReduction(pathPoints, rdpTolerance)));
 				}
 				
 				// Setup parenting
@@ -1333,6 +1336,16 @@ namespace EditorArea {
 				for (int count = 0; count < paths.Count(); count ++)
 				{
 					paths[count].name = count.ToString();
+				}
+			}
+			if (GUILayout.Button("RDP"))
+			{
+				LineReduction reducer = new LineReduction();
+				ClearPathsRepresentation ();
+				foreach (Path p in paths)
+				{
+					reducer.DouglasPeuckerReduction(p.points, rdpTolerance);
+					toggleStatus.Add (p, true);
 				}
 			}
 			
@@ -2074,7 +2087,8 @@ namespace EditorArea {
 						pos.z *= SpaceState.Editor.tileSize.y;
 						pos.x += floor.collider.bounds.min.x;
 						pos.z += floor.collider.bounds.min.z;
-						pos.y = 0f;
+						//pos.y = 0f;
+						pos.y = (p.danger3*100);
 
 						each.Value.transform.position = pos;
 						textDraw.Add(Tuple.New<Vector3, string>(new Vector3(pos.x, pos.y + 1f, pos.z), "H:" + p.playerhp));

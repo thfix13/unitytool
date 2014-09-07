@@ -1,18 +1,95 @@
 // C# Implementation of Douglas-Peucker algorithm
 // by Craig Selbert
 // src : http://www.codeproject.com/Articles/18936/A-Csharp-Implementation-of-Douglas-Peucker-Line-Ap
+// modified to not smooth over obstacles
 
+using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Xml.Serialization;
+using System.IO;
 using Node = Common.Node;
 
 namespace ClusteringSpace
 {
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Xml", "4.0.30319.17020")]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+	[Serializable, XmlRoot("LevelInfo")]
+	public partial class PlatformerLevelInfo
+	{
+		public Vector2[] floorPositions;
+        public Vector2[] floorScales;
+    }
+	
+	public class Line
+	{
+		public Vector2 start;
+		public Vector2 end;
+		public Line(Vector2 s_, Vector2 e_) { start = s_; end = e_; }
+	}
+	
 	public class LineReduction
 	{
+		public Vector2[] floorPositions;
+        public Vector2[] floorScales;
+		public List<Line> smallerObstacles = new List<Line>();
+		
+		public static Vector2 zero = new Vector2 ();
+		public static Vector2 tileSize = new Vector2 ();
+		
+		public LineReduction()
+		{
+			// load the level information (currently just floor pos + scale)
+			XmlSerializer ser = new XmlSerializer (typeof(PlatformerLevelInfo));
+			PlatformerLevelInfo loaded = null;
+			using (FileStream stream = new FileStream ("batchpaths/levelinfo.xml", FileMode.Open)) {
+				loaded = (PlatformerLevelInfo)ser.Deserialize (stream);
+				stream.Close ();
+			}
+			floorPositions = loaded.floorPositions;
+			floorScales = loaded.floorScales;
+			//for (int i = 0; i < floorScales.Length; i ++) { floorScales[i].x /= 2; floorScales[i].y /= 2; }
+			
+			// destroy current floor
+			GameObject levelObj = GameObject.Find("Level"); 
+			for (int i = levelObj.transform.childCount - 1; i > -1; i--)
+			{
+			    GameObject.DestroyImmediate(levelObj.transform.GetChild(i).gameObject);
+			}
+			
+			// add new floor!
+			GameObject templateWall = GameObject.Find("TemplateWall");
+			for (int count = 0; count < floorPositions.Length; count ++)
+			{
+				Transform wallTransform = GameObject.Instantiate(templateWall.transform) as Transform;
+				GameObject wall = wallTransform.gameObject;
+				wall.name = "Platform";
+				wall.tag = "Platform";
+				wall.transform.position = new Vector3(floorPositions[count].x * tileSize.x + zero.x, 0, floorPositions[count].y * tileSize.y + zero.y);
+				wall.transform.localScale = new Vector3(floorScales[count].x/2, 3, floorScales[count].y/2);
+				wall.transform.parent = levelObj.transform;
+				wall.SetActive(true);
+			}
+			
+			for (int count = 0; count < floorPositions.Length; count ++)
+			{
+				List<Vector2> midpoints = new List<Vector2>();
+				midpoints.Add(new Vector2(floorPositions[count].x + (floorScales[count].x/2), floorPositions[count].y));
+				midpoints.Add(new Vector2(floorPositions[count].x + floorScales[count].x, floorPositions[count].y - (floorScales[count].y/2)));
+				midpoints.Add(new Vector2(floorPositions[count].x + (floorScales[count].x/2), floorPositions[count].y - floorScales[count].y));
+				midpoints.Add(new Vector2(floorPositions[count].x, floorPositions[count].y - (floorScales[count].y/2)));
+				for (int count2 = 0; count2 < midpoints.Count; count2 ++)
+				{
+					Debug.Log("Midpoint " + count2 +" : " + midpoints[count2]);
+					smallerObstacles.Add(new Line(midpoints[count2], midpoints[(count2+1)%midpoints.Count]));
+				}
+			}
+		}
+		
 		// Uses the Douglas Peucker algorithm to reduce the number of points.
-		public static List<Node> DouglasPeuckerReduction(List<Node> Points, Double Tolerance)
+		public List<Node> DouglasPeuckerReduction(List<Node> Points, Double Tolerance)
 		{
 		    if (Points == null || Points.Count < 3)
 		    return Points;
@@ -43,7 +120,7 @@ namespace ClusteringSpace
 		    return returnPoints;
 		}
     
-		private static void DouglasPeuckerReduction(List<Node> points, Int32 firstPoint, Int32 lastPoint, Double tolerance, ref List<Int32> pointIndexsToKeep)
+		private void DouglasPeuckerReduction(List<Node> points, Int32 firstPoint, Int32 lastPoint, Double tolerance, ref List<Int32> pointIndexsToKeep)
 		{
 		    Double maxDistance = 0;
 		    Int32 indexFarthest = 0;
@@ -53,8 +130,8 @@ namespace ClusteringSpace
 		        Double distance = PerpendicularDistance(points[firstPoint], points[lastPoint], points[index]);
 		        if (distance > maxDistance)
 		        {
-		            maxDistance = distance;
-		            indexFarthest = index;
+					maxDistance = distance;
+					indexFarthest = index;
 		        }
 		    }
 
@@ -62,18 +139,80 @@ namespace ClusteringSpace
 		    {
 		        //Add the largest point that exceeds the tolerance
 		        pointIndexsToKeep.Add(indexFarthest);
+				Debug.Log("Exceeds tolerance!");
     
 		        DouglasPeuckerReduction(points, firstPoint, indexFarthest, tolerance, ref pointIndexsToKeep);
 		        DouglasPeuckerReduction(points, indexFarthest, lastPoint, tolerance, ref pointIndexsToKeep);
+				
+				return;
 		    }
-			else if (maxDistance < tolerance)
+			else if (maxDistance <= tolerance && indexFarthest != 0)
 			{
-				// todo...
+				// check if an obstacle is contained within the triangle
+				bool obstacleContained = false;
+/*				for (int count = 0; count < floorPositions.Length; count ++)
+				{
+					for (float i = floorPositions[count].x + 1; i <= floorPositions[count].x + floorScales[count].x - 1; i += floorScales[count].x/100)
+					{
+						Vector2 topLine = new Vector2(i, floorPositions[count].y);
+						Vector2 bottomLine = new Vector2(i, floorPositions[count].y + floorScales[count].y);
+						if (PointInTriangle(topLine, points[firstPoint], points[indexFarthest], points[lastPoint]))
+						{
+							obstacleContained = true;
+							break;
+						}
+						else if (PointInTriangle(bottomLine, points[firstPoint], points[indexFarthest], points[lastPoint]))
+						{
+							obstacleContained = true;
+							break;
+						}
+					}
+					if (obstacleContained) break;
+					for (float i = floorPositions[count].y + 1; i <= floorPositions[count].y + floorScales[count].y - 1; i += floorScales[count].y/100)
+					{
+						Vector2 topLine = new Vector2(floorPositions[count].x, i);
+						Vector2 bottomLine = new Vector2(floorPositions[count].x+floorScales[count].x, i);
+						if (PointInTriangle(topLine, points[firstPoint], points[indexFarthest], points[lastPoint]))
+						{
+							obstacleContained = true;
+							break;
+						}
+						else if (PointInTriangle(bottomLine, points[firstPoint], points[indexFarthest], points[lastPoint]))
+						{
+							obstacleContained = true;
+							break;
+						}
+					}
+					if (obstacleContained) break;
+				}*/
+				foreach (Line l in smallerObstacles)
+				{
+					Vector2 p1 = new Vector2(points[firstPoint].x, points[firstPoint].y);
+					Vector2 p2 = new Vector2(points[indexFarthest].x, points[indexFarthest].y);
+					Vector2 p3 = new Vector2(points[lastPoint].x, points[lastPoint].y);
+					if (Intersecting(l.start, l.end, p1, p2, p3))
+					{
+						obstacleContained = true;
+						break;
+					}
+				}
+				
+				if (obstacleContained)
+				{ // must keep that point!
+			        pointIndexsToKeep.Add(indexFarthest);
+					Debug.Log("Contains Obstacle!");
+    
+			        DouglasPeuckerReduction(points, firstPoint, indexFarthest, tolerance, ref pointIndexsToKeep);
+			        DouglasPeuckerReduction(points, indexFarthest, lastPoint, tolerance, ref pointIndexsToKeep);
+				}
+				else Debug.Log("Does not contain");
+				
+				return;
 			}
 		}
 
 		/// The distance of a point from a line made from point1 and point2.
-		public static Double PerpendicularDistance(Node Point1, Node Point2, Node Point)
+		public Double PerpendicularDistance(Node Point1, Node Point2, Node Point)
 		{
 		    //Area = |(1/2)(x1y2 + x2y3 + x3y1 - x2y1 - x3y2 - x1y3)|   *Area of triangle
 		    //Base = v((x1-x2)²+(x1-x2)²)                               *Base of Triangle*
@@ -88,6 +227,53 @@ namespace ClusteringSpace
 		    Double height = area / bottom * 2;
 
 		    return height;
+		}
+		
+		// src : http://gamedev.stackexchange.com/questions/21096/what-is-an-efficient-2d-line-segment-versus-triangle-intersection-test
+		/* Check whether P and Q lie on the same side of line AB */
+		float Side(Vector2 p, Vector2 q, Vector2 a, Vector2 b)
+		{
+		    float z1 = (b.x - a.x) * (p.y - a.y) - (p.x - a.x) * (b.y - a.y);
+		    float z2 = (b.x - a.x) * (q.y - a.y) - (q.x - a.x) * (b.y - a.y);
+		    return z1 * z2;
+		}
+
+		/* Check whether segment P0P1 intersects with triangle t0t1t2 */
+		bool Intersecting(Vector2 p0, Vector2 p1, Vector2 t0, Vector2 t1, Vector2 t2)
+		{
+		    /* Check whether segment is outside one of the three half-planes
+		     * delimited by the triangle. */
+		    float f1 = Side(p0, t2, t0, t1), f2 = Side(p1, t2, t0, t1);
+		    float f3 = Side(p0, t0, t1, t2), f4 = Side(p1, t0, t1, t2);
+		    float f5 = Side(p0, t1, t2, t0), f6 = Side(p1, t1, t2, t0);
+		    /* Check whether triangle is totally inside one of the two half-planes
+		     * delimited by the segment. */
+		    float f7 = Side(t0, t1, p0, p1);
+		    float f8 = Side(t1, t2, p0, p1);
+
+		    /* If segment is strictly outside triangle, or triangle is strictly
+		     * apart from the line, we're not intersecting */
+		    if ((f1 < 0 && f2 < 0) || (f3 < 0 && f4 < 0) || (f5 < 0 && f6 < 0)
+		          || (f7 > 0 && f8 > 0))
+		        return false;
+
+		    /* If segment is aligned with one of the edges, we're overlapping */
+		    if ((f1 == 0 && f2 == 0) || (f3 == 0 && f4 == 0) || (f5 == 0 && f6 == 0))
+		        return false;
+
+		    /* If segment is outside but not strictly, or triangle is apart but
+		     * not strictly, we're touching */
+		    if ((f1 <= 0 && f2 <= 0) || (f3 <= 0 && f4 <= 0) || (f5 <= 0 && f6 <= 0)
+		          || (f7 >= 0 && f8 >= 0))
+		        return true;
+
+		    /* If both segment points are strictly inside the triangle, we
+		     * are not intersecting either */
+		    if (f1 > 0 && f2 > 0 && f3 > 0 && f4 > 0 && f5 > 0 && f6 > 0)
+		        return true;
+
+		    /* Otherwise we're intersecting with at least one edge */
+		    return true;
 		}
 	}
 }
