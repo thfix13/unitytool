@@ -34,6 +34,7 @@ namespace ClusteringSpace
 	{
 		public Vector2[] floorPositions;
         public Vector2[] floorScales;
+		public List<Line> obstacles = new List<Line>();
 		public List<Line> smallerObstacles = new List<Line>();
 		
 		public static Vector2 zero = new Vector2 ();
@@ -71,6 +72,21 @@ namespace ClusteringSpace
 				wall.transform.localScale = new Vector3(floorScales[count].x/2, 3, floorScales[count].y/2);
 				wall.transform.parent = levelObj.transform;
 				wall.SetActive(true);
+			}
+
+			obstacles.Clear();
+			smallerObstacles.Clear();
+			for (int count = 0; count < floorPositions.Length; count ++)
+			{
+				List<Vector2> midpoints = new List<Vector2>();
+				midpoints.Add(new Vector2(floorPositions[count].x, floorPositions[count].y));
+				midpoints.Add(new Vector2(floorPositions[count].x + floorScales[count].x, floorPositions[count].y));
+				midpoints.Add(new Vector2(floorPositions[count].x, floorPositions[count].y - floorScales[count].y));
+				midpoints.Add(new Vector2(floorPositions[count].x + floorScales[count].x, floorPositions[count].y - floorScales[count].y));
+				for (int count2 = 0; count2 < midpoints.Count; count2 ++)
+				{
+					obstacles.Add(new Line(midpoints[count2], midpoints[(count2+1)%midpoints.Count]));
+				}
 			}
 			
 			for (int count = 0; count < floorPositions.Length; count ++)
@@ -185,16 +201,41 @@ namespace ClusteringSpace
 					}
 					if (obstacleContained) break;
 				}*/
+				int obsCount = 0, numIntersect = 0, numContained = 0;
 				foreach (Line l in smallerObstacles)
+	//			foreach (Line l in obstacles)
 				{
+					if (obsCount == 4)
+					{ // gone through 4 lines of one obstacle.
+						if (numIntersect > 0)
+						{ // an obstacle intersects but is not fully contained within the triangle
+							// so try to construct a line around that obstacle.
+							List<Line> pathAroundObstacle = new List<Line>();
+							
+							// polygon subtraction ?
+						}
+						else if (numContained > 0)
+						{ // the triangle fully contains an obstacle.
+							obstacleContained = true;
+							break;
+						}
+						
+						numContained = numIntersect = obsCount = 0;
+					}
+					
 					Vector2 p1 = new Vector2(points[firstPoint].x, points[firstPoint].y);
 					Vector2 p2 = new Vector2(points[indexFarthest].x, points[indexFarthest].y);
 					Vector2 p3 = new Vector2(points[lastPoint].x, points[lastPoint].y);
-					if (Intersecting(l.start, l.end, p1, p2, p3))
-					{
-						obstacleContained = true;
-						break;
-					}
+					int state = Intersecting(l.start, l.end, p1, p2, p3);
+					if (state == 2) numIntersect ++;
+					else if (state > 0) numContained ++;
+			//		if (state > 0)
+			//		{
+			//			obstacleContained = true;
+			//			break;
+			//		}
+					
+					obsCount ++;
 				}
 				
 				if (obstacleContained)
@@ -239,7 +280,7 @@ namespace ClusteringSpace
 		}
 
 		/* Check whether segment P0P1 intersects with triangle t0t1t2 */
-		bool Intersecting(Vector2 p0, Vector2 p1, Vector2 t0, Vector2 t1, Vector2 t2)
+		int Intersecting(Vector2 p0, Vector2 p1, Vector2 t0, Vector2 t1, Vector2 t2)
 		{
 		    /* Check whether segment is outside one of the three half-planes
 		     * delimited by the triangle. */
@@ -255,25 +296,25 @@ namespace ClusteringSpace
 		     * apart from the line, we're not intersecting */
 		    if ((f1 < 0 && f2 < 0) || (f3 < 0 && f4 < 0) || (f5 < 0 && f6 < 0)
 		          || (f7 > 0 && f8 > 0))
-		        return false;
+		        return 0; // separate
 
 		    /* If segment is aligned with one of the edges, we're overlapping */
 		    if ((f1 == 0 && f2 == 0) || (f3 == 0 && f4 == 0) || (f5 == 0 && f6 == 0))
-		        return false;
+		        return 2; // segment on edge
 
 		    /* If segment is outside but not strictly, or triangle is apart but
 		     * not strictly, we're touching */
 		    if ((f1 <= 0 && f2 <= 0) || (f3 <= 0 && f4 <= 0) || (f5 <= 0 && f6 <= 0)
 		          || (f7 >= 0 && f8 >= 0))
-		        return true;
+		        return 2; // point on edge
 
 		    /* If both segment points are strictly inside the triangle, we
 		     * are not intersecting either */
 		    if (f1 > 0 && f2 > 0 && f3 > 0 && f4 > 0 && f5 > 0 && f6 > 0)
-		        return true;
+		        return 1; // contained
 
 		    /* Otherwise we're intersecting with at least one edge */
-		    return true;
+		    return 2;
 		}
 	}
 }

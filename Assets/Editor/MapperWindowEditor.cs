@@ -27,8 +27,8 @@ namespace EditorArea {
 		private static int randomSeed = -1;
 		
 		// Clustering
-		private static String[] distMetrics = new String[] { "Frechet", "Area (Triangulation)", "Area (Interpolation) 3D" };
-		private static String[] distMetricsShort = new String[] { "FRE", "TRI", "INTPOL" };
+		private static String[] distMetrics = new String[] { "Frechet", "Area (Triangulation)", "Area (Interpolation) 3D", "Hausdorff" };
+		private static String[] distMetricsShort = new String[] { "FRE", "TRI", "INTPOL", "H" };
 		private static String[] dimensions = new String[] { "X", "Y", "Time", "Danger", "LOS", "Near Miss" };
 		private static String[] dimensionsShort = new String[] { "X", "Y", "T", "DNG", "LOS", "NM" };
 		public static bool[] dimensionEnabled = new bool[] { true, true, true, false, false, false };
@@ -813,10 +813,8 @@ namespace EditorArea {
 			numClusters = EditorGUILayout.IntSlider ("Number of clusters", numClusters, 1, 7);
 			numPasses = EditorGUILayout.IntSlider ("Number of passes", numPasses, 1, 500);
 			int prevMetric = distMetric;
-		//	scaleTime = EditorGUILayout.Toggle("Scale time", scaleTime);
 			useScalable = EditorGUILayout.Toggle("Use scalable version", useScalable);
-		//	altCentroidComp = EditorGUILayout.Toggle("Alt centroid computation", altCentroidComp);
-			if (distMetric == 0)
+			if (distMetric == 0 || distMetric == 3)
 				discardHighDangerPaths = EditorGUILayout.Toggle("Discard high danger paths", discardHighDangerPaths);
 			distMetric = EditorGUILayout.Popup("Dist metric:", distMetric, distMetrics);
 			
@@ -842,7 +840,7 @@ namespace EditorArea {
 			{
 				KMeans.reset();
 			}
-			if (distMetric == 0)
+			if (distMetric == 0 || distMetric == 3)
 			{
 				for (int count = 0; count < dimensions.Count(); count ++)
 				{
@@ -863,7 +861,7 @@ namespace EditorArea {
 					return;
 				}
 
-				if (distMetric == 0)
+				if (distMetric == 0 || distMetric == 3)
 				{
 					int numSelected = 0;
 					for (int dim = 0; dim < dimensionEnabled.Count(); dim ++)
@@ -899,34 +897,6 @@ namespace EditorArea {
 						paths.Remove(p);
 					}
 				}
-				
-		/*		if (altCentroidComp)
-				{
-					for (int i = 0; i < paths.Count; i ++)
-					{ // make each path have same # of points
-						// find the highest time value!
-						double maxTime = Double.NegativeInfinity;
-						foreach (Path p in paths)
-						{
-							foreach (Node n in p.points)
-							{
-								if (n.t > maxTime)
-								{
-									maxTime = n.t;
-								}
-							}
-						}
-						Vector3[] set1 = MapperWindowEditor.GetSetPointsWithN(paths[i].getPoints3D(), (int)Math.Sqrt(maxTime), false);
-						Debug.Log("Paths now have " + Math.Sqrt(maxTime) + " points.");
-						List<Node> nodes = new List<Node>();
-						foreach(Vector3 v in set1)
-						{
-							if (v.x == 0 && v.y == 0 && v.z == 0) continue;
-							nodes.Add(new Node(v.x, v.z, v.y));
-						}
-						paths[i] = new Path(nodes);
-					}
-				} */
 
 				KMeans.clustTime = new System.Diagnostics.Stopwatch();
 				KMeans.distTime = new System.Diagnostics.Stopwatch();
@@ -1049,7 +1019,7 @@ namespace EditorArea {
 					String totalTimeStr = new DateTime(Math.Abs(totalTime.Ticks)).ToString("HHmmss");
 					
 					String distMetricStr = distMetricsShort[distMetric];
-					if (distMetric == 0)
+					if (distMetric == 0 || distMetric == 3)
 					{ // frechet
 						distMetricStr += "-";
 						for (int dim = 0; dim < dimensionEnabled.Count(); dim ++)

@@ -19,10 +19,11 @@ namespace ClusteringSpace
 		{
 			Frechet = 0,
 			AreaDistTriangulation,
-			AreaDistInterpolation3D
+			AreaDistInterpolation3D,
+			Hausdorff
 		}
 		
-		public enum FrechetDimensions
+		public enum Dimensions
 		{
 			X = 0,
 			Y,
@@ -304,6 +305,8 @@ namespace ClusteringSpace
 				
 				float maxVal = 1000f;
 				
+				if (numSelectedDimensions > 1) Debug.Log("Normalizing paths");
+				
 				for (int count = 0; count < paths.Count; count ++)
 				{
 					int index = Convert.ToInt32(paths[count].name);
@@ -332,17 +335,6 @@ namespace ClusteringSpace
 				
 				init = true;
 			}
-						
-			/*for (int count = 0; count < paths.Count(); count ++)
-			{
-				if (MapperWindowEditor.scaleTime)
-				{
-					foreach (Node n in paths[count].points)
-					{
-						n.t = (int)Math.Pow(n.t, 3);
-					}
-				}
-			}*/
 
 			clustTime.Start();
 			
@@ -443,18 +435,7 @@ namespace ClusteringSpace
 			}
 			
 			clustTime.Stop();
-
-			/*if (MapperWindowEditor.scaleTime)
-			{
-				foreach (Path p in paths)
-				{
-					foreach (Node n in p.points)
-					{
-						n.t = (int)(Math.Pow(n.t, (double)1.0 / 3.0));
-					}
-				}
-			}*/
-
+			
             return bestClustering;
         }
 		
@@ -547,7 +528,7 @@ namespace ClusteringSpace
 		{
 			distMetric = distMetric_;
 			
-			if (distMetric == (int)Metrics.Frechet)
+			if (distMetric == (int)Metrics.Frechet || distMetric == (int)Metrics.Hausdorff)
 			{
 				numSelectedDimensions = 0;
 				for (int dim = 0; dim < MapperWindowEditor.dimensionEnabled.Count(); dim ++)
@@ -558,13 +539,13 @@ namespace ClusteringSpace
 					}
 				}
 				
-				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(numSelectedDimensions));
+				if (distMetric == (int)Metrics.Frechet)
+					frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.L1(numSelectedDimensions));
+	//			else if (distMetric == (int)Metrics.FrechetEuclidean)
+	//			{
+	//				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.epsApproximation2D(1.1));
+	//			}
 			}
-			
-//			else if (distMetric == (int)Metrics.FrechetEuclidean)
-//			{
-//				frechet = new PolyhedralFrechetDistance(PolyhedralDistanceFunction.epsApproximation2D(1.1));
-//			}
 		}
 				
 		public static double FindDistance(Path path1, Path path2, int distMetric_)
@@ -612,13 +593,8 @@ namespace ClusteringSpace
 
 			double result = 0.0;
 			
-			if (distMetric == (int)Metrics.Frechet)
+			if (distMetric == (int)Metrics.Frechet || distMetric == (int)Metrics.Hausdorff)
 			{
-				// source : http://www.win.tue.nl/~wmeulema/implementations.html
-				// Implementation by Wouter Meulemans
-				// based on paper by Buchin et al
-				// http://arxiv.org/abs/1306.5527
-				
 				double[][] curveA = new double[path1.points.Count][];
 				double[][] curveB = new double[path2.points.Count][];
 				
@@ -630,12 +606,12 @@ namespace ClusteringSpace
 					{
 						if (MapperWindowEditor.dimensionEnabled[j])
 						{
-							if (j == (int)FrechetDimensions.X) curve[curvePos] = path1.points[i].xD;
-							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = path1.points[i].yD;
-							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = path1.points[i].tD;
-							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = path1.points[i].danger3;
-							else if (j == (int)FrechetDimensions.LOS) curve[curvePos] = path1.los3;//+(path1.los3/(10+i));
-							else if (j == (int)FrechetDimensions.NearMiss) curve[curvePos] = path1.crazy;//+(path1.crazy/(10+i));
+							if (j == (int)Dimensions.X) curve[curvePos] = path1.points[i].xD;
+							else if (j == (int)Dimensions.Y) curve[curvePos] = path1.points[i].yD;
+							else if (j == (int)Dimensions.Time) curve[curvePos] = path1.points[i].tD;
+							else if (j == (int)Dimensions.Danger) curve[curvePos] = path1.points[i].danger3;
+							else if (j == (int)Dimensions.LOS) curve[curvePos] = path1.los3;//+(path1.los3/(10+i));
+							else if (j == (int)Dimensions.NearMiss) curve[curvePos] = path1.crazy;//+(path1.crazy/(10+i));
 							curvePos ++;
 						}
 					}
@@ -650,19 +626,22 @@ namespace ClusteringSpace
 					{
 						if (MapperWindowEditor.dimensionEnabled[j])
 						{
-							if (j == (int)FrechetDimensions.X) curve[curvePos] = path2.points[i].xD;
-							else if (j == (int)FrechetDimensions.Y) curve[curvePos] = path2.points[i].yD;
-							else if (j == (int)FrechetDimensions.Time) curve[curvePos] = path2.points[i].tD;
-							else if (j == (int)FrechetDimensions.Danger) curve[curvePos] = path2.points[i].danger3;
-							else if (j == (int)FrechetDimensions.LOS) curve[curvePos] = path2.los3;//+(path2.los3/(10+i));
-							else if (j == (int)FrechetDimensions.NearMiss) curve[curvePos] = path2.crazy;//+(path2.crazy/(10+i));
+							if (j == (int)Dimensions.X) curve[curvePos] = path2.points[i].xD;
+							else if (j == (int)Dimensions.Y) curve[curvePos] = path2.points[i].yD;
+							else if (j == (int)Dimensions.Time) curve[curvePos] = path2.points[i].tD;
+							else if (j == (int)Dimensions.Danger) curve[curvePos] = path2.points[i].danger3;
+							else if (j == (int)Dimensions.LOS) curve[curvePos] = path2.los3;//+(path2.los3/(10+i));
+							else if (j == (int)Dimensions.NearMiss) curve[curvePos] = path2.crazy;//+(path2.crazy/(10+i));
 							curvePos ++;
 						}
 					}
 					curveB[i] = curve;
 				}
 				
-				result = frechet.computeDistance(curveA, curveB);
+				if (distMetric == (int)Metrics.Frechet)
+					result = frechet.computeDistance(curveA, curveB);
+				else if (distMetric == (int)Metrics.Hausdorff)
+					result = HausdorffDist.computeDistance(curveA, curveB);
 			}
 			else if (distMetric == (int)Metrics.AreaDistTriangulation || distMetric == (int)Metrics.AreaDistInterpolation3D)
 			{
