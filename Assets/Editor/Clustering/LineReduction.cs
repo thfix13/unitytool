@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Xml.Serialization;
 using System.IO;
 using Node = Common.Node;
+using ClipperLib;
 
 namespace ClusteringSpace
 {
@@ -98,7 +99,7 @@ namespace ClusteringSpace
 				midpoints.Add(new Vector2(floorPositions[count].x, floorPositions[count].y - (floorScales[count].y/2)));
 				for (int count2 = 0; count2 < midpoints.Count; count2 ++)
 				{
-					Debug.Log("Midpoint " + count2 +" : " + midpoints[count2]);
+		//			Debug.Log("Midpoint " + count2 +" : " + midpoints[count2]);
 					smallerObstacles.Add(new Line(midpoints[count2], midpoints[(count2+1)%midpoints.Count]));
 				}
 			}
@@ -202,17 +203,49 @@ namespace ClusteringSpace
 					if (obstacleContained) break;
 				}*/
 				int obsCount = 0, numIntersect = 0, numContained = 0;
-				foreach (Line l in smallerObstacles)
+				for (int count = 0; count < smallerObstacles.Count; count ++)
+			//	foreach (Line l in smallerObstacles)
 	//			foreach (Line l in obstacles)
 				{
-					if (obsCount == 4)
+					if (obsCount == 4) // assuming square obstacle
 					{ // gone through 4 lines of one obstacle.
 						if (numIntersect > 0)
 						{ // an obstacle intersects but is not fully contained within the triangle
 							// so try to construct a line around that obstacle.
-							List<Line> pathAroundObstacle = new List<Line>();
+														
+							Debug.Log("POLYGON SUB");
 							
-							// polygon subtraction ?
+							// polygon subtraction
+							List<List<IntPoint>> subj = new List<List<IntPoint>>(1);
+							subj.Add(new List<IntPoint>(3));
+							subj[0].Add(new IntPoint(points[firstPoint].x, points[firstPoint].y));
+							subj[0].Add(new IntPoint(points[indexFarthest].x, points[indexFarthest].y));
+							subj[0].Add(new IntPoint(points[lastPoint].x, points[lastPoint].y));
+							
+							List<List<IntPoint>> clip = new List<List<IntPoint>>(1);
+							clip.Add(new List<IntPoint>(4)); // assuming square obstacle
+							for (int oldObs = count - 4; oldObs < count; oldObs ++)
+							{
+								clip[0].Add(new IntPoint(smallerObstacles[oldObs].start.x, smallerObstacles[oldObs].start.y));
+							}
+							
+							List<List<IntPoint>> solution = new List<List<IntPoint>>();
+							Clipper c = new Clipper();
+							c.AddPaths(subj, PolyType.ptSubject, true);
+							c.AddPaths(clip, PolyType.ptClip, true);
+							c.Execute(ClipType.ctDifference, solution, PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
+							
+							pointIndexsToKeep.Clear();
+							foreach (List<IntPoint> l in solution)
+							{
+								Debug.Log("L: ");
+								foreach (IntPoint ip in l)
+								{
+									Debug.Log(" P (" + ip.X + ", " + ip.Y + ")");
+									Debug.DrawLine(new Vector3(ip.X, 10.0f, ip.Y), new Vector3(ip.X, 10.0f, ip.Y), Color.red, 100.0f);
+								}
+							}
+							
 						}
 						else if (numContained > 0)
 						{ // the triangle fully contains an obstacle.
@@ -226,7 +259,7 @@ namespace ClusteringSpace
 					Vector2 p1 = new Vector2(points[firstPoint].x, points[firstPoint].y);
 					Vector2 p2 = new Vector2(points[indexFarthest].x, points[indexFarthest].y);
 					Vector2 p3 = new Vector2(points[lastPoint].x, points[lastPoint].y);
-					int state = Intersecting(l.start, l.end, p1, p2, p3);
+					int state = Intersecting(smallerObstacles[count].start, smallerObstacles[count].end, p1, p2, p3);
 					if (state == 2) numIntersect ++;
 					else if (state > 0) numContained ++;
 			//		if (state > 0)
