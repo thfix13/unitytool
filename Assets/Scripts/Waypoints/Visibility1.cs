@@ -1,8 +1,30 @@
 ﻿using UnityEngine;
 using System.Collections;
-
+using System.Collections.Generic;
+using System;
 public class Visibility1 : MonoBehaviour {
-
+	public List<Vector3> points = new List<Vector3>();
+	public List<Color> colours = new List<Color>();
+	// Use this for initialization
+	
+	public List<Triangle> triangles = new List<Triangle>(); 
+	public List<Line> lines = new List<Line>(); 
+	
+	public List<Line> linesMinSpanTree = new List<Line>(); 
+	public List<Geometry> obsGeos = new List<Geometry> (); 
+	//Contains Map
+	public Geometry mapBG = new Geometry ();
+	
+	public bool drawTriangles = false; 
+	public bool drawRoadMap = false; 
+	public bool drawMinSpanTree = false;
+	public bool stopAll = false;
+	public List<int>[] G = new List<int>[110];
+	public int[] colorG = new int[110];
+	public bool[] visitedG = new bool[110];
+	public const int red = 1;
+	public const int green = 2;
+	public const int blue = 3;
 	// Use this for initialization
 	void Start () 
 	{
