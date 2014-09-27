@@ -1392,7 +1392,7 @@ public class MapperWindowEditor : EditorWindow
 				PCG.ClearBehaviours ();
 				PCG.ClearUpObjects (enemypathObjects);
 				PCG.numOfGuards = numOfGuards2;
-				timeSamples = (int) (PCG.InitializeGuardsWithBehavioursOverTimePreserving (enemyPrefab2, waypointPrefab, floor) / stepSize);
+				timeSamples = (int) (PCG.InitializeGuardsWithBehavioursOverTimePreservingFromLoadedPath (enemyPrefab2, waypointPrefab, floor) / stepSize);
 				enemypathObjects = PCG.PopulateGuardsWithBehavioursOverTimePreserving (timeSamples, iterations5, pLine2, pDot2, pSplit2, pZigZag2, pPause2, pSwipe2, pFullRotate2, pNinety2).ToArray ();
 				StorePositionsOverTimePreserving ();
 			}
@@ -1725,6 +1725,90 @@ public class MapperWindowEditor : EditorWindow
 						// Precompute maps again
 						fullMap = mapper.PrecomputeMaps (floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind);
 						ResetAI ();
+					
+						// Compute paths
+						float speed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
+					
+						//Check the start and the end and get them from the editor. 
+						if (start == null) {
+							start = GameObject.Find ("Start");
+						}
+						if (end == null) {
+							end = GameObject.Find ("End");	
+						}
+					
+						paths.Clear ();
+						arrangedByCrazy = arrangedByDanger = arrangedByDanger3 = arrangedByDanger3Norm = arrangedByLength = arrangedByLoS = arrangedByLoS3 = arrangedByLoS3Norm = arrangedByTime = arrangedByVelocity = null;
+					
+						startX = (int)((start.transform.position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x);
+						startY = (int)((start.transform.position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y);
+						endX = (int)((end.transform.position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x);
+						endY = (int)((end.transform.position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y);
+							
+						rrt.min = floor.collider.bounds.min;
+						rrt.tileSizeX = SpaceState.TileSize.x;
+						rrt.tileSizeZ = SpaceState.TileSize.y;
+						rrt.enemies = SpaceState.Enemies;
+					
+						List<Node> nodes = null;
+						iterations = 10;
+						for (int it = 0; it < iterations; it++) {
+							nodes = rrt.Compute (startX, startY, endX, endY, attemps, speed, fullMap, smoothPath);
+							if (nodes.Count > 0) {
+								paths.Add (new Path (nodes));
+							}
+						}
+						BResult rs = new BResult ();
+						rs.ratio = (float)paths.Count / iterations;
+						job.results.Add (rs);
+						ratios.Add ((float)paths.Count / iterations);
+
+						shortest = fastest = longest = lengthiest = mostDanger = null;
+					} // end of for
+				
+					int ratioCnt = 0;
+					float sumRatio = 0.0f, averageRatio = 0.0f;
+					foreach (float r in ratios) {
+						sumRatio += r;
+						ratioCnt ++;
+					}
+					averageRatio = sumRatio / ratioCnt;
+					job.averageRatio = averageRatio;
+					root.everything.Add (job);
+				}
+				
+				XmlSerializer ser = new XmlSerializer (typeof(BResultsRoot), new Type[] {
+								typeof(BResultBatch),
+								typeof(BResult)
+				});
+				ser.Serialize (stream, root);
+				stream.Flush ();
+				stream.Close ();
+			}			
+		}
+		
+		if (GUILayout.Button ("Single Behaviour Over Time Preserving")) {
+			BResultsRoot root = new BResultsRoot ();
+			using (FileStream stream = new FileStream ("Ratio with respect to single behaviour over time preserving.xml", FileMode.Create)) {
+				// Iterations number varying from 0 to 4
+				for (int noi = 0; noi <= noiB; noi++) {
+					BResultBatch job = new BResultBatch ();
+					// Add multiple parameters here
+					job.numOfIterations = noi;
+					// For each test we want 20 trials
+					for (int batchIter = 0; batchIter < 20; batchIter ++) {					
+						// Clear up
+						PCG.ClearBehaviours ();
+						PCG.numOfGuards = 4;
+						PCG.ClearUpObjects (enemypathObjects);
+						timeSamples = (int) (PCG.InitializeGuardsWithBehavioursOverTimePreservingFromLoadedPath (enemyPrefab2, waypointPrefab, floor) / stepSize);
+						// Populate guards on the graph
+						enemypathObjects = PCG.PopulateGuardsWithBehavioursOverTimePreservingFromLoadedPath (timeSamples, noi, 100, 100, pSplit, pZigZag, 100, 0, 0, 0).ToArray ();
+						StorePositionsOverTimePreserving ();
+					
+						// Precompute maps again
+						fullMap = mapper.PrecomputeMapsOverTimePreserving (floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind);
+						ResetAIOverTimePreserving ();
 					
 						// Compute paths
 						float speed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
