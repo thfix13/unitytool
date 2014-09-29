@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+//using System.Collections.Generic.Dictionary<TKey, TValue>;
 using UnityEngine;
 using Common;
 using Exploration;
@@ -108,6 +109,160 @@ public class Geometry
 		return vertex;
 	}
 
+	public List<Vector3> GetReflexVertex(){
+		List<Vector3> vertex = new List<Vector3>();
+		vertex = this.GetVertex ();
+		Vector3 minvert = new Vector3 ();
+		minvert.x = 100000;
+		minvert.z = 100000;
+		minvert.y = 1;
+		foreach (Vector3 v in vertex) {
+			if( v.z < minvert.z )
+				minvert = v;
+			else if( v.z == minvert.z && v.x < minvert.x )
+				minvert = v;
+		}
+
+		List<KeyValuePair<Vector3, float>> angList = new List<KeyValuePair<Vector3, float>>();
+		foreach (Vector3 v in vertex) {
+			float angle;
+			if( v != minvert )
+				angle = getAngle( minvert, v );
+			else
+				angle = -1000;
+			angList.Add(new KeyValuePair<Vector3, float>(v, angle));
+		}
+		//Sort list by angle
+		angList.Sort (CompareAngle);
+
+		//Graham Scan
+		List<Vector3> reflexList = new List<Vector3> ();
+		reflexList.Add (minvert);
+		reflexList.Add (angList[1].Key);
+
+		int sz = 2;
+		for( int i = 2; i < angList.Count; i++ ){
+			bool vol = isLeft( reflexList[sz - 2], reflexList[sz - 1], angList[i].Key );
+			if( vol ){
+				reflexList.Add ( angList[i].Key );
+				sz++;
+			}
+			else{
+				reflexList.RemoveAt( reflexList.Count - 1 );
+				if( sz == 2 )
+					reflexList.Add ( angList[i].Key );
+				else{
+					--i;
+					--sz;
+				}
+			}
+		}
+		return reflexList;
+	}
+
+	public List<Vector3> GetReflexVertexComplement(){
+		List<Vector3> reflexVertex = new List<Vector3>();
+		Line currL = this.edges [0];
+		Line nextL;
+		List<Line> visited = new List<Line> ();
+		List<Line> sortedEdges = new List<Line> ();
+		while ( true ){
+			nextL = null;//take each edge
+			foreach( Line l in this.edges ){//find an adjacent edge
+				if( l.Equals( currL ) ) continue;
+				if( l.ShareVertex( currL ) && !visited.Contains(l) ){
+					Vector3 ptA, ptB;
+					Vector3 commonPoint = l.getSharedVertex( currL );
+					nextL = l;
+					if( !visited.Contains(currL) ){//if this is the first edge we're working with
+						ptA = currL.vertex[0];
+						ptB = currL.vertex[1];
+						if( ptB != commonPoint ){
+							ptA = ptB;
+							ptB = commonPoint;
+						}
+						sortedEdges.Add( new Line( ptA, ptB ) );
+						visited.Add (currL);
+					}
+					ptA = l.vertex[0];
+					ptB = l.vertex[1];
+					if( ptA != commonPoint ){
+						ptB = ptA;
+						ptA = commonPoint;
+					}
+					sortedEdges.Add( new Line( ptA, ptB ) );
+					visited.Add( l );
+					currL = nextL;
+					break;
+				}
+			}
+			if( nextL == null )
+				break;
+		}
+//		GameObject temp = GameObject.Find ("temp");
+//		for ( int i = 0; i < sortedEdges.Count; i++ ) {
+//			GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+//			inter.transform.renderer.material.color = Color.green;
+//			inter.transform.position = sortedEdges[i].vertex[0];
+//			inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
+//			inter.transform.parent = temp.transform;
+//			if( i == 3 ) break;
+//		}
+		float sum = 0;
+		//Check if order in sorted edges is clockwise
+		//Followed theorem outlined in following link:
+		//http://stackoverflow.com/questions/1165647/how-to-determine-if-a-list-of-polygon-points-are-in-clockwise-order
+		for (int i = 0; i < sortedEdges.Count - 1; i++){
+			sum += (sortedEdges [i].vertex [1].x - sortedEdges [i].vertex [0].x) * (sortedEdges [i].vertex [1].z + sortedEdges [i].vertex [0].z);
+			sum += (sortedEdges [i + 1].vertex[0].x - sortedEdges[i].vertex [1].x) * (sortedEdges [i + 1].vertex [0].z + sortedEdges [i].vertex [1].z);
+			if( i == sortedEdges.Count - 2 ) 
+				sum += (sortedEdges [i + 1].vertex[1].x - sortedEdges[i + 1].vertex [0].x) * (sortedEdges [i + 1].vertex [1].z + sortedEdges [i + 1].vertex [1].z);
+		}
+		bool clockwise = true;
+		if (sum <= 0)
+			clockwise = false;
+		//reflexVertex.Add (sortedEdges [1].vertex [1]);
+		int size = sortedEdges.Count;
+		for (int i = 0; i < size; i++) {
+			if( clockwise ){
+				if( sortedEdges[i].PointIsLeft(sortedEdges[(i + 1)% size])  == true )
+				   reflexVertex.Add( sortedEdges[i].vertex[1] );
+			}
+			else{
+				if( sortedEdges[i].PointIsLeft(sortedEdges[(i + 1) % size]) == false )
+				   reflexVertex.Add( sortedEdges[i].vertex[1] );
+			}
+		}
+		return reflexVertex;
+	}
+
+	private bool isLeft(Vector3 v1,Vector3 v2,Vector3 v3){
+		float a = v1.x, b = v1.z;  
+		float c = v2.x, d = v2.z;  
+		float e = v3.x, f = v3.z;  
+		
+//		if((f-b)*(c-a)> (d-b)*(e-a))
+//			return true;
+//		else
+//			return false; 
+		if(  (v2.x - v1.x) * (v3.z - v1.z) >= (v2.z - v1.z) * (v3.x - v1.x) ) 
+			return true;
+		else
+			return false;
+	}
+
+	static int CompareAngle(KeyValuePair<Vector3, float> a, KeyValuePair<Vector3, float> b){
+		//Questionable
+		return a.Value.CompareTo(b.Value);
+	}
+
+	float getAngle( Vector3 v1, Vector3 v2 ){
+		float adj = v1.x - v2.x;
+		float hyp = (adj*adj) + ( (v1.z - v2.z) * (v1.z - v2.z) );
+		hyp = (float)Math.Sqrt( hyp );
+		return adj / hyp;		
+	}
+
 	public void DrawVertex(GameObject parent)
 	{
 		//Find vertex
@@ -160,8 +315,6 @@ public class Geometry
 	public void BoundGeometry(Vector3[] boundary){
 		List<Line> removeLines = new List<Line> ();
 		int i;
-		Debug.Log (boundary [0]);
-		Debug.Log (boundary [2]);
 		foreach (Line l in edges) {
 			bool rem = false;
 			for( i = 0; i < 2; i++ ){

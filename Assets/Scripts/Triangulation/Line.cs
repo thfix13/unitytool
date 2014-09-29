@@ -64,10 +64,11 @@ public class Line
 	}
 	public void DrawVector(GameObject parent)
 	{
-		Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
-		                           UnityEngine.Random.Range(0.0f,1.0f),
-		                           UnityEngine.Random.Range(0.0f,1.0f)) ;
-
+//		Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
+//		                           UnityEngine.Random.Range(0.0f,1.0f),
+//		                           UnityEngine.Random.Range(0.0f,1.0f)) ;
+//
+		Color c = Color.blue;
 		VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
 		line.vectorObject.transform.parent = parent.transform;
 		line.vectorObject.name = name;
@@ -93,6 +94,18 @@ public class Line
 		return false; 
 	}
 
+	public Vector3 getSharedVertex(Line l)
+	{
+		foreach(Vector3 v in vertex)
+		{
+			foreach(Vector3 w in l.vertex)
+			{
+				if(v.Equals(w))
+					return v;
+			}
+		}
+		return vertex[0]; 
+	}
 
 	public bool LineIntersection(Line l)
 	{
@@ -395,6 +408,21 @@ public class Line
 			   return true;
 		}
 		return false;
+	}
+
+	public bool PointIsLeft( Vector3 pt ){
+		Vector3 a = this.vertex [0];
+		Vector3 b = this.vertex [1];
+		Vector3 c = pt;
+		return ((b.x - a.x)*(pt.z - a.z) - (b.z - a.z)*(c.x - a.x)) > 0;
+	}
+
+	public bool PointIsLeft( Line param ){
+		Vector3 x = this.getSharedVertex (param);
+		if (x == param.vertex [0])
+			return PointIsLeft (param.vertex [1]);
+		else
+			return PointIsLeft (param.vertex [0]);
 	}
 }
 
