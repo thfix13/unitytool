@@ -1691,9 +1691,10 @@ namespace EditorArea
 			foreach(Triangle t in triangulation.triangles)
 			{
 				//foreach(Vector3 v in t.vertex)
+				Vector3[] vs = t.getVertexMiddle(); 
 				for(int i =0; i<3;i++)
 				{
-					Vector3 v = t.vertex[i];
+					Vector3 v = vs[i];
 
 					GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 	        		sphere.transform.position = v;

@@ -69,9 +69,9 @@ public class Triangle
 	public Vector3[] getVertexMiddle()
 	{
 		Vector3[] toReturn = new Vector3[3];
-		toReturn[0] = vertex[0] + ((GetCenterTriangle() - vertex[0]).normalized * 0.1f) ; 
-		toReturn[1] = vertex[1] + ((GetCenterTriangle() - vertex[1]).normalized * 0.1f) ; 
-		toReturn[2] = vertex[2] + ((GetCenterTriangle() - vertex[2]).normalized * 0.1f) ; 
+		toReturn[0] = vertex[0] + ((GetCenterTriangle() - vertex[0]).normalized * 0.2f) ; 
+		toReturn[1] = vertex[1] + ((GetCenterTriangle() - vertex[1]).normalized * 0.2f) ; 
+		toReturn[2] = vertex[2] + ((GetCenterTriangle() - vertex[2]).normalized * 0.2f) ; 
 		return toReturn; 
 	}
 	public Vector3 GetCenterTriangle()
