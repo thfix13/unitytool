@@ -371,30 +371,63 @@ public class Line
 			return 2;*/
 	}
 
-	public bool PointOnLine( Vector3 pt ){
-		Vector3 diff = vertex[1] - vertex[0];
-		float grad = 0, cx, cz;
-		float pa, pb;
-		if (diff.x != 0 && diff.y != 0) {
-			grad = diff.z / diff.x;
-//			if( (pt.z - vertex[0].z) == ( (grad * pt.x) - vertex[0].x ) )
-//				return true;
-			pa = pt.z - vertex[0].z;
-			pb = (grad * pt.x) - vertex[0].x;
-			if( Math.Abs(pa - pb) < 0.1f)
-			   return true;
+	public bool PointOnLine( Vector3 pt )
+	{
+		float limit1 = 0.0001f;
+		float limit2 = 0.0001f;
+		//Debug.Log ("In PointOnLine");
+		float minVal = Mathf.Min(Vector3.SqrMagnitude (vertex [0] - pt),Vector3.SqrMagnitude (vertex [1] - pt));
+		//Debug.Log (minVal);
+		if (minVal <= limit1)
+			//if(vertex[0]==pt || vertex[1]==pt)
+			//if (Mathf.Abs(Vector3.Magnitude(vertex [0] - pt)) < limit1 || Mathf.Abs(Vector3.Magnitude (vertex [1] - pt)) < limit1)
+			return true;
+		if (pt.z >= Mathf.Min (vertex [0].z, vertex [1].z) && pt.z <= Mathf.Max (vertex [0].z, vertex [1].z)
+		    &&	pt.x >= Mathf.Min (vertex [0].x, vertex [1].x) && pt.x <= Mathf.Max (vertex [0].x, vertex [1].x))
+		{
 		}
-		else if( diff.x == 0 ){//A Z-axis parallel line
-			if( pt.x == vertex[0].x  && (pt.z >= Math.Min(vertex[0].z, vertex[1].z) &&
-			                             pt.z <= Math.Max(vertex[0].z, vertex[1].z) ) )
-			   return true;
+		else
+			return false;
+
+		float val = 0.0f;
+		float gradx = (vertex [1].x - vertex [0].x);
+		if(gradx!=0)
+		{
+			float m=(vertex[1].z - vertex[0].z)/gradx;
+			//Debug.Log ("Slope = "+m);
+			float c = vertex[1].z-m*vertex[1].x;
+			val = pt.x*m+c-pt.z;
+			if(Mathf.Abs(val)<=limit2)
+				return true;
 		}
-		else if( diff.z == 0 ){//An x-axis parallel line
-			if( pt.z == vertex[0].z  && (pt.x >= Math.Min(vertex[0].x, vertex[1].x) &&
-			                             pt.x <= Math.Max(vertex[0].x, vertex[1].x) ) )
-			   return true;
+		else
+		{
+			val = vertex[1].x-pt.x;
+			if(Mathf.Abs(val)<=limit2)
+				return true;
 		}
+		//Debug.Log ("Line is " + vertex [1] + " to " + vertex [0]);
+		//Debug.Log ("Not on line = "+val+", Pt = "+pt);
 		return false;
+		Vector3 diff = vertex[1] - vertex[0];
+
+
+
+
+		if (pt.z >= Math.Min (vertex [0].z, vertex [1].z) && pt.z <= Math.Max (vertex [0].z, vertex [1].z)
+					&&	pt.x >= Math.Min (vertex [0].x, vertex [1].x) && pt.x <= Math.Max (vertex [0].x, vertex [1].x))
+		{
+			float dist = Mathf.Abs(diff.z*pt.x-diff.x*pt.z -vertex[0].x*vertex[1].z+vertex[1].x*vertex[0].z);
+			dist=dist/Mathf.Sqrt(diff.x*diff.x+diff.z*diff.z);
+			//Debug.Log("Point on line checking. Dist = "+dist);
+			if(dist<limit2)
+			{
+				//Debug.Log("Point on line found");
+				return true;
+			}
+		}
+				
+			return false;
 	}
 }
 
