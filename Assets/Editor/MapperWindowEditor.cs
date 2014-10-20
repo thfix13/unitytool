@@ -28,13 +28,14 @@ namespace EditorArea {
 		
 		// Clustering
 		private static String[] distMetrics = new String[] { "Frechet", "Area (Triangulation)", "Area (Interpolation) 3D", "Hausdorff" };
+		private static String[] clustAlgs = new String[] { "KMeans++", "DBScan" };
 		private static String[] distMetricsShort = new String[] { "FRE", "TRI", "INTPOL", "H" };
 		private static String[] dimensions = new String[] { "X", "Y", "Time", "Danger", "LOS", "Near Miss" };
 		private static String[] dimensionsShort = new String[] { "X", "Y", "T", "DNG", "LOS", "NM" };
-		public static bool[] dimensionEnabled = new bool[] { true, true, true, false, false, false };
+		public static bool[] dimensionEnabled = new bool[] { true, true, false, false, false, false };
 		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
 		private static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
-		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, numPasses = 1, rdpTolerance = 4;
+		private static int numClusters = 4, distMetric = 0, clustAlg = 1, chosenFileIndex = -1, currentColor = 0, numPasses = 1, rdpTolerance = 4;
 		private static List<Path> clusterCentroids = new List<Path>(), origPaths = new List<Path>();
 		private static bool[] showPaths = new bool[colors.Count()];
 		private static bool autoSavePaths = true, discardHighDangerPaths = true, drawHeatMapColored = false, useColors = false;
@@ -73,7 +74,7 @@ namespace EditorArea {
 			MapperWindowEditor window = (MapperWindowEditor)EditorWindow.GetWindow (typeof(MapperWindowEditor));
 			window.title = "Mapper";
 			window.ShowTab ();
-			KMeans.reset();
+			resetClusteringData();
 			origPaths = new List<Path>();
 		}
 		
@@ -425,7 +426,7 @@ namespace EditorArea {
 				}
 				ComputeHeatMap (paths, deaths);
 				SetupArrangedPaths (paths);
-				KMeans.reset();
+				resetClusteringData();
 				origPaths = new List<Path>();
 				
 				for (int count = 0; count < paths.Count(); count ++)
@@ -710,9 +711,9 @@ namespace EditorArea {
 						
 			EditorGUILayout.LabelField ("");
 			EditorGUILayout.LabelField ("7. Clustering");
-			EditorGUILayout.LabelField ("");
+	//		EditorGUILayout.LabelField ("");
 
-			numberLines =  EditorGUILayout.IntField("number of lines", numberLines); 
+/*			numberLines =  EditorGUILayout.IntField("number of lines", numberLines); 
 
 			if (GUILayout.Button ("Draw lines for 2 random paths"))
 			{
@@ -808,13 +809,18 @@ namespace EditorArea {
 				}	
 			}
 
-			EditorGUILayout.LabelField ("");
-			
-			numClusters = EditorGUILayout.IntSlider ("Number of clusters", numClusters, 1, 7);
-			numPasses = EditorGUILayout.IntSlider ("Number of passes", numPasses, 1, 500);
+			EditorGUILayout.LabelField ("");*/
+
+			clustAlg = EditorGUILayout.Popup("Clustering alg: ", clustAlg, clustAlgs);
+
+			if (clustAlg == 0) //kmeans
+			{
+				numClusters = EditorGUILayout.IntSlider ("Number of clusters", numClusters, 1, 7);
+				numPasses = EditorGUILayout.IntSlider ("Number of passes", numPasses, 1, 500);
+				useScalable = EditorGUILayout.Toggle("Use scalable version", useScalable);
+			}
 			int prevMetric = distMetric;
-			useScalable = EditorGUILayout.Toggle("Use scalable version", useScalable);
-			if (distMetric == 0 || distMetric == 3)
+			if ( (distMetric == 0 || distMetric == 3) && dimensionEnabled[3])
 				discardHighDangerPaths = EditorGUILayout.Toggle("Discard high danger paths", discardHighDangerPaths);
 			distMetric = EditorGUILayout.Popup("Dist metric:", distMetric, distMetrics);
 			
@@ -838,7 +844,7 @@ namespace EditorArea {
 			
 			if (prevMetric != distMetric)
 			{
-				KMeans.reset();
+				resetClusteringData();
 			}
 			if (distMetric == 0 || distMetric == 3)
 			{
@@ -848,7 +854,7 @@ namespace EditorArea {
 					dimensionEnabled[count] = EditorGUILayout.Toggle(dimensions[count], dimensionEnabled[count]);
 					if (prevValue != dimensionEnabled[count])
 					{
-						KMeans.reset();
+						resetClusteringData();
 					}
 				}
 			}
@@ -901,91 +907,123 @@ namespace EditorArea {
 				KMeans.clustTime = new System.Diagnostics.Stopwatch();
 				KMeans.distTime = new System.Diagnostics.Stopwatch();
 
+				System.Diagnostics.Stopwatch clustTime = new System.Diagnostics.Stopwatch();
+				clustTime.Start();
+
 				double clustVal = 0.0;
 
-				if (paths.Count > 99)
+				if (clustAlg == 0) // kmeans++
 				{
-					Debug.Log("Paths: " + paths.Count());
-					List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/20, distMetric, numPasses);
-					clustVal = KMeans.clustVal;
-				
-					List<Path> tempCentroids = new List<Path>();
-					foreach(PathCollection pc in clusters)
+					if (paths.Count > 99)
 					{
-				//		if (altCentroidComp) tempCentroids.Add(pc.getCenterDistPath());
-				//		else
-							tempCentroids.Add(pc.Centroid);
-					}
+						Debug.Log("Paths: " + paths.Count());
+						List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/20, distMetric, numPasses);
+						clustVal = KMeans.clustVal;
 				
-			//		if (altCentroidComp) altCentroidComp = false;
-				
-					double[] weights = new double[paths.Count()];
-					for(int i = 0; i < paths.Count(); i ++) { weights[i] = 1.0; }
-					List<PathCollection> newClusters = KMeans.DoKMeans(tempCentroids, numClusters, distMetric, numPasses, weights);
-				
-					paths.Clear ();
-					ClearPathsRepresentation ();
-
-					clusterCentroids.Clear();
-					int cluster = 0;
-					foreach(PathCollection pc in newClusters)
-					{
-						Path centroid = pc.Centroid;
-						centroid.color = colors[cluster];
-						centroid.color.a = 0.5f;
-						pc.Add(centroid);
-						clusterCentroids.Add(centroid);
-						if (!paths.Contains(centroid))
+						List<Path> tempCentroids = new List<Path>();
+						foreach(PathCollection pc in clusters)
 						{
-							paths.Add(centroid);
-							toggleStatus.Add(paths.Last(), true);
+					//		if (altCentroidComp) tempCentroids.Add(pc.getCenterDistPath());
+					//		else
+								tempCentroids.Add(pc.Centroid);
 						}
-								
-						cluster ++;
-					}
+				
+				//		if (altCentroidComp) altCentroidComp = false;
+				
+						double[] weights = new double[paths.Count()];
+						for(int i = 0; i < paths.Count(); i ++) { weights[i] = 1.0; }
+						List<PathCollection> newClusters = KMeans.DoKMeans(tempCentroids, numClusters, distMetric, numPasses, weights);
+				
+						paths.Clear ();
+						ClearPathsRepresentation ();
 
-					for (int c = 0; c < newClusters.Count; c ++)
-					{
-						for (int c2 = 0; c2 < tempCentroids.Count; c2 ++)
+						clusterCentroids.Clear();
+						int cluster = 0;
+						foreach(PathCollection pc in newClusters)
 						{
-							if (newClusters[c].Contains(tempCentroids[c2]))
-							{ // then all paths of clusters[c2] list should be of the same color!
-								foreach (Path path in clusters[c2])
-								{
-									path.color = colors[c];
-									if (path.Equals(tempCentroids[c2]))
+							Path centroid = pc.Centroid;
+							centroid.color = colors[cluster];
+							centroid.color.a = 0.5f;
+							pc.Add(centroid);
+							clusterCentroids.Add(centroid);
+							if (!paths.Contains(centroid))
+							{
+								paths.Add(centroid);
+								toggleStatus.Add(paths.Last(), true);
+							}
+								
+							cluster ++;
+						}
+
+						for (int c = 0; c < newClusters.Count; c ++)
+						{
+							for (int c2 = 0; c2 < tempCentroids.Count; c2 ++)
+							{
+								if (newClusters[c].Contains(tempCentroids[c2]))
+								{ // then all paths of clusters[c2] list should be of the same color!
+									foreach (Path path in clusters[c2])
 									{
-										path.color.a = 0.5f;
-									}
-									if (!paths.Contains(path))
-									{
-										paths.Add(path);
-										toggleStatus.Add(paths.Last (), true);
+										path.color = colors[c];
+										if (path.Equals(tempCentroids[c2]))
+										{
+											path.color.a = 0.5f;
+										}
+										if (!paths.Contains(path))
+										{
+											paths.Add(path);
+											toggleStatus.Add(paths.Last (), true);
+										}
 									}
 								}
 							}
 						}
 					}
-				}
-				else
-				{
-					Debug.Log("<99 paths");
-					List<PathCollection> clusters = KMeans.DoKMeans(paths, numClusters, distMetric, numPasses);
-					for (int i = 0; i < clusters.Count(); i ++)
+					else
 					{
-						Debug.Log("Cluster #" + i + " has " + clusters[i].Count() + " paths");
-					}
-					clustVal = KMeans.clustVal;
+						Debug.Log("<99 paths");
+						List<PathCollection> clusters = KMeans.DoKMeans(paths, numClusters, distMetric, numPasses);
+						for (int i = 0; i < clusters.Count(); i ++)
+						{
+							Debug.Log("Cluster #" + i + " has " + clusters[i].Count() + " paths");
+						}
+						clustVal = KMeans.clustVal;
 					
-					clusterCentroids.Clear();
-					foreach(PathCollection pc in clusters)
-					{
-//						clusterCentroids.Add(pc.Centroid);
-				//		if (altCentroidComp) clusterCentroids.Add(pc.getCenterDistPath());
-				//		else
-							clusterCentroids.Add(pc.Centroid);
-					}
+						clusterCentroids.Clear();
+						foreach(PathCollection pc in clusters)
+						{
+	//						clusterCentroids.Add(pc.Centroid);
+					//		if (altCentroidComp) clusterCentroids.Add(pc.getCenterDistPath());
+					//		else
+								clusterCentroids.Add(pc.Centroid);
+						}
 								
+						paths.Clear ();
+						deaths.Clear ();
+						ClearPathsRepresentation ();
+
+						for(int c = 0; c < clusters.Count; c ++)
+						{
+							foreach(Path path in clusters[c])
+							{
+								Debug.Log(c);
+								path.color = colors[c];
+								if (path.Equals(clusterCentroids[c]))
+								{
+									path.color.a = 0.5f;
+								}
+								if (!paths.Contains(path))
+								{
+									paths.Add(path);
+									toggleStatus.Add(paths.Last (), true);
+								}
+							}
+						}
+					}					
+				}
+				else if (clustAlg == 1)
+				{ // dbscan
+					List<PathCollection> clusters = DBSCAN.DoDBSCAN(paths, distMetric);
+					
 					paths.Clear ();
 					deaths.Clear ();
 					ClearPathsRepresentation ();
@@ -994,12 +1032,7 @@ namespace EditorArea {
 					{
 						foreach(Path path in clusters[c])
 						{
-							Debug.Log(c);
 							path.color = colors[c];
-							if (path.Equals(clusterCentroids[c]))
-							{
-								path.color.a = 0.5f;
-							}
 							if (!paths.Contains(path))
 							{
 								paths.Add(path);
@@ -1007,9 +1040,25 @@ namespace EditorArea {
 							}
 						}
 					}
+					
+					Debug.Log("Num clusters returned from DBSCAN: " + clusters.Count);
+					numClusters = clusters.Count;
+					
+					foreach (Path path in origPaths)
+					{
+						if (!paths.Contains(path))
+						{
+							if (clusters.Count <= 6)
+								path.color = colors[clusters.Count];
+							paths.Add(path);
+							toggleStatus.Add(paths.Last(), true);
+						}
+					}
 				}
 				
-				TimeSpan totalTime = KMeans.clustTime.Elapsed + KMeans.distTime.Elapsed;
+				clustTime.Stop();
+
+				TimeSpan totalTime = clustTime.Elapsed;
 				Debug.Log ("Total: " + totalTime + ", clust val: " + clustVal);
 				
 				if (autoSavePaths)
@@ -1204,7 +1253,7 @@ namespace EditorArea {
 			{
 				paths.Clear ();
 				ClearPathsRepresentation ();
-				KMeans.reset();
+				resetClusteringData();
 				origPaths = new List<Path>();
 				useColors = true;
 				
@@ -1254,7 +1303,7 @@ namespace EditorArea {
 			{
 				paths.Clear ();
 				ClearPathsRepresentation ();
-				KMeans.reset();
+				resetClusteringData();
 				clusterCentroids.Clear();
 				origPaths = new List<Path>();
 				LineReduction reducer = new LineReduction();
@@ -1286,7 +1335,7 @@ namespace EditorArea {
 					}
 					if (pathPoints.Count() <= 3) continue;
 					
-					pathsImported.Add(new Path(reducer.DouglasPeuckerReduction(pathPoints, rdpTolerance)));
+					pathsImported.Add(new Path(pathPoints)); //reducer.shortestPathAroundObstacles(pathPoints)));
 				}
 				
 				// Setup parenting
@@ -1316,6 +1365,16 @@ namespace EditorArea {
 				{
 					reducer.DouglasPeuckerReduction(p.points, rdpTolerance);
 					toggleStatus.Add (p, true);
+				}
+			}
+			if (GUILayout.Button("Reduce to shortest paths"))
+			{
+				LineReduction reducer = new LineReduction();
+				ClearPathsRepresentation ();
+				for (int count = 0; count < paths.Count; count ++)
+				{
+					paths[count] = new Path(reducer.shortestPathAroundObstacles(paths[count].points));
+					toggleStatus.Add (paths[count], true);
 				}
 			}
 			
@@ -2128,6 +2187,12 @@ namespace EditorArea {
 			
 			MapperEditor.editGrid = true;
 			UnityEditorInternal.InternalEditorUtility.RepaintAllViews();
+		}
+
+		public static void resetClusteringData()
+		{
+			KMeans.reset();
+			DBSCAN.reset();
 		}
 	}
 }

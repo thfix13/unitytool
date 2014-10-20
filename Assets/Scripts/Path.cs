@@ -16,6 +16,10 @@ namespace Common {
 		// Metrics
 		public float time, length2d, length3d, danger, los, danger3, los3, danger3Norm, los3Norm, crazy, velocity;
 		
+		public const int NOISE = -1;
+		public const int UNCLASSIFIED = 0;
+		public int ClusterId;
+		
 		/// <summary>
 		/// Serialization only.
 		/// </summary>

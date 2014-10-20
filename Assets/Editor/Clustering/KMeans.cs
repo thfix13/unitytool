@@ -13,25 +13,26 @@ using EditorArea;
 
 namespace ClusteringSpace
 {
+	public enum Metrics
+	{
+		Frechet = 0,
+		AreaDistTriangulation,
+		AreaDistInterpolation3D,
+		Hausdorff
+	}
+	
+	public enum Dimensions
+	{
+		X = 0,
+		Y,
+		Time,
+		Danger,
+		LOS,
+		NearMiss
+	}
+	
     public class KMeans
     {
-		public enum Metrics
-		{
-			Frechet = 0,
-			AreaDistTriangulation,
-			AreaDistInterpolation3D,
-			Hausdorff
-		}
-		
-		public enum Dimensions
-		{
-			X = 0,
-			Y,
-			Time,
-			Danger,
-			LOS,
-			NearMiss
-		}
 		public static int numSelectedDimensions = -1;
 		
 		public static Stopwatch distTime = new Stopwatch();

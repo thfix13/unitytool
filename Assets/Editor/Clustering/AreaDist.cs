@@ -31,11 +31,11 @@ public class AreaDist
 	
 	public static double computeDistance(Path path1, Path path2, int distMetric)
 	{
-		if (distMetric == (int)KMeans.Metrics.AreaDistTriangulation)
+		if (distMetric == (int)Metrics.AreaDistTriangulation)
 		{
 			return areaFromTriangulation(path1, path2);
 		}
-		else if (distMetric == (int)KMeans.Metrics.AreaDistInterpolation3D)
+		else if (distMetric == (int)Metrics.AreaDistInterpolation3D)
 		{
 			return areaFromInterpolation3D(path1, path2);
 		}

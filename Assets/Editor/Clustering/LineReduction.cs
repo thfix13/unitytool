@@ -22,6 +22,7 @@ namespace ClusteringSpace
 	{
 		public Vector2[] floorPositions;
         public Vector2[] floorScales;
+		public Vector2 startPos;
     }
 	
 	public class Line
@@ -35,11 +36,14 @@ namespace ClusteringSpace
 	{
 		public Vector2[] floorPositions;
         public Vector2[] floorScales;
+		public Vector2 startPos;
 		public List<Line> obstacles = new List<Line>();
 		public List<Line> smallerObstacles = new List<Line>();
 		
 		public static Vector2 zero = new Vector2 ();
 		public static Vector2 tileSize = new Vector2 ();
+		
+		private static bool restart = false;
 		
 		public LineReduction()
 		{
@@ -52,7 +56,7 @@ namespace ClusteringSpace
 			}
 			floorPositions = loaded.floorPositions;
 			floorScales = loaded.floorScales;
-			//for (int i = 0; i < floorScales.Length; i ++) { floorScales[i].x /= 2; floorScales[i].y /= 2; }
+			startPos = loaded.startPos;
 			
 			// destroy current floor
 			GameObject levelObj = GameObject.Find("Level"); 
@@ -69,8 +73,10 @@ namespace ClusteringSpace
 				GameObject wall = wallTransform.gameObject;
 				wall.name = "Platform";
 				wall.tag = "Platform";
-				wall.transform.position = new Vector3(floorPositions[count].x * tileSize.x + zero.x, 0, floorPositions[count].y * tileSize.y + zero.y);
-				wall.transform.localScale = new Vector3(floorScales[count].x/2, 3, floorScales[count].y/2);
+				floorScales[count].x *= tileSize.x;
+				floorScales[count].y *= tileSize.y;
+				wall.transform.position = new Vector3((floorPositions[count].x) * tileSize.x + zero.x, 0, floorPositions[count].y * tileSize.y + zero.y);
+				wall.transform.localScale = new Vector3(floorScales[count].x, 3, floorScales[count].y);
 				wall.transform.parent = levelObj.transform;
 				wall.SetActive(true);
 			}
@@ -82,8 +88,8 @@ namespace ClusteringSpace
 				List<Vector2> midpoints = new List<Vector2>();
 				midpoints.Add(new Vector2(floorPositions[count].x, floorPositions[count].y));
 				midpoints.Add(new Vector2(floorPositions[count].x + floorScales[count].x, floorPositions[count].y));
-				midpoints.Add(new Vector2(floorPositions[count].x, floorPositions[count].y - floorScales[count].y));
 				midpoints.Add(new Vector2(floorPositions[count].x + floorScales[count].x, floorPositions[count].y - floorScales[count].y));
+				midpoints.Add(new Vector2(floorPositions[count].x, floorPositions[count].y - floorScales[count].y));
 				for (int count2 = 0; count2 < midpoints.Count; count2 ++)
 				{
 					obstacles.Add(new Line(midpoints[count2], midpoints[(count2+1)%midpoints.Count]));
@@ -93,16 +99,115 @@ namespace ClusteringSpace
 			for (int count = 0; count < floorPositions.Length; count ++)
 			{
 				List<Vector2> midpoints = new List<Vector2>();
-				midpoints.Add(new Vector2(floorPositions[count].x + (floorScales[count].x/2), floorPositions[count].y));
-				midpoints.Add(new Vector2(floorPositions[count].x + floorScales[count].x, floorPositions[count].y - (floorScales[count].y/2)));
-				midpoints.Add(new Vector2(floorPositions[count].x + (floorScales[count].x/2), floorPositions[count].y - floorScales[count].y));
-				midpoints.Add(new Vector2(floorPositions[count].x, floorPositions[count].y - (floorScales[count].y/2)));
+				midpoints.Add(new Vector2(floorPositions[count].x + (floorScales[count].x/2), floorPositions[count].y)); // [0]
+				midpoints.Add(new Vector2(floorPositions[count].x + floorScales[count].x, floorPositions[count].y - (floorScales[count].y/2))); // [1]
+				midpoints.Add(new Vector2(floorPositions[count].x + (floorScales[count].x/2), floorPositions[count].y - floorScales[count].y)); // [2]
+				midpoints.Add(new Vector2(floorPositions[count].x, floorPositions[count].y - (floorScales[count].y/2))); // [3]
 				for (int count2 = 0; count2 < midpoints.Count; count2 ++)
 				{
-		//			Debug.Log("Midpoint " + count2 +" : " + midpoints[count2]);
+			//		Debug.Log("Midpoint " + count2 +" : " + midpoints[count2]);
 					smallerObstacles.Add(new Line(midpoints[count2], midpoints[(count2+1)%midpoints.Count]));
 				}
 			}
+		}
+		
+		public List<Node> shortestPathAroundObstacles(List<Node> points, int prevPointCount = -1)
+		{
+			if (points == null || points.Count < 3 || (prevPointCount == points.Count)) return points;
+			
+			int numPoints = points.Count;
+			points = DouglasPeuckerReduction(points, 100000);
+			
+			// get point that is farthest from the line from first point to last point
+			int firstPoint = 0, lastPoint = points.Count - 1;
+		    double maxDistance = 0;
+		    int indexFarthest = 0;
+    
+		    for (int index = firstPoint; index < lastPoint; index++)
+		    {
+		        double distance = PerpendicularDistance(points[firstPoint], points[lastPoint], points[index]);
+		        if (distance > maxDistance)
+		        {
+					maxDistance = distance;
+					indexFarthest = index;
+		        }
+		    }
+			
+			if (indexFarthest == 0) return points;
+			
+			// check if an obstacle is contained within the triangle
+			int obsCount = 0, numIntersect = 0;
+			
+			for (int count = 0; count < obstacles.Count; count ++)
+			{
+				if (obsCount == 4) // assuming square obstacle
+				{ // gone through 4 lines of one obstacle.
+					if (numIntersect > 0)
+					{ // an obstacle intersects but is not fully contained within the triangle
+						// so try to construct a line around that obstacle.
+												
+						// polygon subtraction
+						List<List<IntPoint>> subj = new List<List<IntPoint>>(1);
+						subj.Add(new List<IntPoint>(3));
+						subj[0].Add(new IntPoint(points[firstPoint].xD*1000, points[firstPoint].yD*1000));
+						subj[0].Add(new IntPoint(points[indexFarthest].xD*1000, points[indexFarthest].yD*1000));
+						subj[0].Add(new IntPoint(points[lastPoint].xD*1000, points[lastPoint].yD*1000));
+						
+						List<List<IntPoint>> clip = new List<List<IntPoint>>(1);
+						clip.Add(new List<IntPoint>(4)); // assuming square obstacle
+						for (int oldObs = count - 4; oldObs < count; oldObs ++)
+						{
+							Debug.Log("Clipping on point (" + obstacles[oldObs].start.x*1000 + ", " + obstacles[oldObs].start.y*1000 + ")" );
+							clip[0].Add(new IntPoint(obstacles[oldObs].start.x*1000, obstacles[oldObs].start.y*1000));
+						}
+						
+						List<List<IntPoint>> solution = new List<List<IntPoint>>();
+						Clipper c = new Clipper();
+						c.AddPaths(subj, PolyType.ptSubject, true);
+						c.AddPaths(clip, PolyType.ptClip, true);
+						c.Execute(ClipType.ctUnion, solution, PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
+						
+						List<Node> returnPoints = new List<Node>();
+						foreach(List<IntPoint> list in solution) foreach (IntPoint ip in list)
+						{
+							double xpos = ip.X / 1000.0, ypos = ip.Y / 1000.0;
+							Debug.Log("RP y: " + ypos + " ( " + ip.Y + ")");
+							returnPoints.Add(new Node(xpos, ypos, 0.0));
+						}
+						
+						List<Node> sortedPoints = new List<Node>();
+						for (int pointsCount = 0; pointsCount < returnPoints.Count; pointsCount ++)
+						{ // sort points according to start position
+							Debug.Log("Checking against start pos of " + startPos.x + ", " + startPos.y);
+							if (returnPoints[pointsCount].x == startPos.x && returnPoints[pointsCount].y == startPos.y)
+							{
+								for (int startIndex = pointsCount; ; startIndex = (startIndex + 1) % returnPoints.Count)
+								{
+									if (startIndex == pointsCount && sortedPoints.Count > 0) break;
+									sortedPoints.Add(returnPoints[startIndex]);
+									Debug.Log(" P (" + returnPoints[startIndex].x + ", " + returnPoints[startIndex].y + ")");
+								}
+								break;
+							}
+						}
+						
+						// found a line around this one
+						return shortestPathAroundObstacles(sortedPoints, numPoints);
+					}
+					
+					numIntersect = obsCount = 0;
+				}
+				
+				Vector2 p1 = new Vector2(points[firstPoint].x, points[firstPoint].y);
+				Vector2 p2 = new Vector2(points[indexFarthest].x, points[indexFarthest].y);
+				Vector2 p3 = new Vector2(points[lastPoint].x, points[lastPoint].y);
+				int state = Intersecting(obstacles[count].start, obstacles[count].end, p1, p2, p3);
+				if (state == 2) numIntersect ++;
+				
+				obsCount ++;
+			}
+			
+			return points;
 		}
 		
 		// Uses the Douglas Peucker algorithm to reduce the number of points.
@@ -114,6 +219,7 @@ namespace ClusteringSpace
 		    Int32 firstPoint = 0;
 		    Int32 lastPoint = Points.Count - 1;
 		    List<Int32> pointIndexsToKeep = new List<Int32>();
+			restart = false;
 
 		    //Add the first and last index to the keepers
 		    pointIndexsToKeep.Add(firstPoint);
@@ -131,6 +237,7 @@ namespace ClusteringSpace
 		    pointIndexsToKeep.Sort();
 		    foreach (Int32 index in pointIndexsToKeep)
 		    {
+//				Debug.Log("Adding index " + index + ", numpts: " + Points.Count);
 		        returnPoints.Add(Points[index]);
 		    }
 
@@ -139,6 +246,8 @@ namespace ClusteringSpace
     
 		private void DouglasPeuckerReduction(List<Node> points, Int32 firstPoint, Int32 lastPoint, Double tolerance, ref List<Int32> pointIndexsToKeep)
 		{
+			if (restart) return;
+			
 		    Double maxDistance = 0;
 		    Int32 indexFarthest = 0;
     
@@ -153,10 +262,9 @@ namespace ClusteringSpace
 		    }
 
 		    if (maxDistance > tolerance && indexFarthest != 0)
-		    {
-		        //Add the largest point that exceeds the tolerance
+		    { // Add the largest point that exceeds the tolerance
 		        pointIndexsToKeep.Add(indexFarthest);
-				Debug.Log("Exceeds tolerance!");
+//				Debug.Log("Exceeds tolerance!");
     
 		        DouglasPeuckerReduction(points, firstPoint, indexFarthest, tolerance, ref pointIndexsToKeep);
 		        DouglasPeuckerReduction(points, indexFarthest, lastPoint, tolerance, ref pointIndexsToKeep);
@@ -167,119 +275,29 @@ namespace ClusteringSpace
 			{
 				// check if an obstacle is contained within the triangle
 				bool obstacleContained = false;
-/*				for (int count = 0; count < floorPositions.Length; count ++)
-				{
-					for (float i = floorPositions[count].x + 1; i <= floorPositions[count].x + floorScales[count].x - 1; i += floorScales[count].x/100)
-					{
-						Vector2 topLine = new Vector2(i, floorPositions[count].y);
-						Vector2 bottomLine = new Vector2(i, floorPositions[count].y + floorScales[count].y);
-						if (PointInTriangle(topLine, points[firstPoint], points[indexFarthest], points[lastPoint]))
-						{
-							obstacleContained = true;
-							break;
-						}
-						else if (PointInTriangle(bottomLine, points[firstPoint], points[indexFarthest], points[lastPoint]))
-						{
-							obstacleContained = true;
-							break;
-						}
-					}
-					if (obstacleContained) break;
-					for (float i = floorPositions[count].y + 1; i <= floorPositions[count].y + floorScales[count].y - 1; i += floorScales[count].y/100)
-					{
-						Vector2 topLine = new Vector2(floorPositions[count].x, i);
-						Vector2 bottomLine = new Vector2(floorPositions[count].x+floorScales[count].x, i);
-						if (PointInTriangle(topLine, points[firstPoint], points[indexFarthest], points[lastPoint]))
-						{
-							obstacleContained = true;
-							break;
-						}
-						else if (PointInTriangle(bottomLine, points[firstPoint], points[indexFarthest], points[lastPoint]))
-						{
-							obstacleContained = true;
-							break;
-						}
-					}
-					if (obstacleContained) break;
-				}*/
-				int obsCount = 0, numIntersect = 0, numContained = 0;
+				
 				for (int count = 0; count < smallerObstacles.Count; count ++)
-			//	foreach (Line l in smallerObstacles)
-	//			foreach (Line l in obstacles)
-				{
-					if (obsCount == 4) // assuming square obstacle
-					{ // gone through 4 lines of one obstacle.
-						if (numIntersect > 0)
-						{ // an obstacle intersects but is not fully contained within the triangle
-							// so try to construct a line around that obstacle.
-														
-							Debug.Log("POLYGON SUB");
-							
-							// polygon subtraction
-							List<List<IntPoint>> subj = new List<List<IntPoint>>(1);
-							subj.Add(new List<IntPoint>(3));
-							subj[0].Add(new IntPoint(points[firstPoint].x, points[firstPoint].y));
-							subj[0].Add(new IntPoint(points[indexFarthest].x, points[indexFarthest].y));
-							subj[0].Add(new IntPoint(points[lastPoint].x, points[lastPoint].y));
-							
-							List<List<IntPoint>> clip = new List<List<IntPoint>>(1);
-							clip.Add(new List<IntPoint>(4)); // assuming square obstacle
-							for (int oldObs = count - 4; oldObs < count; oldObs ++)
-							{
-								clip[0].Add(new IntPoint(smallerObstacles[oldObs].start.x, smallerObstacles[oldObs].start.y));
-							}
-							
-							List<List<IntPoint>> solution = new List<List<IntPoint>>();
-							Clipper c = new Clipper();
-							c.AddPaths(subj, PolyType.ptSubject, true);
-							c.AddPaths(clip, PolyType.ptClip, true);
-							c.Execute(ClipType.ctDifference, solution, PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
-							
-							pointIndexsToKeep.Clear();
-							foreach (List<IntPoint> l in solution)
-							{
-								Debug.Log("L: ");
-								foreach (IntPoint ip in l)
-								{
-									Debug.Log(" P (" + ip.X + ", " + ip.Y + ")");
-									Debug.DrawLine(new Vector3(ip.X, 10.0f, ip.Y), new Vector3(ip.X, 10.0f, ip.Y), Color.red, 100.0f);
-								}
-							}
-							
-						}
-						else if (numContained > 0)
-						{ // the triangle fully contains an obstacle.
-							obstacleContained = true;
-							break;
-						}
-						
-						numContained = numIntersect = obsCount = 0;
-					}
-					
+				{					
 					Vector2 p1 = new Vector2(points[firstPoint].x, points[firstPoint].y);
 					Vector2 p2 = new Vector2(points[indexFarthest].x, points[indexFarthest].y);
 					Vector2 p3 = new Vector2(points[lastPoint].x, points[lastPoint].y);
 					int state = Intersecting(smallerObstacles[count].start, smallerObstacles[count].end, p1, p2, p3);
-					if (state == 2) numIntersect ++;
-					else if (state > 0) numContained ++;
-			//		if (state > 0)
-			//		{
-			//			obstacleContained = true;
-			//			break;
-			//		}
-					
-					obsCount ++;
+					if (state > 0)
+					{
+						obstacleContained = true;
+						break;
+					}
 				}
 				
 				if (obstacleContained)
 				{ // must keep that point!
 			        pointIndexsToKeep.Add(indexFarthest);
-					Debug.Log("Contains Obstacle!");
+//					Debug.Log("Contains Obstacle!");
     
 			        DouglasPeuckerReduction(points, firstPoint, indexFarthest, tolerance, ref pointIndexsToKeep);
 			        DouglasPeuckerReduction(points, indexFarthest, lastPoint, tolerance, ref pointIndexsToKeep);
 				}
-				else Debug.Log("Does not contain");
+//				else Debug.Log("Does not contain");
 				
 				return;
 			}
@@ -333,13 +351,13 @@ namespace ClusteringSpace
 
 		    /* If segment is aligned with one of the edges, we're overlapping */
 		    if ((f1 == 0 && f2 == 0) || (f3 == 0 && f4 == 0) || (f5 == 0 && f6 == 0))
-		        return 2; // segment on edge
+		        return 0; // segment on edge
 
 		    /* If segment is outside but not strictly, or triangle is apart but
 		     * not strictly, we're touching */
 		    if ((f1 <= 0 && f2 <= 0) || (f3 <= 0 && f4 <= 0) || (f5 <= 0 && f6 <= 0)
 		          || (f7 >= 0 && f8 >= 0))
-		        return 2; // point on edge
+		        return 0; // point on edge
 
 		    /* If both segment points are strictly inside the triangle, we
 		     * are not intersecting either */
