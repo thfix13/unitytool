@@ -36,29 +36,13 @@ public class Visibility1 : MonoBehaviour {
 		spTemp = (GameObject)GameObject.Find ("StartPoint");
 		globalPolygon = getObstacleEdges ();
 
-
-		//Debug.Log (globalPolygon.Count);
 		pathPoints = definePath ();
 		CalculateVisibilityForPath ();
-		/*foreach (Vector3 vect in pathPoints) 
-		{
 
-			Debug.Log(vect.x+" , "+vect.y+" , "+vect.z);
-		}*/
 	}
-	/*void OnGUI() 
-	{
-		foreach (Vector3 vect in globalTempArrangedPoints) 
-		{
-			GUI.Label (new Rect (10, 10, 10, 10), "Hello World!");
-		}
-	}*/
-	//float timer = 5;
-	//float timer2=0;
-	//int arranged_index = 0;
+
 
 	Vector3 first_point;
-	//bool bArranged=false;
 	List<Geometry> globalTempShadowPoly = new List<Geometry>();
 	Geometry globalTempStarPoly;
 	List<List<Vector3>> globalTempintersectionPointsPerV = new List<List<Vector3>>();
@@ -67,63 +51,24 @@ public class Visibility1 : MonoBehaviour {
 	// Update is called once per frame
 	void Update () 
 	{
-		/*GameObject clone1 = (GameObject)Instantiate(spTemp);
-			clone1.transform.position = l.vertex[0];
-			GameObject clone2 = (GameObject)Instantiate(spTemp);
-			clone2.transform.position = l.vertex[1];
-			*/
-		/*foreach(Line l in globalTempAllShadowLines)
-		{
-			//Color randColor = new Color(Random.Range(0.0f,0.7f),Random.Range(0.0f,0.7f),Random.Range(0.0f,0.7f));
-			Debug.DrawLine (l.vertex [0], l.vertex [1], Color.blue);
-
-		}*/
 		foreach (Geometry geo in globalTempShadowPoly) 
 		{
 			geo.DrawGeometry(GameObject.Find("Floor"));
+			//Debug.Log(geo.edges.Count);
 			/*foreach(Line l in geo.edges)
 			{
 				Debug.DrawLine (l.vertex [0], l.vertex [1], Color.blue);
 			}*/
 		}
-		Debug.Break ();
+		//Debug.Break ();
 		//foreach (Geometry geo in globalTempStarPoly) 
 		/*foreach(Line l in globalTempStarPoly.edges)
 		{
 			Debug.DrawLine (l.vertex [0], l.vertex [1], Color.blue);
 		}*/
 
-		/*
-		for (int i=0; i<globalTempintersectionPointsPerV.Count-1; i++) 
-		{
-			for(int j=0;j<globalTempintersectionPointsPerV[i].Count;j++)
-			{
-				Debug.DrawLine(first_point,globalTempintersectionPointsPerV[i][j],Color.blue);
-			}
-		}*/
-		/*if (!bArranged)
-			return;
-		timer-=Time.deltaTime;
-		if (timer <= 0)
-		{
-			Debug.DrawLine (first_point, globalTempArrangedPoints[arranged_index], Color.blue);
-			arranged_index++;
-			timer=5;
-			//timer2=1;
-		}
-		if (timer > 0) 
-		{
-			Debug.DrawLine(first_point, globalTempArrangedPoints[arranged_index], Color.blue);
-			//timer2-=Time.deltaTime;
-		}*/
 
-				/*foreach (Geometry g in globalPolygon) {
-						foreach (Line line in g.edges) {
-								//Debug.Log("From"+line.vertex[0]);
-								//Debug.Log("To"+line.vertex[1]);
-								Debug.DrawLine (line.vertex [0], line.vertex [1], Color.blue);
-						}
-				}*/
+
 	}
 	public void CalculateVisibilityForPath()
 	{
@@ -455,7 +400,7 @@ public class Visibility1 : MonoBehaviour {
 		globalTempAllShadowLines.AddRange(listEdges);
 		//Concatinating all lines into geometries
 		//foreach(Line l in listEdges)
-		for(int i=0;i<listEdges.Count;i++)
+		/*for(int i=0;i<listEdges.Count;i++)
 		{
 			if(listEdges[i]==null)
 				continue;
@@ -477,7 +422,37 @@ public class Visibility1 : MonoBehaviour {
 				}
 			}
 			shadowPoly.Add(shadow);
+		}*/
+		///////////////////////////////////
+		for(int i=0;i<listEdges.Count;i++)
+		{
+			if(listEdges[i]==null)
+				continue;
+			Geometry shadow = new Geometry();
+			shadow.edges.Add(listEdges[i]);
+			listEdges[i]=null;
+			for(int k=0;k<shadow.edges.Count;k++)
+			{
+				for(int j=0;j<listEdges.Count;j++)
+				{
+					if(listEdges[j]==null)
+						continue;
+					//int intsct = listEdges[j].LineIntersectMuntacEndPt(shadow.edges[k]);
+					bool intsct = listEdges[j].CommonEndPoint(shadow.edges[k]);
+					if(intsct)
+					{
+						shadow.edges.Add(listEdges[j]);
+						listEdges[j]=null;
+					}
+				}
+			}
+			shadowPoly.Add(shadow);
 		}
+		///////////////////////////////////
+		/*foreach(Line l in listEdges)
+		{
+			Debug.Log(l);
+		}*/
 		return shadowPoly;
 	}
 

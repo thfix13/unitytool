@@ -277,7 +277,21 @@ public class Line
 		
 		return 0; 
 	}
-
+	private bool comparePoints(Vector3 v1,Vector3 v2)
+	{
+		float limit = 0.0001f;
+		float minVal = Vector3.SqrMagnitude (v1 - v2);
+		if (minVal <= limit)
+			return true;
+		return false;
+	}
+	public bool CommonEndPoint(Line param)
+	{
+		if( comparePoints(vertex[0],param.vertex[0]) || comparePoints(vertex[0],param.vertex[1])
+		   || comparePoints(vertex[1],param.vertex[0]) || comparePoints(vertex[1],param.vertex[1]))
+			return true;
+		return false;
+	}
 	public int LineIntersectMuntacEndPt (Line param){
 		Vector3 a = this.vertex [0];
 		Vector3 b = this.vertex[1];
@@ -383,11 +397,11 @@ public class Line
 		{
 
 			float m=-gradx/gradz;
-			Debug.Log("NOT || to z axis. m="+m+" gradz="+gradz);
+			//Debug.Log("NOT || to z axis. m="+m+" gradz="+gradz);
 			c = mp.z-m*mp.x;
 			pair.Add(new Vector3(mp.x+incremnt,mp.y,m*(mp.x+incremnt)+c));
 			pair.Add(new Vector3(mp.x-incremnt,mp.y,m*(mp.x-incremnt)+c));
-			Debug.Log(pair[0]+" , "+pair[1]);
+			//Debug.Log(pair[0]+" , "+pair[1]);
 		}
 		else
 		{
