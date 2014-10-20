@@ -28,7 +28,6 @@ public class TriangulationEditor : Editor {
 			{
 				Triangulation tObject = g.GetComponent<Triangulation>(); 
 				tObject.Clear(); 
-
 			}
 		}
 	}

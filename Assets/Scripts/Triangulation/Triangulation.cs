@@ -160,16 +160,10 @@ public class Triangulation : MonoBehaviour
 		//Compute one step of the discritzation
 		//Find this is the view
 		GameObject floor = (GameObject)GameObject.Find ("Floor");
-			
 		Vector3 [] vertex = new Vector3[4]; 
-		
 		//First geometry is the outer one
 		List<Geometry> geos = new List<Geometry> ();
-
-		
 		//Drawing lines
-		//VectorLine.SetCamera3D(Camera.current); 
-
 		//Floor
 		Vector3[] f = new Vector3[4];
 		MeshFilter mesh = (MeshFilter)(floor.GetComponent ("MeshFilter"));
@@ -177,46 +171,38 @@ public class Triangulation : MonoBehaviour
 		
 		Geometry tempGeometry = new Geometry (); 
 
-		
+		//Get floor points manually
 		vertex [0] = mesh.transform.TransformPoint (t [0]);
 		vertex [2] = mesh.transform.TransformPoint (t [120]);
 		vertex [1] = mesh.transform.TransformPoint (t [110]);
 		vertex [3] = mesh.transform.TransformPoint (t [10]);
-		
+
+		//Working in 2D geometry using x and z. y is always 1.
 		vertex [0].y = 1; 
 		vertex [1].y = 1; 
 		vertex [2].y = 1; 
 		vertex [3].y = 1; 
-		//these were in tempGeometry previously
-
-		//Disabled Temporarily - Find a way to avoid floor when checking for obstacle collision
-		//geos.Add (tempGeometry);
 
 		Vector3 [] mapBoundary = new Vector3[4]; //the map's four corners
 
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < 4; i++) 
 			mapBoundary [i] = vertex [i];
-		}
 
-		Geometry mapBG = new Geometry (); 
+		Geometry mapBG = new Geometry (); //Countains the map polygon
 		for (int i = 0; i < 4; i++)
 			mapBG.edges.Add( new Line( mapBoundary[i], mapBoundary[(i + 1) % 4]) );
-		//mapBG.DrawVertex (GameObject.Find ("temp"));
-		//mapBG.DrawGeometry(GameObject.find);
 
 		GameObject[] obs = GameObject.FindGameObjectsWithTag ("Obs");
-		if(obs == null)
-		{
-			//Debug.Log("Add tag geos to the geometries"); 
+		if (obs == null){
 			return; 
 		}
+
 		//data holder
 		Triangulation triangulation = GameObject.Find ("Triangulation").GetComponent<Triangulation> (); 
 		triangulation.points.Clear ();
 		triangulation.colours.Clear (); 
 		
-		//Only one geometry for now
-		
+		//Get all polygon
 		foreach (GameObject o in obs) {
 			mesh = (MeshFilter)(o.GetComponent ("MeshFilter"));
 			t = mesh.sharedMesh.vertices; 
@@ -244,24 +230,22 @@ public class Triangulation : MonoBehaviour
 		lines = new List<Line> ();
 
 		obsGeos.Clear ();
-		foreach (Geometry g in geos) {
+		foreach (Geometry g in geos)
 			obsGeos.Add(g);
-		}
-
 
 		//Create empty GameObject
 		GameObject temp = GameObject.Find("temp");
 		DestroyImmediate(temp);
 		temp = new GameObject("temp");
+
 		//CODESPACE
-		//Merging Polygons
+		//Merge obstacles that are intersecting
 		for (int i = 0; i < obsGeos.Count; i++) {
 			for (int j = i + 1; j < obsGeos.Count; j++) {
-				//check all line intersections
+				//Check to see if two geometries intersect
 				if( obsGeos[i].GeometryIntersect( obsGeos[j] ) ){
-					//Debug.Log("Geometries Intersect: " + i + " " + j);
 					Geometry tmpG = obsGeos[i].GeometryMerge( obsGeos[j] ); 
-					//remove item at position i, decrement i since it will be increment in the next step, break
+					//remove item at position i, decrement i since it will be incremented in the next step, break
 					obsGeos.RemoveAt(j);
 					obsGeos.RemoveAt(i);
 					obsGeos.Add(tmpG);
@@ -270,9 +254,10 @@ public class Triangulation : MonoBehaviour
 				}
 			}
 		}
-//		mapBG.DrawGeometry (temp);
 
 		List<Geometry> finalPoly = new List<Geometry> ();//Contains all polygons that are fully insde the map
+		//Check for obstacles that intersect the map boundary
+		//and change the map boundary to exclude them
 		foreach ( Geometry g in obsGeos ) {
 			if( mapBG.GeometryIntersect( g ) && !mapBG.GeometryInside( g ) ){
 				mapBG = mapBG.GeometryMergeInner( g );
@@ -301,6 +286,8 @@ public class Triangulation : MonoBehaviour
 		foreach( Line l in mapBG.edges )
 			totalGeo.edges.Add(l);
 		lines.Clear ();
+		//---End of obstacle merging---
+
 		//-----------START MST CODE------------------//
 		//We will use "mapBG" and "finalPoly"
 		//finalPoly contains the "quadrilaters"
@@ -378,28 +365,14 @@ public class Triangulation : MonoBehaviour
 		//First add lines that are in MST
 		foreach (Line l in linesMinSpanTree)
 			lines.Add (l);
-//		Debug.Log (allVertex.Count);
-//		int iv = -1, jv;
-//		vlcnt = 0;
 		foreach (Vector3 Va in allVertex) {
-//			++iv;
-//			jv = -1;
 			foreach(Vector3 Vb in allVertex){
-//				++jv;
 				if( Va != Vb ){
 					bool collides = false, essential = false;
 					Line tempLine = new Line(Va, Vb);
 					//A-Collision with final polygon
 					foreach( Line l in totalGeo.edges ){
 						if( l.LineIntersectMuntacEndPt( tempLine ) == 1 ){
-//							if( iv == 16 && jv == 18 ){	
-//								++vlcnt;
-//								l.name = vlcnt.ToString();
-//								l.DrawVector(temp);
-//								tempLine.name = l.name + "DUP";
-//								tempLine.DrawVector(temp);
-//								Debug.Log("Here 1");
-//							}
 							collides = true;
 							break;
 						}
@@ -430,10 +403,6 @@ public class Triangulation : MonoBehaviour
 			}
 		}
 
-//		foreach (Line L in lines)
-//			L.DrawVector(temp);
-//		Debug.Log ("Total Lines" + lines.Count);
-				
 		//Find the centers 
 		List<Triangle> triangles = new List<Triangle> ();
 		//Well why be efficient when you can be not efficient
@@ -498,8 +467,7 @@ public class Triangulation : MonoBehaviour
 			foreach (Triangle ttt in triangles) {
 				if (tt == ttt)
 					continue; 
-				tt.ShareEdged (ttt, linesMinSpanTree);
-				
+				tt.ShareEdged (ttt, linesMinSpanTree);		
 			}
 			
 		}
@@ -645,10 +613,15 @@ public class Triangulation : MonoBehaviour
 				}
 			}
 		}
-		foreach (Line l in roadMap) {
-			//l.DrawVector( GameObject.Find("temp"));
-			//l.DrawVector( GameObject.Find("temp"), Color.blue );
-		}
+		//Draw Roadmap without cameras
+//		foreach (Line l in roadMap) {
+//			l.DrawVector( GameObject.Find("temp"));
+//			l.DrawVector( GameObject.Find("temp"), Color.blue );
+//		}
+//		//Draw reflex points
+//		foreach (Vector3 v in masterReflex) {
+//			drawSphere( v, Color.green );		
+//		}
 		makeTourOnSPR (roadMap, masterReflex);
 	}
 
@@ -804,6 +777,7 @@ public class Triangulation : MonoBehaviour
 		//Draw tour
 		for( int i = 0; i < tour.Count - 1; i++ ){
 			Line tmpline = new Line( numToVect[tour[i]], numToVect[tour[i + 1]] );
+			visibilityPolygon(numToVect[tour[i]]);
 			tmpline.DrawVector( GameObject.Find("temp") );
 		}
 	}
@@ -923,9 +897,13 @@ public class Triangulation : MonoBehaviour
 		GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 		inter.transform.renderer.material.color = x;
 		inter.transform.position = v;
-		inter.transform.localScale = new Vector3(0.1f,0.1f,0.1f);
+		inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f);
 		inter.transform.parent = temp.transform;
 		//inter.gameObject.name = vlcnt.ToString();
+	}
+
+	void visibilityPolygon( Vector3 v ){
+
 	}
 }//End of Class
 

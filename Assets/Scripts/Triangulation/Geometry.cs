@@ -15,7 +15,7 @@ public class Geometry
 	public List<Line> voisinsLine = new List<Line>();
 	public bool visited = false; 	
 
-	public void DrawGeometry(GameObject parent)
+	public void DrawGeometry(GameObject parent)//Called from outside
 	{
 		Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
                            UnityEngine.Random.Range(0.0f,1.0f),
@@ -24,27 +24,9 @@ public class Geometry
 		foreach (Line l in edges) {
 			l.DrawVector (parent, c);
 		}
-		//DrawVertex (parent);
 	}
 
-
-
-	public bool Collision(Geometry g)
-	{
-		foreach(Line l1 in edges)
-		{
-			foreach(Line l2 in g.edges)
-			{
-				if(l1 == l2)
-					continue;
-				if(l1.LineIntersection(l2))
-					return true; 
-			}
-		}
-		return false; 
-	}
-
-	public bool LineCollision(Line Lparam){
+	public bool LineCollision(Line Lparam){//Called by getClosestLine
 		if( this.PointInside( Lparam.MidPoint() ) )
 		   return true;
 		foreach(Line l1 in edges){
@@ -55,30 +37,24 @@ public class Geometry
 	}
 
 	//TODO: Switch to lineintmuntac
-	public bool LineInside(Line l)
-	{
+	public bool LineInside(Line l){//Called by GeomtryMergeInner and BoundGeometry
 		//Test if one of my line
-		//This is not the best version should check is colinear inastead!
-		foreach(Line myLine in edges)
-		{
-			foreach(Vector3 v1 in myLine.vertex)
-			{
-				foreach(Vector3 v2 in l.vertex)
-				{
+		//This is not the best version should check is colinear instead!
+		foreach(Line myLine in edges){
+			foreach(Vector3 v1 in myLine.vertex){
+				foreach(Vector3 v2 in l.vertex){
 					if(v1 == v2)
 						return false; 
 				}
 			}
 		}
-
 		//Now we check count the intersection
 		Vector3 mid = l.MidPoint(); 
 		return PointInside (l.MidPoint ());
 	}
 
 	//TODO: Fix for lines colinear
-	public bool PointInside( Vector3 pt )
-	{
+	public bool PointInside( Vector3 pt ){//Called by LineInside, GeometryInside and LineCollision
 		Line lray = new Line(pt, new Vector3(-100,-100)); 
 		int count = 0; 
 		foreach(Line myLine in edges){
@@ -94,7 +70,7 @@ public class Geometry
 		return count%2 == 1; 
 	}
 
-	public List<Vector3> GetVertex()
+	public List<Vector3> GetVertex()//Called by GetReflexVertex, GetClosestLine
 	{
 		//Find vertex
 		List<Vector3> vertex = new List<Vector3>(); 
@@ -109,7 +85,7 @@ public class Geometry
 		return vertex;
 	}
 
-	public List<Vector3> GetReflexVertex(){
+	public List<Vector3> GetReflexVertex(){//Called from outside
 		List<Vector3> vertex = new List<Vector3>();
 		vertex = this.GetVertex ();
 		Vector3 minvert = new Vector3 ();
@@ -160,7 +136,7 @@ public class Geometry
 		return reflexList;
 	}
 
-	public List<Vector3> GetReflexVertexComplement(){
+	public List<Vector3> GetReflexVertexComplement(){//Called from outside
 		List<Vector3> reflexVertex = new List<Vector3>();
 		Line currL = this.edges [0];
 		Line nextL;
@@ -199,15 +175,6 @@ public class Geometry
 			if( nextL == null )
 				break;
 		}
-//		GameObject temp = GameObject.Find ("temp");
-//		for ( int i = 0; i < sortedEdges.Count; i++ ) {
-//			GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-//			inter.transform.renderer.material.color = Color.green;
-//			inter.transform.position = sortedEdges[i].vertex[0];
-//			inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
-//			inter.transform.parent = temp.transform;
-//			if( i == 3 ) break;
-//		}
 		float sum = 0;
 		//Check if order in sorted edges is clockwise
 		//Followed theorem outlined in following link:
@@ -236,83 +203,44 @@ public class Geometry
 		return reflexVertex;
 	}
 
-	private bool isLeft(Vector3 v1,Vector3 v2,Vector3 v3){
+	private bool isLeft(Vector3 v1,Vector3 v2,Vector3 v3){//Called by getReflexVertex
 		float a = v1.x, b = v1.z;  
 		float c = v2.x, d = v2.z;  
 		float e = v3.x, f = v3.z;  
 		
-//		if((f-b)*(c-a)> (d-b)*(e-a))
-//			return true;
-//		else
-//			return false; 
 		if(  (v2.x - v1.x) * (v3.z - v1.z) >= (v2.z - v1.z) * (v3.x - v1.x) ) 
 			return true;
 		else
 			return false;
 	}
 
-	static int CompareAngle(KeyValuePair<Vector3, float> a, KeyValuePair<Vector3, float> b){
+	static int CompareAngle(KeyValuePair<Vector3, float> a, KeyValuePair<Vector3, float> b){//Called by getReflexVertex
 		//Questionable
 		return a.Value.CompareTo(b.Value);
 	}
 
-	float getAngle( Vector3 v1, Vector3 v2 ){
+	float getAngle( Vector3 v1, Vector3 v2 ){//Called by getReflexVertex
 		float adj = v1.x - v2.x;
 		float hyp = (adj*adj) + ( (v1.z - v2.z) * (v1.z - v2.z) );
 		hyp = (float)Math.Sqrt( hyp );
 		return adj / hyp;		
 	}
 
-	public void DrawVertex(GameObject parent)
-	{
+	public void DrawVertex(GameObject parent){//Called by no one but maybe useful
 		//Find vertex
-		List<Vector3> vertex = new List<Vector3>(); 
-		foreach(Line l in edges)
-		{
-			foreach(Vector3 v in l.vertex)
-			{
-				if(!vertex.Contains(v))
-					vertex.Add(v); 
-
-			}
-
-		}
+		List<Vector3> vertex = GetVertex ();
 
 		//Draw
-		foreach(Vector3 v in vertex)
-		{
+		foreach(Vector3 v in vertex){
 			GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 			inter.transform.position = v;
 			inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
 			inter.transform.parent = parent.transform;
 		}
-
-	}
-
-	public void CollisionDraw(Geometry g, GameObject parent)
-	{
-		foreach(Line l1 in edges)
-		{
-			foreach(Line l2 in g.edges)
-			{
-				if(l1 == l2)
-					continue;
-				if(l1.LineIntersection(l2))
-				{
-
-					Vector3 pos = l1.LineIntersectionVect(l2);
-					GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-					inter.transform.position = pos;
-					inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
-					inter.transform.parent = parent.transform; 
-				} 
-			}
-		}
-		 
 	}
 
 	//Figures out the boundary of the geometry
-	public void BoundGeometry(Vector3[] boundary){
+	public void BoundGeometry(Vector3[] boundary){//Called from outside
 		List<Line> removeLines = new List<Line> ();
 		int i;
 		foreach (Line l in edges) {
@@ -328,7 +256,7 @@ public class Geometry
 			edges.Remove (l);
 	}
 
-	public Geometry GeometryMerge( Geometry G2 ){
+	public Geometry GeometryMerge( Geometry G2 ){//Called from outside
 		if (GeometryInside (G2))
 			return this;
 		else if (G2.GeometryInside (this))
@@ -373,8 +301,9 @@ public class Geometry
 		}
 		return toReturn;
 	}
+
 	//Used only for merging polygons with the map boundary
-	public Geometry GeometryMergeInner( Geometry G2 ){
+	public Geometry GeometryMergeInner( Geometry G2 ){//Called from outside
 		Geometry tempGeometry = new Geometry ();
 		//Two Geometry objects - G1 and G2
 		Geometry G1 = this;
@@ -423,7 +352,7 @@ public class Geometry
 	}
 
 	//Check if two geometries intersect
-	public bool GeometryIntersect( Geometry G2 ){
+	public bool GeometryIntersect( Geometry G2 ){//Called from outside
 		if (GeometryInside (G2))
 			return true;
 		else if (G2.GeometryInside (this))
@@ -438,11 +367,7 @@ public class Geometry
 		return false;
 	}
 	
-	private double CrossProduct( Vector2 a, Vector2 b ){
-		return (a.x * b.y) - (a.y * b.x);
-	}
-
-	public bool GeometryInside( Geometry G2 ){
+	public bool GeometryInside( Geometry G2 ){//Called from outside
 		foreach (Line L in G2.edges) {
 			if( !PointInside( L.vertex[0] ) )
 				return false;
@@ -452,8 +377,9 @@ public class Geometry
 		return true;
 	}
 
+	//From this point all code is ported from Jonatha's MST calculation
 	//ported code. src:"Triangulation"
-	public void SetVoisins(List<Geometry> geos)
+	public void SetVoisins(List<Geometry> geos)//Called from outside
 	{
 		foreach(Geometry g in geos)
 		{
@@ -468,7 +394,7 @@ public class Geometry
 	}
 
 	//ported code. src:"Triangulation"
-	public Line GetClosestLine(Geometry g, List<Geometry> geos)
+	public Line GetClosestLine(Geometry g, List<Geometry> geos)//Called by SetVoisins
 	{
 		Line toReturn = null;
 		float dist = 1000000; 
@@ -505,7 +431,7 @@ public class Geometry
 	}
 
 	//ported code. src:"Triangulation"
-	public Line GetClosestLine(Vector3 v,Geometry g, List<Geometry> geos)
+	public Line GetClosestLine(Vector3 v,Geometry g, List<Geometry> geos)//Called by findClosestQuad
 	{
 		Line toReturn = null;
 		float dist = 1000000; 
@@ -542,7 +468,7 @@ public class Geometry
 	}
 
 	//ported code. src:"Triangulation"
-	public Geometry findClosestQuad(Vector3 v,List<Geometry> geos,List<Geometry> already)
+	public Geometry findClosestQuad(Vector3 v,List<Geometry> geos,List<Geometry> already)//Called from outside
 	{
 		Geometry toReturn = null; 
 		float dist = 100000000; 
