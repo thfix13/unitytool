@@ -18,6 +18,8 @@ public class Triangulation : MonoBehaviour
 
 	public List<Line> linesMinSpanTree = new List<Line>(); 
 	public List<Geometry> obsGeos = new List<Geometry> (); 
+	public List<Geometry> finalPoly = new List<Geometry> ();
+	public Geometry totalGeo = new Geometry ();
 	//Contains Map
 	public Geometry mapBG = new Geometry ();
 	public Geometry tour = new Geometry ();
@@ -48,8 +50,10 @@ public class Triangulation : MonoBehaviour
 		obsGeos.Clear ();
 		GameObject temp = GameObject.Find("temp"); 
 		DestroyImmediate(temp); 
+		GameObject vptmp = GameObject.Find("vptmp"); 
+		DestroyImmediate(vptmp); 
 		cameras.Clear ();
-
+		
 		stopAll = true;
 	}
 	void OnDrawGizmosSelected( ) 
@@ -188,7 +192,7 @@ public class Triangulation : MonoBehaviour
 		for (int i = 0; i < 4; i++) 
 			mapBoundary [i] = vertex [i];
 
-		Geometry mapBG = new Geometry (); //Countains the map polygon
+		mapBG = new Geometry (); //Countains the map polygon
 		for (int i = 0; i < 4; i++)
 			mapBG.edges.Add( new Line( mapBoundary[i], mapBoundary[(i + 1) % 4]) );
 
@@ -255,7 +259,7 @@ public class Triangulation : MonoBehaviour
 			}
 		}
 
-		List<Geometry> finalPoly = new List<Geometry> ();//Contains all polygons that are fully insde the map
+		finalPoly = new List<Geometry> ();//Contains all polygons that are fully insde the map
 		//Check for obstacles that intersect the map boundary
 		//and change the map boundary to exclude them
 		foreach ( Geometry g in obsGeos ) {
@@ -269,7 +273,7 @@ public class Triangulation : MonoBehaviour
 
 		List<Vector3> allVertex = new List<Vector3>();
 		List<Vector3> tempVertex = new List<Vector3>();
-		Geometry totalGeo = new Geometry ();
+		totalGeo = new Geometry ();
 
 		//Getting all vertices
 		foreach (Geometry g in finalPoly) {
@@ -542,13 +546,13 @@ public class Triangulation : MonoBehaviour
 			if( colours[i] == cGuard ){
 				Vector3 v = points[i];
 				cameras.Add( points[i] );
-				GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-				inter.transform.renderer.material.color = coloursPoints[i];
-				inter.transform.position = v;
-				inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
-				inter.transform.parent = temp.transform;
-				vlcnt++;
-				inter.gameObject.name = vlcnt.ToString();
+//				GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+//				inter.transform.renderer.material.color = coloursPoints[i];
+//				inter.transform.position = v;
+//				inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
+//				inter.transform.parent = temp.transform;
+//				vlcnt++;
+//				inter.gameObject.name = vlcnt.ToString();
 			}
 		}
 //		makeTour ( totalGeo );
@@ -777,9 +781,9 @@ public class Triangulation : MonoBehaviour
 		//Draw tour
 		for( int i = 0; i < tour.Count - 1; i++ ){
 			Line tmpline = new Line( numToVect[tour[i]], numToVect[tour[i + 1]] );
-			visibilityPolygon(numToVect[tour[i]]);
-			tmpline.DrawVector( GameObject.Find("temp") );
+			//tmpline.DrawVector( GameObject.Find("temp") );
 		}
+		visibilityPolygon(numToVect[tour[0]]);
 	}
 
 	private void Dijkstra( int id, int N ){
@@ -902,8 +906,124 @@ public class Triangulation : MonoBehaviour
 		//inter.gameObject.name = vlcnt.ToString();
 	}
 
-	void visibilityPolygon( Vector3 v ){
+	void visibilityPolygon( Vector3 vSrc ){
+		List<Vector3> vpts = new List<Vector3> ();
+		List<Vector3> obs_pts = totalGeo.GetVertex ();
+		GameObject vptmp = new GameObject ("vptmp");
+		int cnt = 0;
+			foreach( Vector3 vobs in obs_pts ){
+				if( vSrc == vobs )	continue;
+				Line ray = new Line( vSrc, vobs );
+				Line rayReverse = new Line( vobs, vSrc );
+				
+				if( totalGeo.edges.Contains(ray) || totalGeo.edges.Contains(rayReverse) ){
+					Debug.Log("FOUND");
+				}
 
+				bool valid = true;
+				foreach( Line l in totalGeo.edges ){
+					if( l.LineIntersectMuntac( ray ) != 0 ){
+						valid = false;
+						break;
+					}
+				}
+				
+				foreach( Geometry g in obsGeos ){
+					if( g.PointInside( ray.MidPoint() ) ){
+						valid = false;
+						break;
+					}
+				}
+
+				foreach( Line l in totalGeo.edges ){
+					if( l.vertex[0] == vSrc || l.vertex[1] == vSrc ){
+						if( l.vertex[0] == vobs || l.vertex[1] == vobs )
+							valid = true;
+					}
+				}
+				if( !valid ) continue;
+				//Add point
+				if( !VectorApprox( vpts, vobs ) ) vpts.Add( vobs );
+				//Extend ray past vobs
+				Vector3 vA = vSrc;
+				Vector3 vB = vobs;
+				Vector3 vobs_new = getExtendedPoint(vA, vB);
+				ray = new Line( vSrc, vobs_new  );
+				//Check earliest intersection point
+				float mindist = 10000f;
+				Vector3 minV = new Vector3();
+				minV = vSrc;
+				foreach( Line l in totalGeo.edges ){
+					if( l.LineIntersectMuntac( ray ) == 0 ) continue;
+					Vector3 interPt = l.GetIntersectionPoint( ray );
+					//if( obs_pts.Contains( interPt ) ) continue;
+					if( VectorApprox( obs_pts, interPt ) ) continue;
+					//if( vpts.Contains(interPt) ) continue; //intersects any point we've considered
+					if( VectorApprox( vpts, interPt ) ) continue;
+					//if( VectorApprox( vobs, interPt ) ) continue;
+					Line newRay = new Line( vSrc, interPt );
+					if( newRay.Magnitude() < mindist ){
+//						if( cnt == 7 ){
+//							if( obs_pts.Contains( interPt ) ){
+//								Debug.Log ("Alright");
+//							}
+//							Debug.Log ("Dart");
+//							ray.DrawVector( vptmp, Color.blue );
+//							drawSphere( interPt, Color.green );
+//						}
+						mindist = newRay.Magnitude();
+						minV = interPt;
+					}
+				}
+
+				if( minV != vSrc ){
+					vpts.Add(minV);
+					Line tmpline = new Line( vSrc, minV );
+					tmpline.name = cnt.ToString();
+					tmpline.DrawVector(vptmp, Color.cyan );
+					cnt++;
+				}
+			}
+
+		Geometry visiPoly = new Geometry ();
+		vpts = visiPoly.GetVertexAngleSorted (vSrc, vpts);
+		visiPoly.edges.Add( new Line(vSrc, vpts[0] ) ); 		
+		for (int i = 0; i < vpts.Count - 1; i++) {
+			visiPoly.edges.Add( new Line(vpts[i], vpts[i + 1]) );
+			//vpts[i]
+			drawSphere( vpts[i], Color.red );
+		}
+		visiPoly.edges.Add( new Line(vpts[vpts.Count - 1], vSrc ) );
+		foreach (Line l in visiPoly.edges) {
+			l.name = cnt.ToString();
+			cnt++;
+			//l.DrawVector(vptmp, Color.red );
+		}
+		//visiPoly.DrawGeometry (GameObject.Find ("temp"));
+	}
+
+	public Vector3 getExtendedPoint( Vector3 vSrc, Vector3 vobs ){
+		Vector2 vSrc2 = new Vector2( vSrc.x, vSrc.z );
+		Vector2 vobs2 = new Vector2( vobs.x, vobs.z );
+		Vector2 dirvSrc2 = vobs2 - vSrc2;
+		float alp = 100.02f;
+		Vector2 vobs_new2 = vSrc2 + (alp * dirvSrc2);
+		Vector3 vobs_new = new Vector3( vobs_new2.x, 1, vobs_new2.y );
+		return vobs_new;
+	}
+
+	public bool VectorApprox ( List<Vector3> obs_pts, Vector3 interPt ){
+		foreach (Vector3 v in obs_pts) {
+			if( Math.Abs (v.x - interPt.x) < 0.01 && Math.Abs (v.z - interPt.z) < 0.01 )
+				return true;
+		}
+		return false;
+	}
+	public bool VectorApprox ( Vector3 a, Vector3 b ){
+		if( Math.Abs (a.x - b.x) < 0.01 && Math.Abs (a.z - b.z) < 0.01 )
+			return true;
+		else
+			return false;
 	}
 }//End of Class
 

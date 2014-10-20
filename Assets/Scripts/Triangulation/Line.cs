@@ -79,6 +79,7 @@ public class Line
 	
 		VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
 		line.vectorObject.transform.parent = parent.transform;
+		line.vectorObject.name = name;
 		line.Draw3D();
 	}
 	public bool ShareVertex(Line l)

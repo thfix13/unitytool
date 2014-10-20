@@ -493,4 +493,20 @@ public class Geometry
 		return toReturn; 
 		
 	}
+
+	public List<Vector3> GetVertexAngleSorted( Vector3 vSrc, List<Vector3> verts ){
+		List<KeyValuePair<Vector3, float>> angList = new List<KeyValuePair<Vector3, float>>();
+		foreach (Vector3 v in verts) {
+			float angle;
+			angle = getAngle( vSrc, v );
+			angList.Add(new KeyValuePair<Vector3, float>(v, angle));
+		}
+		//Sort list by angle
+		angList.Sort (CompareAngle);
+		List<Vector3> retlist = new List<Vector3> ();
+		foreach (KeyValuePair<Vector3, float> kv in angList) {
+				retlist.Add( kv.Key );
+		}
+		return retlist;
+	}
 }
