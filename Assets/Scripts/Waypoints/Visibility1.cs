@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using System;
+//using System;
 public class Visibility1 : MonoBehaviour {
 	public List<Vector3> points = new List<Vector3>();
 	public List<Color> colours = new List<Color>();
@@ -30,9 +30,13 @@ public class Visibility1 : MonoBehaviour {
 	float mapDiagonalLength = 0;
 	//List<Vector3> globalTempArrangedPoints = new List<Vector3>();
 	// Use this for initialization
+	GameObject spTemp ;
 	void Start () 
 	{
+		spTemp = (GameObject)GameObject.Find ("StartPoint");
 		globalPolygon = getObstacleEdges ();
+
+
 		//Debug.Log (globalPolygon.Count);
 		pathPoints = definePath ();
 		CalculateVisibilityForPath ();
@@ -55,18 +59,40 @@ public class Visibility1 : MonoBehaviour {
 
 	Vector3 first_point;
 	//bool bArranged=false;
-	List<Geometry> globalTempStarPoly = new List<Geometry>();
+	List<Geometry> globalTempShadowPoly = new List<Geometry>();
+	Geometry globalTempStarPoly;
 	List<List<Vector3>> globalTempintersectionPointsPerV = new List<List<Vector3>>();
+	List<Line> globalTempAllShadowLines = new List<Line>();
+
 	// Update is called once per frame
 	void Update () 
 	{
-		foreach (Geometry geo in globalTempStarPoly) 
+		/*GameObject clone1 = (GameObject)Instantiate(spTemp);
+			clone1.transform.position = l.vertex[0];
+			GameObject clone2 = (GameObject)Instantiate(spTemp);
+			clone2.transform.position = l.vertex[1];
+			*/
+		/*foreach(Line l in globalTempAllShadowLines)
 		{
-			foreach(Line l in geo.edges)
+			//Color randColor = new Color(Random.Range(0.0f,0.7f),Random.Range(0.0f,0.7f),Random.Range(0.0f,0.7f));
+			Debug.DrawLine (l.vertex [0], l.vertex [1], Color.blue);
+
+		}*/
+		foreach (Geometry geo in globalTempShadowPoly) 
+		{
+			geo.DrawGeometry(GameObject.Find("Floor"));
+			/*foreach(Line l in geo.edges)
 			{
 				Debug.DrawLine (l.vertex [0], l.vertex [1], Color.blue);
-			}
+			}*/
 		}
+		Debug.Break ();
+		//foreach (Geometry geo in globalTempStarPoly) 
+		/*foreach(Line l in globalTempStarPoly.edges)
+		{
+			Debug.DrawLine (l.vertex [0], l.vertex [1], Color.blue);
+		}*/
+
 		/*
 		for (int i=0; i<globalTempintersectionPointsPerV.Count-1; i++) 
 		{
@@ -101,12 +127,11 @@ public class Visibility1 : MonoBehaviour {
 	}
 	public void CalculateVisibilityForPath()
 	{
-		globalPolygon = getObstacleEdges ();
+		//globalPolygon = getObstacleEdges ();
 
 		List<Vector3> endPoints = new List<Vector3> ();
 		Hashtable hTable = new Hashtable ();
 		//Extract all end points
-
 
 		foreach(Line l in mapBG.edges)
 		{
@@ -331,31 +356,36 @@ public class Visibility1 : MonoBehaviour {
 				}*/
 				starPoly.Add(geoVisible);
 			}
-			FindShadowPolygons(starPoly);
+			//Combining all visible edges
+			Geometry visiblePoly = new Geometry();
+			foreach(Geometry geo in starPoly)
+				visiblePoly.edges.AddRange(geo.edges);
+			List<Geometry> shadowPoly = FindShadowPolygons(visiblePoly);
+			//ValidatePolygons(shadowPoly);
 			//globalTempArrangedPoints.AddRange(arrangedPoints);
-			globalTempStarPoly.AddRange(starPoly);
-			globalTempintersectionPointsPerV.AddRange(intersectionPointsPerV);
+			globalTempStarPoly = visiblePoly;
+			globalTempShadowPoly = shadowPoly;
+			//globalTempintersectionPointsPerV.AddRange(intersectionPointsPerV);
 			//bArranged = true;
 			arrangedPoints.Clear();
-			hTable.Add(pPoint,starPoly);
+			hTable.Add(pPoint,shadowPoly);
 			break;//TODO Remove this
 		}//End: Do for all path points
 	}
-	private List<Geometry> FindShadowPolygons(List<Geometry> starPoly)
+
+	void ValidatePolygons (List<Geometry> shadowPoly)
 	{
-		List<Geometry> modObstacles = CreateModifiedObstacles(starPoly);
-		Geometry mapModBoundary = CreateModifiedBoundary(starPoly);
-		List<Geometry> shadowPoly = new List<Geometry> ();
-		return shadowPoly;
+		foreach(Geometry g in shadowPoly)
+		{
+		}
 	}
 
-	List<Geometry> CreateModifiedObstacles (List<Geometry> starPoly)
+	private List<Geometry> FindShadowPolygons(Geometry starPoly)
 	{
-		List<Geometry> modObstacles = new List<Geometry> ();
 		List<Vector3> verticesStar = new List<Vector3> ();
-		foreach(Geometry gStar in starPoly)
+		//foreach(Geometry gStar in starPoly)
 		{
-			foreach(Line l in gStar.edges)
+			foreach(Line l in starPoly.edges)
 			{
 				if(!ListContainsPoint(verticesStar,l.vertex[0]))
 				{
@@ -367,53 +397,159 @@ public class Visibility1 : MonoBehaviour {
 				}
 			}
 		}
-		/*foreach(Vector3 vect in verticesStar)
+
+		List<Geometry> modObstacles = CreateModifiedObstacles(verticesStar);
+
+		Geometry mapModBoundary = CreateModifiedBoundary(verticesStar);
+		List<Geometry> allGeometries = new List<Geometry> ();
+		allGeometries.AddRange (modObstacles);
+		allGeometries.Add (mapModBoundary);
+		allGeometries.Add (starPoly);
+		List<Geometry> shadowPoly = new List<Geometry> ();
+		List<Line> listEdges = new List<Line> ();
+		foreach(Geometry geo in allGeometries)
 		{
-			Debug.Log(vect);
-		}*/
+			foreach(Line l in geo.edges)
+			{
+				List<Vector3> pair = l.PointsOnEitherSide();
+				int ct_visible=0;
+				int ct_insideObstacle=0;
+				int ct_insideBoundary=0;
+				foreach(Vector3 pt in pair)
+				{
+					if(starPoly.PointInside(pt))
+					{
+						ct_visible++;
+					}
+					foreach(Geometry g in globalPolygon)
+					{
+						if(g.PointInside(pt))
+						{
+							ct_insideObstacle++;
+						}
+					}
+					if(mapBG.PointInside(pt))
+					{
+						ct_insideBoundary++;
+					}
+				}
+				//if(ct_visible>1)
+				{
+					//GameObject clone1 = (GameObject)Instantiate(spTemp);
+					//clone1.transform.position = pair[0];
+					//GameObject clone2 = (GameObject)Instantiate(spTemp);
+					//clone2.transform.position = pair[1];
+					//Debug.Log("ct_visible="+ct_visible+" &&&&& ct_insideObstacle = "+ct_insideObstacle+"ct_insideBoundary="+ct_insideBoundary);
+					//Debug.Log(pair[0].x+","+pair[0].z+" )"+pair[1].x+","+pair[1].z);
+				}
+				if((ct_visible==0) || (ct_visible==1 && ct_insideObstacle==0 && ct_insideBoundary==2))
+				{
+					//GameObject clone1 = (GameObject)Instantiate(spTemp);
+					//clone1.transform.position = pair[0];
+					//GameObject clone2 = (GameObject)Instantiate(spTemp);
+					//clone2.transform.position = pair[1];
+					listEdges.Add(l);
+				}
+			}
+		}
+		globalTempAllShadowLines.AddRange(listEdges);
+		//Concatinating all lines into geometries
+		//foreach(Line l in listEdges)
+		for(int i=0;i<listEdges.Count;i++)
+		{
+			if(listEdges[i]==null)
+				continue;
+			Geometry shadow = new Geometry();
+			shadow.edges.Add(listEdges[i]);
+			for(int j=i;j<listEdges.Count;j++)
+			{
+				if(listEdges[j]==null)
+					continue;
+				for(int k=0;k<shadow.edges.Count;k++)
+				{
+					int intsct = listEdges[j].LineIntersectMuntacEndPt(shadow.edges[k]);
+					if(intsct!=0)
+					{
+						shadow.edges.Add(listEdges[j]);
+						listEdges[j]=null;
+						break;
+					}
+				}
+			}
+			shadowPoly.Add(shadow);
+		}
+		return shadowPoly;
+	}
+
+	List<Geometry> CreateModifiedObstacles (List<Vector3> verticesStar)
+	{
+		List<Geometry> modObstacles = new List<Geometry> ();
 		foreach(Geometry g in globalPolygon)
 		{
-			Geometry obstacle = new Geometry();
-			foreach(Line l in g.edges)
-			{
-				List<Vector3> pointsOnSameline = new List<Vector3>();
-				pointsOnSameline.Add(l.vertex[0]);
-				foreach(Vector3 vect in verticesStar)
-				{
-					if(l.PointOnLine(vect))
-					{
-						if(!ListContainsPoint(pointsOnSameline,vect))
-						{
-							pointsOnSameline.Add(vect);
-						}
-					}
-				}
-				//Sort points in a line
-				for(int i=1;i<pointsOnSameline.Count-1;i++)
-				{
-					float dist = Vector3.Distance(pointsOnSameline[0],pointsOnSameline[i+1]);
-					for(int j=i+1;j<pointsOnSameline.Count;j++)
-					{
-						float dist2 = Vector3.Distance(pointsOnSameline[0],pointsOnSameline[j]);
-						if(dist>dist2)
-						{
-							dist=dist2;
-						}
-					}
-				}
-				pointsOnSameline.Add(l.vertex[1]);
-			}
+			Geometry obstacle = CreateModifiedPolygon(g,verticesStar);
 			modObstacles.Add(obstacle);
 		}
 		return modObstacles;
 	}
 
-	Geometry CreateModifiedBoundary (List<Geometry> starPoly)
+	Geometry CreateModifiedBoundary (List<Vector3> verticesStar)
 	{
-		Geometry mapModBoundary = new Geometry ();
+		Geometry mapModBoundary = CreateModifiedPolygon(mapBG,verticesStar);
 		return mapModBoundary;
 	}
-
+	private Geometry CreateModifiedPolygon(Geometry g,List<Vector3> verticesStar)
+	{
+		Geometry obstacle = new Geometry();
+		//Debug.Log("************Obstacle****************");
+		foreach(Line l in g.edges)
+		{
+			//Debug.Log("************SameLine****************");
+			List<Vector3> pointsOnSameline = new List<Vector3>();
+			pointsOnSameline.Add(l.vertex[0]);
+			foreach(Vector3 vect in verticesStar)
+			{
+				if(l.PointOnLine(vect))
+				{
+					if(!ListContainsPoint(pointsOnSameline,vect))
+					{
+						//Debug.Log(vect.x+","+vect.z);
+						pointsOnSameline.Add(vect);
+					}
+				}
+			}
+			//Sort points in a line
+			for(int i=1;i<pointsOnSameline.Count-1;i++)
+			{
+				float dist = Vector3.Distance(pointsOnSameline[0],pointsOnSameline[i]);
+				int indexToReplace=-1;
+				for(int j=i+1;j<pointsOnSameline.Count;j++)
+				{
+					float dist2 = Vector3.Distance(pointsOnSameline[0],pointsOnSameline[j]);
+					if(dist>dist2)
+					{
+						dist=dist2;
+						indexToReplace=j;
+					}
+				}
+				if(indexToReplace>0)
+				{
+					Vector3 tempVar = pointsOnSameline[i];
+					pointsOnSameline[i] = pointsOnSameline[indexToReplace];
+					pointsOnSameline[indexToReplace] = tempVar;
+				}
+			}
+			if(!ListContainsPoint(pointsOnSameline,l.vertex[1]))
+			{
+				pointsOnSameline.Add(l.vertex[1]);
+			}
+			for(int i=0;i<pointsOnSameline.Count-1;i++)
+			{
+				//Debug.Log(pointsOnSameline[i].x+","+pointsOnSameline[i].z+" to "+pointsOnSameline[i+1].x+","+pointsOnSameline[i+1].z);
+				obstacle.edges.Add(new Line(pointsOnSameline[i],pointsOnSameline[i+1]));
+			}
+		}
+		return obstacle;
+	}
 	private bool ListContainsPoint(List<Vector3> intersectionPoints,Vector3 intsctPoint)
 	{
 		float limit = 0.0001f;
@@ -422,6 +558,7 @@ public class Visibility1 : MonoBehaviour {
 			if(Vector3.SqrMagnitude(vect-intsctPoint)<limit)
 			//if(Mathf.Approximately(vect.magnitude,intsctPoint.magnitude))
 				return true;
+			//Debug.Log("Points not equal"+vect+" , "+intsctPoint);
 		}
 		return false;
 	}
@@ -488,8 +625,8 @@ public class Visibility1 : MonoBehaviour {
 		//Debug.Log ("In existOnSamePolygon->" + allGeometries.Count + "=mapBG+"+globalPolygon.Count);
 		foreach (Geometry g in allGeometries)
 		{
-			Boolean pt1Found=false;
-			Boolean pt2Found=false;
+			bool pt1Found=false;
+			bool pt2Found=false;
 			foreach (Line l in g.edges) 
 			{
 				if(l.PointOnLine(pt1))
@@ -607,6 +744,7 @@ public class Visibility1 : MonoBehaviour {
 		//Geometry mapBG = new Geometry (); 
 		for (int i = 0; i < 4; i++)
 			mapBG.edges.Add( new Line( mapBoundary[i], mapBoundary[(i + 1) % 4]) );
+		Debug.Log ("mapBg" + mapBG.edges.Count);
 		//mapBG.DrawVertex (GameObject.Find ("temp"));
 		//mapBG.DrawGeometry(GameObject.find);
 		

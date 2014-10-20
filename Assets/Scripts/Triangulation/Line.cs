@@ -370,7 +370,34 @@ public class Line
 		else
 			return 2;*/
 	}
+	public List<Vector3> PointsOnEitherSide()
+	{
+		float gradx = (vertex [1].x - vertex [0].x);
+		float gradz = (vertex [1].z - vertex [0].z);
+		List<Vector3> pair = new List<Vector3> ();
+		Vector3 mp = MidPoint();
+		float incremnt = 0.02f;
+		float c = 0.0f;
 
+		if(Mathf.Abs(gradz)>0.00001f)
+		{
+
+			float m=-gradx/gradz;
+			Debug.Log("NOT || to z axis. m="+m+" gradz="+gradz);
+			c = mp.z-m*mp.x;
+			pair.Add(new Vector3(mp.x+incremnt,mp.y,m*(mp.x+incremnt)+c));
+			pair.Add(new Vector3(mp.x-incremnt,mp.y,m*(mp.x-incremnt)+c));
+			Debug.Log(pair[0]+" , "+pair[1]);
+		}
+		else
+		{
+			//Debug.Log("|| to z axis");
+			pair.Add(new Vector3(mp.x,mp.y,mp.z+incremnt));
+			pair.Add(new Vector3(mp.x,mp.y,mp.z-incremnt));
+			//Debug.Log(pair[0]+" , "+pair[1]);
+		}
+		return pair;
+	}
 	public bool PointOnLine( Vector3 pt )
 	{
 		float limit1 = 0.0001f;

@@ -21,7 +21,8 @@ public class Geometry
                            UnityEngine.Random.Range(0.0f,1.0f)) ;
 
 		foreach (Line l in edges) {
-			l.DrawVector (parent, c);
+			//l.DrawVector (parent, c);
+			l.DrawLine(c);
 		}
 		//DrawVertex (parent);
 	}
@@ -78,7 +79,7 @@ public class Geometry
 	//TODO: Fix for lines colinear
 	public bool PointInside( Vector3 pt )
 	{
-		Line lray = new Line(pt, new Vector3(-100,-100)); 
+		Line lray = new Line(pt, new Vector3(-100,1,-100)); 
 		int count = 0; 
 		foreach(Line myLine in edges){
 			if( myLine.LineIntersectMuntacEndPt(lray) > 0 ){
