@@ -358,16 +358,36 @@ namespace EditorArea {
 				//Check if the map is precomputed
 				if (playerPrefab == null) 
 				{
+					timeSamples = 1; //TODO change back to original value, only there for debugging purposes.
 					ComputeMap(); 
 				}
 				//find the map nodes that are linked to the segments of the roadmap. 
-				Line l1 = roadMap[0]; 
+				Line l1 = roadMap[10]; 
 
-				startX = (int)((l1.vertex[0].x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
-				startY = (int)((l1.vertex[0].z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);	
+				Vector2 v1;
+				Vector2 v2; 
 
-				l1.DrawLine(); 
-			}
+				v1.x = (int)((l1.vertex[0].x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
+				v1.y = (int)((l1.vertex[0].z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);	
+
+				v2.x = (int)((l1.vertex[1].x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
+				v2.y = (int)((l1.vertex[1].z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
+ 				
+
+
+				l1.DrawVector(); 
+
+				//Find the blocks that are in between the lines
+				fullMap = drawer.fullMap; 
+				
+
+				//fullMap[0][(int)v1.x][(int)v1.y].seen = true;
+				foreach(Line l in roadMap)
+				{
+					
+				}
+				//Bresenham's line algorithm
+
 
 
 			EditorGUILayout.LabelField ("");
@@ -688,6 +708,50 @@ namespace EditorArea {
 			SceneView.RepaintAll ();
 
 		}
+		public void ComputeLine(Vector2 v1, Vector2 v2)
+		{
+			int x0 = (int)v1.x; int y0 = (int)v1.y;
+			int x1 = (int)v2.x; int y1 = (int)v2.y;
+			
+			int sx, sy;
+    
+	        if(x0<x1)
+	            sx = 1;
+	        else
+	            sx = -1;
+	        
+	        if(y0<y1)
+	            sy = 1;
+	        else
+	            sy = -1;
+
+	        int dx =  Math.Abs(x1-x0);
+	        int dy = -Math.Abs(y1-y0);
+	        int err = dx + dy ;
+	        int e2 = 0; 
+	        
+	        while(true)
+	        {
+	            fullMap[0][x0][y0].seen = true;
+	            if (x0==x1 && y0==y1) 
+	                break;
+
+	            e2 = 2 * err;
+
+	            if (e2 >= dy) 
+	            { 
+	                err += dy; 
+	                x0 += sx; 
+	            }
+	            if (e2 <= dx) 
+	            { 
+	                err += dx; 
+	                y0 += sy; 
+	            }
+	        }
+			
+		}
+
 		public void ComputeMap()
 		{
 			//Find this is the view
