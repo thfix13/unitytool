@@ -29,6 +29,7 @@ namespace EditorArea {
 		// Clustering
 		private static String[] distMetrics = new String[] { "Frechet", "Area (Triangulation)", "Area (Interpolation) 3D", "Hausdorff" };
 		private static String[] clustAlgs = new String[] { "KMeans++", "DBScan" };
+		private static String[] clustAlgsShort = new String[] { "KM", "DBS" };
 		private static String[] distMetricsShort = new String[] { "FRE", "TRI", "INTPOL", "H" };
 		private static String[] dimensions = new String[] { "X", "Y", "Time", "Danger", "LOS", "Near Miss" };
 		private static String[] dimensionsShort = new String[] { "X", "Y", "T", "DNG", "LOS", "NM" };
@@ -38,7 +39,7 @@ namespace EditorArea {
 		private static int numClusters = 4, distMetric = 0, clustAlg = 1, chosenFileIndex = -1, currentColor = 0, numPasses = 1, rdpTolerance = 4;
 		private static List<Path> clusterCentroids = new List<Path>(), origPaths = new List<Path>();
 		private static bool[] showPaths = new bool[colors.Count()];
-		private static bool autoSavePaths = true, discardHighDangerPaths = true, drawHeatMapColored = false, useColors = false;
+		private static bool autoSavePaths = true, discardHighDangerPaths = true, drawHeatMapColored = false, useColors = false, showNoise = false;
 		public static bool altCentroidComp = false, useScalable = false;
 		public int numberLines = 20; 
 		public float interpolationValue = 0.0f;
@@ -819,6 +820,10 @@ namespace EditorArea {
 				numPasses = EditorGUILayout.IntSlider ("Number of passes", numPasses, 1, 500);
 				useScalable = EditorGUILayout.Toggle("Use scalable version", useScalable);
 			}
+			else if (clustAlg == 1)
+			{
+				showNoise = EditorGUILayout.Toggle("Show noise", showNoise);
+			}
 			int prevMetric = distMetric;
 			if ( (distMetric == 0 || distMetric == 3) && dimensionEnabled[3])
 				discardHighDangerPaths = EditorGUILayout.Toggle("Discard high danger paths", discardHighDangerPaths);
@@ -1048,8 +1053,9 @@ namespace EditorArea {
 					{
 						if (!paths.Contains(path))
 						{
-							if (clusters.Count <= 6)
-								path.color = colors[clusters.Count];
+						//	if (clusters.Count <= 6)
+						//		path.color = colors[clusters.Count];
+							path.clusterID = Path.NOISE;
 							paths.Add(path);
 							toggleStatus.Add(paths.Last(), true);
 						}
@@ -1080,12 +1086,19 @@ namespace EditorArea {
 						}
 					}
 					
-					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters + "c-" + distMetricStr + "-" + paths.Count() + "p-" + (int)clustVal + "v-" + totalTimeStr + "t@" + currentTime + ".xml", paths);
+					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + clustAlgsShort[clustAlg] + "-" + numClusters + "c-" + distMetricStr + "-" + paths.Count() + "p-" + (int)clustVal + "v-" + totalTimeStr + "t@" + currentTime + ".xml", paths);
 				}
 				
 				for (int color = 0; color < colors.Count(); color ++)
 				{
 					showPaths[color] = (color < numClusters) ? true : false;
+				}
+			}
+			foreach (Path p in paths)
+			{
+				if (p.clusterID == Path.NOISE)
+				{
+					p.color.a = (showNoise ? 1 : 0);
 				}
 			}
 			

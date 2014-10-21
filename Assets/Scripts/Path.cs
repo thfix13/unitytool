@@ -18,7 +18,7 @@ namespace Common {
 		
 		public const int NOISE = -1;
 		public const int UNCLASSIFIED = 0;
-		public int ClusterId;
+		public int clusterID;
 		
 		/// <summary>
 		/// Serialization only.

@@ -138,22 +138,22 @@ namespace ClusteringSpace
 			if (points == null) return null;
 			List<PathCollection> clusters = new List<PathCollection>();
 			eps *= eps; // square eps
-			int clusterId = 1;
+			int clusterID = 1;
 			for (int i = 0; i < points.Count; i++)
 			{
 			   Path p = points[i];
-			   if (p.ClusterId == Path.UNCLASSIFIED)
+			   if (p.clusterID == Path.UNCLASSIFIED)
 			   {
-			       if (ExpandCluster(points, p, clusterId, eps, minPts)) clusterId++;
+			       if (ExpandCluster(points, p, clusterID, eps, minPts)) clusterID++;
 			   }
 			}
 			// sort out points into their clusters, if any
-			int maxClusterId = points.OrderBy(p => p.ClusterId).Last().ClusterId;
-			if (maxClusterId < 1) return clusters; // no clusters, so list is empty
-			for (int i = 0; i < maxClusterId; i++) clusters.Add(new PathCollection());
+			int maxclusterID = points.OrderBy(p => p.clusterID).Last().clusterID;
+			if (maxclusterID < 1) return clusters; // no clusters, so list is empty
+			for (int i = 0; i < maxclusterID; i++) clusters.Add(new PathCollection());
 			foreach (Path p in points)
 			{
-			   if (p.ClusterId > 0) clusters[p.ClusterId - 1].Add(p);
+			   if (p.clusterID > 0) clusters[p.clusterID - 1].Add(p);
 			}
 			return clusters;
 		}
@@ -168,17 +168,17 @@ namespace ClusteringSpace
 	        }
 	        return region;
 	    }
-	    static bool ExpandCluster(List<Path> points, Path p, int clusterId, double eps, int minPts)
+	    static bool ExpandCluster(List<Path> points, Path p, int clusterID, double eps, int minPts)
 	    {
 	        List<Path> seeds = GetRegion(points, p, eps);
 	        if (seeds.Count < minPts) // no core point
 	        {
-	            p.ClusterId = Path.NOISE;
+	            p.clusterID = Path.NOISE;
 	            return false;
 	        }
 	        else // all points in seeds are density reachable from point 'p'
 	        {
-	            for (int i = 0; i < seeds.Count; i++) seeds[i].ClusterId = clusterId;
+	            for (int i = 0; i < seeds.Count; i++) seeds[i].clusterID = clusterID;
 	            seeds.Remove(p);
 	            while (seeds.Count > 0)
 	            {
@@ -189,10 +189,10 @@ namespace ClusteringSpace
 	                    for (int i = 0; i < result.Count; i++)
 	                    {
 	                        Path resultP = result[i];
-	                        if (resultP.ClusterId == Path.UNCLASSIFIED || resultP.ClusterId == Path.NOISE)
+	                        if (resultP.clusterID == Path.UNCLASSIFIED || resultP.clusterID == Path.NOISE)
 	                        {
-	                            if (resultP.ClusterId == Path.UNCLASSIFIED) seeds.Add(resultP);
-	                            resultP.ClusterId = clusterId;
+	                            if (resultP.clusterID == Path.UNCLASSIFIED) seeds.Add(resultP);
+	                            resultP.clusterID = clusterID;
 	                        }
 	                    }
 	                }
