@@ -356,8 +356,10 @@ namespace EditorArea {
 
 
 				//Check if the map is precomputed
-
-
+				if (playerPrefab == null) 
+				{
+					ComputeMap(); 
+				}
 				//find the map nodes that are linked to the segments of the roadmap. 
 				Line l1 = roadMap[0]; 
 
@@ -688,58 +690,59 @@ namespace EditorArea {
 		}
 		public void ComputeMap()
 		{
-				//Find this is the view
-				if (playerPrefab == null) {
-					playerPrefab = GameObject.Find ("Player"); 
-				}
+			//Find this is the view
+			if (playerPrefab == null) {
+				playerPrefab = GameObject.Find ("Player"); 
+			}
+			
+			if (floor == null) {
+				floor = (GameObject)GameObject.Find ("Floor");
 				
-				if (floor == null) {
-					floor = (GameObject)GameObject.Find ("Floor");
+				if (mapper == null) {
+					mapper = floor.GetComponent<Mapper> ();
 					
-					if (mapper == null) {
-						mapper = floor.GetComponent<Mapper> ();
-						
-						if (mapper == null)
-							mapper = floor.AddComponent<Mapper> ();
+					if (mapper == null)
+						mapper = floor.AddComponent<Mapper> ();
 
-						mapper.hideFlags = HideFlags.None;
-					
-					}
-					drawer = floor.gameObject.GetComponent<MapperEditorDrawer> ();
-					if (drawer == null) {
-						drawer = floor.gameObject.AddComponent<MapperEditorDrawer> ();
-						drawer.hideFlags = HideFlags.HideInInspector;
+					mapper.hideFlags = HideFlags.None;
+				
+				}
+				drawer = floor.gameObject.GetComponent<MapperEditorDrawer> ();
+				if (drawer == null) {
+					drawer = floor.gameObject.AddComponent<MapperEditorDrawer> ();
+					drawer.hideFlags = HideFlags.HideInInspector;
+				}
+			}
+			
+			if (!simulated) {
+				StorePositions ();
+				simulated = true;
+			}
+			
+			Cell[][] baseMap = null;
+			if (MapperEditor.grid != null) {
+				Cell[][] obstacles = mapper.ComputeObstacles ();
+				baseMap = new Cell[gridSize][];
+				for (int x = 0; x < gridSize; x++) {
+					baseMap [x] = new Cell[gridSize];
+					for (int y = 0; y < gridSize; y++) {
+						baseMap [x] [y] = MapperEditor.grid [x] [y] == null ? obstacles [x] [y] : MapperEditor.grid [x] [y];
 					}
 				}
-				
-				if (!simulated) {
-					StorePositions ();
-					simulated = true;
-				}
-				
-				Cell[][] baseMap = null;
-				if (MapperEditor.grid != null) {
-					Cell[][] obstacles = mapper.ComputeObstacles ();
-					baseMap = new Cell[gridSize][];
-					for (int x = 0; x < gridSize; x++) {
-						baseMap [x] = new Cell[gridSize];
-						for (int y = 0; y < gridSize; y++) {
-							baseMap [x] [y] = MapperEditor.grid [x] [y] == null ? obstacles [x] [y] : MapperEditor.grid [x] [y];
-						}
-					}
-				}
-				
-				original = mapper.PrecomputeMaps (SpaceState.Editor, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind, baseMap);
+			}
+			
+			original = mapper.PrecomputeMaps (SpaceState.Editor, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind, baseMap);
 
-				drawer.fullMap = original;
-				float maxSeenGrid;
-				drawer.seenNeverSeen = Analyzer.ComputeSeenValuesGrid (original, out maxSeenGrid);
-				drawer.seenNeverSeenMax = maxSeenGrid;
-				drawer.tileSize = SpaceState.Editor.tileSize;
-				drawer.zero.Set (floor.collider.bounds.min.x, floor.collider.bounds.min.z);
-				
-				ResetAI ();
-				previous = DateTime.Now;
+			drawer.fullMap = original;
+			float maxSeenGrid;
+			drawer.seenNeverSeen = Analyzer.ComputeSeenValuesGrid (original, out maxSeenGrid);
+			drawer.seenNeverSeenMax = maxSeenGrid;
+			drawer.tileSize = SpaceState.Editor.tileSize;
+			drawer.zero.Set (floor.collider.bounds.min.x, floor.collider.bounds.min.z);
+			
+			ResetAI ();
+			previous = DateTime.Now;
+
 		}
 		public void Update () {
 			textDraw.Clear();
