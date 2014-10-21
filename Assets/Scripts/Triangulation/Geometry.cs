@@ -160,8 +160,8 @@ public class Geometry
 	public void BoundGeometry(Vector3[] boundary){
 		List<Line> removeLines = new List<Line> ();
 		int i;
-		Debug.Log (boundary [0]);
-		Debug.Log (boundary [2]);
+		// Debug.Log (boundary [0]);
+		// Debug.Log (boundary [2]);
 		foreach (Line l in edges) {
 			bool rem = false;
 			for( i = 0; i < 2; i++ ){

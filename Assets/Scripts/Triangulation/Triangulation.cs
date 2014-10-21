@@ -30,6 +30,8 @@ public class Triangulation : MonoBehaviour
 	public const int red = 1;
 	public const int green = 2;
 	public const int blue = 3;
+	public List<Line> roadMap = new List<Line>(); 
+
 
 	public void Start(){
 	
@@ -43,6 +45,7 @@ public class Triangulation : MonoBehaviour
 		points.Clear(); 
 		colours.Clear();
 		obsGeos.Clear ();
+		roadMap.Clear(); 
 		GameObject temp = GameObject.Find("temp"); 
 		DestroyImmediate(temp); 
 
@@ -69,6 +72,9 @@ public class Triangulation : MonoBehaviour
 	}
 	public void Update()
 	{
+		//TODO: move to vectrocity for the drawing. 
+
+
 
 		//return; 
 		//points.Clear(); 
@@ -114,6 +120,7 @@ public class Triangulation : MonoBehaviour
 
 				if(ll.Length == 1)
 				{
+					
 					Debug.DrawLine(ll[0].MidPoint(), tt.GetCenterTriangle(),Color.red);
 					//Debug.Log("Drawing Red Line at: " + ll[0].MidPoint() + " " + tt.GetCenterTriangle());
 				}
@@ -501,6 +508,33 @@ public class Triangulation : MonoBehaviour
 		}
 		
 		triangulation.triangles = triangles;
+
+		//Create the road map
+		roadMap.Clear(); 
+
+		foreach(Triangle tt in triangles)
+		{
+			Line[] ll = tt.GetSharedLines(); 
+			if(ll.Length == 1)
+			{
+				
+				roadMap.Add(new Line(ll[0].MidPoint(), tt.GetCenterTriangle()));
+			}
+			else if(ll.Length > 2)
+			{
+				for(int i = 0; i<ll.Length; i++)
+				{
+					roadMap.Add(new Line(ll[i].MidPoint(), tt.GetCenterTriangle()));
+				}
+			}
+			else
+			{
+				for(int i = 0; i<ll.Length; i++)
+				{
+					roadMap.Add(new Line(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint()));
+				}
+			}
+		}
 	}
 
 }

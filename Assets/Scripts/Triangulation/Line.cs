@@ -62,6 +62,19 @@ public class Line
 
 		Debug.DrawLine(this.vertex[0],this.vertex[1],c); 
 	}
+	public void DrawVector()
+	{
+		String name = "Line";
+		GameObject.DestroyImmediate(GameObject.Find("Line"));
+
+		Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
+		                           UnityEngine.Random.Range(0.0f,1.0f),
+		                           UnityEngine.Random.Range(0.0f,1.0f)) ;
+
+		VectorLine line = new VectorLine(name,vertex,c,null,2.0f);
+		line.vectorObject.name = name;
+		line.Draw3D();
+	}
 	public void DrawVector(GameObject parent)
 	{
 		Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),

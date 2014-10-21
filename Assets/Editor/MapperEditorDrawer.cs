@@ -6,7 +6,8 @@ using Extra;
 
 namespace EditorArea {
 	
-	public class MapperEditorDrawer : MonoBehaviour {
+	public class MapperEditorDrawer : MonoBehaviour 
+	{
 		
 		// Options
 		public bool drawMap = true, drawNeverSeen = false, drawHeatMap = true, drawPath = false, editGrid = false, drawFoVOnly = false, drawCombatLines = false;

@@ -129,60 +129,9 @@ namespace EditorArea {
 			stepInTicks = ((long)(stepSize * 10000000L));
 			ticksBehind = EditorGUILayout.IntSlider (new GUIContent ("Ticks behind", "Number of ticks that the FoV will remain seen after the enemy has no visibility on that cell (prevents noise/jitter like behaviours)"), ticksBehind, 0, 100);
 			
-			if (GUILayout.Button ("Precompute Maps")) {
-				
-				//Find this is the view
-				if (playerPrefab == null) {
-					playerPrefab = GameObject.Find ("Player"); 
-				}
-				
-				if (floor == null) {
-					floor = (GameObject)GameObject.Find ("Floor");
-					
-					if (mapper == null) {
-						mapper = floor.GetComponent<Mapper> ();
-						
-						if (mapper == null)
-							mapper = floor.AddComponent<Mapper> ();
-
-						mapper.hideFlags = HideFlags.None;
-					
-					}
-					drawer = floor.gameObject.GetComponent<MapperEditorDrawer> ();
-					if (drawer == null) {
-						drawer = floor.gameObject.AddComponent<MapperEditorDrawer> ();
-						drawer.hideFlags = HideFlags.HideInInspector;
-					}
-				}
-				
-				if (!simulated) {
-					StorePositions ();
-					simulated = true;
-				}
-				
-				Cell[][] baseMap = null;
-				if (MapperEditor.grid != null) {
-					Cell[][] obstacles = mapper.ComputeObstacles ();
-					baseMap = new Cell[gridSize][];
-					for (int x = 0; x < gridSize; x++) {
-						baseMap [x] = new Cell[gridSize];
-						for (int y = 0; y < gridSize; y++) {
-							baseMap [x] [y] = MapperEditor.grid [x] [y] == null ? obstacles [x] [y] : MapperEditor.grid [x] [y];
-						}
-					}
-				}
-				
-				original = mapper.PrecomputeMaps (SpaceState.Editor, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind, baseMap);
-
-				drawer.fullMap = original;
-				float maxSeenGrid;
-				drawer.seenNeverSeen = Analyzer.ComputeSeenValuesGrid (original, out maxSeenGrid);
-				drawer.seenNeverSeenMax = maxSeenGrid;
-				drawer.tileSize = SpaceState.Editor.tileSize;
-				drawer.zero.Set (floor.collider.bounds.min.x, floor.collider.bounds.min.z);
-				
-				ResetAI ();
-				previous = DateTime.Now;
+			if (GUILayout.Button ("Precompute Maps")) 
+			{
+				ComputeMap();
 			} 
 			EditorGUILayout.LabelField ("");
 			
@@ -391,6 +340,39 @@ namespace EditorArea {
 			
 			// ----------------------------------
 			
+			if (GUILayout.Button ("Metric Road Map")) 
+			{
+				//Get the road map. 
+				List<Line> roadMap; 
+
+				Triangulation triangulation = GameObject.Find("Triangulation").GetComponent<Triangulation>();
+				
+				//Get the triangulation
+				if(triangulation.roadMap.Count == 0)
+				{
+					triangulation.TriangulationSpace();   
+				}
+				roadMap = triangulation.roadMap;
+
+
+				//Check if the map is precomputed
+
+
+				//find the map nodes that are linked to the segments of the roadmap. 
+				Line l1 = roadMap[0]; 
+
+				startX = (int)((l1.vertex[0].x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
+				startY = (int)((l1.vertex[0].z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);	
+
+				l1.DrawLine(); 
+			}
+
+
+			EditorGUILayout.LabelField ("");
+
+			// ----------------------------------
+
+
 			#region 5. Visualization
 			
 			EditorGUILayout.LabelField ("5. Visualization");
@@ -407,7 +389,8 @@ namespace EditorArea {
 			drawPath = EditorGUILayout.Toggle ("Draw path", drawPath);
 			drawCombatLines = EditorGUILayout.Toggle ("Draw combat lines", drawCombatLines);
 			
-			if (drawer != null) {
+			if (drawer != null) 
+			{
 				drawer.heatMap = null;
 				drawer.heatMap3d = null;
 				drawer.deathHeatMap = null;
@@ -703,7 +686,61 @@ namespace EditorArea {
 			SceneView.RepaintAll ();
 
 		}
-			
+		public void ComputeMap()
+		{
+				//Find this is the view
+				if (playerPrefab == null) {
+					playerPrefab = GameObject.Find ("Player"); 
+				}
+				
+				if (floor == null) {
+					floor = (GameObject)GameObject.Find ("Floor");
+					
+					if (mapper == null) {
+						mapper = floor.GetComponent<Mapper> ();
+						
+						if (mapper == null)
+							mapper = floor.AddComponent<Mapper> ();
+
+						mapper.hideFlags = HideFlags.None;
+					
+					}
+					drawer = floor.gameObject.GetComponent<MapperEditorDrawer> ();
+					if (drawer == null) {
+						drawer = floor.gameObject.AddComponent<MapperEditorDrawer> ();
+						drawer.hideFlags = HideFlags.HideInInspector;
+					}
+				}
+				
+				if (!simulated) {
+					StorePositions ();
+					simulated = true;
+				}
+				
+				Cell[][] baseMap = null;
+				if (MapperEditor.grid != null) {
+					Cell[][] obstacles = mapper.ComputeObstacles ();
+					baseMap = new Cell[gridSize][];
+					for (int x = 0; x < gridSize; x++) {
+						baseMap [x] = new Cell[gridSize];
+						for (int y = 0; y < gridSize; y++) {
+							baseMap [x] [y] = MapperEditor.grid [x] [y] == null ? obstacles [x] [y] : MapperEditor.grid [x] [y];
+						}
+					}
+				}
+				
+				original = mapper.PrecomputeMaps (SpaceState.Editor, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind, baseMap);
+
+				drawer.fullMap = original;
+				float maxSeenGrid;
+				drawer.seenNeverSeen = Analyzer.ComputeSeenValuesGrid (original, out maxSeenGrid);
+				drawer.seenNeverSeenMax = maxSeenGrid;
+				drawer.tileSize = SpaceState.Editor.tileSize;
+				drawer.zero.Set (floor.collider.bounds.min.x, floor.collider.bounds.min.z);
+				
+				ResetAI ();
+				previous = DateTime.Now;
+		}
 		public void Update () {
 			textDraw.Clear();
 			if (playing) {
