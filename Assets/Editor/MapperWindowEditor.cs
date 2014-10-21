@@ -360,36 +360,31 @@ namespace EditorArea {
 				{
 					timeSamples = 1; //TODO change back to original value, only there for debugging purposes.
 					ComputeMap(); 
+					fullMap = drawer.fullMap; 
+
 				}
-				//find the map nodes that are linked to the segments of the roadmap. 
-				Line l1 = roadMap[10]; 
-
-				Vector2 v1;
-				Vector2 v2; 
-
-				v1.x = (int)((l1.vertex[0].x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
-				v1.y = (int)((l1.vertex[0].z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);	
-
-				v2.x = (int)((l1.vertex[1].x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
-				v2.y = (int)((l1.vertex[1].z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
- 				
-
-
-				l1.DrawVector(); 
-
-				//Find the blocks that are in between the lines
-				fullMap = drawer.fullMap; 
 				
-
-				//fullMap[0][(int)v1.x][(int)v1.y].seen = true;
+				//Compute eachLine. 
 				foreach(Line l in roadMap)
 				{
-					
+					Vector2 v1;
+					Vector2 v2; 
+
+					v1.x = (int)((l.vertex[0].x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
+					v1.y = (int)((l.vertex[0].z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);	
+
+					v2.x = (int)((l.vertex[1].x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
+					v2.y = (int)((l.vertex[1].z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
+ 					
+ 					l.DrawVector(); 
+
+ 					//Draw the line on the 2d map
+					ComputeLine(v1,v2);
 				}
 				//Bresenham's line algorithm
 
 
-
+			}
 			EditorGUILayout.LabelField ("");
 
 			// ----------------------------------
@@ -708,6 +703,7 @@ namespace EditorArea {
 			SceneView.RepaintAll ();
 
 		}
+
 		public void ComputeLine(Vector2 v1, Vector2 v2)
 		{
 			int x0 = (int)v1.x; int y0 = (int)v1.y;
