@@ -358,7 +358,7 @@ namespace EditorArea {
 				//Check if the map is precomputed
 				if (playerPrefab == null) 
 				{
-					timeSamples = 1; //TODO change back to original value, only there for debugging purposes.
+					//timeSamples = 1; //TODO change back to original value, only there for debugging purposes.
 					ComputeMap(); 
 					fullMap = drawer.fullMap; 
 
@@ -376,13 +376,51 @@ namespace EditorArea {
 					v2.x = (int)((l.vertex[1].x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
 					v2.y = (int)((l.vertex[1].z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
  					
- 					l.DrawVector(); 
+ 					
 
  					//Draw the line on the 2d map
-					ComputeLine(v1,v2);
+					l.listGrid = ComputeLine(v1,v2);
 				}
-				//Bresenham's line algorithm
+				
+				//Get Absolute seen value. 
+				foreach(Line l in roadMap)
+				{
 
+					foreach(Vector2 v in l.listGrid)
+					{
+						int count=0; 
+						
+						for(int t = 0; t<fullMap.Length; t++)
+						{
+							if(fullMap[t][(int)v.x][(int)v.y].seen)
+							{
+								count++; 
+							}
+						}
+						l.valueGrid.Add(count); 
+					}
+
+				}
+				//Find the most expansive segment
+				int max = -1;
+				foreach(Line l in roadMap)
+				{
+					if(l.valueGrid.Max()>max)
+						max = l.valueGrid.Max(); 
+				} 
+
+				//Set there color and draw them
+				GameObject g = GameObject.Find("Lines");
+				if(g)
+					GameObject.DestroyImmediate(g);
+				g = new GameObject("Lines");	
+
+
+				foreach(Line l in roadMap)
+				{
+					
+					l.DrawVector(g,l.valueGrid.Max()/(float)max); 
+				}
 
 			}
 			EditorGUILayout.LabelField ("");
@@ -704,8 +742,9 @@ namespace EditorArea {
 
 		}
 
-		public void ComputeLine(Vector2 v1, Vector2 v2)
+		public List<Vector2> ComputeLine(Vector2 v1, Vector2 v2)
 		{
+			List<Vector2> cells = new List<Vector2>();  
 			int x0 = (int)v1.x; int y0 = (int)v1.y;
 			int x1 = (int)v2.x; int y1 = (int)v2.y;
 			
@@ -728,7 +767,8 @@ namespace EditorArea {
 	        
 	        while(true)
 	        {
-	            fullMap[0][x0][y0].seen = true;
+	            //fullMap[0][x0][y0].seen = true;
+	            cells.Add(new Vector2(x0, y0));
 	            if (x0==x1 && y0==y1) 
 	                break;
 
@@ -745,7 +785,7 @@ namespace EditorArea {
 	                y0 += sy; 
 	            }
 	        }
-			
+			return cells; 
 		}
 
 		public void ComputeMap()
