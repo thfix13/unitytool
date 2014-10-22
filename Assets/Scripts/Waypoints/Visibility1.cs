@@ -3,14 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 //using System;
 public class Visibility1 : MonoBehaviour {
-	public List<Vector3> points = new List<Vector3>();
-	public List<Color> colours = new List<Color>();
+	//public List<Vector3> points = new List<Vector3>();
+	//public List<Color> colours = new List<Color>();
 	// Use this for initialization
 	
-	public List<Triangle> triangles = new List<Triangle>(); 
-	public List<Line> lines = new List<Line>(); 
+	//public List<Triangle> triangles = new List<Triangle>(); 
+	//public List<Line> lines = new List<Line>(); 
 	
-	public List<Line> linesMinSpanTree = new List<Line>(); 
+	//public List<Line> linesMinSpanTree = new List<Line>(); 
 	public List<Geometry> obsGeos = new List<Geometry> (); 
 	//Contains Map
 	public Geometry mapBG = new Geometry ();
@@ -19,15 +19,17 @@ public class Visibility1 : MonoBehaviour {
 	//public bool drawRoadMap = false; 
 	//public bool drawMinSpanTree = false;
 	//public bool stopAll = false;
-	public List<int>[] G = new List<int>[110];
-	public int[] colorG = new int[110];
-	public bool[] visitedG = new bool[110];
-	public const int red = 1;
-	public const int green = 2;
-	public const int blue = 3;
+	//public List<int>[] G = new List<int>[110];
+	//public int[] colorG = new int[110];
+	//public bool[] visitedG = new bool[110];
+	//public const int red = 1;
+	//public const int green = 2;
+	//public const int blue = 3;
 	List<Geometry> globalPolygon;
 	List<Vector3> pathPoints;
 	float mapDiagonalLength = 0;
+	GameObject floor ;
+	public Camera camObj;
 	//List<Vector3> globalTempArrangedPoints = new List<Vector3>();
 	// Use this for initialization
 	GameObject spTemp ;
@@ -37,23 +39,119 @@ public class Visibility1 : MonoBehaviour {
 		globalPolygon = getObstacleEdges ();
 
 		pathPoints = definePath ();
+		foreach(Vector3 vect in pathPoints)
+		{
+			GameObject pathObj;
+			pathObj = Instantiate(pathSphere, 
+			                    vect, 
+			                    pathSphere.transform.rotation) as GameObject;
+			//pathObj.transform.position=vect;
+		}
 		CalculateVisibilityForPath ();
 
 	}
 
 
-	Vector3 first_point;
+	//Vector3 first_point;
 	List<Geometry> globalTempShadowPoly = new List<Geometry>();
 	Geometry globalTempStarPoly;
 	List<List<Vector3>> globalTempintersectionPointsPerV = new List<List<Vector3>>();
 	List<Line> globalTempAllShadowLines = new List<Line>();
+	public Material mat;
+	public GameObject pathSphere;
+	public GameObject hiddenSphere;
+	public GameObject selectedBoxPrefab;
+	GameObject selectedBox;
+	List<GameObject> hiddenSphereList;
+	//GameObject shadowObject = new GameObject();
 
-	// Update is called once per frame
+	
+	Hashtable hTable;
+	Vector3 start_box,end_box;
+	Rect boundbox;
+	bool b_ShowBoundbox=false;
+	private void makeBox() {
+		//Ensures the bottom left and top right values are correct
+		//regardless of how the user boxes units
+		float xmin = Mathf.Min(start_box.x, end_box.x);
+		float zmin = Mathf.Min(start_box.z, end_box.z);
+		float width = Mathf.Max(start_box.x, end_box.x) - xmin;
+		float height = Mathf.Max(start_box.z, end_box.z) - zmin;
+		boundbox = new Rect(xmin, zmin, width, height);
+		if(width*height>0.01)
+		{
+			selectedBox = Instantiate(selectedBoxPrefab) as GameObject;
+			b_ShowBoundbox = true;
+			float centreX=(start_box.x+end_box.x)/2;
+			float centreZ=(start_box.z+end_box.z)/2;
+			selectedBox.renderer.enabled=true;
+			Vector3 tempVect = new Vector3(centreX,1,centreZ);
+			selectedBox.transform.position=tempVect;
+			tempVect.x=width;
+			tempVect.z=height;
+			selectedBox.transform.localScale=tempVect;
+		}
+		else
+		{
+			GameObject.Destroy(selectedBox);
+			b_ShowBoundbox=false;
+		}
+		if(hiddenSphereList!=null)
+		{
+			foreach(GameObject g in hiddenSphereList)
+			{
+				GameObject.Destroy(g);
+			}
+		}
+		hiddenSphereList=null;
+	}
+
 	void Update () 
 	{
-		foreach (Geometry geo in globalTempShadowPoly) 
+		if(Input.GetMouseButtonDown(0)) 
 		{
-			geo.DrawGeometry(GameObject.Find("Floor"));
+			GameObject.Destroy(selectedBox);
+			start_box = Input.mousePosition;
+		}
+		
+		if(Input.GetMouseButtonUp(0)) {
+			end_box = Input.mousePosition;
+			start_box = camObj.ScreenToWorldPoint(start_box);
+			start_box.y=1;
+			end_box = camObj.ScreenToWorldPoint(end_box);
+			end_box.y=1;
+			//Debug.Log(start_box+","+end_box);
+			makeBox();
+			IdentifyGoodHidingSpots();
+
+		}
+		/*
+		//Destroy old game object
+		shadowObject.GetComponent("MeshFilter").mesh.Clear();
+		
+		//New mesh and game object
+		//shadowObject = new GameObject();
+		shadowObject.name = "MousePolygon";
+		Mesh mesh = new Mesh();
+		
+		//Components
+		var MF = shadowObject.AddComponent("MeshFilter");
+		var MR = shadowObject.AddComponent("MeshRenderer");
+		//myObject[x].AddComponent();
+		
+		//Create mesh
+		mesh = CreateMesh(x);
+		
+		//Assign materials
+		MR.material = myMaterial;
+		
+		//Assign mesh to game object
+		MF.mesh = mesh;
+		*/
+		//foreach (Geometry geo in globalTempShadowPoly) 
+		{
+			//geo.DrawGeometry(GameObject.Find("Floor"));
+
 			//Debug.Log(geo.edges.Count);
 			/*foreach(Line l in geo.edges)
 			{
@@ -70,12 +168,167 @@ public class Visibility1 : MonoBehaviour {
 
 
 	}
+
+	void IdentifyGoodHidingSpots ()
+	{
+		if (!b_ShowBoundbox)
+			return;
+		//Identify path points in box
+		Geometry boundboxGeo = new Geometry ();
+		boundboxGeo.edges.Add (new Line (new Vector3(boundbox.x,1,boundbox.y),new Vector3(boundbox.x+boundbox.width,1,boundbox.y)));
+		boundboxGeo.edges.Add (new Line (new Vector3(boundbox.x+boundbox.width,1,boundbox.y),new Vector3(boundbox.x+boundbox.width,1,boundbox.y+boundbox.height)));
+		boundboxGeo.edges.Add (new Line (new Vector3(boundbox.x+boundbox.width,1,boundbox.y+boundbox.height),new Vector3(boundbox.x,1,boundbox.y+boundbox.height)));
+		boundboxGeo.edges.Add (new Line (new Vector3(boundbox.x,1,boundbox.y+boundbox.height),new Vector3(boundbox.x,1,boundbox.y)));
+		int startIndex = -1;
+		int endIndex = -1;
+		int currIndex = 0;
+		foreach(Vector3 vect in pathPoints)
+		{
+			if(boundboxGeo.PointInside(vect))
+			{
+				if(startIndex==-1)
+				{
+					startIndex=currIndex;
+				}
+			}
+			else
+			{
+				if(startIndex!=-1)
+				{
+					endIndex=currIndex-1;
+					break;
+				}
+			}
+			currIndex++;
+		}
+		if (startIndex == -1)
+			return;
+		List<Line> hiddenLines = new List<Line> ();
+		//ForEach first path point:
+		//Identify lines behind which to hide
+		List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [startIndex]];
+		foreach(Geometry geo in shadowPolyTemp)
+		{
+			foreach(Line l in geo.edges)
+			{
+				List<Vector3> pair = l.PointsOnEitherSide(0.02f);
+
+				int ct_insideObstacle=0;
+				//int ct_insideBoundary=0;
+				foreach(Vector3 pt in pair)
+				{
+					foreach(Geometry g in globalPolygon)
+					{
+						if(g.PointInside(pt))
+						{
+							ct_insideObstacle++;
+						}
+					}
+				}
+				if(ct_insideObstacle==1)
+				{
+					hiddenLines.Add(l);
+				}
+			}
+		}
+		currIndex = 0;
+		foreach(Line l in hiddenLines)
+		{
+			Vector3 midPt = l.MidPoint();
+			Vector3 tempPt = Vector3.MoveTowards(midPt,pathPoints[startIndex],0.1f);
+			bool b_insideObs=false;
+			foreach(Geometry g in globalPolygon)
+			{
+				if(g.PointInside(tempPt))
+				{
+					b_insideObs=true;
+				}
+			}
+			if(!b_insideObs)
+			{
+				hiddenLines[currIndex]=null;
+			}
+			
+			currIndex++;
+		}
+		hiddenLines.RemoveAll(item=>item==null);
+		float radius_hiddenSphere = ((SphereCollider)hiddenSphere.collider).radius*((SphereCollider)hiddenSphere.collider).transform.lossyScale.x;
+		//Debug.Log ("radius" + radius_hiddenSphere);
+		hiddenSphereList = new List<GameObject> ();
+		//Foreach line:
+		foreach(Line l in hiddenLines)
+		{
+			Vector3 towardsVect=l.vertex[0];
+			while(towardsVect!=l.vertex[1])
+			{
+				Vector3 previous = towardsVect;
+				towardsVect = Vector3.MoveTowards(previous,l.vertex[1],radius_hiddenSphere+0.01f);
+				Line tempLine = new Line(previous,towardsVect);
+				List<Vector3> pair = tempLine.PointsOnEitherSide(radius_hiddenSphere+0.01f);
+				if(!Physics.CheckSphere(pair[0],radius_hiddenSphere))
+				{
+					GameObject clone1 = (GameObject)Instantiate(hiddenSphere);
+					clone1.transform.position = pair[0];
+					hiddenSphereList.Add(clone1);
+				}
+				if(!Physics.CheckSphere(pair[1],radius_hiddenSphere))
+				{
+					GameObject clone1 = (GameObject)Instantiate(hiddenSphere);
+					clone1.transform.position = pair[1];
+					hiddenSphereList.Add(clone1);
+				}
+			}
+			////// move over line, identify point beside line inside shadow polygon
+			////// , make abstract area and check if all points on hidden sphere fits in all shadow
+		}
+		List<Vector3> circumPoints = new List<Vector3>();
+		for(int k=0;k<hiddenSphereList.Count;k++)
+		{
+			bool sphereFound=false;
+			circumPoints.Clear();
+			circumPoints.Add(new Vector3(hiddenSphereList[k].transform.position.x,1,hiddenSphereList[k].transform.position.z));
+			//circumPoints.Add(new Vector3(hiddenSphereList[k].transform.position.x-radius_hiddenSphere,1,hiddenSphereList[k].transform.position.z));
+			//circumPoints.Add(new Vector3(hiddenSphereList[k].transform.position.x+radius_hiddenSphere,1,hiddenSphereList[k].transform.position.z));
+			//circumPoints.Add(new Vector3(hiddenSphereList[k].transform.position.x,1,hiddenSphereList[k].transform.position.z-radius_hiddenSphere));
+			//circumPoints.Add(new Vector3(hiddenSphereList[k].transform.position.x,1,hiddenSphereList[k].transform.position.z+radius_hiddenSphere));
+			for(int i=startIndex;i<=endIndex;i++)
+			{
+				shadowPolyTemp = (List<Geometry>)hTable [pathPoints [i]];
+				int insideCounterTemp=0;
+				foreach(Geometry geo in shadowPolyTemp)
+				{
+					insideCounterTemp=0;
+					foreach(Vector3 vect in circumPoints)
+					{
+						if(geo.PointInside(vect))
+						{
+							insideCounterTemp++;
+						}
+					}
+					if(insideCounterTemp>0 && insideCounterTemp<4)
+						Debug.Log (insideCounterTemp);
+					if(insideCounterTemp==circumPoints.Count)
+					{
+						sphereFound=true;
+						break;
+					}
+				}
+				if(!sphereFound)
+				{
+					GameObject.Destroy(hiddenSphereList[k]);
+					hiddenSphereList[k]=null;
+				}
+			}
+		}
+		hiddenSphereList.RemoveAll(item=>item==null);
+	}
+
 	public void CalculateVisibilityForPath()
 	{
 		//globalPolygon = getObstacleEdges ();
 
 		List<Vector3> endPoints = new List<Vector3> ();
-		Hashtable hTable = new Hashtable ();
+		hTable = new Hashtable ();
 		//Extract all end points
 
 		foreach(Line l in mapBG.edges)
@@ -308,13 +561,12 @@ public class Visibility1 : MonoBehaviour {
 			List<Geometry> shadowPoly = FindShadowPolygons(visiblePoly);
 			//ValidatePolygons(shadowPoly);
 			//globalTempArrangedPoints.AddRange(arrangedPoints);
-			globalTempStarPoly = visiblePoly;
-			globalTempShadowPoly = shadowPoly;
+			//globalTempStarPoly = visiblePoly;
+			//globalTempShadowPoly = shadowPoly;
 			//globalTempintersectionPointsPerV.AddRange(intersectionPointsPerV);
 			//bArranged = true;
 			arrangedPoints.Clear();
 			hTable.Add(pPoint,shadowPoly);
-			break;//TODO Remove this
 		}//End: Do for all path points
 	}
 
@@ -356,7 +608,7 @@ public class Visibility1 : MonoBehaviour {
 		{
 			foreach(Line l in geo.edges)
 			{
-				List<Vector3> pair = l.PointsOnEitherSide();
+				List<Vector3> pair = l.PointsOnEitherSide(0.02f);
 				int ct_visible=0;
 				int ct_insideObstacle=0;
 				int ct_insideBoundary=0;
@@ -650,14 +902,14 @@ public class Visibility1 : MonoBehaviour {
 		GameObject sp = (GameObject)GameObject.Find ("StartPoint");
 		GameObject ep = (GameObject)GameObject.Find ("EndPoint");
 		pathPts.Add(sp.transform.position);
-		first_point = pathPts [0];
+		//first_point = pathPts [0];
 		pathPts.Add(ep.transform.position);
 		findPath (pathPts);//straight Line points
 		return pathPts;
 	}
 	private void findPath (List<Vector3> pathPts)
 	{
-		int iterations = 10;//increase to increase number of points on path
+		int iterations = 6;//increase to increase number of points on path
 		for (int i=0; i<iterations; i++)
 		{
 			int k=0;
@@ -675,7 +927,7 @@ public class Visibility1 : MonoBehaviour {
 	{
 		//Compute one step of the discritzation
 		//Find this is the view
-		GameObject floor = (GameObject)GameObject.Find ("Floor");
+		floor = (GameObject)GameObject.Find ("Floor");
 		
 		Vector3 [] vertex = new Vector3[4]; 
 		
@@ -760,7 +1012,7 @@ public class Visibility1 : MonoBehaviour {
 		}
 		
 		//lines are defined by all the points in  obs
-		lines = new List<Line> ();
+		//lines = new List<Line> ();
 		
 		obsGeos.Clear ();
 		foreach (Geometry g in geos) {

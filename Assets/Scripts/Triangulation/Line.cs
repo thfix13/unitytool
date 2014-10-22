@@ -384,13 +384,13 @@ public class Line
 		else
 			return 2;*/
 	}
-	public List<Vector3> PointsOnEitherSide()
+	public List<Vector3> PointsOnEitherSide(float incremnt)
 	{
 		float gradx = (vertex [1].x - vertex [0].x);
 		float gradz = (vertex [1].z - vertex [0].z);
 		List<Vector3> pair = new List<Vector3> ();
 		Vector3 mp = MidPoint();
-		float incremnt = 0.02f;
+		//float incremnt = 0.02f;
 		float c = 0.0f;
 
 		if(Mathf.Abs(gradz)>0.00001f)
