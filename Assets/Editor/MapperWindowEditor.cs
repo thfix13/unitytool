@@ -36,14 +36,15 @@ namespace EditorArea {
 		public static bool[] dimensionEnabled = new bool[] { true, true, false, false, false, false };
 		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
 		private static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
-		private static int numClusters = 4, distMetric = 0, clustAlg = 1, chosenFileIndex = -1, currentColor = 0, numPasses = 1, rdpTolerance = 4;
+		public static int clustAlg = 1;
+		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, numPasses = 1, rdpTolerance = 4, maxClusters = 7, dbsScanEps = 12, minPathsForCluster = 5;
 		private static List<Path> clusterCentroids = new List<Path>(), origPaths = new List<Path>();
 		private static bool[] showPaths = new bool[colors.Count()];
 		private static bool autoSavePaths = true, discardHighDangerPaths = true, drawHeatMapColored = false, useColors = false, showNoise = false;
 		public static bool altCentroidComp = false, useScalable = false;
-		public int numberLines = 20; 
-		public float interpolationValue = 0.0f;
-		public float interpolationValueCheck = 0.0f; 
+	//	public int numberLines = 20; 
+	//	public float interpolationValue = 0.0f;
+	//	public float interpolationValueCheck = 0.0f; 
 		public static bool[] drawHeatMapColors = new bool[MapperWindowEditor.colors.Count()];
 
 		// Computed parameters
@@ -822,6 +823,9 @@ namespace EditorArea {
 			}
 			else if (clustAlg == 1)
 			{
+				maxClusters = EditorGUILayout.IntSlider("Max clusters", maxClusters, 1, colors.Count());
+				dbsScanEps = EditorGUILayout.IntSlider("Eps value", dbsScanEps, 1, 50);
+				minPathsForCluster = EditorGUILayout.IntSlider("Min paths for cluster", minPathsForCluster, 1, 15);
 				showNoise = EditorGUILayout.Toggle("Show noise", showNoise);
 			}
 			int prevMetric = distMetric;
@@ -1027,39 +1031,82 @@ namespace EditorArea {
 				}
 				else if (clustAlg == 1)
 				{ // dbscan
-					List<PathCollection> clusters = DBSCAN.DoDBSCAN(paths, distMetric);
+					List<PathCollection> clusters = DBSCAN.DoDBSCAN(paths, distMetric, dbsScanEps, minPathsForCluster);
 					
 					paths.Clear ();
 					deaths.Clear ();
 					ClearPathsRepresentation ();
-
-					for(int c = 0; c < clusters.Count; c ++)
-					{
-						foreach(Path path in clusters[c])
-						{
-							path.color = colors[c];
-							if (!paths.Contains(path))
-							{
-								paths.Add(path);
-								toggleStatus.Add(paths.Last (), true);
-							}
-						}
-					}
 					
 					Debug.Log("Num clusters returned from DBSCAN: " + clusters.Count);
 					numClusters = clusters.Count;
 					
+					if (clusters.Count > maxClusters)
+					{ // too many clusters. reduce using kmeans.
+						List<Path> clusterCentroids = new List<Path>();
+						foreach(PathCollection c in clusters)
+						{
+							c.UpdateCentroid();
+							clusterCentroids.Add(c.Centroid);
+						}
+						
+						double[] weights = new double[paths.Count()];
+						for(int i = 0; i < paths.Count(); i ++) { weights[i] = 1.0; }
+						List<PathCollection> newClusters = KMeans.DoKMeans(clusterCentroids, maxClusters, distMetric, 1, weights);
+						
+						for (int c = 0; c < newClusters.Count; c ++)
+						{
+							for (int c2 = 0; c2 < clusterCentroids.Count; c2 ++)
+							{
+								if (newClusters[c].Contains(clusterCentroids[c2]))
+								{ // then all paths of clusters[c2] list should be of the same color!
+									foreach (Path path in clusters[c2])
+									{
+										path.color = colors[c];
+										if (path.Equals(clusterCentroids[c2]))
+										{
+											path.color.a = 0.5f;
+										}
+										if (!paths.Contains(path))
+										{
+											paths.Add(path);
+											toggleStatus.Add(paths.Last (), true);
+										}
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						for(int c = 0; c < clusters.Count; c ++)
+						{
+							foreach(Path path in clusters[c])
+							{
+								path.color = colors[c];
+								if (!paths.Contains(path))
+								{
+									paths.Add(path);
+									toggleStatus.Add(paths.Last (), true);
+								}
+							}
+						}
+					}
+					
+					int noisy = 0;
 					foreach (Path path in origPaths)
 					{
 						if (!paths.Contains(path))
 						{
-						//	if (clusters.Count <= 6)
-						//		path.color = colors[clusters.Count];
 							path.clusterID = Path.NOISE;
+							noisy ++;
+							path.color = colors[colors.Count() - 1];
+							path.color.a = 1;
+							
 							paths.Add(path);
 							toggleStatus.Add(paths.Last(), true);
 						}
 					}
+					Debug.Log("Noisy paths: " + noisy);
 				}
 				
 				clustTime.Stop();
@@ -1075,7 +1122,7 @@ namespace EditorArea {
 					
 					String distMetricStr = distMetricsShort[distMetric];
 					if (distMetric == 0 || distMetric == 3)
-					{ // frechet
+					{ // frechet, hausdorff
 						distMetricStr += "-";
 						for (int dim = 0; dim < dimensionEnabled.Count(); dim ++)
 						{
@@ -1094,107 +1141,16 @@ namespace EditorArea {
 					showPaths[color] = (color < numClusters) ? true : false;
 				}
 			}
-			foreach (Path p in paths)
+			if (clustAlg == 1)
 			{
-				if (p.clusterID == Path.NOISE)
+				foreach (Path p in paths)
 				{
-					p.color.a = (showNoise ? 1 : 0);
+					if (p.clusterID == Path.NOISE)
+					{
+						p.color.a = (showNoise ? 1 : 0);
+					}
 				}
 			}
-			
-	/*		if (GUILayout.Button ("Cluster with optimal k (2-7)"))
-			{
-				if (paths.Count() < 7)
-				{
-					Debug.Log("You must have at least 100 paths to perform this operation!");
-					return;
-				}
-				
-				List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/20, distMetric, numPasses);
-			
-				List<Path> tempCentroids = new List<Path>();
-				foreach(PathCollection pc in clusters)
-				{
-					tempCentroids.Add(pc.Centroid);
-				}
-				
-				double maxDistanceBetweenClusters = Double.NegativeInfinity;
-				int clusterNumOfMaxDist = -1;
-				
-				for (int numClusters_ = 7; numClusters_ > 1; numClusters_ --)
-				{	
-					List<PathCollection> newClusters = KMeans.DoKMeans(tempCentroids, numClusters_, distMetric, numPasses);
-					
-					clusterCentroids.Clear();
-					foreach(PathCollection pc in newClusters)
-					{
-						clusterCentroids.Add(pc.Centroid);
-					}
-					
-					paths.Clear ();
-					deaths.Clear ();
-					ClearPathsRepresentation ();
-
-					for (int c = 0; c < newClusters.Count; c ++)
-					{
-						for (int c2 = 0; c2 < clusters.Count; c2 ++)
-						{
-							if (newClusters[c].Contains(clusters[c2].Centroid))
-							{ // then all paths of clusters[c2] list should be of the same color!
-								foreach (Path path in clusters[c2])
-								{
-									path.color = colors[c];
-									if (path.Equals(clusters[c2].Centroid))
-									{
-										path.color.a = 0.5f;
-									}
-									if (!paths.Contains(path))
-									{
-										paths.Add(path);
-										toggleStatus.Add(paths.Last (), true);
-									}
-								}
-							}
-						}
-					}
-
-					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + numClusters_ + "c-" + distMetric + "d-" + paths.Count() + "p.xml", paths);
-				
-					double totalDist = 0;
-					int numDist = 0;
-					for (int i = 0; i < clusterCentroids.Count(); i ++)
-					{
-						for (int j = i+1; j < clusterCentroids.Count(); j ++)
-						{
-							numDist ++;
-							totalDist += KMeans.FindDistance(clusterCentroids[i], clusterCentroids[j]);
-						}
-					}
-					
-					double avgDist = totalDist / numDist;
-					if (avgDist > maxDistanceBetweenClusters)
-					{
-						clusterNumOfMaxDist = numClusters_;
-						maxDistanceBetweenClusters = avgDist;
-					}
-				}
-				
-				// find cluster # that on average maximizes the distances between cluster centroids.				
-				Debug.Log("Optimal cluster #: " + clusterNumOfMaxDist + ".");
-				
-				// Display the optimal clustering.
-				List<Path> pathsImported = PathBulk.LoadPathsFromFile ("clusteringdata/" + nameFile + "_" + clusterNumOfMaxDist + "c-" + distMetric + "d-" + paths.Count() + "p.xml");
-
-				paths.Clear ();
-				ClearPathsRepresentation ();
-								
-				foreach (Path p in pathsImported)
-				{
-					toggleStatus.Add (p, true);
-					paths.Add(p);
-				}
-			}
-	*/
 			
 			if (GUILayout.Button("Generate graph (Mac only)"))
 			{
@@ -1252,7 +1208,7 @@ namespace EditorArea {
 			
 			List<String> goodFiles = new List<String>();
 			for (int count = 0; count < info.Count(); count ++)
-			{
+			{ // find clustering results file to display in load menu.
 				String[] temp = info[count].Name.Split(new Char[]{'_'});
 				if (temp[0] == nameFile)
 				{
@@ -1311,9 +1267,10 @@ namespace EditorArea {
 				chosenFileIndex = -1;
 			}
 			
-			rdpTolerance = EditorGUILayout.IntField("RDP Tolerance", rdpTolerance);
-			if (GUILayout.Button("Import Platformer Paths"))
-			{
+			EditorGUILayout.LabelField ("");
+			
+			if (GUILayout.Button("Import Platformer Paths & RDP"))
+			{ // imports paths, sets up obstacles in viewer,.
 				paths.Clear ();
 				ClearPathsRepresentation ();
 				resetClusteringData();
@@ -1348,7 +1305,7 @@ namespace EditorArea {
 					}
 					if (pathPoints.Count() <= 3) continue;
 					
-					pathsImported.Add(new Path(pathPoints)); //reducer.shortestPathAroundObstacles(pathPoints)));
+					pathsImported.Add(new Path(reducer.DouglasPeuckerReduction(pathPoints, rdpTolerance, true))); //shortestPathAroundObstacles(pathPoints)));
 				}
 				
 				// Setup parenting
@@ -1370,14 +1327,24 @@ namespace EditorArea {
 					paths[count].name = count.ToString();
 				}
 			}
+			rdpTolerance = EditorGUILayout.IntField("RDP Tolerance", rdpTolerance);
 			if (GUILayout.Button("RDP"))
 			{
-				LineReduction reducer = new LineReduction();
+				List<Path> origPaths = new List<Path>();
+				foreach (Path p in paths) { origPaths.Add(p); }
 				ClearPathsRepresentation ();
-				foreach (Path p in paths)
+				paths.Clear();
+
+				LineReduction reducer = new LineReduction();
+				foreach (Path p in origPaths)
 				{
-					reducer.DouglasPeuckerReduction(p.points, rdpTolerance);
-					toggleStatus.Add (p, true);
+					Path reducedPath = new Path(reducer.DouglasPeuckerReduction(p.points, rdpTolerance, false));
+					reducedPath.color.a = 1;
+					if (!paths.Contains(reducedPath))
+					{
+						paths.Add(reducedPath);
+						toggleStatus.Add(paths.Last(), true);
+					}
 				}
 			}
 			if (GUILayout.Button("Reduce to shortest paths"))

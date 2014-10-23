@@ -116,7 +116,7 @@ namespace ClusteringSpace
 			if (points == null || points.Count < 3 || (prevPointCount == points.Count)) return points;
 			
 			int numPoints = points.Count;
-			points = DouglasPeuckerReduction(points, 100000);
+			points = DouglasPeuckerReduction(points, 100000, true);
 			
 			// get point that is farthest from the line from first point to last point
 			int firstPoint = 0, lastPoint = points.Count - 1;
@@ -211,7 +211,7 @@ namespace ClusteringSpace
 		}
 		
 		// Uses the Douglas Peucker algorithm to reduce the number of points.
-		public List<Node> DouglasPeuckerReduction(List<Node> Points, Double Tolerance)
+		public List<Node> DouglasPeuckerReduction(List<Node> Points, Double Tolerance, bool aroundObstacles)
 		{
 		    if (Points == null || Points.Count < 3)
 		    return Points;
@@ -231,7 +231,7 @@ namespace ClusteringSpace
 		        lastPoint--;
 		    }
 
-		    DouglasPeuckerReduction(Points, firstPoint, lastPoint, Tolerance, ref pointIndexsToKeep);
+		    DouglasPeuckerReduction(Points, firstPoint, lastPoint, Tolerance, ref pointIndexsToKeep, aroundObstacles);
 
 		    List<Node> returnPoints = new List<Node>();
 		    pointIndexsToKeep.Sort();
@@ -244,7 +244,7 @@ namespace ClusteringSpace
 		    return returnPoints;
 		}
     
-		private void DouglasPeuckerReduction(List<Node> points, Int32 firstPoint, Int32 lastPoint, Double tolerance, ref List<Int32> pointIndexsToKeep)
+		private void DouglasPeuckerReduction(List<Node> points, Int32 firstPoint, Int32 lastPoint, Double tolerance, ref List<Int32> pointIndexsToKeep, bool aroundObstacles)
 		{
 			if (restart) return;
 			
@@ -266,8 +266,8 @@ namespace ClusteringSpace
 		        pointIndexsToKeep.Add(indexFarthest);
 //				Debug.Log("Exceeds tolerance!");
     
-		        DouglasPeuckerReduction(points, firstPoint, indexFarthest, tolerance, ref pointIndexsToKeep);
-		        DouglasPeuckerReduction(points, indexFarthest, lastPoint, tolerance, ref pointIndexsToKeep);
+		        DouglasPeuckerReduction(points, firstPoint, indexFarthest, tolerance, ref pointIndexsToKeep, aroundObstacles);
+		        DouglasPeuckerReduction(points, indexFarthest, lastPoint, tolerance, ref pointIndexsToKeep, aroundObstacles);
 				
 				return;
 		    }
@@ -276,16 +276,19 @@ namespace ClusteringSpace
 				// check if an obstacle is contained within the triangle
 				bool obstacleContained = false;
 				
-				for (int count = 0; count < smallerObstacles.Count; count ++)
-				{					
-					Vector2 p1 = new Vector2(points[firstPoint].x, points[firstPoint].y);
-					Vector2 p2 = new Vector2(points[indexFarthest].x, points[indexFarthest].y);
-					Vector2 p3 = new Vector2(points[lastPoint].x, points[lastPoint].y);
-					int state = Intersecting(smallerObstacles[count].start, smallerObstacles[count].end, p1, p2, p3);
-					if (state > 0)
-					{
-						obstacleContained = true;
-						break;
+				if (aroundObstacles)
+				{
+					for (int count = 0; count < smallerObstacles.Count; count ++)
+					{					
+						Vector2 p1 = new Vector2(points[firstPoint].x, points[firstPoint].y);
+						Vector2 p2 = new Vector2(points[indexFarthest].x, points[indexFarthest].y);
+						Vector2 p3 = new Vector2(points[lastPoint].x, points[lastPoint].y);
+						int state = Intersecting(smallerObstacles[count].start, smallerObstacles[count].end, p1, p2, p3);
+						if (state > 0)
+						{
+							obstacleContained = true;
+							break;
+						}
 					}
 				}
 				
@@ -294,8 +297,8 @@ namespace ClusteringSpace
 			        pointIndexsToKeep.Add(indexFarthest);
 //					Debug.Log("Contains Obstacle!");
     
-			        DouglasPeuckerReduction(points, firstPoint, indexFarthest, tolerance, ref pointIndexsToKeep);
-			        DouglasPeuckerReduction(points, indexFarthest, lastPoint, tolerance, ref pointIndexsToKeep);
+			        DouglasPeuckerReduction(points, firstPoint, indexFarthest, tolerance, ref pointIndexsToKeep, aroundObstacles);
+			        DouglasPeuckerReduction(points, indexFarthest, lastPoint, tolerance, ref pointIndexsToKeep, aroundObstacles);
 				}
 //				else Debug.Log("Does not contain");
 				

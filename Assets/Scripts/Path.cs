@@ -52,6 +52,7 @@ namespace Common {
 			this.los3Norm = p.los3Norm;
 			this.crazy = p.crazy;
 			this.velocity = p.velocity;
+			this.clusterID = p.clusterID;
 			
 			if (points == null)
 				throw new ArgumentNullException ("Points can't be null");
