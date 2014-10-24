@@ -12,25 +12,7 @@ using Debug = UnityEngine.Debug;
 using EditorArea;
 
 namespace ClusteringSpace
-{
-	public enum Metrics
-	{
-		Frechet = 0,
-		AreaDistTriangulation,
-		AreaDistInterpolation3D,
-		Hausdorff
-	}
-	
-	public enum Dimensions
-	{
-		X = 0,
-		Y,
-		Time,
-		Danger,
-		LOS,
-		NearMiss
-	}
-	
+{	
     public class KMeans
     {
 		public static int numSelectedDimensions = -1;
@@ -38,29 +20,23 @@ namespace ClusteringSpace
 		public static Stopwatch distTime = new Stopwatch();
 		public static Stopwatch clustTime = new Stopwatch();
 		static FrechetDistance frechet;
-        
+		        
 		private static int distMetric = 0;
 		
+		public static bool init = false;
 		public static double clustVal = 0.0;
 				
-		private static double[][] distances;
 		public static double[] weights;
-		private static bool init = false;
 		public static int numPaths = -1;
-		
-		public static Path[] normalizedPaths;
-		
+				
 		public static void reset()
 		{
 			distMetric = -1;
 			clustVal = 0.0;
-			init = false;
 			numPaths = -1;
 			numSelectedDimensions = -1;
-			if (distances != null)
-				Array.Clear(distances, 0, distances.Count());
-			if (normalizedPaths != null)
-				Array.Clear(normalizedPaths, 0, normalizedPaths.Count());
+			init = false;
+			Clustering.reset();
 		}
 		
         private static List<PathCollection> initializeCentroids(List<Path> paths, int numClusters, double[] weights_)
@@ -263,79 +239,6 @@ namespace ClusteringSpace
 			}
 			
 			setDistMetric(distMetric_);
-			
-			if (!init)
-			{
-				distances = new double[paths.Count()][];
-				for (int count = 0; count < paths.Count(); count ++)
-				{
-					distances[count] = new double[paths.Count()];
-					for (int count2 = 0; count2 < paths.Count(); count2 ++)
-					{
-						distances[count][count2] = -1;
-					}
-				}
-				
-				normalizedPaths = new Path[paths.Count()];
-				// get max vals for x,y,t,d3norm,los3norm,crazy.
-				float maxX = -1f, maxY = -1f, maxT = -1f, maxD3 = -1f, maxLOS3 = -1f, maxCrazy = -1f, maxNodeD3 = -1f;
-				float minX = Single.PositiveInfinity, minY = Single.PositiveInfinity, minT = Single.PositiveInfinity, minD3 = Single.PositiveInfinity, minLOS3 = Single.PositiveInfinity, minCrazy = Single.PositiveInfinity, minNodeD3 = Single.PositiveInfinity;
-				foreach (Path p in paths)
-				{
-					if (p.danger3 > maxD3) maxD3 = p.danger3;
-					if (p.los3 > maxLOS3) maxLOS3 = p.los3;
-					if (p.crazy > maxCrazy) maxCrazy = p.crazy;
-					
-					if (p.danger3 < minD3) minD3 = p.danger3;
-					if (p.los3 < minLOS3) minLOS3 = p.los3;
-					if (p.crazy < minCrazy) minCrazy = p.crazy;
-					
-					foreach (Node n in p.points)
-					{
-						if (n.x > maxX) maxX = (float)n.xD;
-						if (n.y > maxY) maxY = (float)n.yD;
-						if (n.t > maxT) maxT = (float)n.tD;
-						if (n.danger3 > maxNodeD3) maxNodeD3 = n.danger3;
-						
-						if (n.x < minX) minX = (float)n.xD;
-						if (n.y < minY) minY = (float)n.yD;
-						if (n.t < minT) minT = (float)n.tD;
-						if (n.danger3 < maxNodeD3) minNodeD3 = n.danger3;
-					}					
-				}
-				
-				float maxVal = 1000f;
-				
-				if (numSelectedDimensions > 1) Debug.Log("Normalizing paths");
-				
-				for (int count = 0; count < paths.Count; count ++)
-				{
-					int index = Convert.ToInt32(paths[count].name);
-					normalizedPaths[index] = new Path(paths[count]);
-
-					if (numSelectedDimensions > 1)
-					{ // normalize data.
-						normalizedPaths[index].danger3 = ((normalizedPaths[index].danger3 - minD3) * maxVal) / (maxD3 - minD3);
-	//					Debug.Log("Path " + index + ": " + normalizedPaths[index].danger3Norm);
-						normalizedPaths[index].los3 = ((normalizedPaths[index].los3 - minLOS3) * maxVal) / (maxLOS3 - minLOS3);
-						normalizedPaths[index].crazy = ((normalizedPaths[index].crazy - minCrazy) * maxVal) / (maxCrazy - minCrazy);
-					
-						foreach (Node n in normalizedPaths[index].points)
-						{
-							n.xD = (((n.xD - minX) * maxVal) / (maxX - minX));
-							n.yD = (((n.yD - minY) * maxVal) / (maxY - minY));
-							n.tD = (((n.tD - minT) * maxVal) / (maxT - minT));
-							n.danger3 = (((n.danger3 - minNodeD3) * maxVal) / (maxNodeD3 - minNodeD3));
-							
-							n.x = (int)n.xD;
-							n.y = (int)n.yD;
-							n.t = (int)n.tD;
-						}						
-					}
-				}
-				
-				init = true;
-			}
 
 			clustTime.Start();
 			
@@ -571,13 +474,13 @@ namespace ClusteringSpace
 			Path path1, path2;
 			
 			bool saveDistances = false;
-			if (p1num <= distances.Count() && p2num <= distances.Count())
+			if (p1num <= Clustering.distances.Count() && p2num <= Clustering.distances.Count())
 			{
-				if (distances[p1num][p2num] != -1) return distances[p1num][p2num];
-				if (distances[p2num][p1num] != -1) return distances[p2num][p1num];
+				if (Clustering.distances[p1num][p2num] != -1) return Clustering.distances[p1num][p2num];
+				if (Clustering.distances[p2num][p1num] != -1) return Clustering.distances[p2num][p1num];
 				
-				path1 = normalizedPaths[p1num];
-				path2 = normalizedPaths[p2num];
+				path1 = Clustering.normalizedPaths[p1num];
+				path2 = Clustering.normalizedPaths[p2num];
 				
 				saveDistances = true;
 			}
@@ -659,8 +562,8 @@ namespace ClusteringSpace
 			
 			if (saveDistances)
 			{
-				distances[p1num][p2num] = result;
-				distances[p2num][p1num] = result;
+				Clustering.distances[p1num][p2num] = result;
+				Clustering.distances[p2num][p1num] = result;
 			}
 			
 //            Debug.Log("Dist between " + path1.danger3 + " and " + path2.danger3 + " is " + result);

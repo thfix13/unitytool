@@ -37,7 +37,7 @@ namespace EditorArea {
 		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
 		private static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
 		public static int clustAlg = 1;
-		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, numPasses = 1, rdpTolerance = 4, maxClusters = 7, dbsScanEps = 12, minPathsForCluster = 5;
+		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, numPasses = 1, rdpTolerance = 4, maxClusters = 4, dbsScanEps = 15, minPathsForCluster = 3;
 		private static List<Path> clusterCentroids = new List<Path>(), origPaths = new List<Path>();
 		private static bool[] showPaths = new bool[colors.Count()];
 		private static bool autoSavePaths = true, discardHighDangerPaths = true, drawHeatMapColored = false, useColors = false, showNoise = false;
@@ -913,6 +913,18 @@ namespace EditorArea {
 					}
 				}
 
+
+				int numSelectedDimensions = 0;
+				for (int dim = 0; dim < MapperWindowEditor.dimensionEnabled.Count(); dim ++)
+				{
+					if (MapperWindowEditor.dimensionEnabled[dim])
+					{
+						numSelectedDimensions ++;
+					}
+				}
+				
+				Clustering.initWithPaths(paths, (numSelectedDimensions > 1) ? true : false);
+
 				KMeans.clustTime = new System.Diagnostics.Stopwatch();
 				KMeans.distTime = new System.Diagnostics.Stopwatch();
 
@@ -1051,7 +1063,7 @@ namespace EditorArea {
 						
 						double[] weights = new double[paths.Count()];
 						for(int i = 0; i < paths.Count(); i ++) { weights[i] = 1.0; }
-						List<PathCollection> newClusters = KMeans.DoKMeans(clusterCentroids, maxClusters, distMetric, 1, weights);
+						List<PathCollection> newClusters = KMeans.DoKMeans(clusterCentroids, maxClusters, distMetric, 5, weights);
 						
 						for (int c = 0; c < newClusters.Count; c ++)
 						{
