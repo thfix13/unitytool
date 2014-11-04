@@ -273,7 +273,7 @@ public class Triangulation : MonoBehaviour
 				}
 			}
 		}
-//		mapBG.DrawGeometry (temp);
+		//mapBG.DrawGeometry (temp);
 
 		List<Geometry> finalPoly = new List<Geometry> ();//Contains all polygons that are fully insde the map
 		foreach ( Geometry g in obsGeos ) {
@@ -283,6 +283,10 @@ public class Triangulation : MonoBehaviour
 			}
 			else
 				finalPoly.Add(g);
+		}
+
+		foreach(Geometry g in finalPoly){
+			g.DrawGeometry( temp);
 		}
 
 		List<Vector3> allVertex = new List<Vector3>();
@@ -304,6 +308,8 @@ public class Triangulation : MonoBehaviour
 		foreach( Line l in mapBG.edges )
 			totalGeo.edges.Add(l);
 		lines.Clear ();
+
+
 		//-----------START MST CODE------------------//
 		//We will use "mapBG" and "finalPoly"
 		//finalPoly contains the "quadrilaters"
@@ -331,6 +337,8 @@ public class Triangulation : MonoBehaviour
 		List<Geometry> toCheckNode = new List<Geometry> (); 
 		toCheckNode.Add (start); 
 		Line LinetoAdd = start.voisinsLine [0];
+
+		//mapBG.DrawGeometry (temp);
 
 		//Straight Porting//
 		while (LinetoAdd != null) {
@@ -379,6 +387,8 @@ public class Triangulation : MonoBehaviour
 		lines.Clear ();
 		//Constructing "lines" for triangulation
 		//First add lines that are in MST
+
+
 		foreach (Line l in linesMinSpanTree)
 			lines.Add (l);
 //		Debug.Log (allVertex.Count);
