@@ -41,6 +41,9 @@ namespace Exploration {
 			return (Node)o;
 		}
 
+
+
+
 		// Creates a node with the specified coordinates, no matter if it already exists in the tree or not
 		// This is mainly to create the connections between nodes that shouldn't be added to the tree
 		// Like the nodes with combat in then

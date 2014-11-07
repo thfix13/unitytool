@@ -22,7 +22,8 @@ namespace EditorArea {
 		public static int gridSize = 60;
 		private static bool drawMap = true, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = false, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false, successfulPaths = false;
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10, dangerLimit = 0f, losLimit = 0f;
-		private static int randomSeed = -1, timeSamples = 1200, attemps = 25000, iterations = 1, ticksBehind = 0, crazyLimit = 0;
+		private static int randomSeed = -1, timeSamples = 500, attemps = 25000, iterations = 1, ticksBehind = 0, crazyLimit = 0;
+		private static float distanceMinimum=1.0f;
 
 		// Computed parameters
 		private static int[,] heatMap, deathHeatMap, combatHeatMap;
@@ -202,6 +203,8 @@ namespace EditorArea {
 			successfulPaths = EditorGUILayout.Toggle ("Only Successful Paths", successfulPaths);
 			smoothPath = EditorGUILayout.Toggle ("Smooth path", smoothPath);
 			simulateCombat = EditorGUILayout.Toggle ("Simulate combat", simulateCombat);
+			
+			distanceMinimum = EditorGUILayout.Slider ("- Min distance", distanceMinimum, 0, 10);
 
 			crazyLimit = EditorGUILayout.IntSlider ("- Crazy limit", crazyLimit, 0, 1000000);
 			dangerLimit = EditorGUILayout.Slider ("- Danger limit", dangerLimit, 0, 1);
@@ -321,6 +324,9 @@ namespace EditorArea {
 					rrt.controllers.Add(new RRTController.Basic());
 					rrt.controllers.Add(new RRTController.Combat());
 					rrt.controllers.Add(new RRTController.Health());
+
+					if (distanceMinimum > 0)
+						rrt.controllers.Add(new RRTController.Distance(distanceMinimum));
 
 					if (crazyLimit > 0)
 						rrt.controllers.Add(new RRTController.Crazyness((int) (crazySeconds / stepSize), crazyLimit));

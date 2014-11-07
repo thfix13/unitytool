@@ -120,7 +120,8 @@ namespace Exploration {
 				nodeVisiting.visited = true;
 				
 				// Attemp to connect to the end node
-				if (Random.Range (0, 1000) > 0) {
+				if (Random.Range (0, 1000) > 0) 
+				{
 					p1 = nodeVisiting.GetVector3 ();
 					p2 = end.GetVector3 ();
 					p2.y = p1.y;

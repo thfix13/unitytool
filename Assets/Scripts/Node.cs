@@ -70,7 +70,10 @@ namespace Common {
 				throw new ArgumentException ();
 			}
 		}
-
+		public String toString()
+		{
+			return "{" + x + "," + y +"," + t +"}";	
+		}
 		/// <summary>
 		/// Warning: this is a light clone, so objects references are still the same from the source object.
 		/// </summary>
