@@ -499,17 +499,39 @@ public class Geometry
 
 	public List<Vector3> GetVertexAngleSorted( Vector3 vSrc, List<Vector3> verts ){
 		List<KeyValuePair<Vector3, float>> angList = new List<KeyValuePair<Vector3, float>>();
+		Vector3 v1 = verts [0] - vSrc;
+		v1.y = 1;
 		foreach (Vector3 v in verts) {
-			float angle;
-			angle = getAngle( vSrc, v );
-			angList.Add(new KeyValuePair<Vector3, float>(v, angle));
+			if( v.Equals(verts[0]) ){
+				angList.Add(new KeyValuePair<Vector3, float>(v, 0f));
+			}
+			else{
+				float angle;
+				Vector3 v2 = v - vSrc;
+				v2.y = 1;
+				angle = (float)Math.Atan2((v2.x * v1.z) - (v1.x * v2.z), (v1.x * v2.x) - (v1.z * v2.z));
+				angList.Add(new KeyValuePair<Vector3, float>(v, angle));
+			}
 		}
 		//Sort list by angle
 		angList.Sort (CompareAngle);
 		List<Vector3> retlist = new List<Vector3> ();
+		Debug.Log ("PRINTING ANGLES");
+		int cnt = 0;
 		foreach (KeyValuePair<Vector3, float> kv in angList) {
+				Debug.Log( cnt++ + " " + kv.Value);
 				retlist.Add( kv.Key );
 		}
 		return retlist;
+	}
+
+	void drawSphere( Vector3 v, Color x ){
+		GameObject temp = GameObject.Find ("temp");
+		GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+		inter.transform.renderer.material.color = x;
+		inter.transform.position = v;
+		inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f);
+		inter.transform.parent = temp.transform;
+		//inter.gameObject.name = vlcnt.ToString();
 	}
 }

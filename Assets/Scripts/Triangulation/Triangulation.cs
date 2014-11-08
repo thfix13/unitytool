@@ -950,28 +950,32 @@ public class Triangulation : MonoBehaviour
 
 				if( minV != vSrc ){
 					vpts.Add(minV);
-					Line tmpline = new Line( vSrc, minV );
-					tmpline.name = cnt.ToString();
-					tmpline.DrawVector(vptmp, Color.cyan );
-					cnt++;
+					//Line tmpline = new Line( vSrc, minV );
+					//tmpline.name = cnt.ToString();
+					//tmpline.DrawVector(vptmp, Color.cyan );
+					//cnt++;
 				}
 			}
 
 		Geometry visiPoly = new Geometry ();
 		vpts = visiPoly.GetVertexAngleSorted (vSrc, vpts);
 		visiPoly.edges.Add( new Line(vSrc, vpts[0] ) );
+		cnt = 0;
 		for (int i = 0; i < vpts.Count - 1; i++) {
 			visiPoly.edges.Add( new Line(vpts[i], vpts[i + 1]) );
-			//vpts[i]
 			drawSphere( vpts[i], Color.red );
+			/*Line tmpline = new Line( vSrc, vpts[i] );
+			tmpline.name = cnt.ToString();
+			tmpline.DrawVector(vptmp, Color.cyan );
+			cnt++;*/
 		}
 		visiPoly.edges.Add( new Line(vpts[vpts.Count - 1], vSrc ) );
 		foreach (Line l in visiPoly.edges) {
 			l.name = cnt.ToString();
 			cnt++;
-			//l.DrawVector(vptmp, Color.red );
+			l.DrawVector(vptmp, Color.red );
 		}
-		visiPoly.DrawGeometry (GameObject.Find ("temp"));
+		//visiPoly.DrawGeometry (GameObject.Find ("temp"));
 	}
 
 	public Vector3 getExtendedPoint( Vector3 vSrc, Vector3 vobs ){
