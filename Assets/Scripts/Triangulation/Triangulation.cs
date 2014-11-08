@@ -76,46 +76,25 @@ public class Triangulation : MonoBehaviour
 	}
 	public void Update()
 	{
-
-		//return; 
-		//points.Clear(); 
-		//colours.Clear();  
 		if ( stopAll )
 			return;
 
-
-		if(drawMinSpanTree)
-		{
+		if(drawMinSpanTree){
 			GameObject temp = GameObject.Find("temp"); 
 			foreach(Line l in linesMinSpanTree)
-			{
-				//l.DrawLine(Color.blue); 
-				//l.DrawVector( temp );
 				Debug.DrawLine(l.vertex[0], l.vertex[1],Color.red);
-			}
 		}
 
-		foreach(Triangle tt in triangles)
-		{
-			//triangulation.points.Add(tt.GetCenterTriangle());
-			//triangulation.colours.Add(Color.cyan); 
-			if(drawTriangles)
-			{	
-
+		foreach(Triangle tt in triangles){
+			if(drawTriangles){	
 				tt.DrawDebug();
-				foreach(Vector3 v in tt.getVertexMiddle())
-				{
-				//	points.Add(v);
-				}
-
-				foreach(Color v in tt.colourVertex)
-				{
-				//	colours.Add(v);
-				}
+				//foreach(Vector3 v in tt.getVertexMiddle())
+					//	points.Add(v);
+				//foreach(Color v in tt.colourVertex)
+					//	colours.Add(v);
 			}
 
-			if(drawRoadMap)
-			{
+			if(drawRoadMap)	{
 //				Line[] ll = tt.GetSharedLines(); 
 //			
 //
@@ -147,20 +126,17 @@ public class Triangulation : MonoBehaviour
 
 	}
 
-	public void AddPoint(Vector3 v)
-	{
+	public void AddPoint(Vector3 v){
 		points.Add(v); 
 		colours.Add(Color.cyan); 
 	}
 
-	public void AddPoint(Vector3 v,Color c)
-	{
+	public void AddPoint(Vector3 v,Color c){
 		points.Add(v); 
 		colours.Add(c); 
 	}
 
-	public void TriangulationSpace ()
-	{
+	public void TriangulationSpace (){
 		//Compute one step of the discritzation
 		//Find this is the view
 		GameObject floor = (GameObject)GameObject.Find ("Floor");
@@ -197,9 +173,9 @@ public class Triangulation : MonoBehaviour
 			mapBG.edges.Add( new Line( mapBoundary[i], mapBoundary[(i + 1) % 4]) );
 
 		GameObject[] obs = GameObject.FindGameObjectsWithTag ("Obs");
-		if (obs == null){
+
+		if (obs == null)
 			return; 
-		}
 
 		//data holder
 		Triangulation triangulation = GameObject.Find ("Triangulation").GetComponent<Triangulation> (); 
@@ -207,9 +183,9 @@ public class Triangulation : MonoBehaviour
 		triangulation.colours.Clear (); 
 		
 		//Get all polygon
-		foreach (GameObject o in obs) {
+		foreach (GameObject o in obs){
 			mesh = (MeshFilter)(o.GetComponent ("MeshFilter"));
-			t = mesh.sharedMesh.vertices; 
+			t = mesh.sharedMesh.vertices;
 			tempGeometry = new Geometry();
 
 			vertex [0] = mesh.transform.TransformPoint (t [6]);
@@ -227,7 +203,7 @@ public class Triangulation : MonoBehaviour
 				else 	       
 					tempGeometry.edges.Add (new Line (vertex [0], vertex [i]));
 			}	
-			geos.Add (tempGeometry); 
+			geos.Add (tempGeometry);
 		}
 		
 		//lines are defined by all the points in  obs
@@ -304,9 +280,8 @@ public class Triangulation : MonoBehaviour
 			toCheck.Add(g);
 		}
 		//set links with neighbors for each quadrilater (send list of all obstacles as a paramter)
-		foreach (Geometry g in toCheck) {
-			g.SetVoisins( toCheck );		
-		}
+		foreach (Geometry g in toCheck)
+			g.SetVoisins( toCheck );
 		//keep a list of the edges (graph where obstaceles are the nodes) in a list of lines called "linesLinking"
 		List<Vector3> mapVertices = mapBG.GetVertex();
 
@@ -353,11 +328,8 @@ public class Triangulation : MonoBehaviour
 			}
 		}
 		
-		
-		
-		foreach (Line l in linesLinking) {
+		foreach (Line l in linesLinking)
 			triangulation.linesMinSpanTree.Add (l); 
-		}
 		//END porting
 
 		//-----------END MST CODE--------------------//
@@ -419,12 +391,12 @@ public class Triangulation : MonoBehaviour
 				Vector3 v3 = Vector3.zero; 
 				
 				
-				if (l2.vertex [0].Equals (v2)) {
+				if (l2.vertex [0].Equals (v2))
 					v3 = l2.vertex [1];
 					//have to check if closes
-				} else if (l2.vertex [1].Equals (v2)) {
+				else if (l2.vertex [1].Equals (v2))
 					v3 = l2.vertex [0];
-				}
+
 				
 				if (v3 != Vector3.zero) {
 					foreach (Line l3 in lines) {
@@ -987,7 +959,7 @@ public class Triangulation : MonoBehaviour
 
 		Geometry visiPoly = new Geometry ();
 		vpts = visiPoly.GetVertexAngleSorted (vSrc, vpts);
-		visiPoly.edges.Add( new Line(vSrc, vpts[0] ) ); 		
+		visiPoly.edges.Add( new Line(vSrc, vpts[0] ) );
 		for (int i = 0; i < vpts.Count - 1; i++) {
 			visiPoly.edges.Add( new Line(vpts[i], vpts[i + 1]) );
 			//vpts[i]
@@ -999,7 +971,7 @@ public class Triangulation : MonoBehaviour
 			cnt++;
 			//l.DrawVector(vptmp, Color.red );
 		}
-		//visiPoly.DrawGeometry (GameObject.Find ("temp"));
+		visiPoly.DrawGeometry (GameObject.Find ("temp"));
 	}
 
 	public Vector3 getExtendedPoint( Vector3 vSrc, Vector3 vobs ){

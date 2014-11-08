@@ -220,10 +220,13 @@ public class Geometry
 	}
 
 	float getAngle( Vector3 v1, Vector3 v2 ){//Called by getReflexVertex
-		float adj = v1.x - v2.x;
-		float hyp = (adj*adj) + ( (v1.z - v2.z) * (v1.z - v2.z) );
-		hyp = (float)Math.Sqrt( hyp );
-		return adj / hyp;		
+//		float adj = v1.x - v2.x;
+//		float hyp = (adj*adj) + ( (v1.z - v2.z) * (v1.z - v2.z) );
+//		hyp = (float)Math.Sqrt( hyp );
+		//return adj / hyp;		
+		float delx = v1.x - v2.x;
+		float delz = v1.z - v2.z;
+		return (float)Math.Atan2 (delz, delx);
 	}
 
 	public void DrawVertex(GameObject parent){//Called by no one but maybe useful
