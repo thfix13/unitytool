@@ -73,10 +73,10 @@ namespace ClusteringSpace
 				GameObject wall = wallTransform.gameObject;
 				wall.name = "Platform";
 				wall.tag = "Platform";
-				floorScales[count].x *= tileSize.x;
-				floorScales[count].y *= tileSize.y;
+			//	floorScales[count].x *= tileSize.x;
+			//	floorScales[count].y *= tileSize.y;
 				wall.transform.position = new Vector3((floorPositions[count].x) * tileSize.x + zero.x, 0, floorPositions[count].y * tileSize.y + zero.y);
-				wall.transform.localScale = new Vector3(floorScales[count].x, 3, floorScales[count].y);
+				wall.transform.localScale = new Vector3(floorScales[count].x*tileSize.x, 3, floorScales[count].y*tileSize.y);
 				wall.transform.parent = levelObj.transform;
 				wall.SetActive(true);
 			}
@@ -99,10 +99,10 @@ namespace ClusteringSpace
 			for (int count = 0; count < floorPositions.Length; count ++)
 			{
 				List<Vector2> midpoints = new List<Vector2>();
-				midpoints.Add(new Vector2(floorPositions[count].x + (floorScales[count].x/2), floorPositions[count].y)); // [0]
-				midpoints.Add(new Vector2(floorPositions[count].x + floorScales[count].x, floorPositions[count].y - (floorScales[count].y/2))); // [1]
-				midpoints.Add(new Vector2(floorPositions[count].x + (floorScales[count].x/2), floorPositions[count].y - floorScales[count].y)); // [2]
-				midpoints.Add(new Vector2(floorPositions[count].x, floorPositions[count].y - (floorScales[count].y/2))); // [3]
+				midpoints.Add(new Vector2(floorPositions[count].x + (floorScales[count].x/2), floorPositions[count].y));
+				midpoints.Add(new Vector2(floorPositions[count].x + floorScales[count].x, floorPositions[count].y - (floorScales[count].y/2)));
+				midpoints.Add(new Vector2(floorPositions[count].x + (floorScales[count].x/2), floorPositions[count].y - floorScales[count].y));
+				midpoints.Add(new Vector2(floorPositions[count].x, floorPositions[count].y - (floorScales[count].y/2)));
 				for (int count2 = 0; count2 < midpoints.Count; count2 ++)
 				{
 			//		Debug.Log("Midpoint " + count2 +" : " + midpoints[count2]);

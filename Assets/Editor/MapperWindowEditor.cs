@@ -154,62 +154,9 @@ namespace EditorArea {
 			stepInTicks = ((long)(stepSize * 10000000L));
 			ticksBehind = EditorGUILayout.IntSlider (new GUIContent ("Ticks behind", "Number of ticks that the FoV will remain seen after the enemy has no visibility on that cell (prevents noise/jitter like behaviours)"), ticksBehind, 0, 100);
 			
-			if (GUILayout.Button ("Precompute Maps")) {
-				
-				//Find this is the view
-				if (playerPrefab == null) {
-					playerPrefab = GameObject.Find ("Player"); 
-				}
-				
-				if (floor == null) {
-					floor = (GameObject)GameObject.Find ("Floor");
-					
-					if (mapper == null) {
-						mapper = floor.GetComponent<Mapper> ();
-						
-						if (mapper == null)
-							mapper = floor.AddComponent<Mapper> ();
-
-						mapper.hideFlags = HideFlags.None;
-					
-					}
-					drawer = floor.gameObject.GetComponent<MapperEditorDrawer> ();
-					if (drawer == null) {
-						drawer = floor.gameObject.AddComponent<MapperEditorDrawer> ();
-						drawer.hideFlags = HideFlags.HideInInspector;
-					}
-				}
-				
-				if (!simulated) {
-					StorePositions ();
-					simulated = true;
-				}
-				
-				Cell[][] baseMap = null;
-				if (MapperEditor.grid != null) {
-					Cell[][] obstacles = mapper.ComputeObstacles ();
-					baseMap = new Cell[gridSize][];
-					for (int x = 0; x < gridSize; x++) {
-						baseMap [x] = new Cell[gridSize];
-						for (int y = 0; y < gridSize; y++) {
-							baseMap [x] [y] = MapperEditor.grid [x] [y] == null ? obstacles [x] [y] : MapperEditor.grid [x] [y];
-						}
-					}
-				}
-				
-				original = mapper.PrecomputeMaps (SpaceState.Editor, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind, baseMap);
-
-				drawer.fullMap = original;
-				float maxSeenGrid;
-				drawer.seenNeverSeen = Analyzer.ComputeSeenValuesGrid (original, out maxSeenGrid);
-				drawer.seenNeverSeenMax = maxSeenGrid;
-				drawer.tileSize = SpaceState.Editor.tileSize;
-				drawer.zero.Set (floor.collider.bounds.min.x, floor.collider.bounds.min.z);
-				LineReduction.tileSize = SpaceState.Editor.tileSize;
-				LineReduction.zero.Set(floor.collider.bounds.min.x, floor.collider.bounds.min.z);
-				
-				ResetAI ();
-				previous = DateTime.Now;
+			if (GUILayout.Button ("Precompute Maps"))
+			{
+				precomputeMaps();
 			} 
 			EditorGUILayout.LabelField ("");
 			
@@ -823,7 +770,7 @@ namespace EditorArea {
 			}
 			else if (clustAlg == 1)
 			{
-				maxClusters = EditorGUILayout.IntSlider("Max clusters", maxClusters, 1, colors.Count());
+				maxClusters = EditorGUILayout.IntSlider("Max clusters", maxClusters, 1, colors.Count()-1);
 				dbsScanEps = EditorGUILayout.IntSlider("Eps value", dbsScanEps, 1, 50);
 				minPathsForCluster = EditorGUILayout.IntSlider("Min paths for cluster", minPathsForCluster, 1, 15);
 				showNoise = EditorGUILayout.Toggle("Show noise", showNoise);
@@ -1259,6 +1206,7 @@ namespace EditorArea {
 					paths.Add(p);
 				}
 				
+				if (drawer == null) precomputeMaps();
 				ComputeHeatMap(paths, deaths);
 				
 				heatMapColored = Analyzer.Compute2DHeatMapColored (paths, gridSize, gridSize, out maxHeatMap);
@@ -1281,6 +1229,12 @@ namespace EditorArea {
 			
 			EditorGUILayout.LabelField ("");
 			
+			if (GUILayout.Button("Load platformer level"))
+			{
+				if (drawer == null) precomputeMaps();
+				LineReduction reducer = new LineReduction();
+			}
+			
 			if (GUILayout.Button("Import Platformer Paths & RDP"))
 			{ // imports paths, sets up obstacles in viewer,.
 				paths.Clear ();
@@ -1301,6 +1255,7 @@ namespace EditorArea {
 				}
 				
 				List<Path> pathsImported = new List<Path>();
+				int pathNum = 0;
 				foreach (String file in pathFilenames)
 				{
 					XmlSerializer ser = new XmlSerializer (typeof(PlatformerPathBridge));
@@ -1317,7 +1272,12 @@ namespace EditorArea {
 					}
 					if (pathPoints.Count() <= 3) continue;
 					
-					pathsImported.Add(new Path(reducer.DouglasPeuckerReduction(pathPoints, rdpTolerance, true))); //shortestPathAroundObstacles(pathPoints)));
+					Path path = new Path();
+					path.points = reducer.DouglasPeuckerReduction(pathPoints, rdpTolerance, true); //shortestPathAroundObstacles(pathPoints)));
+					path.name = pathNum.ToString();
+					pathNum ++;
+					
+					pathsImported.Add(path);
 				}
 				
 				// Setup parenting
@@ -1334,10 +1294,10 @@ namespace EditorArea {
 					paths.Add(p);
 				}
 				
-				for (int count = 0; count < paths.Count(); count ++)
+		/*		for (int count = 0; count < paths.Count(); count ++)
 				{
 					paths[count].name = count.ToString();
-				}
+				}*/
 			}
 			rdpTolerance = EditorGUILayout.IntField("RDP Tolerance", rdpTolerance);
 			if (GUILayout.Button("RDP"))
@@ -2185,6 +2145,64 @@ namespace EditorArea {
 		{
 			KMeans.reset();
 			DBSCAN.reset();
+		}
+		
+		private void precomputeMaps()
+		{
+			//Find this is the view
+			if (playerPrefab == null) {
+				playerPrefab = GameObject.Find ("Player"); 
+			}
+			
+			if (floor == null) {
+				floor = (GameObject)GameObject.Find ("Floor");
+				
+				if (mapper == null) {
+					mapper = floor.GetComponent<Mapper> ();
+					
+					if (mapper == null)
+						mapper = floor.AddComponent<Mapper> ();
+
+					mapper.hideFlags = HideFlags.None;
+				
+				}
+				drawer = floor.gameObject.GetComponent<MapperEditorDrawer> ();
+				if (drawer == null) {
+					drawer = floor.gameObject.AddComponent<MapperEditorDrawer> ();
+					drawer.hideFlags = HideFlags.HideInInspector;
+				}
+			}
+			
+			if (!simulated) {
+				StorePositions ();
+				simulated = true;
+			}
+			
+			Cell[][] baseMap = null;
+			if (MapperEditor.grid != null) {
+				Cell[][] obstacles = mapper.ComputeObstacles ();
+				baseMap = new Cell[gridSize][];
+				for (int x = 0; x < gridSize; x++) {
+					baseMap [x] = new Cell[gridSize];
+					for (int y = 0; y < gridSize; y++) {
+						baseMap [x] [y] = MapperEditor.grid [x] [y] == null ? obstacles [x] [y] : MapperEditor.grid [x] [y];
+					}
+				}
+			}
+			
+			original = mapper.PrecomputeMaps (SpaceState.Editor, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind, baseMap);
+
+			drawer.fullMap = original;
+			float maxSeenGrid;
+			drawer.seenNeverSeen = Analyzer.ComputeSeenValuesGrid (original, out maxSeenGrid);
+			drawer.seenNeverSeenMax = maxSeenGrid;
+			drawer.tileSize = SpaceState.Editor.tileSize;
+			drawer.zero.Set (floor.collider.bounds.min.x, floor.collider.bounds.min.z);
+			LineReduction.tileSize = SpaceState.Editor.tileSize;
+			LineReduction.zero.Set(floor.collider.bounds.min.x, floor.collider.bounds.min.z);
+			
+			ResetAI ();
+			previous = DateTime.Now;
 		}
 	}
 }
