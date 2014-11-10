@@ -9,7 +9,7 @@ using Objects;
 public class Geometry
 {
 	public List<Line> edges = new List<Line> ();
-
+	private float precision = 0.001f;
 	//Added for MST Code
 	public List<Geometry> voisins = new List<Geometry>();  
 	public List<Line> voisinsLine = new List<Line>();
@@ -63,8 +63,10 @@ public class Geometry
 				//Check if the intersection point is on the polygon edge
 				//Note: other checks tried but precision error kept coming up in cases
 				Vector3 vtemp = myLine.GetIntersectionPoint(lray);
-				if( Math.Abs( vtemp.x - pt.x ) < 0.01 && Math.Abs(vtemp.z - pt.z) < 0.01 )
+				if( VectorApprox(vtemp, pt) )
 					return false;
+//				if( Math.Abs( vtemp.x - pt.x ) < 0.01 && Math.Abs(vtemp.z - pt.z) < 0.01 )
+//					return false;
 			}
 		}
 		return count%2 == 1; 
@@ -497,30 +499,49 @@ public class Geometry
 		
 	}
 
-	public List<Vector3> GetVertexAngleSorted( Vector3 vSrc, List<Vector3> verts ){
-		List<KeyValuePair<Vector3, float>> angList = new List<KeyValuePair<Vector3, float>>();
+	public class angclass{
+		public Vector3 vect;
+		public float angle;
+		public float distance;
+		public angclass( Vector3 v, float a, float d ){
+			vect = v;
+			angle = a;
+			distance = d;
+		}
+	}
+
+	public List<KeyValuePair<Vector3, float>> GetVertexAngleSorted( Vector3 vSrc, List<Vector3> verts ){
+		List< angclass > angList = new List< angclass >();
+		Vector3 infv = new Vector3 ();
+		infv.x = -1000f; infv.y = 1; infv.z = -1000f;
 		Vector3 v1 = verts [0] - vSrc;
 		v1.y = 1;
 		foreach (Vector3 v in verts) {
-			if( v.Equals(verts[0]) ){
-				angList.Add(new KeyValuePair<Vector3, float>(v, 0f));
-			}
-			else{
+//			if( v.Equals(verts[0]) ){
+//				angList.Add(new angclass(v, 1000f, 0f));
+//			}
+//			else{
 				float angle;
 				Vector3 v2 = v - vSrc;
 				v2.y = 1;
 				angle = (float)Math.Atan2((v2.x * v1.z) - (v1.x * v2.z), (v1.x * v2.x) - (v1.z * v2.z));
-				angList.Add(new KeyValuePair<Vector3, float>(v, angle));
-			}
+				Line ls = new Line(vSrc, v2);
+				angList.Add(new angclass(v, angle, ls.Magnitude()));
+			//}
 		}
 		//Sort list by angle
-		angList.Sort (CompareAngle);
-		List<Vector3> retlist = new List<Vector3> ();
-		Debug.Log ("PRINTING ANGLES");
+		//angList.Sort (CompareAngle);
+		angList.Sort( delegate(angclass a, angclass b){
+			int xdiff = a.angle.CompareTo(b.angle);
+			if (xdiff != 0) return xdiff;
+			else return a.distance.CompareTo(b.distance);
+		});
+		//List<Vector3> retlist = new List<Vector3> ();
 		int cnt = 0;
-		foreach (KeyValuePair<Vector3, float> kv in angList) {
-				Debug.Log( cnt++ + " " + kv.Value);
-				retlist.Add( kv.Key );
+		List<KeyValuePair<Vector3, float>> retlist = new List<KeyValuePair<Vector3, float>>();
+		foreach (angclass ang in angList) {
+			//Debug.Log( cnt++ + " " + kv.Value);
+			retlist.Add( new KeyValuePair<Vector3,float>( ang.vect, ang.angle ) );
 		}
 		return retlist;
 	}
@@ -533,5 +554,20 @@ public class Geometry
 		inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f);
 		inter.transform.parent = temp.transform;
 		//inter.gameObject.name = vlcnt.ToString();
+	}
+
+	public bool VectorApprox ( List<Vector3> obs_pts, Vector3 interPt ){
+		foreach (Vector3 v in obs_pts) {
+			if( Math.Abs (v.x - interPt.x) < precision && Math.Abs (v.z - interPt.z) < precision )
+				return true;
+		}
+		return false;
+	}
+
+	public bool VectorApprox ( Vector3 a, Vector3 b ){
+		if( Math.Abs (a.x - b.x) < precision && Math.Abs (a.z - b.z) < precision )
+			return true;
+		else
+			return false;
 	}
 }

@@ -755,7 +755,7 @@ public class Triangulation : MonoBehaviour
 			Line tmpline = new Line( numToVect[tour[i]], numToVect[tour[i + 1]] );
 			//tmpline.DrawVector( GameObject.Find("temp") );
 		}
-		visibilityPolygon(numToVect[tour[0]]);
+		visibilityPolygonDiff(numToVect[tour[0]]);
 	}
 
 	private void Dijkstra( int id, int N ){
@@ -878,111 +878,176 @@ public class Triangulation : MonoBehaviour
 		//inter.gameObject.name = vlcnt.ToString();
 	}
 
-	void visibilityPolygon( Vector3 vSrc ){
-		List<Vector3> vpts = new List<Vector3> ();
-		List<Vector3> obs_pts = totalGeo.GetVertex ();
-		GameObject vptmp = new GameObject ("vptmp");
+	void visibilityPolygonDiff( Vector3 kernel ){
+		//Find closest intersections
+		Stack<Vector3> extendablePoints = new Stack<Vector3> ();
+		Debug.Log (totalGeo.edges.Count);
 		int cnt = 0;
-			foreach( Vector3 vobs in obs_pts ){
-				if( vSrc == vobs )	continue;
-				Line ray = new Line( vSrc, vobs );
-				Line rayReverse = new Line( vobs, vSrc );
-				
-				if( totalGeo.edges.Contains(ray) || totalGeo.edges.Contains(rayReverse) ){
-					Debug.Log("FOUND");
+		List<Vector3> allpoints = totalGeo.GetVertex ();
+		//Taking each edge
+		foreach (Line obstacleEdge in totalGeo.edges) {
+			//Taking each vertex of the edge
+			for (int i = 0; i < 2; i++) {
+				//Creating new line
+				Line NL = new Line (kernel, obstacleEdge.vertex [i]);
+				bool intersects = false;
+				//Check if the line intersects any other edge
+				foreach (Line earlierLine in totalGeo.edges) {
+					//If same line
+					if (obstacleEdge == earlierLine)
+							continue;
+					//if intersects
+					if (NL.LineIntersectMuntac (earlierLine) != 0){
+						Vector3 vect = NL.GetIntersectionPoint(earlierLine);
+						//Intersects at only an endpoint
+						if( earlierLine.vertex[0] == vect || earlierLine.vertex[1] == vect )
+							continue;
+						else{
+							//drawSphere(vect);
+							intersects = true;
+							break;
+						}
+					}
 				}
-
-				bool valid = true;
-				foreach( Line l in totalGeo.edges ){
-					if( l.LineIntersectMuntac( ray ) != 0 ){
-						valid = false;
+				if (intersects)
+					continue;
+				//Check if the line is inside one of the original obstacle. 
+				//Simultaneously checks if line is outside the final map as it can only be so
+				//if it's connected to an obstacle point outside the map
+				foreach (Geometry g in obsGeos) {
+					List<Vector3> gv = g.GetVertex ();
+					if ( gv.Contains (kernel) && g.PointInside (NL.MidPoint ()) ){
+						intersects = true;
 						break;
 					}
 				}
-				
-				foreach( Geometry g in obsGeos ){
-					if( g.PointInside( ray.MidPoint() ) ){
-						valid = false;
-						break;
-					}
-				}
-
-				foreach( Line l in totalGeo.edges ){
-					if( l.vertex[0] == vSrc || l.vertex[1] == vSrc ){
-						if( l.vertex[0] == vobs || l.vertex[1] == vobs )
-							valid = true;
-					}
-				}
-				if( !valid ) continue;
-				//Add point
-				if( !VectorApprox( vpts, vobs ) ) vpts.Add( vobs );
-				//Extend ray past vobs
-				Vector3 vA = vSrc;
-				Vector3 vB = vobs;
-				Vector3 vobs_new = getExtendedPoint(vA, vB);
-				ray = new Line( vSrc, vobs_new  );
-				//Check earliest intersection point
-				float mindist = 10000f;
-				Vector3 minV = new Vector3();
-				minV = vSrc;
-				foreach( Line l in totalGeo.edges ){
-					if( l.LineIntersectMuntac( ray ) == 0 ) continue;
-					Vector3 interPt = l.GetIntersectionPoint( ray );
-					//if( obs_pts.Contains( interPt ) ) continue;
-					if( VectorApprox( obs_pts, interPt ) ) continue;
-					//if( vpts.Contains(interPt) ) continue; //intersects any point we've considered
-					if( VectorApprox( vpts, interPt ) ) continue;
-					//if( VectorApprox( vobs, interPt ) ) continue;
-					Line newRay = new Line( vSrc, interPt );
-					if( newRay.Magnitude() < mindist ){
-//						if( cnt == 7 ){
-//							if( obs_pts.Contains( interPt ) ){
-//								Debug.Log ("Alright");
-//							}
-//							Debug.Log ("Dart");
-//							ray.DrawVector( vptmp, Color.blue );
-//							drawSphere( interPt, Color.green );
-//						}
-						mindist = newRay.Magnitude();
-						minV = interPt;
-					}
-				}
-
-				if( minV != vSrc ){
-					vpts.Add(minV);
-					//Line tmpline = new Line( vSrc, minV );
-					//tmpline.name = cnt.ToString();
-					//tmpline.DrawVector(vptmp, Color.cyan );
-					//cnt++;
+				if (!intersects) {
+//					Line tmpline = new Line (kernel, obstacleEdge.vertex [i]);
+//					tmpline.name = cnt.ToString ();
+//					tmpline.DrawVector (GameObject.Find ("temp"), Color.green);
+//					cnt++;
+					extendablePoints.Push (obstacleEdge.vertex [i]);
 				}
 			}
-
+		}
+		//Extend lines of the extendable points
+		Debug.Log ("Size of ext points : " + extendablePoints.Count);
+		List<Vector3> VPPoints = new List<Vector3> ();
+		while( extendablePoints.Count != 0 ){
+			Vector3 expoint = extendablePoints.Pop();
+			Vector3 expointext = getExtendedPoint(kernel, expoint, 1.005f);//Potential error, extend less maybe
+			bool cantextend = false;
+			//Check if slight extension causes it to enter an obstacle
+			foreach( Geometry g in finalPoly ){
+				if( g.PointInside(expointext) ){
+						cantextend = true;
+						break;
+				}
+			}
+			if( cantextend ){//Line can't be extended
+				//Add to visibility polygon
+				VPPoints.Add(expoint);
+//				Line tmpline = new Line (kernel, expoint);
+//				tmpline.name = cnt.ToString ();
+//				tmpline.DrawVector (GameObject.Find ("temp"), Color.cyan);
+//				cnt++;
+			}
+			else{
+				//Old line
+				Line origline = new Line( kernel, expoint );
+				//Create ray
+				Line NLX = new Line( kernel, getExtendedPoint( kernel, expoint, 10f ) );
+				//Check ray intersection
+				Vector3 closestPoint = new Vector3();
+				float mindist = 100000f;
+				bool validextension = false;
+				foreach( Line L in totalGeo.edges ){
+					if( L.LineIntersectMuntacEndPt(NLX) != 0 ){
+						//Check if same point or earlier colinear point
+						Line NLXInter = new Line( kernel, L.GetIntersectionPoint(NLX) );
+						float dist = NLXInter.Magnitude();
+						if( dist > origline.Magnitude() && dist < mindist ){
+							//drawSphere(NLXInter.vertex[1]);
+							//Check if it falls into an obstacle
+							Line extSeg = new Line( expoint, NLXInter.vertex[1]);
+							bool inside = false;
+							foreach( Geometry gg in obsGeos ){
+								if( gg.PointInside(extSeg.MidPoint()) ){
+									inside = true;
+									break;
+								}
+							}
+							if( inside ) continue;
+							validextension = true;
+							mindist = dist;
+							closestPoint = NLXInter.vertex[1];
+						}
+					}
+				}
+				VPPoints.Add(expoint);
+				if( validextension ){
+					extendablePoints.Push (closestPoint);
+//					drawSphere(closestPoint);
+//					Line tmpline = new Line (kernel, closestPoint);
+//					tmpline.name = cnt.ToString ();
+//					tmpline.DrawVector (GameObject.Find ("temp"), Color.cyan);
+//					cnt++;
+				}
+				else{
+					//VPPoints.Add(expoint);
+				}
+			}
+		}
+		//return;
 		Geometry visiPoly = new Geometry ();
-		vpts = visiPoly.GetVertexAngleSorted (vSrc, vpts);
-		visiPoly.edges.Add( new Line(vSrc, vpts[0] ) );
-		cnt = 0;
-		for (int i = 0; i < vpts.Count - 1; i++) {
-			visiPoly.edges.Add( new Line(vpts[i], vpts[i + 1]) );
-			drawSphere( vpts[i], Color.red );
-			/*Line tmpline = new Line( vSrc, vpts[i] );
-			tmpline.name = cnt.ToString();
-			tmpline.DrawVector(vptmp, Color.cyan );
-			cnt++;*/
+		//Sort w.r.t kernel and some arbitrary point
+		List<Vector3> lsv = new List<Vector3> ();
+		foreach( Vector3 vv in VPPoints ){
+			if( !lsv.Contains(vv) ){
+				lsv.Add(vv);
+			}
 		}
-		visiPoly.edges.Add( new Line(vpts[vpts.Count - 1], vSrc ) );
-		foreach (Line l in visiPoly.edges) {
-			l.name = cnt.ToString();
-			cnt++;
-			l.DrawVector(vptmp, Color.red );
+		VPPoints = lsv;
+		List<KeyValuePair<Vector3, float>> realVPpts = new List<KeyValuePair<Vector3, float>>  ();
+		realVPpts = visiPoly.GetVertexAngleSorted(kernel, lsv);
+		List<List<Vector3>> raylist = new List<List<Vector3>> ();
+		int rayptr = 0;
+		for (int i = 0; i < realVPpts.Count; i++) {
+			raylist.Add(new List<Vector3>());
+			raylist[rayptr].Add(realVPpts[i].Key);
+			float angle = realVPpts[i].Value;
+			while( i + 1 < realVPpts.Count && Math.Abs(realVPpts[i + 1].Value - angle) < 0.0000001f ){
+				i++;
+				raylist[rayptr].Add(realVPpts[i].Key);
+			}
+			rayptr++;
 		}
-		//visiPoly.DrawGeometry (GameObject.Find ("temp"));
+		GameObject vptmp = new GameObject("vptmp");
+		//visiPoly.edges.Add( new Line(kernel, raylist[0][0]) );
+		raylist.Add(new List<Vector3>());
+		raylist[raylist.Count - 1].Add(kernel);//So that kernel is automatically connected back to at the end
+		//drawSphere (raylist [0] [0]);
+		Debug.Log ("Size of ray list: " + raylist.Count);
+		for (int i = 0; i < raylist.Count - 1; i++) {
+			//Reverse list if needed
+			if( OnSameLine(raylist[i][raylist[i].Count - 1], raylist[i + 1][raylist[i + 1].Count - 1]) )
+				raylist[i + 1].Reverse();
+			for( int j = 0; j < raylist[i].Count - 1; j++ ){
+				visiPoly.edges.Add ( new Line(raylist[i][j], raylist[i][j + 1]) );
+				drawSphere(raylist[i][j + 1]);
+			}
+			//visiPoly.edges.Add ( new Line(raylist[i][raylist[i].Count - 1], raylist[i + 1][0]) );
+			drawSphere(raylist[i + 1][0]);
+		}
+		//visiPoly.DrawGeometry (GameObject.Find ("vptemp"));
+		visiPoly.DrawGeometry (GameObject.Find ("temp"));
 	}
 
-	public Vector3 getExtendedPoint( Vector3 vSrc, Vector3 vobs ){
+	public Vector3 getExtendedPoint( Vector3 vSrc, Vector3 vobs, float amount ){
 		Vector2 vSrc2 = new Vector2( vSrc.x, vSrc.z );
 		Vector2 vobs2 = new Vector2( vobs.x, vobs.z );
 		Vector2 dirvSrc2 = vobs2 - vSrc2;
-		float alp = 100.02f;
+		float alp = amount;//100.02f
 		Vector2 vobs_new2 = vSrc2 + (alp * dirvSrc2);
 		Vector3 vobs_new = new Vector3( vobs_new2.x, 1, vobs_new2.y );
 		return vobs_new;
@@ -1000,6 +1065,14 @@ public class Triangulation : MonoBehaviour
 			return true;
 		else
 			return false;
+	}
+	public bool OnSameLine( Vector3 v1, Vector3 v2 ){
+		foreach (Line l in totalGeo.edges) {
+			if( l.LineIntersectMuntacEndPt(new Line(v1,v1)) != 0 && l.LineIntersectMuntacEndPt(new Line(v2,v2)) != 0 ){
+				return true;
+			}
+		}
+		return false;
 	}
 }//End of Class
 

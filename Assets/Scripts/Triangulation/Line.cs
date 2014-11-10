@@ -15,7 +15,7 @@ public class Line
 	public Vector3[] vertex = new Vector3[2];
 	public Color[] colours = new Color[2]; 
 	public string name = "Vector Line";
-
+	private float precision = 0.001f;
 	public Line(Vector3 v1, Vector3 v2)
 	{
 		vertex[0] = v1; 
@@ -108,121 +108,12 @@ public class Line
 		return vertex[0]; 
 	}
 
-	public bool LineIntersection(Line l)
-	{
-		Vector3 a = l.vertex[0]; 
-		Vector3 b = l.vertex[1];
-		Vector3 c = vertex[0];
-		Vector3 d = vertex[1];
-		
-		
-		// a-b
-		// c-d
-		//if the same lines
-		
-		//When share a point use the other algo
-		if(a.Equals(c) || a.Equals(d) || b.Equals(c) || b.Equals(d))
-			return LineIntersect(a,b,c,d); 
-		
-		
-		
-		
-		return CounterClockWise(a,c,d) != CounterClockWise(b,c,d) && 
-			CounterClockWise(a,b,c) != CounterClockWise(a,b,d);
-		
-		//if( CounterClockWise(a,c,d) == CounterClockWise(b,c,d))
-		//	return false;
-		//else if (CounterClockWise(a,b,c) == CounterClockWise(a,b,d))
-		//	return false; 
-		//else 
-		//	return true; 
-		
-		
-	}
 	public float Magnitude()
 	{
 		return (vertex[0]-vertex[1]).magnitude; 
 	}
-	private bool LineIntersect(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
-	{
-		//Debug.Log(a); 
-		//Debug.Log(b); 
-		//Debug.Log(c); 
-		//Debug.Log(d); 
-		
-		Vector2 u = new Vector2(b.x,b.z) - new Vector2(a.x,a.z);
-		Vector2 p0 = new Vector2(a.x,a.z); Vector2 p1 = new Vector2(b.x,b.z); 
-		
-		Vector2 v = new Vector2(d.x,d.z) - new Vector2(c.x,c.z);
-		Vector2 q0 = new Vector2(c.x,c.z); Vector2 q1 = new Vector2(d.x,d.z);
-		
-		Vector2 w = new Vector2(a.x,a.z) - new Vector2(d.x,d.z);
-		
-		
-		//if (u.x * v.y - u.y*v.y == 0)
-		//	return true;
-		
-		double s = (v.y* w.x - v.x*w.y) / (v.x*u.y - v.y*u.x);
-		double t = (u.x*w.y-u.y*w.x) / (u.x*v.y- u.y*v.x); 
-		//Debug.Log(s); 
-		//Debug.Log(t); 
-		
-		if ( (s>0 && s< 1) || (t>0 && t< 1) )
-			return true;
-		
-		return false; 
-	}
-	public Vector3 LineIntersectionVect(Line l)
-	{
-		Vector3 a = l.vertex[0]; 
-		Vector3 b = l.vertex[1];
-		Vector3 c = vertex[0];
-		Vector3 d = vertex[1];
 
-		return LineIntersectVect(a,b,c,d);
-	}
-	private Vector3 LineIntersectVect (Vector3 a, Vector3 b, Vector3 c, Vector3 d)
-	{
-		//Debug.Log(a); 
-		//Debug.Log(b); 
-		//Debug.Log(c); 
-		//Debug.Log(d); 
-		
-		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
-		Vector2 p0 = new Vector2 (a.x, a.z);
-		Vector2 p1 = new Vector2 (b.x, b.z); 
-		
-		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
-		Vector2 q0 = new Vector2 (c.x, c.z);
-		Vector2 q1 = new Vector2 (d.x, d.z);
-		
-		Vector2 w = new Vector2 (a.x, a.z) - new Vector2 (d.x, d.z);
-		
-		
-		//if (u.x * v.y - u.y*v.y == 0)
-		//	return true;
-		
-		double s = (v.y * w.x - v.x * w.y) / (v.x * u.y - v.y * u.x);
-		double t = (u.x * w.y - u.y * w.x) / (u.x * v.y - u.y * v.x); 
-		//Debug.Log(s); 
-		//Debug.Log(t); 
-		
-
-			//Interpolation
-		Vector3 r = a + (b-a)*(float)s; 
-		return r; 
-		//}
-		
-
-
-		//return Vector3.zero; 
-	}
-	private bool CounterClockWise(Vector3 v1,Vector3 v2,Vector3 v3)
-	{
-		//v1 = a,b
-		//v2 = c,d
-		//v3 = e,f
-		
+	private bool CounterClockWise(Vector3 v1,Vector3 v2,Vector3 v3){
 		float a = v1.x, b = v1.z;  
 		float c = v2.x, d = v2.z;  
 		float e = v3.x, f = v3.z;  
@@ -391,8 +282,6 @@ public class Line
 		float pa, pb;
 		if (diff.x != 0 && diff.y != 0) {
 			grad = diff.z / diff.x;
-//			if( (pt.z - vertex[0].z) == ( (grad * pt.x) - vertex[0].x ) )
-//				return true;
 			pa = pt.z - vertex[0].z;
 			pb = (grad * pt.x) - vertex[0].x;
 			if( Math.Abs(pa - pb) < 0.1f)
@@ -418,6 +307,18 @@ public class Line
 		return ((b.x - a.x)*(pt.z - a.z) - (b.z - a.z)*(c.x - a.x)) > 0;
 	}
 
+	public bool PointOnLineB( Vector3 pt ){
+		if (pt.x >= Math.Min (vertex [0].x, vertex [1].x) && pt.x <= Math.Max (vertex [0].x, vertex [1].x) 
+				&& pt.z >= Math.Min (vertex [0].z, vertex [1].z) && pt.z <= Math.Max (vertex [0].z, vertex [1].z)) {
+				Vector3 a = this.vertex [0];
+				Vector3 b = this.vertex [1];
+				Vector3 c = pt;
+				return ((b.x - a.x) * (pt.z - a.z) - (b.z - a.z) * (c.x - a.x)) == 0;
+		} 
+		else
+			return false;
+	}
+
 	public bool PointIsLeft( Line param ){
 		Vector3 x = this.getSharedVertex (param);
 		if (x == param.vertex [0])
@@ -425,6 +326,21 @@ public class Line
 		else
 			return PointIsLeft (param.vertex [0]);
 	}
+
+	public bool VectorApprox ( List<Vector3> obs_pts, Vector3 interPt ){
+		foreach (Vector3 v in obs_pts) {
+			if( Math.Abs (v.x - interPt.x) < 0.01 && Math.Abs (v.z - interPt.z) < 0.01 )
+				return true;
+		}
+		return false;
+	}
+	public bool VectorApprox ( Vector3 a, Vector3 b ){
+		if( Math.Abs (a.x - b.x) < 0.01 && Math.Abs (a.z - b.z) < 0.01 )
+			return true;
+		else
+			return false;
+	}
+
 }
 
 class LineEqualityComparer : IEqualityComparer<Line>
