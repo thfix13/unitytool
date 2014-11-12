@@ -34,6 +34,9 @@ namespace EditorArea {
 		private static bool seeByTime, seeByLength, seeByDanger, seeByLoS, seeByDanger3, seeByLoS3, seeByDanger3Norm, seeByLoS3Norm, seeByCrazy, seeByVelocity;
 		private static List<Path> arrangedByTime, arrangedByLength, arrangedByDanger, arrangedByLoS, arrangedByDanger3, arrangedByLoS3, arrangedByDanger3Norm, arrangedByLoS3Norm, arrangedByCrazy, arrangedByVelocity;
 
+		//GEONEW
+
+
 		// Helping stuff
 		private static Vector2 scrollPos = new Vector2 ();
 		private static GameObject playerNode;
@@ -183,9 +186,10 @@ namespace EditorArea {
 			}
 
 			if (GUILayout.Button ("Compute Path")) {
+
 				float playerSpeed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
 				float playerMaxHp = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().maxHp;
-				
+
 				//Check the start and the end and get them from the editor. 
 				if (start == null) {
 					start = GameObject.Find ("Start");
@@ -308,6 +312,7 @@ namespace EditorArea {
 				}
 
 				// Debug.Log(summary);
+
 			}
 			
 			if (GUILayout.Button ("(DEBUG) Export Paths")) {

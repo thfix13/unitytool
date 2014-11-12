@@ -158,8 +158,10 @@ public class Triangulation : MonoBehaviour
 		colours.Add(c); 
 	}
 
-	public void TriangulationSpace ()
+	public List<Geometry> TriangulationSpace ()
 	{
+		List<Geometry> toReturn = new List<Geometry> ();
+
 		//Compute one step of the discritzation
 		//Find this is the view
 		GameObject floor = (GameObject)GameObject.Find ("Floor");
@@ -211,7 +213,7 @@ public class Triangulation : MonoBehaviour
 		if(obs == null)
 		{
 			Debug.Log("Add tag geos to the geometries"); 
-			return; 
+			return null; 
 		}
 		//data holder
 		Triangulation triangulation = GameObject.Find ("Triangulation").GetComponent<Triangulation> (); 
@@ -287,6 +289,7 @@ public class Triangulation : MonoBehaviour
 
 		foreach(Geometry g in finalPoly){
 			g.DrawGeometry( temp);
+			toReturn.Add (g);
 		}
 
 		List<Vector3> allVertex = new List<Vector3>();
@@ -338,7 +341,9 @@ public class Triangulation : MonoBehaviour
 		toCheckNode.Add (start); 
 		Line LinetoAdd = start.voisinsLine [0];
 
-		//mapBG.DrawGeometry (temp);
+
+		mapBG.DrawGeometry (temp);
+		toReturn.Add (mapBG);
 
 		//Straight Porting//
 		while (LinetoAdd != null) {
@@ -545,6 +550,8 @@ public class Triangulation : MonoBehaviour
 				}
 			}
 		}
+	
+		return toReturn;
 	}
 
 }
