@@ -287,6 +287,10 @@ public class Triangulation : MonoBehaviour
 
 		foreach(Geometry g in finalPoly){
 			g.DrawGeometry( temp);
+			foreach(Line l in g.edges){
+				Debug.Log (l.vertex[0]);
+				Debug.Log (l.vertex[1]);
+			}
 		}
 
 		List<Vector3> allVertex = new List<Vector3>();
@@ -338,7 +342,15 @@ public class Triangulation : MonoBehaviour
 		toCheckNode.Add (start); 
 		Line LinetoAdd = start.voisinsLine [0];
 
-		//mapBG.DrawGeometry (temp);
+		//Testing code for use elsewhere
+
+		mapBG.DrawGeometry (temp);
+		foreach(Line l in mapBG.edges){
+			Debug.Log (l.vertex[0]);
+			Debug.Log (l.vertex[1]);
+		}
+
+		//end test
 
 		//Straight Porting//
 		while (LinetoAdd != null) {
