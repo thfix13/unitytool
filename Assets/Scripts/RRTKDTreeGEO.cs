@@ -11,14 +11,14 @@ using Extra;
 namespace Exploration {
 	public class RRTKDTreeGEO : NodeProvider {
 
-		private Cell[][][] nodeMatrix;
+		//private Cell[][][] nodeMatrix;
 		private float angle;
 		public KDTree tree;
-		public List<Node> explored;
+		public List<NodeGeo> explored;
 		// Only do noisy calculations if enemies is different from null
 		public Enemy[] enemies;
-		public Vector3 min;
-		public float tileSizeX, tileSizeZ;
+		//public Vector3 min;
+		//public float tileSizeX, tileSizeZ;
 
 		//Geo version of GetNode
 		public NodeGeo GetNodeGeo (int t, float x, float y) {
@@ -32,6 +32,244 @@ namespace Exploration {
 			}
 			return (NodeGeo)o;
 		}
+
+
+
+		public List<NodeGeo> ComputeGeo (float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, List<Geometry> obstacles, int attemps, float speed,  bool smooth = false) {
+			// Initialization
+			tree = new KDTree (3);
+			explored = new List<NodeGeo> ();
+			//nodeMatrix = matrix;
+			
+			//Start and ending node
+			NodeGeo start = GetNodeGeo (0, startX, startY);
+			start.visited = true; 
+			start.parent = null;
+			
+			// Prepare start and end node
+			NodeGeo end = GetNodeGeo (0, endX, endY);
+			tree.insert (start.GetArray (), start);
+			explored.Add (start);
+			
+			// Prepare the variables		
+			NodeGeo nodeVisiting = null;
+			NodeGeo nodeTheClosestTo = null;
+			
+			float tan = speed / 1;
+			angle = 90f - Mathf.Atan (tan) * Mathf.Rad2Deg;
+			
+			// WHAT IS THIS??
+			/*
+			List<Distribution.Pair> pairs = new List<Distribution.Pair> ();
+			
+			for (int x = 0; x < matrix[0].Length; x++) 
+				for (int y = 0; y < matrix[0].Length; y++) 
+					if (((Cell)matrix [0] [x] [y]).waypoint)
+						pairs.Add (new Distribution.Pair (x, y));
+			
+			pairs.Add (new Distribution.Pair (end.x, end.y));
+			
+			//Distribution rd = new Distribution(matrix[0].Length, pairs.ToArray());
+			*/
+			
+			//RRT algo
+			for (int i = 0; i <= attemps; i++) {
+				
+				//Pick a random time
+				int rt = Random.Range (1,maxT);
+				//Then pick random x and y values
+				int rx = Random.Range (minX, maxX);
+				int ry = Random.Range (minY, maxY);
+				//int rx = p.x, ry = p.y;
+				nodeVisiting = GetNodeGeo (rt, rx, ry);
+				//if this node has already been visited continue
+				if (nodeVisiting.visited) {
+					i--;
+					//Consider checking if point is valid earlier, for i--.
+					continue;
+				}
+				
+				explored.Add (nodeVisiting);
+				
+				nodeTheClosestTo = (NodeGeo)tree.nearest (new double[] {rx, rt, ry});
+				
+				// cannot go back in time, so skip if t is decreasing
+				if (nodeTheClosestTo.t > nodeVisiting.t){
+					continue;
+				}
+				
+				// Only add if we are going in ANGLE degrees or higher.As there is a fixed max speed
+				Vector3 p1 = nodeVisiting.GetVector3 ();
+				Vector3 p2 = nodeTheClosestTo.GetVector3 ();
+				Vector3 pd = p1 - p2;
+				if (Vector3.Angle (pd, new Vector3 (pd.x, 0f, pd.z)) < angle) {
+					continue;
+				}				
+				
+				//Check for collision with obstacles
+				if(checkCollObs(p2.x, p2.z, p1.x, p1.z, obstacles)){
+
+					continue;
+				}
+				
+				//Check for collision with guard line of sight
+				if(checkCollEs(p2.x, p2.z, (int)p2.y, p1.x, p1.z, (int)p1.y, enemies)){
+					continue;
+				}
+				
+				
+				try {
+					tree.insert (nodeVisiting.GetArray (), nodeVisiting);
+				} catch (KeyDuplicateException) {
+				}
+				
+				nodeVisiting.parent = nodeTheClosestTo;
+				nodeVisiting.visited = true;
+				
+				// Attempt to connect to the end node
+				if (Random.Range (0, 1000) > 0) {
+					p1 = nodeVisiting.GetVector3 ();
+					p2 = end.GetVector3 ();
+					p2.y = p1.y;
+					float dist = Vector3.Distance (p1, p2);
+					
+					float t = dist * Mathf.Tan (angle);
+					pd = p2;
+					pd.y += t;
+
+
+
+					NodeGeo endNode = GetNodeGeo ((int)pd.y, pd.x, pd.z);
+
+
+					if (!checkCollObs(p1.x, p1.z, p2.x, p2.z, obstacles) && !checkCollEs(p1.x, p1.z, (int)p1.y, p2.x, p2.z, (int)p2.y, enemies)) {
+						//Debug.Log ("Done3");
+						endNode.parent = nodeVisiting;
+						return ReturnPathGeo (endNode, smooth);
+					}
+				}
+				
+				//Might be adding the neighboor as a the goal
+				if (Mathf.Approximately(nodeVisiting.x, end.x) & Mathf.Approximately(nodeVisiting.y,end.y)) {
+					//Debug.Log ("Done2");
+					return ReturnPathGeo (nodeVisiting, smooth);
+					
+				}
+			}
+			
+			return new List<NodeGeo> ();
+		}
+
+
+
+		//Check for collision of a path with the obstacles, x, t, y
+		public bool checkCollObs(float startX, float startY, float endX, float endY, List<Geometry> obs){
+			Vector3 start = new Vector3(startX, 1, startY);
+			Vector3 end = new Vector3(endX, 1, endY);
+			Line path = new Line(start, end);
+			foreach(Geometry g in obs){
+				foreach(Line l in g.edges){
+					if(l.LineIntersection(path)){
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
+		//Check for collision of a path with the enemies
+		public bool checkCollEs(float startX, float startY,int startT, float endX, float endY,  int endT, Enemy[] enems){
+			int numSteps = endT - startT;
+			float stepX = (endX - startX) / ((float) numSteps);
+			float stepY = (endY - startY) / ((float) numSteps);
+
+			float checkX = startX;
+			float checkY = startY;
+
+			for(int t = startY; t <= endT; t++){
+				foreach(Enemy e in enems){
+					if(checkColE(e, checkX, t, checkY)){
+						return true;
+					}
+				}
+
+				checkX += stepX;
+				checkY += stepY;
+			}
+
+			return false;
+		}
+
+		//TODO
+		//Check if an enemy can see you at a certain time/place
+		public bool checkColE(Enemy e, float x, int t, float y){
+			return false;
+		}
+
+
+		//Returns the computed geo path by the RRT
+		private List<NodeGeo> ReturnPathGeo(NodeGeo endNode, bool smooth) {
+			NodeGeo n = endNode;
+			List<NodeGeo> points = new List<NodeGeo> ();
+			
+			while (n != null) {
+				points.Add (n);
+				n = n.parent;
+			}
+			points.Reverse ();
+			
+			// If we didn't find a path
+			if (points.Count == 1){
+				points.Clear ();
+			}
+			else if(smooth){
+				Debug.Log ("NO SMOOTHING IMPLEMENTED CURRENTLY");
+			}
+
+			return points;
+		}
+
+		#region oldcode
+		//OLD CODE FOLLOWS
+		/*
+
+
+
+		// Returns the computed path by the RRT, and smooth it if that's the case
+		private List<Node> ReturnPath (Node endNode, bool smooth) {
+			Node n = endNode;
+			List<Node> points = new List<Node> ();
+			
+			while (n != null) {
+				points.Add (n);
+				n = n.parent;
+			}
+			points.Reverse ();
+			
+			// If we didn't find a path
+			if (points.Count == 1)
+				points.Clear ();
+			else if (smooth) {
+				// Smooth out the path
+				Node final = null;
+				foreach (Node each in points) {
+					final = each;
+					while (Extra.Collision.SmoothNode(final, this, SpaceState.Editor, true)) {
+					}
+				}
+				
+				points.Clear ();
+				
+				while (final != null) {
+					points.Add (final);
+					final = final.parent;
+				}
+				points.Reverse ();
+			}
+			
+			return points;
+		}
+
 
 		// Gets the node at specified position from the NodeMap, or create the Node based on the Cell position for that Node
 		public Node GetNode (int t, int x, int y) {
@@ -166,61 +404,8 @@ namespace Exploration {
 			return new List<Node> ();
 		}
 
+		*/
 
-		//Check for collision of a path with the obstacles, x, y, t?
-		public bool checkCollOb(Vector3 start, Vector3 end, List<Geometry> obs){
-			Line path = new Line(start, end);
-			foreach(Geometry g in obs){
-				foreach(Line l in g.edges){
-					if(l.LineIntersection(path)){
-						return true;
-					}
-				}
-			}
-			return false;
-		}
-
-		//Check for collision of a path with the enemies
-		public bool checkCollE(Vector3 start, Vector3 end, Enemy[] enems){
-			//for(int t = start.
-		}
-
-
-		// Returns the computed path by the RRT, and smooth it if that's the case
-		private List<Node> ReturnPath (Node endNode, bool smooth) {
-			Node n = endNode;
-			List<Node> points = new List<Node> ();
-			
-			while (n != null) {
-				points.Add (n);
-				n = n.parent;
-			}
-			points.Reverse ();
-			
-			// If we didn't find a path
-			if (points.Count == 1)
-				points.Clear ();
-			else if (smooth) {
-				// Smooth out the path
-				Node final = null;
-				foreach (Node each in points) {
-					final = each;
-					while (Extra.Collision.SmoothNode(final, this, SpaceState.Editor, true)) {
-					}
-				}
-				
-				points.Clear ();
-				
-				while (final != null) {
-					points.Add (final);
-					final = final.parent;
-				}
-				points.Reverse ();
-			}
-			
-			return points;
-		}
-		
-		
+		#endregion oldcode
 	}
 }
