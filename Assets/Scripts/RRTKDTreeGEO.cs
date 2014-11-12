@@ -10,6 +10,7 @@ using Extra;
 
 namespace Exploration {
 	public class RRTKDTreeGEO : NodeProvider {
+
 		private Cell[][][] nodeMatrix;
 		private float angle;
 		public KDTree tree;
@@ -164,7 +165,27 @@ namespace Exploration {
 			
 			return new List<Node> ();
 		}
-		
+
+
+		//Check for collision of a path with the obstacles, x, y, t?
+		public bool checkCollOb(Vector3 start, Vector3 end, List<Geometry> obs){
+			Line path = new Line(start, end);
+			foreach(Geometry g in obs){
+				foreach(Line l in g.edges){
+					if(l.LineIntersection(path)){
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
+		//Check for collision of a path with the enemies
+		public bool checkCollE(Vector3 start, Vector3 end, Enemy[] enems){
+			//for(int t = start.
+		}
+
+
 		// Returns the computed path by the RRT, and smooth it if that's the case
 		private List<Node> ReturnPath (Node endNode, bool smooth) {
 			Node n = endNode;
