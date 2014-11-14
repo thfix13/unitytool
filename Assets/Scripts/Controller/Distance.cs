@@ -21,10 +21,12 @@ namespace RRTController {
 			if(lines != null)
 				GameObject.DestroyImmediate(lines);
 			lines = new GameObject("Lines");
+
+
 		}
 		public void onStart (Node start, RRTKDTreeCombat context) 
 		{
-			
+			VectorLine.SetCamera(); 
 		}
 		
 		public List<Cell[][][]> beforeLineOfSight (Node from, Node to, RRTKDTreeCombat context) {
@@ -44,23 +46,43 @@ namespace RRTController {
 			//between from - to nodes
 
 			Bresenham3D line = new Bresenham3D( from.GetVector3 (), to.GetVector3 () );
- 
-			foreach( Vector3 point in line )
-			{
-				//Visualise the line created by the segment. 
-			    GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-			    cube.transform.parent = lines.transform; 
-			    cube.transform.position = point; 
-
-			}
+ 	
+			VectorLine l = new VectorLine("Line",new Vector3[2]{from.GetVector3 (), to.GetVector3 ()},null,2.0f);
+			l.vectorObject.transform.parent = lines.transform;
+			l.Draw3D();
 
 
-			foreach(Enemy e in context.enemies)
-			{
-				Vector2 ePos = new Vector2((int)((e.cells[from.t][0].x - context.min.x) / context.tileSizeX),
-										   (int)((e.cells[from.t][0].y - context.min.y) / context.tileSizeZ));
-				//Debug.Log(ePos);
-			}	
+//			foreach( Vector3 point in line )
+//			{
+//				//Visualise the line created by the segment. 
+//			    GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+//			    cube.transform.parent = lines.transform; 
+//			    cube.transform.position = point; 
+//
+//
+//				foreach(Enemy e in context.enemies)
+//				{
+//					Vector3 ePos = new Vector3((int)((e.cells[from.t][0].x - context.min.x) / context.tileSizeX),
+//					                           from.t,
+//					                           (int)((e.cells[from.t][0].y - context.min.y) / context.tileSizeZ));
+//					//Debug.Log(ePos);
+//
+//					//Add debug line vectrocity
+//					//Foreach cube check the distance to the enemy
+//
+//					VectorLine l = new VectorLine("Line",new Vector3[2]{ePos,point},null,2.0f);
+//					l.vectorObject.transform.parent = lines.transform;
+//					l.Draw3D(); 
+//
+//				}
+//
+//			}
+
+
+
+
+
+				
 
 
 
