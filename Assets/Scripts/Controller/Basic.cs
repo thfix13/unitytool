@@ -61,6 +61,7 @@ namespace RRTController {
 		}
 		
 		public Node afterConnect (Node from, Node to, RRTKDTreeCombat context) {
+
 			// Attemp to connect to the end node
 			if (!context.simulateCombat || (context.simulateCombat && to.playerhp > 0)) {
 				// Compute minimum time to reach the end node
@@ -85,6 +86,16 @@ namespace RRTController {
 					
 					Node hit = context.dda.Los3D (context.nodeMatrix, to, endNode, seenList.ToArray ());
 					
+
+					//we need to check if the other controllers are respected. 
+					bool skip = false; 
+					foreach (Controller c in context.controllers)
+					{
+						skip = skip || !c.validateLineOfSight(to, endNode, hit, context);
+					}
+					if (skip) 
+						return null;
+
 					// To simplify things, only connect if player isn't seen or collides with an obstacle
 					if (hit == null) {
 						endNode.parent = to;
