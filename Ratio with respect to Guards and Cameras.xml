@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="gb2312"?>
+<BResultsRoot2 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <everything>
+    <BResultBatch2>
+      <numOfCameras>0</numOfCameras>
+      <numOfGuards>0</numOfGuards>
+      <numOfIterations>0</numOfIterations>
+      <results>
+        <BResult2>
+          <ratio>1</ratio>
+        </BResult2>
+        <BResult2>
+          <ratio>1</ratio>
+        </BResult2>
+      </results>
+      <averageRatio>1</averageRatio>
+    </BResultBatch2>
+  </everything>
+</BResultsRoot2>

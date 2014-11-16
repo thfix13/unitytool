@@ -812,7 +812,7 @@ public class PCG : MonoBehaviour
 								int index = tempWaypoints.IndexOf (currentWaypoint);
 								tempSequence.RemoveAt (index);
 								Vector3 startVec = tempWaypoints.ElementAt (index).transform.position;
-								Vector3 endVec1, endVec2, dir1, dir2;
+								Vector3 endVec2, dir1, dir2;
 								if (index != tempWaypoints.Count - 1) {
 									endVec2 = tempWaypoints.ElementAt (index + 1).transform.position;
 								} else {
@@ -820,7 +820,6 @@ public class PCG : MonoBehaviour
 								}
 								dir2 = endVec2 - startVec;
 								dir1 = - dir2;
-								endVec1 = startVec + dir1;
 								GameObject rwp = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
 								GameObject rwp1 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
 								GameObject rwp2 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
@@ -2175,7 +2174,7 @@ public class PCG : MonoBehaviour
 								}
 								tempSequence.RemoveAt (index);
 								Vector3 startVec = tempWaypoints.ElementAt (index).transform.position;
-								Vector3 endVec1, endVec2, dir1, dir2;
+								Vector3 endVec2, dir1, dir2;
 								if (index != tempWaypoints.Count - 1) {
 									endVec2 = tempWaypoints.ElementAt (index + 1).transform.position;
 								} else {
@@ -2183,7 +2182,6 @@ public class PCG : MonoBehaviour
 								}
 								dir2 = endVec2 - startVec;
 								dir1 = - dir2;
-								endVec1 = startVec + dir1;
 								GameObject rwp = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
 								GameObject rwp1 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
 								GameObject rwp2 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
@@ -2511,7 +2509,7 @@ public class PCG : MonoBehaviour
 										// Change the rotating elapse
 										rotatingElapse = timeElapseBefore - timeElapseAfter;
 									}
-																		// Update moving speed
+									// Update moving speed
 									float newMovingSpeed = (float)(segDist / (timeElapseAfter / 10));		
 									for (int t = listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 2)]; t < listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 3)]; t++) {
 										listOfEnemies2.ElementAt (size).moveSpeedDictionary [t].moveSpeed = newMovingSpeed;
@@ -2840,7 +2838,7 @@ public class PCG : MonoBehaviour
 								}
 								tempSequence.RemoveAt (index);
 								Vector3 startVec = tempWaypoints.ElementAt (index).transform.position;
-								Vector3 endVec1, endVec2, dir1, dir2;
+								Vector3 endVec2, dir1, dir2;
 								if (index != tempWaypoints.Count - 1) {
 									endVec2 = tempWaypoints.ElementAt (index + 1).transform.position;
 								} else {
@@ -2848,7 +2846,6 @@ public class PCG : MonoBehaviour
 								}
 								dir2 = endVec2 - startVec;
 								dir1 = - dir2;
-								endVec1 = startVec + dir1;
 								GameObject rwp = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
 								GameObject rwp1 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
 								GameObject rwp2 = GameObject.Instantiate (waypointPrefab, startVec, Quaternion.identity) as GameObject;
@@ -3176,7 +3173,7 @@ public class PCG : MonoBehaviour
 										// Change the rotating elapse
 										rotatingElapse = timeElapseBefore - timeElapseAfter;
 									}
-																		// Update moving speed
+									// Update moving speed
 									float newMovingSpeed = (float)(segDist / (timeElapseAfter / 10));		
 									for (int t = listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 2)]; t < listOfEnemies2.ElementAt (size).reverseMoveSpeedDictionary [tempWaypoints.ElementAt (index + 3)]; t++) {
 										listOfEnemies2.ElementAt (size).moveSpeedDictionary [t].moveSpeed = newMovingSpeed;
