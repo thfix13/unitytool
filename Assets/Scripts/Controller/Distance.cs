@@ -47,36 +47,41 @@ namespace RRTController {
 
 			Bresenham3D line = new Bresenham3D( from.GetVector3 (), to.GetVector3 () );
  	
-			VectorLine l = new VectorLine("Line",new Vector3[2]{from.GetVector3 (), to.GetVector3 ()},null,2.0f);
-			l.vectorObject.transform.parent = lines.transform;
-			l.Draw3D();
+			//VectorLine l = new VectorLine("Line",new Vector3[2]{from.GetVector3 (), to.GetVector3 ()},null,2.0f);
+			//l.vectorObject.transform.parent = lines.transform;
+			//l.Draw3D();
+
+			foreach( Vector3 point in line )
+			{
+				//Visualise the line created by the segment. 
+			    GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+			    cube.transform.parent = lines.transform; 
+			    cube.transform.position = point; 
 
 
-//			foreach( Vector3 point in line )
-//			{
-//				//Visualise the line created by the segment. 
-//			    GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-//			    cube.transform.parent = lines.transform; 
-//			    cube.transform.position = point; 
-//
-//
-//				foreach(Enemy e in context.enemies)
-//				{
-//					Vector3 ePos = new Vector3((int)((e.cells[from.t][0].x - context.min.x) / context.tileSizeX),
-//					                           from.t,
-//					                           (int)((e.cells[from.t][0].y - context.min.y) / context.tileSizeZ));
-//					//Debug.Log(ePos);
-//
-//					//Add debug line vectrocity
-//					//Foreach cube check the distance to the enemy
-//
-//					VectorLine l = new VectorLine("Line",new Vector3[2]{ePos,point},null,2.0f);
-//					l.vectorObject.transform.parent = lines.transform;
-//					l.Draw3D(); 
-//
-//				}
-//
-//			}
+				foreach(Enemy e in context.enemies)
+				{
+					Vector3 ePos = new Vector3((int)((e.cells[(int)point.y][0].x - context.min.x) / context.tileSizeX),
+					                           point.y,
+					                           (int)((e.cells[(int)point.y][0].y - context.min.y) / context.tileSizeZ));
+					//Debug.Log(ePos);
+
+					//Add debug line vectrocity
+					//Foreach cube check the distance to the enemy
+
+					VectorLine ll = new VectorLine("Line",new Vector3[2]{ePos,point},null,2.0f);
+					ll.SetColor(Color.red);
+					ll.vectorObject.transform.parent = lines.transform;
+					ll.Draw3D(); 
+
+
+					//Line from ePos to point is the line segment from the search to the enemy as a function of time. 
+
+
+
+				}
+
+			}
 
 
 
