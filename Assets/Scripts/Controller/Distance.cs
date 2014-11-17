@@ -55,16 +55,16 @@ namespace RRTController {
 			foreach( Vector3 point in line )
 			{
 				//Visualise the line created by the segment. 
-			    GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-			    cube.transform.parent = lines.transform; 
-			    cube.transform.position = point; 
+			    //GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+			    //cube.transform.parent = lines.transform; 
+			    //cube.transform.position = point; 
 
 
 				foreach(Enemy e in context.enemies)
 				{
 					Vector3 ePos = new Vector3((int)((e.cells[(int)point.y][0].x)),// - context.min.x) / context.tileSizeX),
 					                           point.y,
-					                                  (int)((e.cells[(int)point.y][0].y))); //- context.min.y) / context.tileSizeZ));
+					                           (int)((e.cells[(int)point.y][0].y))); //- context.min.y) / context.tileSizeZ));
 					//Debug.Log(ePos);
 
 					//Add debug line vectrocity
@@ -80,15 +80,11 @@ namespace RRTController {
 					//Draw the line only if the enemy is seened by it. 
 
 					//Check the distance
-					Debug.Log(Vector3.Distance(point, ePos));
+					//Debug.Log(Vector3.Distance(point, ePos));
 
 					if( Vector3.Distance(point, ePos) <dist)
 					{
-						VectorLine ll = new VectorLine("Line",new Vector3[2]{ePos,point},null,2.0f);
-						ll.SetColor(Color.red);
-						ll.vectorObject.transform.parent = lines.transform;
-						ll.Draw3D();
-						
+						return false; 
 
 						//get the nodes inbetween
 						Bresenham3D lineToEnemy = new Bresenham3D( ePos, point );
