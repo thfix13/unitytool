@@ -16,6 +16,7 @@ namespace RRTController {
 		public Distance(float dist)
 		{
 			this.dist = dist; 
+
 			//Debug.Log("Created");
 			lines = GameObject.Find("Lines");
 			if(lines != null)
@@ -61,23 +62,46 @@ namespace RRTController {
 
 				foreach(Enemy e in context.enemies)
 				{
-					Vector3 ePos = new Vector3((int)((e.cells[(int)point.y][0].x - context.min.x) / context.tileSizeX),
+					Vector3 ePos = new Vector3((int)((e.cells[(int)point.y][0].x)),// - context.min.x) / context.tileSizeX),
 					                           point.y,
-					                           (int)((e.cells[(int)point.y][0].y - context.min.y) / context.tileSizeZ));
+					                                  (int)((e.cells[(int)point.y][0].y))); //- context.min.y) / context.tileSizeZ));
 					//Debug.Log(ePos);
 
 					//Add debug line vectrocity
 					//Foreach cube check the distance to the enemy
 
-					VectorLine ll = new VectorLine("Line",new Vector3[2]{ePos,point},null,2.0f);
-					ll.SetColor(Color.red);
-					ll.vectorObject.transform.parent = lines.transform;
-					ll.Draw3D(); 
+					//VectorLine ll = new VectorLine("Line",new Vector3[2]{ePos,point},null,2.0f);
+					//ll.SetColor(Color.red);
+					//ll.vectorObject.transform.parent = lines.transform;
+					//ll.Draw3D(); 
 
 
 					//Line from ePos to point is the line segment from the search to the enemy as a function of time. 
+					//Draw the line only if the enemy is seened by it. 
+
+					//Check the distance
+					Debug.Log(Vector3.Distance(point, ePos));
+
+					if( Vector3.Distance(point, ePos) <dist)
+					{
+						VectorLine ll = new VectorLine("Line",new Vector3[2]{ePos,point},null,2.0f);
+						ll.SetColor(Color.red);
+						ll.vectorObject.transform.parent = lines.transform;
+						ll.Draw3D();
+						
+
+						//get the nodes inbetween
+						Bresenham3D lineToEnemy = new Bresenham3D( ePos, point );
+							
 
 
+
+						foreach( Vector3 point2 in line )
+						{
+							//Check on the map
+							//if(context.nodeMatrix[][][])
+						}
+					}
 
 				}
 
