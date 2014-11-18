@@ -12,7 +12,8 @@ namespace RRTController {
 	{
 		float dist; 
 		GameObject lines;
-		
+		bool debug = false;
+
 		public Distance(float dist)
 		{
 			this.dist = dist; 
@@ -47,16 +48,22 @@ namespace RRTController {
 			//between from - to nodes
 
 			Bresenham3D line = new Bresenham3D( from.GetVector3 (), to.GetVector3 () );
- 	
-			VectorLine l = new VectorLine("Line",new Vector3[2]{from.GetVector3 (), to.GetVector3 ()},null,2.0f);
-			l.vectorObject.transform.parent = lines.transform;
-			l.Draw3D();
-
+ 			
+ 			if(debug)
+			{	
+				VectorLine l = new VectorLine("Line",new Vector3[2]{from.GetVector3 (), to.GetVector3 ()},null,2.0f);
+				l.vectorObject.transform.parent = lines.transform;
+				l.Draw3D();
+			}
 			List<Vector3> lineList =  new List<Vector3>(); 
 
 			foreach( Vector3 point in line )
 			{
 				lineList.Add(point);
+				// Visualise the line created by the segment. 
+			    // GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+			    // cube.transform.parent = lines.transform; 
+			    // cube.transform.position = point; 
 			}
 			//Instead of doing a line, check in binary fashion. 
 			
@@ -64,12 +71,13 @@ namespace RRTController {
 			List<int> posChecked = new List<int>(); 
 
 			posToCheck.Add(0);
-			posToCheck.Add(posToCheck.Count/2);  
-			posToCheck.Add(posToCheck.Count-1);
+			posToCheck.Add(lineList.Count/2); 
+
+			posToCheck.Add(lineList.Count-1);
 
 			int depth = 0; 
 
-			while(depth<4)
+			while(depth<3)
 			{
 				depth++; 
 				//Check the position
@@ -83,13 +91,14 @@ namespace RRTController {
 						Vector3 ePos = new Vector3((int)((e.cells[(int)vec3.y][0].x)),// - context.min.x) / context.tileSizeX),
 			                           vec3.y,
 			                           (int)((e.cells[(int)vec3.y][0].y))); //- context.min.y) / context.tileSizeZ));
-			
-						//Debug
-						VectorLine ll = new VectorLine("Line",new Vector3[2]{ePos,vec3},null,2.0f);
-						ll.SetColor(Color.red);
-						ll.vectorObject.transform.parent = lines.transform;
-						ll.Draw3D(); 
-
+						if(debug)
+						{
+							// Debug
+							VectorLine ll = new VectorLine("Line",new Vector3[2]{ePos,vec3},null,2.0f);
+							ll.SetColor(Color.red);
+							ll.vectorObject.transform.parent = lines.transform;
+							ll.Draw3D(); 
+						}
 
 						//Need something a little bit more fancy
 						//check if line of sight exists first. 
@@ -99,7 +108,17 @@ namespace RRTController {
 						}
 						posChecked.Add(posToCheck[i]);
 					}
+
 				}
+
+				//update the list of things to check. 
+				posToCheck.Clear(); 
+
+				for(int i = 0; i<posChecked.Count -1; i++)
+				{
+					posToCheck.Add( (posChecked[i] + posChecked[i+1])/2 );
+				}
+
 			}
 
 			return true; 

@@ -22,8 +22,8 @@ namespace EditorArea {
 		public static int gridSize = 60;
 		private static bool drawMap = true, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = false, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false, successfulPaths = false;
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10, dangerLimit = 0f, losLimit = 0f;
-		private static int randomSeed = -1, timeSamples = 500, attemps = 25000, iterations = 1, ticksBehind = 0, crazyLimit = 0;
-		private static float distanceMinimum=150.0f;
+		private static int randomSeed = -1, timeSamples = 500, attemps = 1000, iterations = 1, ticksBehind = 0, crazyLimit = 0;
+		private static float distanceMinimum=8.0f;
 
 		// Computed parameters
 		private static int[,] heatMap, deathHeatMap, combatHeatMap;
