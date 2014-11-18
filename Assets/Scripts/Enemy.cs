@@ -17,6 +17,8 @@ namespace Objects {
 		public float dps = 2;
 		public float maxHealth = 100;
 		// The first index is always the time span you want to peek
+
+		
 		[HideInInspector]
 		public Vector3[] positions;
 		[HideInInspector]

@@ -41,6 +41,9 @@ namespace Exploration {
 			return (Node)o;
 		}
 
+
+
+
 		// Creates a node with the specified coordinates, no matter if it already exists in the tree or not
 		// This is mainly to create the connections between nodes that shouldn't be added to the tree
 		// Like the nodes with combat in then
@@ -62,6 +65,7 @@ namespace Exploration {
 			// Initialization
 			tree = new KDTree (3);
 			deathPaths = new List<List<Node>> ();
+
 
 			// TODO Nodes can hold generic Map<String, Object> information insetad of having a bunch of hard coded variables to allow dynamic content to be added
 			// This will need a typecast after each 'get' operation, which is an annoying behaviour.
@@ -172,6 +176,7 @@ namespace Exploration {
 
 				foreach (Controller c in controllers) {
 					Node returned = c.afterConnect(nodeTheClosestTo, nodeVisiting, this);
+					//This is mainly for the try to connect to the end. 
 					
 					if (returned != null) {
 						// Check if we ended the computation

@@ -18,7 +18,8 @@ namespace RRTController {
 		bool afterSample (Node closest, Node sampled, RRTKDTreeCombat context);
 
 		/// <summary>
-		/// Before the line of sight between the 'from' and 'to' nodes, some of the cells that should not be ignored must be added to the LoS computation.
+		/// Before the line of sight between the 'from' and 'to' nodes, 
+		/// some of the cells that should not be ignored must be added to the LoS computation.
 		/// </summary>
 		/// <returns>The line of sight.</returns>
 		/// <param name="from">From.</param>
