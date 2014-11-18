@@ -104,7 +104,22 @@ namespace RRTController {
 						//check if line of sight exists first. 
 						if( Vector3.Distance(vec3, ePos) <dist)
 						{
-							return false; 
+							//Check if LOS exists
+							//get the cells 
+							Bresenham3D line2 = new Bresenham3D( vec3, ePos );
+
+							bool losExists = true; 
+
+							foreach(Vector3 v in line2)
+							{
+								if(context.nodeMatrix[(int)v.x][(int)v.z][(int)v.y].blocked)
+								{
+									losExists = false; 
+								}
+							}
+
+							if(losExists)
+								return false; 
 						}
 						posChecked.Add(posToCheck[i]);
 					}
