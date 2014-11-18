@@ -48,78 +48,60 @@ namespace RRTController {
 
 			Bresenham3D line = new Bresenham3D( from.GetVector3 (), to.GetVector3 () );
  	
-			//VectorLine l = new VectorLine("Line",new Vector3[2]{from.GetVector3 (), to.GetVector3 ()},null,2.0f);
-			//l.vectorObject.transform.parent = lines.transform;
-			//l.Draw3D();
+			VectorLine l = new VectorLine("Line",new Vector3[2]{from.GetVector3 (), to.GetVector3 ()},null,2.0f);
+			l.vectorObject.transform.parent = lines.transform;
+			l.Draw3D();
+
+			List<Vector3> lineList =  new List<Vector3>(); 
 
 			foreach( Vector3 point in line )
 			{
-				//Visualise the line created by the segment. 
-			    //GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-			    //cube.transform.parent = lines.transform; 
-			    //cube.transform.position = point; 
+				lineList.Add(point);
+			}
+			//Instead of doing a line, check in binary fashion. 
+			
+			List<int> posToCheck = new List<int>(); 
+			List<int> posChecked = new List<int>(); 
 
+			posToCheck.Add(0);
+			posToCheck.Add(posToCheck.Count/2);  
+			posToCheck.Add(posToCheck.Count-1);
 
-				foreach(Enemy e in context.enemies)
+			int depth = 0; 
+
+			while(depth<4)
+			{
+				depth++; 
+				//Check the position
+
+				for(int i = 0; i<posToCheck.Count; i++)
 				{
-					Vector3 ePos = new Vector3((int)((e.cells[(int)point.y][0].x)),// - context.min.x) / context.tileSizeX),
-					                           point.y,
-					                           (int)((e.cells[(int)point.y][0].y))); //- context.min.y) / context.tileSizeZ));
-					//Debug.Log(ePos);
+					Vector3 vec3 = lineList[posToCheck[i]];
 
-					//Add debug line vectrocity
-					//Foreach cube check the distance to the enemy
-
-					//VectorLine ll = new VectorLine("Line",new Vector3[2]{ePos,point},null,2.0f);
-					//ll.SetColor(Color.red);
-					//ll.vectorObject.transform.parent = lines.transform;
-					//ll.Draw3D(); 
-
-
-					//Line from ePos to point is the line segment from the search to the enemy as a function of time. 
-					//Draw the line only if the enemy is seened by it. 
-
-					//Check the distance
-					//Debug.Log(Vector3.Distance(point, ePos));
-
-					if( Vector3.Distance(point, ePos) <dist)
+					foreach(Enemy e in context.enemies)
 					{
-						return false; 
+						Vector3 ePos = new Vector3((int)((e.cells[(int)vec3.y][0].x)),// - context.min.x) / context.tileSizeX),
+			                           vec3.y,
+			                           (int)((e.cells[(int)vec3.y][0].y))); //- context.min.y) / context.tileSizeZ));
+			
+						//Debug
+						VectorLine ll = new VectorLine("Line",new Vector3[2]{ePos,vec3},null,2.0f);
+						ll.SetColor(Color.red);
+						ll.vectorObject.transform.parent = lines.transform;
+						ll.Draw3D(); 
 
-						//get the nodes inbetween
-						Bresenham3D lineToEnemy = new Bresenham3D( ePos, point );
-							
 
-
-
-						foreach( Vector3 point2 in line )
+						//Need something a little bit more fancy
+						//check if line of sight exists first. 
+						if( Vector3.Distance(vec3, ePos) <dist)
 						{
-							//Check on the map
-							//if(context.nodeMatrix[][][])
+							return false; 
 						}
+						posChecked.Add(posToCheck[i]);
 					}
-
 				}
-
 			}
 
-
-
-
-
-				
-
-
-
-
-
-			//find the line between each block and the enemy
-				//Check if it instersects with a wall
-
-
-
-			//Debug.Log(from);
-			//Debug.Log(to);
 			return true; 
 		}
 
