@@ -112,10 +112,16 @@ namespace RRTController {
 
 							foreach(Vector3 v in line2)
 							{
-								if(context.nodeMatrix[(int)v.x][(int)v.z][(int)v.y].blocked)
+								if(context.nodeMatrix.Length<v.x &&
+								   context.nodeMatrix[(int)v.x].Length<v.z &&
+								   context.nodeMatrix[(int)v.x][(int)v.z].Length<v.y)
 								{
-									losExists = false; 
+									if(context.nodeMatrix[(int)v.x][(int)v.z][(int)v.y].blocked)
+									{
+										losExists = false; 
+									}
 								}
+		
 							}
 
 							if(losExists)
