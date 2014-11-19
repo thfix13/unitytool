@@ -755,6 +755,7 @@ public class Triangulation : MonoBehaviour
 			Line tmpline = new Line( numToVect[tour[i]], numToVect[tour[i + 1]] );
 			//tmpline.DrawVector( GameObject.Find("temp") );
 		}
+		drawSphere( numToVect[tour[0]], Color.red);
 		visibilityPolygonDiff(numToVect[tour[0]]);
 	}
 
@@ -1023,7 +1024,7 @@ public class Triangulation : MonoBehaviour
 			rayptr++;
 		}
 		GameObject vptmp = new GameObject("vptmp");
-		//visiPoly.edges.Add( new Line(kernel, raylist[0][0]) );
+		visiPoly.edges.Add( new Line(kernel, raylist[0][0]) );
 		raylist.Add(new List<Vector3>());
 		raylist[raylist.Count - 1].Add(kernel);//So that kernel is automatically connected back to at the end
 		//drawSphere (raylist [0] [0]);
@@ -1036,7 +1037,7 @@ public class Triangulation : MonoBehaviour
 				visiPoly.edges.Add ( new Line(raylist[i][j], raylist[i][j + 1]) );
 				drawSphere(raylist[i][j + 1]);
 			}
-			//visiPoly.edges.Add ( new Line(raylist[i][raylist[i].Count - 1], raylist[i + 1][0]) );
+			visiPoly.edges.Add ( new Line(raylist[i][raylist[i].Count - 1], raylist[i + 1][0]) );
 			drawSphere(raylist[i + 1][0]);
 		}
 		//visiPoly.DrawGeometry (GameObject.Find ("vptemp"));
@@ -1068,9 +1069,18 @@ public class Triangulation : MonoBehaviour
 	}
 	public bool OnSameLine( Vector3 v1, Vector3 v2 ){
 		foreach (Line l in totalGeo.edges) {
-			if( l.LineIntersectMuntacEndPt(new Line(v1,v1)) != 0 && l.LineIntersectMuntacEndPt(new Line(v2,v2)) != 0 ){
+			bool la = false;
+			bool lb = false;
+			Line lv1a = new Line( l.vertex[0], v1 );
+			Line lv1b = new Line( l.vertex[1], v1 );
+			Line lv2a = new Line( l.vertex[0], v2 );
+			Line lv2b = new Line( l.vertex[1], v2 );
+			if( Math.Abs ( l.Magnitude() - (lv1a.Magnitude() + lv1b.Magnitude()) ) < 0.01f )
+				la = true;
+			if( Math.Abs ( l.Magnitude() - (lv2a.Magnitude() + lv2b.Magnitude()) ) < 0.01f )
+				lb = true;
+			if( la && lb )
 				return true;
-			}
 		}
 		return false;
 	}
