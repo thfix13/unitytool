@@ -22,7 +22,7 @@ namespace EditorArea {
 
 		// Parameters with default values
 		public static int timeSamples = 2000, attemps = 25000, iterations = 1, gridSize = 60, ticksBehind = 0;
-		private static bool drawMap = false, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = true, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false;
+		private static bool drawMap = false, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = true, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false, limitImportablePathsToCurLevel = true;
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10;
 		private static int randomSeed = -1;
 		
@@ -46,6 +46,7 @@ namespace EditorArea {
 	//	public float interpolationValue = 0.0f;
 	//	public float interpolationValueCheck = 0.0f; 
 		public static bool[] drawHeatMapColors = new bool[MapperWindowEditor.colors.Count()];
+		LevelRepresentation rep;
 
 		// Computed parameters
 		private static int[,] heatMap, deathHeatMap, combatHeatMap;
@@ -356,12 +357,30 @@ namespace EditorArea {
 				PathBulk.SavePathsToFile (nameFile + "_paths.xml", all);
 			}
 			
-			if (GUILayout.Button ("(DEBUG) Import Paths")) {
+			DirectoryInfo pathsDir = new DirectoryInfo(".");
+			FileInfo[] pathsInfo = pathsDir.GetFiles("*.xml");
+			
+			List<String> goodPathFiles = new List<String>();
+			for (int count = 0; count < pathsInfo.Count(); count ++)
+			{ // find clustering results file to display in load menu.
+				String[] temp = pathsInfo[count].Name.Split(new Char[]{'_'});
+				if (limitImportablePathsToCurLevel && temp[0] != nameFile)
+					continue;
+				
+				goodPathFiles.Add(pathsInfo[count].Name);
+			}
+			
+			String[] pathFileNames = goodPathFiles.ToArray();
+			chosenFileIndex = EditorGUILayout.Popup("Import paths", chosenFileIndex, pathFileNames);
+			if (chosenFileIndex != -1)
+			{
 				useColors = false;
 				paths.Clear ();
 				ClearPathsRepresentation ();
+				resetClusteringData();
+				origPaths = new List<Path>();
 				
-				List<Path> pathsImported = PathBulk.LoadPathsFromFile (nameFile + "_paths.xml");
+				List<Path> pathsImported = PathBulk.LoadPathsFromFile(pathFileNames[chosenFileIndex]);
 				
 				foreach (Path p in pathsImported) {
 					if (p.points.Last().playerhp <= 0) {
@@ -373,10 +392,11 @@ namespace EditorArea {
 					}
 					paths.Add(p);
 				}
+
+				if (drawer == null) precomputeMaps();
+
 				ComputeHeatMap (paths, deaths);
 				SetupArrangedPaths (paths);
-				resetClusteringData();
-				origPaths = new List<Path>();
 				
 				for (int count = 0; count < paths.Count(); count ++)
 				{
@@ -392,7 +412,11 @@ namespace EditorArea {
 						if (n.t != 0 && n.tD == 0) n.tD = n.t;
 					}
 				}
+				
+				chosenFileIndex = -1;
 			}
+			
+			limitImportablePathsToCurLevel = EditorGUILayout.Toggle ("Hide paths for other levels", limitImportablePathsToCurLevel);
 			
 			EditorGUILayout.LabelField ("");
 			
@@ -1231,18 +1255,21 @@ namespace EditorArea {
 			
 			if (GUILayout.Button("Load platformer level"))
 			{
-				if (drawer == null) precomputeMaps();
-				LineReduction reducer = new LineReduction();
+				if (drawer == null) precomputeMaps();				
+				rep = new LevelRepresentation();
+				LevelRepresentation.tileSize = SpaceState.Editor.tileSize;
+				LevelRepresentation.zero.Set(floor.collider.bounds.min.x, floor.collider.bounds.min.z);
+				rep.loadPlatformerLevel();
 			}
 			
 			if (GUILayout.Button("Import Platformer Paths & RDP"))
-			{ // imports paths, sets up obstacles in viewer,.
+			{ // imports paths, sets up obstacles in viewer.
+				if (rep == null) Debug.Log("Warning - no level representation (did you load level above?)");
 				paths.Clear ();
 				ClearPathsRepresentation ();
 				resetClusteringData();
 				clusterCentroids.Clear();
 				origPaths = new List<Path>();
-				LineReduction reducer = new LineReduction();
 				
 				DirectoryInfo batchDir = new DirectoryInfo("batchpaths/");
 				FileInfo[] batchInfo = batchDir.GetFiles("*.xml");
@@ -1273,7 +1300,7 @@ namespace EditorArea {
 					if (pathPoints.Count() <= 3) continue;
 					
 					Path path = new Path();
-					path.points = reducer.DouglasPeuckerReduction(pathPoints, rdpTolerance, true); //shortestPathAroundObstacles(pathPoints)));
+					path.points = LineReduction.DouglasPeuckerReduction(rep, pathPoints, rdpTolerance, true); //shortestPathAroundObstacles(pathPoints)));
 					path.name = pathNum.ToString();
 					pathNum ++;
 					
@@ -1300,32 +1327,51 @@ namespace EditorArea {
 				}*/
 			}
 			rdpTolerance = EditorGUILayout.IntField("RDP Tolerance", rdpTolerance);
-			if (GUILayout.Button("RDP"))
+			if (GUILayout.Button("RDP (simple path cleaning)"))
 			{
-				List<Path> origPaths = new List<Path>();
-				foreach (Path p in paths) { origPaths.Add(p); }
+				if (rep == null)
+				{
+					Debug.Log("No level representation (only supports platformer paths currently)!");
+					return;
+				}
+
+				List<Path> newPaths = new List<Path>();
+				foreach (Path p in paths)
+				{
+					Path reducedPath = new Path(p);
+					reducedPath.points = LineReduction.DouglasPeuckerReduction(rep, p.points, rdpTolerance, true);
+					reducedPath.color = p.color;
+					for (int i = reducedPath.points.Count - 1; i > 0; i--) {
+						reducedPath.points [i].parent = reducedPath.points [i - 1];
+					}
+					if (!newPaths.Contains(reducedPath))
+					{
+						newPaths.Add(reducedPath);
+					}
+				}
+
 				ClearPathsRepresentation ();
 				paths.Clear();
-
-				LineReduction reducer = new LineReduction();
-				foreach (Path p in origPaths)
+				resetClusteringData();
+				
+				foreach (Path p in newPaths)
 				{
-					Path reducedPath = new Path(reducer.DouglasPeuckerReduction(p.points, rdpTolerance, false));
-					reducedPath.color.a = 1;
-					if (!paths.Contains(reducedPath))
-					{
-						paths.Add(reducedPath);
-						toggleStatus.Add(paths.Last(), true);
-					}
+					paths.Add(p);
+					toggleStatus.Add(paths.Last(), true);
 				}
 			}
 			if (GUILayout.Button("Reduce to shortest paths"))
 			{
-				LineReduction reducer = new LineReduction();
+				if (rep == null)
+				{
+					Debug.Log("No level representation (only supports platformer paths currently)!");
+					return;
+				}
+				
 				ClearPathsRepresentation ();
 				for (int count = 0; count < paths.Count; count ++)
 				{
-					paths[count] = new Path(reducer.shortestPathAroundObstacles(paths[count].points));
+					paths[count] = new Path(LineReduction.shortestPathAroundObstacles(rep, paths[count].points));
 					toggleStatus.Add (paths[count], true);
 				}
 			}
@@ -2144,7 +2190,9 @@ namespace EditorArea {
 		public static void resetClusteringData()
 		{
 			KMeans.reset();
-			DBSCAN.reset();
+			DBSCAN.reset();			
+			clusterCentroids.Clear();
+			clusterCentroids = new List<Path>();
 		}
 		
 		private void precomputeMaps()
@@ -2198,8 +2246,6 @@ namespace EditorArea {
 			drawer.seenNeverSeenMax = maxSeenGrid;
 			drawer.tileSize = SpaceState.Editor.tileSize;
 			drawer.zero.Set (floor.collider.bounds.min.x, floor.collider.bounds.min.z);
-			LineReduction.tileSize = SpaceState.Editor.tileSize;
-			LineReduction.zero.Set(floor.collider.bounds.min.x, floor.collider.bounds.min.z);
 			
 			ResetAI ();
 			previous = DateTime.Now;
