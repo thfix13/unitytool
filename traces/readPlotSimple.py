@@ -125,7 +125,7 @@ for path in paths:
 #normal distribution center at x=0 and y=5
 
 h = hist2d(xs, ys, bins=20, norm=LogNorm())
-print h
+
 show()
 
 
