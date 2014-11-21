@@ -11,11 +11,11 @@ using Vectrosity;
 [Serializable]
 public class Line 
 {
-
+	public float eps = 1e-5f;//the margin of accuracy for all floating point equivalence checks
 	public Vector3[] vertex = new Vector3[2];
 	public Color[] colours = new Color[2]; 
 	public string name = "Vector Line";
-	private float precision = 0.001f;
+
 	public Line(Vector3 v1, Vector3 v2)
 	{
 		vertex[0] = v1; 
@@ -26,15 +26,19 @@ public class Line
 
 	public  bool Equals(Line l)
 	{
-		return this.MidPoint().Equals(l.MidPoint());
-		//return vertex[0].Equals(l.vertex[0]) && vertex[1].Equals(l.vertex[1]); 
-		
+		if (VectorApprox (l.vertex [0], vertex [0]) && VectorApprox (l.vertex [1], vertex [1]))
+				return true;
+		else if (VectorApprox (l.vertex [0], vertex [1]) && VectorApprox (l.vertex [1], vertex [0]))
+			return true;
+		else
+			return false;
 	}
+
 	public static Line Zero
 	{
-		//get the person name 
 		get { return new Line(Vector3.zero,Vector3.zero); }
 	}
+
 	public Vector3 MidPoint()
 	{
 		return new Vector3( (vertex[0].x + vertex[1].x)/2f,
@@ -44,9 +48,10 @@ public class Line
 
 	public Vector3 GetOther(Vector3 v)
 	{
-		if(vertex[0]==v)
+		if( VectorApprox( vertex[0], v ) )
 			return vertex[1];
-		return vertex[0];
+		else
+			return vertex[0];
 	}
 
 	public void DrawLine(Color c)
@@ -62,6 +67,7 @@ public class Line
 
 		Debug.DrawLine(this.vertex[0],this.vertex[1],c); 
 	}
+
 	public void DrawVector(GameObject parent)
 	{
 //		Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
@@ -74,21 +80,22 @@ public class Line
 		line.vectorObject.name = name;
 		line.Draw3D();
 	}
+
 	public void DrawVector(GameObject parent,Color c)
 	{
-	
 		VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
 		line.vectorObject.transform.parent = parent.transform;
 		line.vectorObject.name = name;
 		line.Draw3D();
 	}
+
 	public bool ShareVertex(Line l)
 	{
 		foreach(Vector3 v in vertex)
 		{
 			foreach(Vector3 w in l.vertex)
 			{
-				if(v.Equals(w))
+				if(VectorApprox(v, w))
 					return true; 
 			}
 		}
@@ -101,7 +108,7 @@ public class Line
 		{
 			foreach(Vector3 w in l.vertex)
 			{
-				if(v.Equals(w))
+				if(VectorApprox(v, w))
 					return v;
 			}
 		}
@@ -118,7 +125,7 @@ public class Line
 		float c = v2.x, d = v2.z;  
 		float e = v3.x, f = v3.z;  
 		
-		if((f-b)*(c-a)> (d-b)*(e-a))
+		if( (f-b)*(c-a) > (d-b)*(e-a))//PP: add eps to right?
 			return true;
 		else
 			return false; 
@@ -163,9 +170,13 @@ public class Line
 		//Case 1 - Colinear
 		if ( denom == 0 && numerator2 == 0 ) {
 			//Case 2 - Colinear and Overlapping
-			if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
+			//if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
+			if( floatCompare( Vector2.Dot( (q0 - p0), u ), 0, ">=" )
+			   && floatCompare( Vector2.Dot( (q0 - p0), u ), Vector2.Dot( u, u ), "<=" ) )
 				return 2;
-			if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
+			//if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
+			if( floatCompare( Vector2.Dot( (p0 - q0), v ), 0, ">=" )
+			   && floatCompare( Vector2.Dot( (p0 - q0), v ), Vector2.Dot( v, v ), "<=" ) )
 				return 2;
 			return 0;
 		}
@@ -180,9 +191,10 @@ public class Line
 		if ((s > 0 && s < 1) && (t > 0 && t < 1))
 			return 1;
 		
-		return 0; 
+		return 0;
 	}
 
+	//Detects regular intersections unless the lines share a vertex
 	public int LineIntersectMuntacEndPt (Line param){
 		Vector3 a = this.vertex [0];
 		Vector3 b = this.vertex[1];
@@ -202,9 +214,11 @@ public class Line
 		//Case 1 - Colinear
 		if ( denom == 0 && numerator2 == 0 ) {
 			//Case 2 - Colinear and Overlapping
-			if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
+			//if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
+			if( floatCompare( Vector2.Dot( (q0 - p0), u ), 0f, ">=" ) && floatCompare( Vector2.Dot( (q0 - p0), u ), Vector2.Dot( u, u ), "<=" ) )
 				return 2;
-			if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
+			//if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
+			if( floatCompare( Vector2.Dot( (p0 - q0), v ), 0f, ">=" ) && floatCompare( Vector2.Dot( (p0 - q0), v ), Vector2.Dot( v, v ), "<=" ) )
 				return 2;
 			return 0;
 		}
@@ -216,16 +230,18 @@ public class Line
 		double s = numerator1 / denom;
 		double t = numerator2 / denom;
 		
-//		if ((s >= 0 && s <= 1) && (t >= 0 && t <= 1))
-		if ((s >= -0.0001f && s <= 1.0001f) && (t >= -0.0001f && t <= 1.0001f)){
-			if( vertex[0].Equals(param.vertex[0]) || vertex[0].Equals(param.vertex[1])
-			   || vertex[1].Equals(param.vertex[0]) || vertex[1].Equals(param.vertex[1]))
+		if ( (floatCompare( (float)s, 0f, ">=")  && floatCompare((float)s, 1f, "<="))
+		    && (floatCompare( (float)t, 0f, ">=")  && floatCompare((float)t, 1f, "<=")) ){
+			if( ShareVertex(param) )
 				return 0;
 			else
 				return 1;
 		}
-		
 		return 0; 
+	}
+
+	private double CrossProduct( Vector2 a, Vector2 b ){
+		return (a.x * b.y) - (a.y * b.x);
 	}
 
 	public Vector3 GetIntersectionPoint (Line param){
@@ -251,72 +267,50 @@ public class Line
 		return r;
 	}
 
-	private double CrossProduct( Vector2 a, Vector2 b ){
-		return (a.x * b.y) - (a.y * b.x);
-	}
-
-	int EndPointIntersecion( Vector3 pt, Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4 ){
-			Vector3 pt2;
-		//Find common endpoint
-		if (v1 == v3)
-			pt2 = v1;
-		else if( v1 == v4 )
-			pt2 = v1;
-		else if( v2 == v3 )
-			pt2 = v2;
-		else if( v2 == v4 )
-			pt2 = v2;
-		else
-			return 0;
-		
-		return 1;
-		/*if (Math.Abs (pt.x - pt2.x) < 0.01 && Math.Abs (pt.z - pt2.z) < 0.01)
-			return 1; //Endpoint and intersection point same
-		else
-			return 2;*/
-	}
-
-	public bool PointOnLine( Vector3 pt ){
-		Vector3 diff = vertex[1] - vertex[0];
-		float grad = 0, cx, cz;
-		float pa, pb;
-		if (diff.x != 0 && diff.y != 0) {
-			grad = diff.z / diff.x;
-			pa = pt.z - vertex[0].z;
-			pb = (grad * pt.x) - vertex[0].x;
-			if( Math.Abs(pa - pb) < 0.1f)
-			   return true;
-		}
-		else if( diff.x == 0 ){//A Z-axis parallel line
-			if( pt.x == vertex[0].x  && (pt.z >= Math.Min(vertex[0].z, vertex[1].z) &&
-			                             pt.z <= Math.Max(vertex[0].z, vertex[1].z) ) )
-			   return true;
-		}
-		else if( diff.z == 0 ){//An x-axis parallel line
-			if( pt.z == vertex[0].z  && (pt.x >= Math.Min(vertex[0].x, vertex[1].x) &&
-			                             pt.x <= Math.Max(vertex[0].x, vertex[1].x) ) )
-			   return true;
-		}
-		return false;
-	}
+//	public bool PointOnLine( Vector3 pt ){
+//		Vector3 diff = vertex[1] - vertex[0];
+//		float grad = 0, cx, cz;
+//		float pa, pb;
+//		//if (diff.x != 0 && diff.z != 0) {
+//		if( !floatCompare(diff.x, 0) && !floatCompare(diff.z, 0) ){
+//			grad = diff.z / diff.x;
+//			pa = pt.z - vertex[0].z;
+//			pb = (grad * pt.x) - vertex[0].x;
+//			if( floatCompare(pa, pb) )
+//			   return true;
+//		}
+//		else if( floatCompare(diff.x, 0) ){//A Z-axis parallel line
+//			if( floatCompare( pt.x, vertex[0].x )
+//			   && ( floatCompare( pt.z, Math.Min(vertex[0].z, vertex[1].z), ">=" ) 
+//			        && floatCompare( pt.z, Math.Max(vertex[0].z, vertex[1].z), "<=" ) ) )
+//			   return true;
+//		}
+//		else if( floatCompare(diff.z, 0) ){//An x-axis parallel line
+//			if( pt.z == vertex[0].z  && (pt.x >= Math.Min(vertex[0].x, vertex[1].x) &&
+//			                             pt.x <= Math.Max(vertex[0].x, vertex[1].x) ) )
+//			   return true;
+//		}
+//		return false;
+//	}
+//
+//
+//	public bool PointOnLineB( Vector3 pt ){
+//		if (pt.x >= Math.Min (vertex [0].x, vertex [1].x) && pt.x <= Math.Max (vertex [0].x, vertex [1].x) 
+//				&& pt.z >= Math.Min (vertex [0].z, vertex [1].z) && pt.z <= Math.Max (vertex [0].z, vertex [1].z)) {
+//				Vector3 a = this.vertex [0];
+//				Vector3 b = this.vertex [1];
+//				Vector3 c = pt;
+//				return ((b.x - a.x) * (pt.z - a.z) - (b.z - a.z) * (c.x - a.x)) == 0;
+//		} 
+//		else
+//			return false;
+//	}
 
 	public bool PointIsLeft( Vector3 pt ){
 		Vector3 a = this.vertex [0];
 		Vector3 b = this.vertex [1];
 		Vector3 c = pt;
 		return ((b.x - a.x)*(pt.z - a.z) - (b.z - a.z)*(c.x - a.x)) > 0;
-	}
-
-	public bool PointOnLineB( Vector3 pt ){
-		if (pt.x >= Math.Min (vertex [0].x, vertex [1].x) && pt.x <= Math.Max (vertex [0].x, vertex [1].x) 
-				&& pt.z >= Math.Min (vertex [0].z, vertex [1].z) && pt.z <= Math.Max (vertex [0].z, vertex [1].z)) {
-				Vector3 a = this.vertex [0];
-				Vector3 b = this.vertex [1];
-				Vector3 c = pt;
-				return ((b.x - a.x) * (pt.z - a.z) - (b.z - a.z) * (c.x - a.x)) == 0;
-		} 
-		else
-			return false;
 	}
 
 	public bool PointIsLeft( Line param ){
@@ -329,18 +323,39 @@ public class Line
 
 	public bool VectorApprox ( List<Vector3> obs_pts, Vector3 interPt ){
 		foreach (Vector3 v in obs_pts) {
-			if( Math.Abs (v.x - interPt.x) < 0.01 && Math.Abs (v.z - interPt.z) < 0.01 )
+			if( Math.Abs (v.x - interPt.x) < eps && Math.Abs (v.z - interPt.z) < eps )
 				return true;
 		}
 		return false;
 	}
 	public bool VectorApprox ( Vector3 a, Vector3 b ){
-		if( Math.Abs (a.x - b.x) < 0.01 && Math.Abs (a.z - b.z) < 0.01 )
+		if( Math.Abs (a.x - b.x) < eps && Math.Abs (a.z - b.z) < eps )
 			return true;
 		else
 			return false;
 	}
 
+	public bool floatCompare ( float a, float b ){
+		return Math.Abs (a - b) < eps;
+	}
+
+	public bool floatCompare ( float a, float b, string condition ){
+		switch (condition) {
+			case(">="):
+					if (a > b || Math.Abs (a - b) < eps)
+						return true;
+					break;
+			case("=="):
+					if (Math.Abs (a - b) < eps)
+						return true;
+					break;
+			case("<="):
+					if (a < b || Math.Abs (a - b) < eps)
+						return true;
+					break;
+		}
+		return false;
+	}
 }
 
 class LineEqualityComparer : IEqualityComparer<Line>
@@ -356,6 +371,5 @@ class LineEqualityComparer : IEqualityComparer<Line>
 	{
 		int hCode = (int)(bx.MidPoint().sqrMagnitude);
 		return hCode.GetHashCode();
-	}
-	
+	}	
 }

@@ -541,7 +541,7 @@ public class Triangulation : MonoBehaviour
 		foreach( Vector3 v in lv2 )
 			masterReflex.Add( v );
 		int hh = 0;
-		makeSPRoadMap (masterReflex, totalGeo );
+		//makeSPRoadMap (masterReflex, totalGeo );
 	}
 
 	private void makeSPRoadMap( List<Vector3> masterReflex, Geometry totalGeo ) {
@@ -1084,6 +1084,42 @@ public class Triangulation : MonoBehaviour
 		}
 		return false;
 	}
+	public bool VectorApprox ( List<Vector3> obs_pts, Vector3 interPt ){
+		foreach (Vector3 v in obs_pts) {
+			if( Math.Abs (v.x - interPt.x) < eps && Math.Abs (v.z - interPt.z) < eps )
+				return true;
+		}
+		return false;
+	}
+	public bool VectorApprox ( Vector3 a, Vector3 b ){
+		if( Math.Abs (a.x - b.x) < eps && Math.Abs (a.z - b.z) < eps )
+			return true;
+		else
+			return false;
+	}
+	
+	public bool floatCompare ( float a, float b ){
+		return Math.Abs (a - b) < eps;
+	}
+	
+	public bool floatCompare ( float a, float b, string condition ){
+		switch (condition) {
+		case(">="):
+			if (a > b || Math.Abs (a - b) < eps)
+				return true;
+			break;
+		case("=="):
+			if (Math.Abs (a - b) < eps)
+				return true;
+			break;
+		case("<="):
+			if (a < b || Math.Abs (a - b) < eps)
+				return true;
+			break;
+		}
+		return false;
+	}
+
 }//End of Class
 
 	

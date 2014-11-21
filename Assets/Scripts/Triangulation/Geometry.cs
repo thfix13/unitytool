@@ -9,7 +9,8 @@ using Objects;
 public class Geometry
 {
 	public List<Line> edges = new List<Line> ();
-	private float precision = 0.001f;
+	public float eps = 1e-5f;//the margin of accuracy for all floating point equivalence checks
+
 	//Added for MST Code
 	public List<Geometry> voisins = new List<Geometry>();  
 	public List<Line> voisinsLine = new List<Line>();
@@ -43,7 +44,7 @@ public class Geometry
 		foreach(Line myLine in edges){
 			foreach(Vector3 v1 in myLine.vertex){
 				foreach(Vector3 v2 in l.vertex){
-					if(v1 == v2)
+					if( VectorApprox(v1, v2) )
 						return false; 
 				}
 			}
@@ -55,7 +56,7 @@ public class Geometry
 
 	//TODO: Fix for lines colinear
 	public bool PointInside( Vector3 pt ){//Called by LineInside, GeometryInside and LineCollision
-		Line lray = new Line(pt, new Vector3(-100,-100)); 
+		Line lray = new Line(pt, new Vector3(-100, 1f, -100)); 
 		int count = 0; 
 		foreach(Line myLine in edges){
 			if( myLine.LineIntersectMuntacEndPt(lray) > 0 ){
@@ -65,11 +66,9 @@ public class Geometry
 				Vector3 vtemp = myLine.GetIntersectionPoint(lray);
 				if( VectorApprox(vtemp, pt) )
 					return false;
-//				if( Math.Abs( vtemp.x - pt.x ) < 0.01 && Math.Abs(vtemp.z - pt.z) < 0.01 )
-//					return false;
 			}
 		}
-		return count%2 == 1; 
+		return count % 2 == 1;
 	}
 
 	public List<Vector3> GetVertex()//Called by GetReflexVertex, GetClosestLine
@@ -97,14 +96,14 @@ public class Geometry
 		foreach (Vector3 v in vertex) {
 			if( v.z < minvert.z )
 				minvert = v;
-			else if( v.z == minvert.z && v.x < minvert.x )
+			else if( floatCompare(v.z, minvert.z) && v.x < minvert.x )
 				minvert = v;
 		}
 
 		List<KeyValuePair<Vector3, float>> angList = new List<KeyValuePair<Vector3, float>>();
 		foreach (Vector3 v in vertex) {
 			float angle;
-			if( v != minvert )
+			if( !VectorApprox( v, minvert ) )
 				angle = getAngle( minvert, v );
 			else
 				angle = -1000;
@@ -155,7 +154,7 @@ public class Geometry
 					if( !visited.Contains(currL) ){//if this is the first edge we're working with
 						ptA = currL.vertex[0];
 						ptB = currL.vertex[1];
-						if( ptB != commonPoint ){
+						if( !VectorApprox(ptB, commonPoint) ){
 							ptA = ptB;
 							ptB = commonPoint;
 						}
@@ -164,7 +163,7 @@ public class Geometry
 					}
 					ptA = l.vertex[0];
 					ptB = l.vertex[1];
-					if( ptA != commonPoint ){
+					if( !VectorApprox(ptA, commonPoint) ){
 						ptB = ptA;
 						ptA = commonPoint;
 					}
@@ -188,7 +187,7 @@ public class Geometry
 				sum += (sortedEdges [i + 1].vertex[1].x - sortedEdges[i + 1].vertex [0].x) * (sortedEdges [i + 1].vertex [1].z + sortedEdges [i + 1].vertex [1].z);
 		}
 		bool clockwise = true;
-		if (sum <= 0)
+		if ( floatCompare( sum, 0, "<=") )
 			clockwise = false;
 		//reflexVertex.Add (sortedEdges [1].vertex [1]);
 		int size = sortedEdges.Count;
@@ -533,7 +532,7 @@ public class Geometry
 		//angList.Sort (CompareAngle);
 		angList.Sort( delegate(angclass a, angclass b){
 			int xdiff = a.angle.CompareTo(b.angle);
-			if (xdiff != 0) return xdiff;
+			if (xdiff > eps) return xdiff;
 			else return a.distance.CompareTo(b.distance);
 		});
 		//List<Vector3> retlist = new List<Vector3> ();
@@ -558,16 +557,37 @@ public class Geometry
 
 	public bool VectorApprox ( List<Vector3> obs_pts, Vector3 interPt ){
 		foreach (Vector3 v in obs_pts) {
-			if( Math.Abs (v.x - interPt.x) < precision && Math.Abs (v.z - interPt.z) < precision )
+			if( Math.Abs (v.x - interPt.x) < eps && Math.Abs (v.z - interPt.z) < eps )
 				return true;
 		}
 		return false;
 	}
-
 	public bool VectorApprox ( Vector3 a, Vector3 b ){
-		if( Math.Abs (a.x - b.x) < precision && Math.Abs (a.z - b.z) < precision )
+		if( Math.Abs (a.x - b.x) < eps && Math.Abs (a.z - b.z) < eps )
 			return true;
 		else
 			return false;
+	}
+	
+	public bool floatCompare ( float a, float b ){
+		return Math.Abs (a - b) < eps;
+	}
+	
+	public bool floatCompare ( float a, float b, string condition ){
+		switch (condition) {
+		case(">="):
+			if (a > b || Math.Abs (a - b) < eps)
+				return true;
+			break;
+		case("=="):
+			if (Math.Abs (a - b) < eps)
+				return true;
+			break;
+		case("<="):
+			if (a < b || Math.Abs (a - b) < eps)
+				return true;
+			break;
+		}
+		return false;
 	}
 }
