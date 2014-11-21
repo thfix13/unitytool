@@ -85,7 +85,7 @@ xs = []
 ys = [] 
 
 for i,l in enumerate(data):
-	if "<\Path>" in l:
+	if "</Path>" in l:
 		if len(pathTemp)>2:
 			
 			paths.append((pathTemp))
@@ -111,13 +111,13 @@ for i,l in enumerate(data):
 for path in paths:
 	
 	for i,v in enumerate(path):
-		print v
+		
 		if i+1 == len(path):
 			break 
 		output = line(int(v[0]),int(v[1]),int(path[i+1][0]),int(path[i+1][1]))
-		print"point"
+		#print"point"
 		for point in output:
-			print point
+			#print point
 			xs.append(point[0])
 			ys.append(point[1])
 
