@@ -1,6 +1,7 @@
 import copy
 from matplotlib.colors import LogNorm
 from pylab import *
+import numpy as np
 
 def line( x0, y0, x1, y1):
     #"Bresenham's line algorithm"
@@ -31,39 +32,6 @@ def line( x0, y0, x1, y1):
     toReturn.append([x, y])
     return toReturn
 
-def get_line(x1, y1, x2, y2):
-	points = []
-	issteep = abs(y2-y1) > abs(x2-x1)
-	if issteep:
-		x1, y1 = y1, x1
-		x2, y2 = y2, x2
-	rev = False
-	if x1 > x2:
-		x1, x2 = x2, x1
-		y1, y2 = y2, y1
-		rev = True
-	deltax = x2 - x1
-	deltay = abs(y2-y1)
-	error = int(deltax / 2)
-	y = y1
-	ystep = None
-	if y1 < y2:
-		ystep = 1
-	else:
-		ystep = -1
-	for x in range(x1, x2 + 1):
-		if issteep:
-			points.append((y, x))
-		else:
-			points.append((x, y))
-		error -= deltay
-		if error < 0:
-			y += ystep
-			error += deltax
-	# Reverse the list if the coordinates were reversed
-	if rev:
-		points.reverse()
-	return points
 
 #This code will read and plot the heatmaps
 f ="Sanity"
@@ -83,6 +51,7 @@ pathTemp = []
 maxX = -10; maxY = -10
 xs = []
 ys = [] 
+
 
 for i,l in enumerate(data):
 	if "</Path>" in l:
@@ -108,6 +77,9 @@ for i,l in enumerate(data):
 
 #Create the data, make sure they are lines
 
+mapData = [[0]*60 for _ in range(60)]
+
+
 for path in paths:
 	
 	for i,v in enumerate(path):
@@ -117,14 +89,40 @@ for path in paths:
 		output = line(int(v[0]),int(v[1]),int(path[i+1][0]),int(path[i+1][1]))
 		#print"point"
 		for point in output:
-			#print point
+			
+			# mapData[point[0]][point[1]]+=1
+			
 			xs.append(point[0])
 			ys.append(point[1])
 
-#print xs
-#normal distribution center at x=0 and y=5
 
-h = hist2d(xs, ys, bins=20, norm=LogNorm())
+for i in range(len(xs)):
+	mapData[int(xs[i])][int(ys[i])]+=1
+
+#create grayScale map
+#Find max value
+maxValue = 0
+for i in mapData:
+	for j in i:
+		if maxValue<j:
+			maxValue=j
+
+
+#normalyse data and putthem in the right color format 
+a = [[1]*60 for _ in range(60)]
+# for i in a:
+# 	print a
+for j,v1 in enumerate(a):
+	for i, v2 in enumerate(v1):
+		v = float(mapData[j][i])/float(maxValue)
+		a[j][i] = v
+	# print v1	
+				 
+
+
+a = np.array(a,)
+a = np.rot90(a)
+h = imshow(a, norm=LogNorm())
 
 show()
 
