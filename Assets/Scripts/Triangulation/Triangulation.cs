@@ -7,6 +7,7 @@ using Vectrosity;
 [ExecuteInEditMode]
 public class Triangulation : MonoBehaviour 
 {
+	public float eps = 1e-5f;//the margin of accuracy for all floating point equivalence checks
 	//Data holder to display and save
 	public List<Vector3> points = new List<Vector3>();
 	public List<Color> colours = new List<Color>();
@@ -20,15 +21,19 @@ public class Triangulation : MonoBehaviour
 	public List<Geometry> obsGeos = new List<Geometry> (); 
 	public List<Geometry> finalPoly = new List<Geometry> ();
 	public Geometry totalGeo = new Geometry ();
-	//Contains Map
+		//Contains Map
 	public Geometry mapBG = new Geometry ();
 	public Geometry tour = new Geometry ();
 
 	public bool drawTriangles = false; 
 	public bool drawRoadMap = false; 
 	public bool drawMinSpanTree = false;
+	public bool drawGeometry = false;
 	public bool stopAll = false;
+	private bool drawn = false;
 
+	//
+	private List<Line> roadMap = new List<Line> ();
 	//Dijkstra
 	List<edges>[] EL = new List<edges>[5000];
 	//Stores shortest path calculations with node i as source on all nodes j
@@ -48,12 +53,12 @@ public class Triangulation : MonoBehaviour
 		points.Clear(); 
 		colours.Clear();
 		obsGeos.Clear ();
-		GameObject temp = GameObject.Find("temp"); 
-		DestroyImmediate(temp); 
-		GameObject vptmp = GameObject.Find("vptmp"); 
-		DestroyImmediate(vptmp); 
+		GameObject temp = GameObject.Find("temp");
+		DestroyImmediate(temp);
+		GameObject vptmp = GameObject.Find("vptmp");
+		DestroyImmediate(vptmp);
 		cameras.Clear ();
-		
+		drawn = false;
 		stopAll = true;
 	}
 	void OnDrawGizmosSelected( ) 
@@ -83,6 +88,16 @@ public class Triangulation : MonoBehaviour
 			GameObject temp = GameObject.Find("temp"); 
 			foreach(Line l in linesMinSpanTree)
 				Debug.DrawLine(l.vertex[0], l.vertex[1],Color.red);
+		}
+
+		if (drawGeometry) {
+//			foreach(Geometry g in finalPoly){
+//
+//			}
+			if( !drawn ){
+				totalGeo.DrawGeometry(GameObject.Find("temp"));
+				drawn = true;
+			}
 		}
 
 		foreach(Triangle tt in triangles){
@@ -307,7 +322,7 @@ public class Triangulation : MonoBehaviour
 					if (! q.voisins [i].visited) {
 						if (LinetoAdd != null) {
 							//get the shortest line
-							if (LinetoAdd.Magnitude () >= q.voisinsLine [i].Magnitude ()) {
+							if ( floatCompare( LinetoAdd.Magnitude (), q.voisinsLine [i].Magnitude (), ">=" ) ){
 								LinetoAdd = q.voisinsLine [i];
 								qToAdd = q.voisins [i]; 
 								
@@ -329,7 +344,7 @@ public class Triangulation : MonoBehaviour
 		}
 		
 		foreach (Line l in linesLinking)
-			triangulation.linesMinSpanTree.Add (l); 
+			triangulation.linesMinSpanTree.Add (l);
 		//END porting
 
 		//-----------END MST CODE--------------------//
@@ -386,21 +401,22 @@ public class Triangulation : MonoBehaviour
 			Vector3 v1 = l.vertex [0]; 
 			Vector3 v2 = l.vertex [1];
 			foreach (Line l2 in lines) {
-				if (l == l2)
+				if (l == l2 || l.Equals(l2))
 					continue;
-				Vector3 v3 = Vector3.zero; 
-				
-				
-				if (l2.vertex [0].Equals (v2))
+				Vector3 v3 = Vector3.zero;
+
+				//if (l2.vertex [0].Equals (v2))
+				if( VectorApprox( l2.vertex[0], v2 ) )
 					v3 = l2.vertex [1];
 					//have to check if closes
-				else if (l2.vertex [1].Equals (v2))
+				//else if (l2.vertex [1].Equals (v2))
+				else if ( VectorApprox(l2.vertex [1], v2 ) )
 					v3 = l2.vertex [0];
 
 				
 				if (v3 != Vector3.zero) {
 					foreach (Line l3 in lines) {
-						if (l3 == l2 || l3 == l)
+						if (l3 == l2 || l3 == l || l3.Equals(l2) || l3.Equals(l) )
 							continue; 
 						if ((l3.vertex [0].Equals (v1) && l3.vertex [1].Equals (v3))
 						    || (l3.vertex [1].Equals (v1) && l3.vertex [0].Equals (v3))) {
@@ -541,15 +557,17 @@ public class Triangulation : MonoBehaviour
 		foreach( Vector3 v in lv2 )
 			masterReflex.Add( v );
 		int hh = 0;
-		//makeSPRoadMap (masterReflex, totalGeo );
+		makeSPRoadMap (masterReflex, totalGeo );
+		makeTourOnSPR (roadMap, masterReflex);
+		//return masterReflex;
 	}
 
 	private void makeSPRoadMap( List<Vector3> masterReflex, Geometry totalGeo ) {
-		List<Line> roadMap = new List<Line> ();
+		roadMap = new List<Line> ();
 		//int lineCnt = 0; //DBG
 		foreach (Vector3 vA in masterReflex) {
 			foreach (Vector3 vB in masterReflex) {
-				if( vA == vB ) continue;
+				if( vA == vB && VectorApprox( vA, vB ) ) continue;
 				Line tmpLine = new Line( vA, vB );
 				if( roadMap.Contains( tmpLine ) ) continue;
 				bool added = false;
@@ -598,7 +616,7 @@ public class Triangulation : MonoBehaviour
 //		foreach (Vector3 v in masterReflex) {
 //			drawSphere( v, Color.green );		
 //		}
-		makeTourOnSPR (roadMap, masterReflex);
+		//makeTourOnSPR (roadMap, masterReflex);
 	}
 
 	public struct edges{//used to represent graph for Dijkstra
@@ -636,7 +654,8 @@ public class Triangulation : MonoBehaviour
 		//Connect cameras to each other
 		foreach( Vector3 v1 in cameras ){
 			foreach( Vector3 v2 in cameras ){
-				if( v1.Equals(v2) ) continue;
+				//if( v1.Equals(v2) || Vec) continue;
+				if( VectorApprox( v1, v2 ) ) continue;
 				if( !dict.ContainsKey( v1 ) ){
 					EL[N] = new List<edges>();
 					dict.Add( v1, N );
@@ -666,7 +685,8 @@ public class Triangulation : MonoBehaviour
 		//Connect cameras to the rest of the graph
 		foreach (Vector3 v1 in cameras) {
 			foreach( Vector3 v2 in masterReflex ){
-				if( v1.Equals(v2) ) continue;
+				//if( v1.Equals(v2) ) continue;
+				if( VectorApprox( v1, v2 ) ) continue;
 				int u = dict[v1];
 				int v = dict[v2];
 				Line tmpLine = new Line( v1, v2 );
@@ -791,74 +811,74 @@ public class Triangulation : MonoBehaviour
 		}
 	}
 
-	public void makeTour( Geometry totalGeo ){
-		List<Vector3> roadMapPoints = new List<Vector3> ();
-		//Get all points in road map
-		tour.edges.Clear ();
-		foreach (Triangle tt in triangles) {
-			Line[] ll = tt.GetSharedLines(); 
-			if(ll.Length == 1)
-			{
-				//Debug.DrawLine(ll[0].MidPoint(), tt.GetCenterTriangle(),Color.red);
-				tour.edges.Add( new Line(ll[0].MidPoint(), tt.GetCenterTriangle()) );
-				if( !roadMapPoints.Contains( ll[0].MidPoint() ) )
-					roadMapPoints.Add( ll[0].MidPoint() );
-				if( !roadMapPoints.Contains( tt.GetCenterTriangle() ) )
-					roadMapPoints.Add( tt.GetCenterTriangle() );
-			}
-			else if(ll.Length > 2)
-			{
-				for(int i = 0; i<ll.Length; i++)
-				{
-					//Debug.DrawLine(ll[i].MidPoint(), tt.GetCenterTriangle(),Color.red);
-					tour.edges.Add( new Line(ll[i].MidPoint(), tt.GetCenterTriangle()) );
-					if( !roadMapPoints.Contains( ll[i].MidPoint() ) )
-						roadMapPoints.Add( ll[i].MidPoint() );
-					if( !roadMapPoints.Contains( tt.GetCenterTriangle() ) )
-						roadMapPoints.Add( tt.GetCenterTriangle() );
-					//Debug.Log("Drawing Red Line at: " + ll[i].MidPoint() + " " + tt.GetCenterTriangle());
-				}
-			}			
-			else
-			{
-				for(int i = 0; i<ll.Length; i++)
-				{
-					//Debug.DrawLine(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint(),Color.red);
-					tour.edges.Add( new Line(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint()) );
-					if( !roadMapPoints.Contains( ll[i].MidPoint() ) )
-						roadMapPoints.Add( ll[i].MidPoint() );
-					if( !roadMapPoints.Contains( ll[(i+1) % ll.Length].MidPoint() ) )
-						roadMapPoints.Add( ll[(i+1) % ll.Length].MidPoint() );
-				}
-			}			
-		}
-		//For each camera find closest connection to roadmap, check for collisions in between
-		tour.DrawGeometry( GameObject.Find ( "temp" ) );
-		foreach (Vector3 v in cameras) {
-			float shortestLine = 100000f;
-			Line finalLine = new Line ( Vector3.zero, Vector3.zero );
-			foreach( Vector3 rmv in roadMapPoints ){
-				Line tmpLine = new Line( v, rmv );
-				//check for collision
-				bool collides = false;
-				foreach( Line l in totalGeo.edges ){
-					if( l.LineIntersectMuntacEndPt( tmpLine ) == 1 ){
-						collides = true;
-						break;
-					}
-				}
-				if( collides ) continue;
-
-				if( tmpLine.Magnitude() < shortestLine ){
-					shortestLine = tmpLine.Magnitude();
-					finalLine = tmpLine;
-				}
-			}
-			//tour.edges.Add( finalLine );
-			finalLine.DrawVector( GameObject.Find("temp"), Color.blue );
-		}
-		//tour.DrawGeometry( GameObject.Find ( "temp" ) );
-	}
+//	public void makeTour( Geometry totalGeo ){
+//		List<Vector3> roadMapPoints = new List<Vector3> ();
+//		//Get all points in road map
+//		tour.edges.Clear ();
+//		foreach (Triangle tt in triangles) {
+//			Line[] ll = tt.GetSharedLines(); 
+//			if(ll.Length == 1)
+//			{
+//				//Debug.DrawLine(ll[0].MidPoint(), tt.GetCenterTriangle(),Color.red);
+//				tour.edges.Add( new Line(ll[0].MidPoint(), tt.GetCenterTriangle()) );
+//				if( !roadMapPoints.Contains( ll[0].MidPoint() ) )
+//					roadMapPoints.Add( ll[0].MidPoint() );
+//				if( !roadMapPoints.Contains( tt.GetCenterTriangle() ) )
+//					roadMapPoints.Add( tt.GetCenterTriangle() );
+//			}
+//			else if(ll.Length > 2)
+//			{
+//				for(int i = 0; i<ll.Length; i++)
+//				{
+//					//Debug.DrawLine(ll[i].MidPoint(), tt.GetCenterTriangle(),Color.red);
+//					tour.edges.Add( new Line(ll[i].MidPoint(), tt.GetCenterTriangle()) );
+//					if( !roadMapPoints.Contains( ll[i].MidPoint() ) )
+//						roadMapPoints.Add( ll[i].MidPoint() );
+//					if( !roadMapPoints.Contains( tt.GetCenterTriangle() ) )
+//						roadMapPoints.Add( tt.GetCenterTriangle() );
+//					//Debug.Log("Drawing Red Line at: " + ll[i].MidPoint() + " " + tt.GetCenterTriangle());
+//				}
+//			}			
+//			else
+//			{
+//				for(int i = 0; i<ll.Length; i++)
+//				{
+//					//Debug.DrawLine(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint(),Color.red);
+//					tour.edges.Add( new Line(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint()) );
+//					if( !roadMapPoints.Contains( ll[i].MidPoint() ) )
+//						roadMapPoints.Add( ll[i].MidPoint() );
+//					if( !roadMapPoints.Contains( ll[(i+1) % ll.Length].MidPoint() ) )
+//						roadMapPoints.Add( ll[(i+1) % ll.Length].MidPoint() );
+//				}
+//			}			
+//		}
+//		//For each camera find closest connection to roadmap, check for collisions in between
+//		tour.DrawGeometry( GameObject.Find ( "temp" ) );
+//		foreach (Vector3 v in cameras) {
+//			float shortestLine = 100000f;
+//			Line finalLine = new Line ( Vector3.zero, Vector3.zero );
+//			foreach( Vector3 rmv in roadMapPoints ){
+//				Line tmpLine = new Line( v, rmv );
+//				//check for collision
+//				bool collides = false;
+//				foreach( Line l in totalGeo.edges ){
+//					if( l.LineIntersectMuntacEndPt( tmpLine ) == 1 ){
+//						collides = true;
+//						break;
+//					}
+//				}
+//				if( collides ) continue;
+//
+//				if( tmpLine.Magnitude() < shortestLine ){
+//					shortestLine = tmpLine.Magnitude();
+//					finalLine = tmpLine;
+//				}
+//			}
+//			//tour.edges.Add( finalLine );
+//			finalLine.DrawVector( GameObject.Find("temp"), Color.blue );
+//		}
+//		//tour.DrawGeometry( GameObject.Find ( "temp" ) );
+//	}
 
 	void drawSphere( Vector3 v ){
 		GameObject temp = GameObject.Find ("temp");
@@ -895,7 +915,7 @@ public class Triangulation : MonoBehaviour
 				//Check if the line intersects any other edge
 				foreach (Line earlierLine in totalGeo.edges) {
 					//If same line
-					if (obstacleEdge == earlierLine)
+					if (obstacleEdge == earlierLine || obstacleEdge.Equals(earlierLine))
 							continue;
 					//if intersects
 					if (NL.LineIntersectMuntac (earlierLine) != 0){
@@ -1054,19 +1074,6 @@ public class Triangulation : MonoBehaviour
 		return vobs_new;
 	}
 
-	public bool VectorApprox ( List<Vector3> obs_pts, Vector3 interPt ){
-		foreach (Vector3 v in obs_pts) {
-			if( Math.Abs (v.x - interPt.x) < 0.01 && Math.Abs (v.z - interPt.z) < 0.01 )
-				return true;
-		}
-		return false;
-	}
-	public bool VectorApprox ( Vector3 a, Vector3 b ){
-		if( Math.Abs (a.x - b.x) < 0.01 && Math.Abs (a.z - b.z) < 0.01 )
-			return true;
-		else
-			return false;
-	}
 	public bool OnSameLine( Vector3 v1, Vector3 v2 ){
 		foreach (Line l in totalGeo.edges) {
 			bool la = false;
@@ -1075,9 +1082,11 @@ public class Triangulation : MonoBehaviour
 			Line lv1b = new Line( l.vertex[1], v1 );
 			Line lv2a = new Line( l.vertex[0], v2 );
 			Line lv2b = new Line( l.vertex[1], v2 );
-			if( Math.Abs ( l.Magnitude() - (lv1a.Magnitude() + lv1b.Magnitude()) ) < 0.01f )
+			//if( Math.Abs ( l.Magnitude() - (lv1a.Magnitude() + lv1b.Magnitude()) ) < 0.01f )
+			if( floatCompare( l.Magnitude(), (lv1a.Magnitude() + lv1b.Magnitude()) ) )
 				la = true;
-			if( Math.Abs ( l.Magnitude() - (lv2a.Magnitude() + lv2b.Magnitude()) ) < 0.01f )
+			//if( Math.Abs ( l.Magnitude() - (lv2a.Magnitude() + lv2b.Magnitude()) ) < 0.01f )
+			if( floatCompare( l.Magnitude(), (lv2a.Magnitude() + lv2b.Magnitude()) ) )
 				lb = true;
 			if( la && lb )
 				return true;
@@ -1121,5 +1130,3 @@ public class Triangulation : MonoBehaviour
 	}
 
 }//End of Class
-
-	
