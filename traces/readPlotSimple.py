@@ -122,7 +122,7 @@ for j,v1 in enumerate(a):
 
 a = np.array(a,)
 a = np.rot90(a)
-h = imshow(a, norm=LogNorm())
+imshow(a,cmap="Blues",norm=LogNorm(),interpolation="none")
 
 show()
 
