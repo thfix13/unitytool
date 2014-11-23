@@ -28,10 +28,10 @@ public class Triangulation : MonoBehaviour
 	public bool drawTriangles = false; 
 	public bool drawRoadMap = false; 
 	public bool drawMinSpanTree = false;
+	public bool drawGeometry = false;
 	public bool stopAll = false;
 	private bool drawn = false;
 	
-	//
 	public List<Line> roadMap = new List<Line> ();
 
 	public void Start(){
@@ -54,8 +54,7 @@ public class Triangulation : MonoBehaviour
 		drawn = false;
 		stopAll = true;
 	}
-
-	void OnDrawGizmosSelected()
+	void OnDrawGizmosSelected( ) 
 	{
 		//return; 
 		//Debug.Log(colours.Count);
@@ -84,6 +83,16 @@ public class Triangulation : MonoBehaviour
 				Debug.DrawLine(l.vertex[0], l.vertex[1],Color.red);
 		}
 		
+		if (drawGeometry) {
+			//			foreach(Geometry g in finalPoly){
+			//
+			//			}
+			if( !drawn ){
+				totalGeo.DrawGeometry(GameObject.Find("temp"));
+				drawn = true;
+			}
+		}
+		
 		foreach(Triangle tt in triangles){
 			if(drawTriangles){	
 				tt.DrawDebug();
@@ -94,34 +103,35 @@ public class Triangulation : MonoBehaviour
 			}
 			
 			if(drawRoadMap)	{
-				Line[] ll = tt.GetSharedLines(); 
-			
-
-				if(ll.Length == 1)
-				{
-					Debug.DrawLine(ll[0].MidPoint(), tt.GetCenterTriangle(),Color.red);
-					//Debug.Log("Drawing Red Line at: " + ll[0].MidPoint() + " " + tt.GetCenterTriangle());
-				}
-				else if(ll.Length > 2)
-				{
-					for(int i = 0; i<ll.Length; i++)
-					{
-						Debug.DrawLine(ll[i].MidPoint(), tt.GetCenterTriangle(),Color.red);
-						//Debug.Log("Drawing Red Line at: " + ll[i].MidPoint() + " " + tt.GetCenterTriangle());
-					}
-
-				}
-				
-				else
-				{
-					for(int i = 0; i<ll.Length; i++)
-					{
-						Debug.DrawLine(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint(),Color.red);
-					}
-				}
-				tour.DrawGeometry( GameObject.Find("temp") );
+				//				Line[] ll = tt.GetSharedLines(); 
+				//			
+				//
+				//				if(ll.Length == 1)
+				//				{
+				//					Debug.DrawLine(ll[0].MidPoint(), tt.GetCenterTriangle(),Color.red);
+				//					//Debug.Log("Drawing Red Line at: " + ll[0].MidPoint() + " " + tt.GetCenterTriangle());
+				//				}
+				//				else if(ll.Length > 2)
+				//				{
+				//					for(int i = 0; i<ll.Length; i++)
+				//					{
+				//						Debug.DrawLine(ll[i].MidPoint(), tt.GetCenterTriangle(),Color.red);
+				//						//Debug.Log("Drawing Red Line at: " + ll[i].MidPoint() + " " + tt.GetCenterTriangle());
+				//					}
+				//
+				//				}
+				//				
+				//				else
+				//				{
+				//					for(int i = 0; i<ll.Length; i++)
+				//					{
+				//						Debug.DrawLine(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint(),Color.red);
+				//					}
+				//				}
+				//tour.DrawGeometry( GameObject.Find("temp") );
 			}
 		}
+		
 	}
 	
 	public void AddPoint(Vector3 v){
@@ -147,7 +157,7 @@ public class Triangulation : MonoBehaviour
 		MeshFilter mesh = (MeshFilter)(floor.GetComponent ("MeshFilter"));
 		Vector3[] t = mesh.sharedMesh.vertices; 
 		
-		Geometry tempGeometry = new Geometry ();
+		Geometry tempGeometry = new Geometry (); 
 		
 		//Get floor points manually
 		vertex [0] = mesh.transform.TransformPoint (t [0]);
@@ -156,10 +166,10 @@ public class Triangulation : MonoBehaviour
 		vertex [3] = mesh.transform.TransformPoint (t [10]);
 		
 		//Working in 2D geometry using x and z. y is always 1.
-		vertex [0].y = 1;
-		vertex [1].y = 1;
-		vertex [2].y = 1;
-		vertex [3].y = 1;
+		vertex [0].y = 1; 
+		vertex [1].y = 1; 
+		vertex [2].y = 1; 
+		vertex [3].y = 1; 
 		
 		Vector3 [] mapBoundary = new Vector3[4]; //the map's four corners
 		
@@ -244,19 +254,7 @@ public class Triangulation : MonoBehaviour
 			else
 				finalPoly.Add(g);
 		}
-<<<<<<< HEAD
 		
-=======
-
-		foreach(Geometry g in finalPoly){
-			g.DrawGeometry( temp);
-			foreach(Line l in g.edges){
-				Debug.Log (l.vertex[0]);
-				Debug.Log (l.vertex[1]);
-			}
-		}
-
->>>>>>> origin/TriMod
 		List<Vector3> allVertex = new List<Vector3>();
 		List<Vector3> tempVertex = new List<Vector3>();
 		totalGeo = new Geometry ();
@@ -304,21 +302,7 @@ public class Triangulation : MonoBehaviour
 		List<Geometry> toCheckNode = new List<Geometry> (); 
 		toCheckNode.Add (start); 
 		Line LinetoAdd = start.voisinsLine [0];
-<<<<<<< HEAD
 		
-=======
-
-		//Testing code for use elsewhere
-
-		mapBG.DrawGeometry (temp);
-		foreach(Line l in mapBG.edges){
-			Debug.Log (l.vertex[0]);
-			Debug.Log (l.vertex[1]);
-		}
-
-		//end test
-
->>>>>>> origin/TriMod
 		//Straight Porting//
 		while (LinetoAdd != null) {
 			LinetoAdd = null; 
@@ -474,36 +458,102 @@ public class Triangulation : MonoBehaviour
 		}
 		
 		triangulation.triangles = triangles;
-
-		//Create the road map
-		roadMap.Clear(); 
 		
-		foreach(Triangle tt in triangles)
+		
+		////////COLORING//////////
+		/// ported code/////
+		triangles [0].SetColour ();
+		
+		//Count Where to put guards 
+		List<Vector3> points = new List<Vector3> (); 
+		List<Color> coloursPoints = new List<Color> (); 
+		
+		int[] count = new int[3];
+		//0 red, 1 blue, 2 green
+		
+		foreach (Triangle tt in triangles) 
 		{
-			Line[] ll = tt.GetSharedLines(); 
-			if(ll.Length == 1)
+			//foreach(Vector3 v in tt.vertex)
+			for (int j = 0; j<tt.vertex.Length; j++) 
 			{
+				bool vectorToAdd = true;
 				
-				roadMap.Add(new Line(ll[0].MidPoint(), tt.GetCenterTriangle()));
-			}
-			else if(ll.Length > 2)
-			{
-				for(int i = 0; i<ll.Length; i++)
+				for (int i = 0; i<points.Count; i++) 
 				{
-					roadMap.Add(new Line(ll[i].MidPoint(), tt.GetCenterTriangle()));
+					if (points [i] == tt.vertex [j] && coloursPoints [i] == tt.colourVertex [j])
+						vectorToAdd = false; 			
 				}
-			}
-			else
-			{
-				for(int i = 0; i<ll.Length; i++)
-				{
-					roadMap.Add(new Line(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint()));
+				
+				if (vectorToAdd) {
+					points.Add (tt.vertex [j]); 
+					coloursPoints.Add (tt.colourVertex [j]); 
 				}
+				
 			}
 		}
+		
+		foreach (Color c in coloursPoints) {
+			if (c == Color.red)
+				count [0]++;
+			else if (c == Color.blue)
+				count [1]++;
+			else
+				count [2]++; 
+			
+		}
+		
+		triangulation.points = points; 
+		triangulation.colours = coloursPoints; 
+		
+		//Get points with the least colour
+		Color cGuard = Color.cyan; 
+		int lowest = 100000000; 
+		
+		for (int i = 0; i<count.Length; i++) {
+			if (count [i] < lowest) {
+				if (i == 0)
+					cGuard = Color.red;
+				else if (i == 1)
+					cGuard = Color.blue;
+				else
+					cGuard = Color.green;
+				lowest = count [i];
+			}
+		}
+		
+		vlcnt = 0;
+		for( int i = 0; i < points.Count; i++ )
+		{
+			if( colours[i] == cGuard ){
+				Vector3 v = points[i];
+				cameras.Add( points[i] );
+				//				GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+				//				inter.transform.renderer.material.color = coloursPoints[i];
+				//				inter.transform.position = v;
+				//				inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
+				//				inter.transform.parent = temp.transform;
+				//				vlcnt++;
+				//				inter.gameObject.name = vlcnt.ToString();
+			}
+		}
+		//		makeTour ( totalGeo );
+		List<Vector3> masterReflex = new List<Vector3> ();
+		foreach (Geometry g in finalPoly) {
+			List<Vector3> lv = new List<Vector3>();
+			lv = g.GetReflexVertex();
+			foreach( Vector3 v in lv )
+				masterReflex.Add( v );
+		}
+		List<Vector3> lv2 = new List<Vector3>();
+		lv2 = mapBG.GetReflexVertexComplement();
+		//lv2 = mapBG.GetVertex ();
+		foreach( Vector3 v in lv2 )
+			masterReflex.Add( v );
+		int hh = 0;
+		//makeSPRoadMap (masterReflex, totalGeo );
+		//makeTourOnSPR (roadMap, masterReflex);
 	}
 
-	
 	void drawSphere( Vector3 v ){
 		GameObject temp = GameObject.Find ("temp");
 		GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -513,6 +563,7 @@ public class Triangulation : MonoBehaviour
 		inter.transform.parent = temp.transform;
 		//inter.gameObject.name = vlcnt.ToString();
 	}
+
 	void drawSphere( Vector3 v, Color x ){
 		GameObject temp = GameObject.Find ("temp");
 		GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
