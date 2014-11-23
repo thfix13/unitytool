@@ -244,7 +244,19 @@ public class Triangulation : MonoBehaviour
 			else
 				finalPoly.Add(g);
 		}
+<<<<<<< HEAD
 		
+=======
+
+		foreach(Geometry g in finalPoly){
+			g.DrawGeometry( temp);
+			foreach(Line l in g.edges){
+				Debug.Log (l.vertex[0]);
+				Debug.Log (l.vertex[1]);
+			}
+		}
+
+>>>>>>> origin/TriMod
 		List<Vector3> allVertex = new List<Vector3>();
 		List<Vector3> tempVertex = new List<Vector3>();
 		totalGeo = new Geometry ();
@@ -292,7 +304,21 @@ public class Triangulation : MonoBehaviour
 		List<Geometry> toCheckNode = new List<Geometry> (); 
 		toCheckNode.Add (start); 
 		Line LinetoAdd = start.voisinsLine [0];
+<<<<<<< HEAD
 		
+=======
+
+		//Testing code for use elsewhere
+
+		mapBG.DrawGeometry (temp);
+		foreach(Line l in mapBG.edges){
+			Debug.Log (l.vertex[0]);
+			Debug.Log (l.vertex[1]);
+		}
+
+		//end test
+
+>>>>>>> origin/TriMod
 		//Straight Porting//
 		while (LinetoAdd != null) {
 			LinetoAdd = null; 
