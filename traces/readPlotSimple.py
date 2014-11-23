@@ -38,7 +38,10 @@ f ="Sanity"
 f1 = "Distance_8_60000nodesRRT_787_paths.xml"
 f2 = "465_paths_seed_2363_1000_Crazy.xml"
 
-d = open(f1)
+f =  ["1145_Paths_dist_2_seed_14_60000_nodes.xml","4_Paths_dist_12_seed_13_60000_nodes.xml", "Distance_8_60000nodesRRT_787_paths.xml","Paths_dist_6_seed_14_60000_nodes.xml"]
+
+d = open(f[3])
+
 data = d.readlines()
 d.close()
 

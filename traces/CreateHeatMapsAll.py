@@ -113,7 +113,7 @@ def readDataToPaths(name):
 		for i, v2 in enumerate(v1):
 			v = float(mapData[j][i])/float(maxValue)
 			a[j][i] = v
-	return a
+	return (a,len(paths))
 
 
 
@@ -126,13 +126,15 @@ for f in files:
 	a = []
 	a = readDataToPaths(f)				 
 
-	aFinal = np.array(a)
+	aFinal = np.array(a[0])
 	aFinal = np.rot90(aFinal)
 
-	imshow(aFinal,cmap="Blues",norm=LogNorm(),interpolation="none")
+	clf()
+	imshow(aFinal,cmap="Blues",interpolation="none",norm=LogNorm())
+	title("Nb paths:"+ str(a[1]))
 	f = f.replace(".xml",".pdf")
 	savefig(f)
-	#show()
+	show()
 
 
 
