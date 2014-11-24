@@ -14,7 +14,7 @@ public class Triangulation : MonoBehaviour
 	public List<Vector3> cameras = new List<Vector3>();
 	// Use this for initialization
 	
-	public List<Triangle> triangles = new List<Triangle>(); 
+	public List<Triangle> triangles = new List<Triangle>();
 	public List<Line> lines = new List<Line>(); 
 	
 	public List<Line> linesMinSpanTree = new List<Line>(); 
@@ -289,20 +289,22 @@ public class Triangulation : MonoBehaviour
 		}
 		//set links with neighbors for each quadrilater (send list of all obstacles as a paramter)
 		foreach (Geometry g in toCheck)
-			g.SetVoisins( toCheck );
+			g.SetVoisins( toCheck, mapBG );
 		//keep a list of the edges (graph where obstaceles are the nodes) in a list of lines called "linesLinking"
 		List<Vector3> mapVertices = mapBG.GetVertex();
 		
 		//Possible redundancy here
-		Geometry start = mapBG.findClosestQuad (mapVertices[0], toCheck, new List<Geometry> ());
+		//Finds the closest geometry to the map border
+		Geometry start = mapBG.findClosestQuad (mapVertices[0], toCheck, mapBG);
+		//Connect border to this geometry
 		List<Line> linesLinking = new List<Line> ();
-		linesLinking.Add (mapBG.GetClosestLine (start, toCheck));
+		linesLinking.Add (mapBG.GetClosestLine (start, toCheck, mapBG));
 		start.visited = true;
 		
 		List<Geometry> toCheckNode = new List<Geometry> (); 
 		toCheckNode.Add (start); 
 		Line LinetoAdd = start.voisinsLine [0];
-		
+
 		//Straight Porting//
 		while (LinetoAdd != null) {
 			LinetoAdd = null; 
