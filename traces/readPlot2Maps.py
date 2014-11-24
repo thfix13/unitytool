@@ -1,6 +1,6 @@
 from copy import deepcopy
 from matplotlib.colors import LogNorm
-from pylab import *
+import matplotlib.pyplot as plt
 import numpy as np
 
 def line( x0, y0, x1, y1):
@@ -119,7 +119,7 @@ def readDataToPaths(name):
 #This code will read and plot the heatmaps
 f = "Sanity"
 f1 = "Distance_8_60000nodesRRT_787_paths.xml"
-f2 = "465_paths_seed_2363_1000_Crazy.xml"
+f2 = "1145_Paths_dist_2_seed_14_60000_nodes.xml"
 
 
 a1 = np.array(readDataToPaths(f1))				 
@@ -148,13 +148,17 @@ for j in range(len(a1)):
 		
 
 aFinal = np.array(a)
-aFinal = np.array(a2) - np.array(a1)
+aFinal = np.array(a1) - np.array(a2)
 aFinal = np.rot90(aFinal)
 
-imshow(a1,cmap="Blues",norm=LogNorm(),interpolation="none",alpha=0.5)
-imshow(a2,cmap="Reds",norm=LogNorm(),interpolation="none",alpha=0.5)
-#savefig("Test1.pdf")
-show()
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.imshow(aFinal,cmap="Blues",norm=LogNorm(),interpolation="none")
+
+#imshow(a1,cmap="Blues",norm=LogNorm(),interpolation="none",alpha=0.5)
+#imshow(a2,cmap="Reds",norm=LogNorm(),interpolation="none",alpha=0.5)
+fig.savefig("Test1.pdf")
+plt.show()
 
 
 
