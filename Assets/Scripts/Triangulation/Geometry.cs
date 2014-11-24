@@ -383,12 +383,14 @@ public class Geometry
 
 	//From this point all code is ported from Jonatha's MST calculation
 	//ported code. src:"Triangulation"
-	public void SetVoisins(List<Geometry> geos)//Called from outside
+
+	//Connects geometry to all other geometries that are visible form it
+	public void SetVoisins(List<Geometry> geos, Geometry mapBG)//Called from outside
 	{
 		foreach(Geometry g in geos)
 		{
 			if( g == this ) continue;
-			Line voisinConnect = this.GetClosestLine(g,geos);
+			Line voisinConnect = this.GetClosestLine( g, geos, mapBG );
 			if(voisinConnect != null)
 			{
 				voisins.Add (g);
@@ -398,7 +400,8 @@ public class Geometry
 	}
 
 	//ported code. src:"Triangulation"
-	public Line GetClosestLine(Geometry g, List<Geometry> geos)//Called by SetVoisins
+	//Finds the closest vertex-to-vertex line from this geometry to geometry g
+	public Line GetClosestLine(Geometry g, List<Geometry> geos, Geometry mapBG )//Called by SetVoisins
 	{
 		Line toReturn = null;
 		float dist = 1000000; 
@@ -415,10 +418,19 @@ public class Geometry
 				foreach(Geometry gCollision in geos)
 				{
 					
-					if(gCollision.LineCollision(l))
+					if(gCollision.LineCollision(l)){
 						collisionFree = false; 
+						break;
+					}
 				}
-				
+
+				foreach( Line borderLine in mapBG.edges ){
+					if( borderLine.LineIntersectMuntac(l) != 0 ){
+						collisionFree = false;
+						break;
+					}
+				}
+
 				if(!collisionFree)
 				{
 					continue; 
@@ -435,7 +447,8 @@ public class Geometry
 	}
 
 	//ported code. src:"Triangulation"
-	public Line GetClosestLine(Vector3 v,Geometry g, List<Geometry> geos)//Called by findClosestQuad
+	//Finds the closest point between a vector v and a geometry g
+	public Line GetClosestLine(Vector3 v,Geometry g, List<Geometry> geos, Geometry mapBG)//Called by findClosestQuad
 	{
 		Line toReturn = null;
 		float dist = 1000000; 
@@ -451,11 +464,20 @@ public class Geometry
 			foreach(Geometry gCollision in geos)
 			{
 				if(this == gCollision)
-					continue; 
-				if(gCollision.LineCollision(l))
-					collisionFree = false; 
+					continue;
+				if(gCollision.LineCollision(l)){
+					collisionFree = false;
+					break;
+				}
 			}
-			
+
+			foreach( Line borderLine in mapBG.edges ){
+				if( borderLine.LineIntersectMuntac(l) != 0 ){
+					collisionFree = false;
+					break;
+				}
+			}
+
 			if(!collisionFree)
 			{
 				continue; 
@@ -472,17 +494,18 @@ public class Geometry
 	}
 
 	//ported code. src:"Triangulation"
-	public Geometry findClosestQuad(Vector3 v,List<Geometry> geos,List<Geometry> already)//Called from outside
+	//Finds closest geometry to a vector v
+	public Geometry findClosestQuad(Vector3 v,List<Geometry> geos, Geometry mapBG)//Called from outside
 	{
 		Geometry toReturn = null; 
 		float dist = 100000000; 
 		
 		foreach(Geometry g in geos)
 		{
-			if(g == this || already.Contains(g))
+			if(g == this)
 				continue;
 			
-			Line l = this.GetClosestLine(v,g,geos); 
+			Line l = this.GetClosestLine(v,g,geos,mapBG); 
 			
 			if(l == null)
 				continue;
