@@ -130,11 +130,11 @@ for f in files:
 	aFinal = np.rot90(aFinal)
 
 	clf()
-	imshow(aFinal,cmap="Blues",interpolation="none",norm=LogNorm())
+	imshow(aFinal,cmap="Blues",interpolation="nearest",norm=LogNorm())
 	title("Nb paths:"+ str(a[1]))
 	f = f.replace(".xml",".pdf")
 	savefig(f)
-	show()
+	# show()
 
 
 
