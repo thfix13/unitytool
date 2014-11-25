@@ -54,6 +54,7 @@ public class Triangulation : MonoBehaviour
 		cameras.Clear ();
 		drawn = false;
 		stopAll = true;
+		roadMap.Clear ();
 	}
 	void OnDrawGizmosSelected( ) 
 	{
@@ -96,7 +97,7 @@ public class Triangulation : MonoBehaviour
 
 		if (drawRoadMap) {
 			foreach(Line l in roadMap){
-				Debug.DrawLine(l.vertex[0],l.vertex[1],Color.red);
+				Debug.DrawLine(l.vertex[0],l.vertex[1],Color.green);
 			}
 		}
 
