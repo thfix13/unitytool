@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿xusing UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
@@ -31,7 +31,8 @@ public class Triangulation : MonoBehaviour
 	public bool drawGeometry = false;
 	public bool stopAll = false;
 	private bool drawn = false;
-	
+
+	//Contains roadmap traversing triangles
 	public List<Line> roadMap = new List<Line> ();
 
 	public void Start(){
@@ -92,7 +93,14 @@ public class Triangulation : MonoBehaviour
 				drawn = true;
 			}
 		}
-		
+
+		if (drawRoadMap) {
+			foreach(Line l in roadMap){
+				Debug.DrawLine(l.vertex[0],l.vertex[1],Color.red);
+			}
+		}
+
+
 		foreach(Triangle tt in triangles){
 			if(drawTriangles){	
 				tt.DrawDebug();
@@ -102,34 +110,34 @@ public class Triangulation : MonoBehaviour
 				//	colours.Add(v);
 			}
 			
-			if(drawRoadMap)	{
-				//				Line[] ll = tt.GetSharedLines(); 
-				//			
-				//
-				//				if(ll.Length == 1)
-				//				{
-				//					Debug.DrawLine(ll[0].MidPoint(), tt.GetCenterTriangle(),Color.red);
-				//					//Debug.Log("Drawing Red Line at: " + ll[0].MidPoint() + " " + tt.GetCenterTriangle());
-				//				}
-				//				else if(ll.Length > 2)
-				//				{
-				//					for(int i = 0; i<ll.Length; i++)
-				//					{
-				//						Debug.DrawLine(ll[i].MidPoint(), tt.GetCenterTriangle(),Color.red);
-				//						//Debug.Log("Drawing Red Line at: " + ll[i].MidPoint() + " " + tt.GetCenterTriangle());
-				//					}
-				//
-				//				}
-				//				
-				//				else
-				//				{
-				//					for(int i = 0; i<ll.Length; i++)
-				//					{
-				//						Debug.DrawLine(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint(),Color.red);
-				//					}
-				//				}
-				//tour.DrawGeometry( GameObject.Find("temp") );
-			}
+//			if(drawRoadMap)	{
+//					Line[] ll = tt.GetSharedLines(); 
+//				
+//	
+//					if(ll.Length == 1)
+//					{
+//						Debug.DrawLine(ll[0].MidPoint(), tt.GetCenterTriangle(),Color.red);
+//						//Debug.Log("Drawing Red Line at: " + ll[0].MidPoint() + " " + tt.GetCenterTriangle());
+//					}
+//					else if(ll.Length > 2)
+//					{
+//						for(int i = 0; i<ll.Length; i++)
+//						{
+//							Debug.DrawLine(ll[i].MidPoint(), tt.GetCenterTriangle(),Color.red);
+//							//Debug.Log("Drawing Red Line at: " + ll[i].MidPoint() + " " + tt.GetCenterTriangle());
+//						}
+//	
+//					}
+//					
+//					else
+//					{
+//						for(int i = 0; i<ll.Length; i++)
+//						{
+//							Debug.DrawLine(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint(),Color.red);
+//						}
+//					}
+//				//tour.DrawGeometry( GameObject.Find("temp") );
+//			}
 		}
 		
 	}
@@ -461,7 +469,29 @@ public class Triangulation : MonoBehaviour
 		
 		triangulation.triangles = triangles;
 		
-		
+
+		////////ROADMAP//////////
+		foreach(Triangle tt in triangles){
+			Line[] ll = tt.GetSharedLines(); 
+			
+			if(ll.Length == 1)		
+				roadMap.Add(new Line(ll[0].MidPoint(), tt.GetCenterTriangle()));
+			else if(ll.Length > 2)
+			{
+				for(int i = 0; i<ll.Length; i++)
+				{
+					roadMap.Add(new Line(ll[i].MidPoint(), tt.GetCenterTriangle()));
+				}				
+			}
+			else
+			{
+				for(int i = 0; i<ll.Length; i++)
+				{
+					roadMap.Add(new Line(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint()));
+				}
+			}
+		}
+
 		////////COLORING//////////
 		/// ported code/////
 		triangles [0].SetColour ();
@@ -552,8 +582,7 @@ public class Triangulation : MonoBehaviour
 		foreach( Vector3 v in lv2 )
 			masterReflex.Add( v );
 		int hh = 0;
-		//makeSPRoadMap (masterReflex, totalGeo );
-		//makeTourOnSPR (roadMap, masterReflex);
+
 	}
 
 	void drawSphere( Vector3 v ){
