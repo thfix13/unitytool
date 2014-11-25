@@ -120,7 +120,7 @@ def readDataToPaths(name):
 
 #This code will read and plot the heatmaps
 f = "Distance_8_60000nodesRRT_787_paths.xml"
-f = "no_distance.xml"
+f = "no_distance_1470_paths.xml"
 a = []
 a = readDataToPaths(f)				 
 
