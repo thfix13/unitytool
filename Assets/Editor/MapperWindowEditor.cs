@@ -315,6 +315,184 @@ namespace EditorArea {
 
 			}
 			
+
+			#region experimental
+			RRTKDTreeGEO rrtgeo = new RRTKDTreeGEO();
+
+			if (GUILayout.Button ("Compute Path Geo")) {
+				
+				float playerSpeed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
+				float playerMaxHp = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().maxHp;
+				
+				//Check the start and the end and get them from the editor. 
+				if (start == null) {
+					start = GameObject.Find ("Start");
+				}
+				if (end == null) {
+					end = GameObject.Find ("End");	
+				}
+				
+				paths.Clear ();
+				deaths.Clear ();
+				ClearPathsRepresentation ();
+				arrangedByCrazy = arrangedByDanger = arrangedByDanger3 = arrangedByDanger3Norm = arrangedByLength = arrangedByLoS = arrangedByLoS3 = arrangedByLoS3Norm = arrangedByTime = arrangedByVelocity = null;
+
+				/*
+
+				// Prepare start and end position
+				startX = (int)((start.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
+				startY = (int)((start.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
+				endX = (int)((end.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
+				endY = (int)((end.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
+				
+				GameObject[] hps = GameObject.FindGameObjectsWithTag("HealthPack");
+				HealthPack[] packs = new HealthPack[hps.Length];
+				for (int i = 0; i < hps.Length; i++) {
+					packs[i] = hps[i].GetComponent<HealthPack>();
+					packs[i].posX = (int)((packs[i].transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
+					packs[i].posZ = (int)((packs[i].transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
+				}
+				
+				// Update the parameters on the RRT class
+				rrt.min = floor.collider.bounds.min;
+				rrt.tileSizeX = SpaceState.Editor.tileSize.x;
+				rrt.tileSizeZ = SpaceState.Editor.tileSize.y;
+				rrt.enemies = SpaceState.Editor.enemies;
+				rrt.packs = packs;
+				rrt.simulateCombat = simulateCombat;
+				*/
+				float startX = start.transform.position.x;
+				float startY = start.transform.position.z;
+				float endX = end.transform.position.x;
+				float endY = end.transform.position.z;
+
+
+				int seed = randomSeed;
+				if (randomSeed != -1)
+					UnityEngine.Random.seed = randomSeed;
+				else {
+					DateTime now = DateTime.Now;
+					seed = now.Millisecond + now.Second + now.Minute + now.Hour + now.Day + now.Month+ now.Year;
+					UnityEngine.Random.seed = seed;
+				}
+				
+				List<NodeGeo> nodes = null;
+
+				for (int it = 0; it < iterations; it++) {
+
+					/* Screw the Map
+
+					// Make a copy of the original map
+					fullMap = new Cell[original.Length][][];
+					for (int t = 0; t < original.Length; t++) {
+						fullMap[t] = new Cell[original[0].Length][];
+						for (int x = 0; x < original[0].Length; x++) {
+							fullMap[t][x] = new Cell[original[0][0].Length];
+							for (int y = 0; y < original[0][0].Length; y++)
+								fullMap[t][x][y] = original[t][x][y].Copy();
+						}
+					}
+					
+					// Use the copied map so the RRT can modify it
+					foreach (Enemy e in SpaceState.Editor.enemies) {
+						for (int t = 0; t < original.Length; t++)
+							for (int x = 0; x < original[0].Length; x++)
+								for (int y = 0; y < original[0][0].Length; y++)
+									if (e.seenCells[t][x][y] != null)
+										e.seenCells[t][x][y] = fullMap[t][x][y];
+						
+						// TODO: Need to make a backup of the enemies positions, rotations and forwards
+
+
+
+
+					}
+					*/
+
+
+
+					// We have this try/catch block here to account for the issue that we don't solve when we find a path when t is near the limit
+					try {
+
+						nodes = rrtgeo.ComputeGeo (startX, startY, endX, endY, 0, 5000, 0, 5000,5000, null, attemps, playerSpeed);
+
+						//nodes = rrt.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
+
+
+
+						// Did we found a path?
+						if (nodes.Count > 0) {
+							//paths.Add (new Path (nodes));
+							//toggleStatus.Add (paths.Last (), true);
+							//paths.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
+						}
+
+
+						/*
+						// Grab the death list
+						foreach (List<Node> deathNodes in rrt.deathPaths) {
+							deaths.Add(new Path(deathNodes));
+						}
+						*/
+
+					} catch (Exception e) {
+						Debug.LogWarning("Skip errored calculated path");
+						Debug.LogException(e);
+						// This can happen in two different cases:
+						// In line 376 by having a duplicate node being picked (coincidence picking the EndNode as visiting but the check is later on)
+						// We also cant just bring the check earlier since there's data to be copied (really really rare cases)
+						// The other case is yet unkown, but it's a conicidence by trying to insert a node in the tree that already exists (really rare cases)
+					}
+				}
+				// Set the map to be drawn
+				drawer.fullMap = fullMap;
+				ComputeHeatMap (paths, deaths);
+				
+				// Compute the summary about the paths and print it
+				String summary = "Summary:\n";
+				summary += "Seed used:" + seed;
+				summary += "\nSuccessful paths found: " + paths.Count;
+				summary += "\nDead paths: " + deaths.Count;
+				
+				// How many paths killed how many enemies
+				Dictionary<int, int> map = new Dictionary<int, int>();
+				for (int i = 0; i <= SpaceState.Editor.enemies.Length; i++)
+					map.Add(i, 0);
+				foreach (Path p in paths) {
+					int killed = 0;
+					foreach (Node n in p.points)
+						if (n.died != null)
+							killed++;
+					
+					if (map.ContainsKey(killed))
+						map[killed]++;
+					else
+						map.Add(killed, 1);
+				}
+				
+				foreach (int k in map.Keys) {
+					summary += "\n" + map[k] + " paths killed " + k + " enemies";
+				}
+				
+				// Debug.Log(summary);
+				
+			}
+			
+
+
+
+
+
+
+
+
+
+
+
+
+			#endregion experimental
+
+
 			if (GUILayout.Button ("(DEBUG) Export Paths")) {
 				List<Path> all = new List<Path>();
 				all.AddRange(paths);

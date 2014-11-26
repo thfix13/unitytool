@@ -78,8 +78,8 @@ namespace Exploration {
 				//Pick a random time
 				int rt = Random.Range (1,maxT);
 				//Then pick random x and y values
-				int rx = Random.Range (minX, maxX);
-				int ry = Random.Range (minY, maxY);
+				float rx = Random.Range (minX, maxX);
+				float ry = Random.Range (minY, maxY);
 				//int rx = p.x, ry = p.y;
 				nodeVisiting = GetNodeGeo (rt, rx, ry);
 				//if this node has already been visited continue
@@ -186,7 +186,7 @@ namespace Exploration {
 			float checkX = startX;
 			float checkY = startY;
 
-			for(int t = startY; t <= endT; t++){
+			for(int t = startT; t <= endT; t++){
 				foreach(Enemy e in enems){
 					if(checkColE(e, checkX, t, checkY)){
 						return true;
@@ -230,7 +230,17 @@ namespace Exploration {
 		}
 
 		#region oldcode
+		//To prevent errors temporarily
+
+		public Node GetNode (int t, int x, int y) {
+			return null;
+		}
+
+
 		//OLD CODE FOLLOWS
+
+
+
 		/*
 
 
@@ -272,28 +282,7 @@ namespace Exploration {
 
 
 		// Gets the node at specified position from the NodeMap, or create the Node based on the Cell position for that Node
-		public Node GetNode (int t, int x, int y) {
-			object o = tree.search (new double[] {x, t, y});
-			if (o == null) {
-				Node n = new Node ();
-				n.x = x;
-				n.y = y;
-				n.t = t;
-				try {
-					n.cell = nodeMatrix [t] [x] [y];
-				} catch {
-					Debug.Log (t + "-" + x + "-" + y);
-					Debug.Log (n);
-					Debug.Log (nodeMatrix [t]);
-					Debug.Log (nodeMatrix.Length);
-					Debug.Log (nodeMatrix [t].Length);
-					Debug.Log (nodeMatrix [t] [x].Length);
-					n.cell = nodeMatrix [t] [x] [y];
-				}
-				o = n;
-			}
-			return (Node)o;
-		}
+
 		
 		public List<Node> Compute (int startX, int startY, int endX, int endY, int attemps, float speed, Cell[][][] matrix, bool smooth = false) {
 			// Initialization
