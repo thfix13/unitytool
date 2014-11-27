@@ -458,9 +458,10 @@ public class Triangulation : MonoBehaviour
 		
 		
 		//Find shared edge and triangle structure
-		
-		foreach (Triangle tt in triangles) {
-			foreach (Triangle ttt in triangles) {
+		foreach (Triangle tt in triangles) 
+		{
+			foreach (Triangle ttt in triangles) 
+			{
 				if (tt == ttt)
 					continue; 
 				tt.ShareEdged (ttt, linesMinSpanTree);		
@@ -469,15 +470,23 @@ public class Triangulation : MonoBehaviour
 		}
 		
 		triangulation.triangles = triangles;
+		foreach(Triangle tShare in triangles)
+		{
+			tShare.DrawShareTriangles(temp);
+		}		
+		Debug.Log("Hello");
 		
+		//Draw shareEdges
+		return; 
 
 		////////ROADMAP//////////
-		foreach(Triangle tt in triangles){
+		foreach(Triangle tt in triangles)
+		{
 			Line[] ll = tt.GetSharedLines(); 
 			
 			if(ll.Length == 1)		
 				roadMap.Add(new Line(ll[0].MidPoint(), tt.GetCenterTriangle()));
-			else if(ll.Length > 2)
+			else if(ll.Length > 3)
 			{
 				for(int i = 0; i<ll.Length; i++)
 				{

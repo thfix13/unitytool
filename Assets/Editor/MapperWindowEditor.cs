@@ -418,7 +418,6 @@ namespace EditorArea {
 
 				foreach(Line l in roadMap)
 				{
-					
 					l.DrawVector(g,l.valueGrid.Max()/(float)max); 
 				}
 

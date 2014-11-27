@@ -80,6 +80,7 @@ public class Triangle
 		                    (vertex[0].y + vertex[1].y + vertex[2].y ) / 3,
 		                    (vertex[0].z + vertex[1].z + vertex[2].z ) / 3);
 	}
+	
 	public void SetColour()
 	{
 		//data.points.AddRange(this.vertex);
@@ -100,6 +101,22 @@ public class Triangle
 		}
 
 	}
+
+
+
+
+	public void DrawShareTriangles(GameObject parent)
+	{
+		foreach(Triangle t in voisins)
+		{
+			Line l = new Line(this.GetCenterTriangle(),t.GetCenterTriangle()); 
+			l.DrawVector(parent);
+		}
+	}
+	
+
+
+
 
 	public void SetColour(Triangle ttt)
 	{
