@@ -8,14 +8,13 @@ using System.Linq;
 
 public class MapperWindowEditor : EditorWindow
 {
-	
 	// Data holders
 	public static Cell[][][] fullMap;
 	public static Cell[][] obs;
 	public static List<Path> paths = new List<Path> ();
 	public static List<Node> mostDanger = null, shortest = null, lengthiest = null, fastest = null, longest = null;
 	// Parameters
-	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 25000, iterations = 5, gridSize = 75, ticksBehind = 0, numOfEnemies = 0, numOfRegionsForEnemies = 0, numOfCameras = 0, numOfRegionsForCameras = 0, iterations2 = 5, iterations3 = 5, noeB = 1, nocB = 1, noreB = 0, norcB = 0, numOfGuards = 0, numOfGuards2 = 1, iterations4 = 3, iterations5 = 2, nogB = 2, noiB = 4;
+	public static int startX, startY, maxHeatMap, endX = 27, endY = 27, timeSlice, timeSamples = 800, attemps = 10000, iterations = 5, gridSize = 75, ticksBehind = 0, numOfEnemies = 0, numOfRegionsForEnemies = 0, numOfCameras = 0, numOfRegionsForCameras = 0, iterations2 = 5, iterations3 = 5, noeB = 0, nocB = 0, noreB = 0, norcB = 0, numOfGuards = 0, numOfGuards2 = 1, iterations4 = 3, iterations5 = 2, nogB = 2, noiB = 4;
 	public static int pLine = 50, pDot = 50, pSplit = 50, pZigZag = 50, pPause = 25, pSwipe = 25, pFullRotate = 25, pNinety = 25, pLine2 = 50, pDot2 = 50, pSplit2 = 50, pZigZag2 = 50, pPause2 = 25, pSwipe2 = 25, pFullRotate2 = 25, pNinety2 = 25;
 	public static bool drawMap = true, drawMoveMap = false, drawMoveUnits = false, drawNeverSeen = false, draw3dExploration = false, drawHeatMap = false, drawHeatMap3d = false, drawPath = false, 
 		drawVoronoiForEnemies = false, drawVoronoiForCameras = false, drawVoronoiForBoundaries = false, drawBoundaries = false, drawRoadmaps = false, drawRoadmaps2 = false, drawRoadmaps3 = false, drawGraph = false, drawGraph2 = false,
@@ -61,7 +60,7 @@ public class MapperWindowEditor : EditorWindow
 				drawer = floor.gameObject.GetComponent<MapperEditorDrawer> ();
 				if (drawer == null) {
 					drawer = floor.gameObject.AddComponent<MapperEditorDrawer> ();
-					drawer.hideFlags = HideFlags.HideInInspector;
+//					drawer.hideFlags = HideFlags.HideInInspector;
 				}
 			}
 			if (mapper == null) {
@@ -133,7 +132,7 @@ public class MapperWindowEditor : EditorWindow
 				drawer = floor.gameObject.GetComponent<MapperEditorDrawer> ();
 				if (drawer == null) {
 					drawer = floor.gameObject.AddComponent<MapperEditorDrawer> ();
-					drawer.hideFlags = HideFlags.HideInInspector;
+					//drawer.hideFlags = HideFlags.HideInInspector;
 				}
 			}
 			
@@ -157,7 +156,6 @@ public class MapperWindowEditor : EditorWindow
 		} 
 		
 		if (GUILayout.Button ("Precompute Maps Over Time-Preserving")) {
-			
 			//Find this is the view
 			if (playerPrefab == null) {
 				//Debug.Log("No playerPrefab"); 
@@ -853,31 +851,32 @@ public class MapperWindowEditor : EditorWindow
 			setRotationOpEnables = false;
 		}
 		
+		
 		#endregion
 		
 		#region Batch
 		
 		EditorGUILayout.LabelField ("");
 		EditorGUILayout.LabelField ("9. Batch Computing for Enemies");
-
+		
 		GUI.enabled = true;
-		noeB = EditorGUILayout.IntField ("Number of enemies", noeB);
 		
 		if (GUILayout.Button ("Batch Computation for Enemies")) {
 			
 			BResultsRoot2 root = new BResultsRoot2 ();
 			using (FileStream stream = new FileStream ("Ratio with respect to Guards.xml", FileMode.Create)) {
-				for (noeB = 0; noeB <= 8; noeB++) {
+				for (noeB = 0; noeB <= 0; noeB++) {
 					BResultBatch2 job = new BResultBatch2 ();
 					job.numOfGuards = noeB;
-					
 					noreB = noeB != 0 ? 2 * noeB - 1 : 0;
 					
-					for (int batchIter = 0; batchIter < 2; batchIter ++) {
+					ratios.Clear ();
+					
+					for (int batchIter = 0; batchIter < 10; batchIter ++) {
 						// Create moving enemies and rotational cameras
 						PCG.ClearUpEnemies (enemyObjects);
 						PCG.ClearUpPaths (pathObjects);
-				
+						
 						if (obs == null) { 
 							obs = mapper.ComputeObstacles ();
 							Cell[][] grid = MapperEditor.grid;
@@ -892,12 +891,12 @@ public class MapperWindowEditor : EditorWindow
 						} else {
 							PCG.ResetEnemiesObs ();	
 						}
-								
+						
 						PCG.numOfEnemies = noeB;
 						PCG.numOfRegionsForEnemies = noreB;
 						// Populate region centres as enemies
 						enemyObjects = PCG.PopulateEnemies (floor).ToArray ();
-								
+						
 						// Hide all region centres
 						foreach (GameObject enemyObject in enemyObjects) {
 							Enemy enemyScript;
@@ -905,30 +904,30 @@ public class MapperWindowEditor : EditorWindow
 							enemyScript.LineForFOV = new Color (1.0f, 1.0f, 1.0f, 0.0f);
 							enemyObject.renderer.enabled = false;
 						}
-								
+						
 						// Calculate different voronoi regions and visualization is ready
 						// PCG.vEnemy.calculateVoronoiRegions (floor, PCG.numOfEnemies, PCG.numOfRegionsForEnemies, enemyObjects);
 						PCG.vEnemy.calculateVoronoiRegionsUsingFlooding (floor, PCG.numOfEnemies, PCG.numOfRegionsForEnemies, enemyObjects);
 						//drawer.eVoronoiGrid = PCG.vEnemy.obs;
-								
+						
 						// Select [numOfEnemies] regions with maximum area
 						int[] maxAreaIndexArrayForEnemies = PCG.vEnemy.selectMaximumRegions ();
-								
+						
 						// Show region centres with [numOfEnemies] regions with maximum area
 						for (int i = 0; i < noeB; i++) {
 							Enemy enemyRestoredScript;
 							enemyRestoredScript = enemyObjects.ElementAt (maxAreaIndexArrayForEnemies [i]).GetComponent ("Enemy") as Enemy;
 							enemyRestoredScript.LineForFOV = new Color (1.0f, 0.3f, 0.0f, 1.0f);
 							enemyObjects.ElementAt (maxAreaIndexArrayForEnemies [i]).renderer.enabled = true;
-		
+							
 						}
-								
+						
 						PCG.maxAreaIndexHolderE = maxAreaIndexArrayForEnemies;
-								
-						int batchIter2 = 20;
+						
+						int batchIter2 = 10;
 						pathObjects = PCG.PathInVoronoiRegion (floor, PCG.vEnemy.obs, batchIter2).ToArray ();
 						PCG.DestroyVoronoiCentreForEnemies ();
-							
+						
 						// Store positions all together
 						StorePositions ();
 						// Precompute maps again
@@ -943,35 +942,29 @@ public class MapperWindowEditor : EditorWindow
 						if (end == null) {
 							end = GameObject.Find ("End");	
 						}
-								
+						
 						paths.Clear ();
-						//toggleStatus.Clear ();
 						arrangedByCrazy = arrangedByDanger = arrangedByDanger3 = arrangedByDanger3Norm = arrangedByLength = arrangedByLoS = arrangedByLoS3 = arrangedByLoS3Norm = arrangedByTime = arrangedByVelocity = null;
-								
+						
 						startX = (int)((start.transform.position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x);
 						startY = (int)((start.transform.position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y);
 						endX = (int)((end.transform.position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x);
 						endY = (int)((end.transform.position.z - floor.collider.bounds.min.z) / SpaceState.TileSize.y);
-								
+						
 						rrt.min = floor.collider.bounds.min;
 						rrt.tileSizeX = SpaceState.TileSize.x;
 						rrt.tileSizeZ = SpaceState.TileSize.y;
 						rrt.enemies = SpaceState.Enemies;
-							
+						
 						List<Node> nodes = null;
-						iterations = 20;
+						iterations = 100;
 						for (int it = 0; it < iterations; it++) {
 							nodes = rrt.Compute (startX, startY, endX, endY, attemps, speed, fullMap, smoothPath);
 							if (nodes.Count > 0) {
 								paths.Add (new Path (nodes));
-								//toggleStatus.Add (paths.Last (), true);
-								//paths.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
 							}
 						}
-						//heatMap = Analyzer.Compute2DHeatMap (paths, gridSize, gridSize, out maxHeatMap);
-								
-						//Debug.Log ("Paths found: " + paths.Count);
-						//				Debug.Log ("Ratio: " + (float)paths.Count / iterations);
+
 						ratios.Add ((float)paths.Count / iterations);
 						shortest = fastest = longest = lengthiest = mostDanger = null;
 						
@@ -989,7 +982,6 @@ public class MapperWindowEditor : EditorWindow
 					averageRatio = sumRatio / ratioCnt;
 					job.averageRatio = averageRatio;
 					root.everything.Add (job);
-//			        Debug.Log ("Moving Enemies: " + noeB + ", Rotational Cameras: " + nocB + " is: " + averageRatio);
 				}
 				
 				XmlSerializer ser = new XmlSerializer (typeof(BResultsRoot2), new Type[] {
@@ -1003,28 +995,30 @@ public class MapperWindowEditor : EditorWindow
 		}
 		
 		EditorGUILayout.LabelField ("");
-		EditorGUILayout.LabelField ("9. Batch Computing for Cameras");
-
+		EditorGUILayout.LabelField ("10. Batch Computing for Cameras");
+		
 		GUI.enabled = true;
-		nocB = EditorGUILayout.IntField ("Number of cameras", nocB);
 		
 		if (GUILayout.Button ("Batch Computation for Cameras")) {
 			
 			BResultsRoot2 root = new BResultsRoot2 ();
+			
 			using (FileStream stream = new FileStream ("Ratio with respect to Cameras.xml", FileMode.Create)) {
-				for (nocB = 0; nocB <= 3; noeB++) {
+				for (nocB = 0; nocB <= 0; nocB++) {
 					BResultBatch2 job = new BResultBatch2 ();
 					job.numOfCameras = nocB;
+					ratios.Clear ();
+					paths.Clear ();
+					
 					
 					norcB = nocB != 0 ? 2 * nocB - 1 : 0;
 					
-					for (int batchIter = 0; batchIter < 2; batchIter ++) {
+					for (int batchIter = 0; batchIter < 10; batchIter ++) {
 														
 						PCG.ClearUpCameras (cameraObjects);
 						PCG.ClearUpAngles (angleObjects);
 						PCG.numOfCameras = nocB;
 						PCG.numOfRegionsForCameras = norcB;
-								
 						if (obs == null) { 
 							obs = mapper.ComputeObstacles ();
 							Cell[][] grid = MapperEditor.grid;
@@ -1071,7 +1065,7 @@ public class MapperWindowEditor : EditorWindow
 						}
 								
 						PCG.maxAreaIndexHolderC = maxAreaIndexArrayForCameras;
-						int batchIter3 = 20;
+						int batchIter3 = 5;
 						angleObjects = PCG.RotationInVoronoiRegion (floor, PCG.vCamera.obs, batchIter3).ToArray ();
 						PCG.DestroyVoronoiCentreForCameras ();
 							
@@ -1091,7 +1085,6 @@ public class MapperWindowEditor : EditorWindow
 						}
 								
 						paths.Clear ();
-						//toggleStatus.Clear ();
 						arrangedByCrazy = arrangedByDanger = arrangedByDanger3 = arrangedByDanger3Norm = arrangedByLength = arrangedByLoS = arrangedByLoS3 = arrangedByLoS3Norm = arrangedByTime = arrangedByVelocity = null;
 								
 						startX = (int)((start.transform.position.x - floor.collider.bounds.min.x) / SpaceState.TileSize.x);
@@ -1105,19 +1098,14 @@ public class MapperWindowEditor : EditorWindow
 						rrt.enemies = SpaceState.Enemies;
 							
 						List<Node> nodes = null;
-						iterations = 20;
+						iterations = 100;
 						for (int it = 0; it < iterations; it++) {
 							nodes = rrt.Compute (startX, startY, endX, endY, attemps, speed, fullMap, smoothPath);
 							if (nodes.Count > 0) {
 								paths.Add (new Path (nodes));
-								//toggleStatus.Add (paths.Last (), true);
-								//paths.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
 							}
 						}
-						//heatMap = Analyzer.Compute2DHeatMap (paths, gridSize, gridSize, out maxHeatMap);
 								
-						//Debug.Log ("Paths found: " + paths.Count);
-						//				Debug.Log ("Ratio: " + (float)paths.Count / iterations);
 						ratios.Add ((float)paths.Count / iterations);
 						shortest = fastest = longest = lengthiest = mostDanger = null;
 						
@@ -1135,7 +1123,6 @@ public class MapperWindowEditor : EditorWindow
 					averageRatio = sumRatio / ratioCnt;
 					job.averageRatio = averageRatio;
 					root.everything.Add (job);
-//			        Debug.Log ("Moving Enemies: " + noeB + ", Rotational Cameras: " + nocB + " is: " + averageRatio);
 				}
 				
 				XmlSerializer ser = new XmlSerializer (typeof(BResultsRoot2), new Type[] {
@@ -1154,7 +1141,7 @@ public class MapperWindowEditor : EditorWindow
 		#region Skeleton
 		
 		EditorGUILayout.LabelField ("");
-		EditorGUILayout.LabelField ("10. Skeleton");
+		EditorGUILayout.LabelField ("11. Skeleton");
 
 		if (randomOpEnables && !shortcutClicked) {
 			moreStepsBtnEnables = true;
@@ -1345,7 +1332,7 @@ public class MapperWindowEditor : EditorWindow
 		#region Behaviors
 		
 		EditorGUILayout.LabelField ("");
-		EditorGUILayout.LabelField ("11. Behaviours");
+		EditorGUILayout.LabelField ("12. Behaviours");
 
 		GUI.enabled = behaviorOpEnables;
 
@@ -1449,7 +1436,7 @@ public class MapperWindowEditor : EditorWindow
 		#region Behaviours with Time-preserving
 		
 		EditorGUILayout.LabelField ("");
-		EditorGUILayout.LabelField ("12. Behaviours with Time-preserving");
+		EditorGUILayout.LabelField ("13. Behaviours with Time-preserving");
 		
 		GUI.enabled = behaviorOpEnables;
 		
@@ -1553,7 +1540,7 @@ public class MapperWindowEditor : EditorWindow
 		#region Flows and Cuts
 	
 		EditorGUILayout.LabelField ("");
-		EditorGUILayout.LabelField ("12. Flows and Cuts");
+		EditorGUILayout.LabelField ("14. Flows and Cuts");
 		
 		GUI.enabled = behaviorOpEnables;
 
@@ -1623,7 +1610,7 @@ public class MapperWindowEditor : EditorWindow
 		#region Rhythm
 		
 		EditorGUILayout.LabelField ("");
-		EditorGUILayout.LabelField ("13. Rhythm");
+		EditorGUILayout.LabelField ("15. Rhythm");
 		
 		GUI.enabled = behaviorOpEnables;
 		
@@ -1660,8 +1647,6 @@ public class MapperWindowEditor : EditorWindow
 				ResetAI ();
 			}
 			
-//			EditorGUILayout.LabelField ("");
-//			EditorGUILayout.LabelField ("Rythm Indicator");
 		}
 		
 		#endregion
@@ -1671,7 +1656,7 @@ public class MapperWindowEditor : EditorWindow
 		GUI.enabled = true;
 		
 		EditorGUILayout.LabelField ("");
-		EditorGUILayout.LabelField ("14. Batch Computing For Behaviours");
+		EditorGUILayout.LabelField ("16. Batch Computing For Behaviours");
 		
 		nogB = EditorGUILayout.IntField ("Number of guards", nogB);
 		noiB = EditorGUILayout.IntField ("Number of iterations", noiB);
@@ -1694,7 +1679,6 @@ public class MapperWindowEditor : EditorWindow
 				PCG.InitializeSkeleton (obs);
 			}
 
-
 			PCG.sBoundary.identifyObstacleContours (floor);			
 			PCG.sBoundary.boundaryContoursFlooding (floor);
 			PCG.sBoundary.extractRoadmaps (floor);			
@@ -1702,17 +1686,21 @@ public class MapperWindowEditor : EditorWindow
 			PCG.sBoundary.initializeGraph ();			
 			PCG.sBoundary.cleanUp (floor);
 			
+			
 			BResultsRoot root = new BResultsRoot ();
 			using (FileStream stream = new FileStream ("Ratio with respect to Guards and Iterations.xml", FileMode.Create)) {
 				// Guards number varying from 1 to 8
-				for (int nog = 1; nog <= nogB; nog++) {
+				for (int nog = 5; nog <= 5; nog++) {
 					// Iterations number varying from 0 to 3
-					for (int noi = 0; noi <= noiB; noi++) {
+					for (int noi = 0; noi <= 0; noi++) {
+					
 						BResultBatch job = new BResultBatch ();
 						job.numOfGuards = nog;
 						job.numOfIterations = noi;
-						// For each test we want 20 trials
-						for (int batchIter = 0; batchIter < 30; batchIter ++) {					
+						ratios.Clear ();
+						
+						// For each test we want 30 trials
+						for (int batchIter = 0; batchIter < 15; batchIter ++) {					
 							// Clear up
 							PCG.ClearBehaviours ();
 							PCG.numOfGuards = nog;
@@ -1751,7 +1739,7 @@ public class MapperWindowEditor : EditorWindow
 							rrt.enemies = SpaceState.Enemies;
 					
 							List<Node> nodes = null;
-							iterations = 1;
+							iterations = 20;
 							for (int it = 0; it < iterations; it++) {
 								nodes = rrt.Compute (startX, startY, endX, endY, attemps, speed, fullMap, smoothPath);
 								if (nodes.Count > 0) {
@@ -2102,7 +2090,7 @@ public class MapperWindowEditor : EditorWindow
 			stream.Flush ();
 			stream.Close ();
 		}
-			
+						
 		// Time varying batch tests
 			
 		using (FileStream stream = new FileStream ("timevary" + att + ".xml", FileMode.Create)) {

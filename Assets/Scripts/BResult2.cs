@@ -22,6 +22,6 @@ public class BResultBatch2
 [Serializable]
 public class BResult2
 {
-	public double ratio = 0f;
+	public float ratio = 0f;
 	// public List<float> listOfDanger3 = new List<float> ();
 }

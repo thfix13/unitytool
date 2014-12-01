@@ -70,7 +70,7 @@ public class MapperEditor : Editor
 			case KeyCode.Alpha0:
 				Ray ray = HandleUtility.GUIPointToWorldRay (current.mousePosition);
 				RaycastHit hit;
-				Debug.Log("RockAndRoll");
+				Debug.Log ("RockAndRoll");
 				if (Physics.Raycast (ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer ("Floor"))) {
 					if (hit.transform.CompareTag ("Floor")) {
 						Vector2 pos = new Vector2 ((hit.point.x - hit.collider.bounds.min.x) / SpaceState.TileSize.x, (hit.point.z - hit.collider.bounds.min.x) / SpaceState.TileSize.y);
@@ -79,11 +79,9 @@ public class MapperEditor : Editor
 							c = new Cell ();
 							grid [(int)pos.x] [(int)pos.y] = c;
 						}
-						if (current.keyCode == KeyCode.Alpha1)
-						{
+						if (current.keyCode == KeyCode.Alpha1) {
 							c.safe = true;
-						}
-						else if (current.keyCode == KeyCode.Alpha2)
+						} else if (current.keyCode == KeyCode.Alpha2)
 							c.blocked = true;
 						else if (current.keyCode == KeyCode.Alpha3)
 							c.noisy = true;
