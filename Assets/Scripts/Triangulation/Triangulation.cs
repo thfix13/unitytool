@@ -464,20 +464,19 @@ public class Triangulation : MonoBehaviour
 			{
 				if (tt == ttt)
 					continue; 
-				tt.ShareEdged (ttt, linesMinSpanTree);		
+				tt.ShareEdged (ttt);		
 			}
 			
 		}
 		
-		triangulation.triangles = triangles;
-		foreach(Triangle tShare in triangles)
-		{
-			tShare.DrawShareTriangles(temp);
-		}		
-		Debug.Log("Hello");
+		// triangulation.triangles = triangles;
+		// foreach(Triangle tShare in triangles)
+		// {
+		// 	tShare.DrawShareTriangles(temp);
+		// }		
+
 		
-		//Draw shareEdges
-		return; 
+
 
 		////////ROADMAP//////////
 		foreach(Triangle tt in triangles)
@@ -486,7 +485,7 @@ public class Triangulation : MonoBehaviour
 			
 			if(ll.Length == 1)		
 				roadMap.Add(new Line(ll[0].MidPoint(), tt.GetCenterTriangle()));
-			else if(ll.Length > 3)
+			else if(ll.Length >2)
 			{
 				for(int i = 0; i<ll.Length; i++)
 				{
@@ -533,6 +532,7 @@ public class Triangulation : MonoBehaviour
 				
 			}
 		}
+		return; 
 		
 		foreach (Color c in coloursPoints) {
 			if (c == Color.red)
@@ -596,6 +596,7 @@ public class Triangulation : MonoBehaviour
 	}
 
 	void drawSphere( Vector3 v ){
+
 		GameObject temp = GameObject.Find ("temp");
 		GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 		inter.transform.renderer.material.color = Color.gray;

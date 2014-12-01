@@ -339,6 +339,13 @@ public class Line
 		}
 		return false;
 	}
+	public bool LineAlmostEquals(Line l)
+	{
+		Vector3 m1 = l.MidPoint(); 
+		Vector3 m2 = this.MidPoint(); 
+
+		return VectorApprox(m1,m2);
+	}
 }
 
 class LineEqualityComparer : IEqualityComparer<Line>
@@ -346,6 +353,7 @@ class LineEqualityComparer : IEqualityComparer<Line>
 	
 	public bool Equals(Line b1, Line b2)
 	{
+
 		return b1.Equals(b2);
 	}
 	

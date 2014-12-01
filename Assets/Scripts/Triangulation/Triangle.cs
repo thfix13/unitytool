@@ -194,7 +194,7 @@ public class Triangle
 		{
 			for(int j = 0; j<3;j++)
 			{
-				if(l1[i].Equals(l2[j]))
+				if(l1[i].LineAlmostEquals(l2[j]))
 				{
 					if(! voisins.Contains(t) && this != t)
 						voisins.Add(t); 
@@ -232,7 +232,7 @@ public class Triangle
 				continue; 
 			for(int j = 0; j<3;j++)
 			{
-				if(l1[i].Equals(l2[j]))
+				if(l1[i].LineAlmostEquals(l2[j]))
 				{
 					if(! voisins.Contains(t) && this != t)
 						voisins.Add(t); 
