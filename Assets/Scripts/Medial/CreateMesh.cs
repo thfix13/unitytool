@@ -36,13 +36,9 @@ public class CreateMesh : MonoBehaviour {
 //						UnityEngine.Debug.Log(line);
 //					}
 
-//		UnityEngine.Debug.Log("Waiting for exit");
-//		waitforsometime();
 		proc.WaitForExit();
 //		UnityEngine.Debug.Log("exited");
 		proc.Close();
-		//proc.Kill();
-//		UnityEngine.Debug.Log("Closed");
 		medial_output="output_medial_"+multi_triangle_input_file;
 
 		GameObject gameobj = GameObject.Find ("Box");
@@ -53,6 +49,9 @@ public class CreateMesh : MonoBehaviour {
 		buildObject (medial_output,gameobj2);
 		//SetAlpha(gameobj2.renderer.material,0.6f);
 		cam = GameObject.FindGameObjectWithTag("Cam").transform;
+	}
+	public static void udl(String s){
+		UnityEngine.Debug.Log(s);
 	}
 	IEnumerator waitforsometime() {
 		print(Time.time);
@@ -65,6 +64,22 @@ public class CreateMesh : MonoBehaviour {
 		material.color = color;
 	}
 
+	int n=0;
+	List<Vector3> ply_vertices= new List<Vector3>();
+	List<string> ply_triangles= new List<string>();
+
+	void writePLY(List<Vector3> vertices_orig, List<Vector3>vertices_final, List<List<int>> polygons){
+
+		foreach(var polygon in polygons){
+			int i=0,j=0, n=polygon.Count;
+			//ply_triangles.Add("3 "+);
+			String s= "3 "+i+" "+(i+1)%n+" "+(i%n)+n;
+			String t= "3 "+(i%n)+n+" "+(i+1)%n+" "+(i%n)+1+n;
+			udl (s);
+			udl (t);
+		}
+
+	}
 	// Update is called once per frame
 	void Update () {
 		if (Input.GetKey(KeyCode.DownArrow))
@@ -111,7 +126,7 @@ public class CreateMesh : MonoBehaviour {
 		string []parsed;
 		float a,b, c;
 		int vPointer=2,i=0;
-		UnityEngine.Debug.Log(nvertices+","+ntriangles);
+		//UnityEngine.Debug.Log(nvertices+","+ntriangles);
 		for( vPointer=2; i <nvertices/2;vPointer++, i++){
 			parsed= objectFile[vPointer].Split(delimiterChars);
 			a=float.Parse(parsed[0], System.Globalization.CultureInfo.InvariantCulture);

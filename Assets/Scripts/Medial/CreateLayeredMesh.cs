@@ -29,30 +29,24 @@ public class CreateLayeredMesh : MonoBehaviour {
 	string dir=@"/Users/dhsingh/Documents/Thesis/SM03Skeleton/";
 	void Start () {
 
+		List <List<Vector3>> layers =generate_arena2(40);
+		layers=generate_moving_gaurd(layers,40);
 
-//		Vector3 one= new Vector3(-4f,0f,-4f),two=new Vector3(4f,0f,-4f), three= new Vector3(4f,0f,4f), four= new Vector3(-4f,0f,4f)
-//			,f=new Vector3(-2f,0,-2f), s=new Vector3(-2f,0,2f), sv= new Vector3(2f,0,0f);
-//		Vector3 one1= new Vector3(-4f,1f,-4f),two1=new Vector3(4f,1f,-4f), three1= new Vector3(4f,1f,4f), four1= new Vector3(-4f,1f,4f)
-//			,f2=new Vector3(-1f,1,-2f), s2=new Vector3(-1f,1,2f), sv2= new Vector3(3f,1,0f);
-//		Vector3 one2= new Vector3(-4f,2f,-4f),two2=new Vector3(4f,2f,-4f), three2= new Vector3(4f,2f,4f), four2= new Vector3(-4f,2f,4f)
-//			,f3=new Vector3(0f,2,-2f), s3=new Vector3(0f,2,2f), sv3= new Vector3(3.5f,2,0f);
-		List <List<Vector3>> layers;//= new List<List<Vector3>>{new List<Vector3>{one,two,three,four,f,s,sv},
-			//new List<Vector3>{one1,two1,three1,four1,f2,s2,sv2},new List<Vector3>{one2,two2,three2,four2,f3,s3,sv3}};
-		layers=generate_arena(5);
-		layers=generate_rotating_gaurd(layers,5);
-		List<List<int>> polygons= new List<List<int>>{new List<int>{0,1,2,3}, new List<int>{6,5,4}};
+		List<List<int>> polygons= new List<List<int>>{new List<int>{0,1,2,3,4,5,6,7}, new List<int>{10,9,8}};
 
-		comb combb= subdivide_layer(layers,polygons,30f);
+		comb combb= subdivide_layer(layers,polygons,10f);
 		layers=combb.getLayer();
 		polygons=combb.getPoly();
 //		layers=addLayers(layers,4f);
-		assignPLY(layers,polygons);
+
+
+		VertTria vt= assignPLY(layers,polygons);
 
 		string multi_triangle_input_file= file_prefix+".ply2";
-		writePLY(dir+multi_triangle_input_file);
+		writePLY(dir+multi_triangle_input_file,vt.getVertices(),vt.getTriangles());
 
 		GameObject gameobj = GameObject.Find ("Box");
-		buildplyObject (gameobj);
+		buildplyObject (gameobj,vt.getVertices(),vt.getTriangles());
 		SetAlpha(gameobj.renderer.material,0.99f);
 
 		
@@ -76,10 +70,25 @@ public class CreateLayeredMesh : MonoBehaviour {
 //
 //		gameobj2 = GameObject.Find ("Medial");
 //		buildObject (medial_output,gameobj2);
-		SetAlpha(gameobj2.renderer.material,0.6f);
-//		cam = GameObject.FindGameObjectWithTag("Cam").transform;
+//		SetAlpha(gameobj2.renderer.material,0.6f);
+//		//cam = GameObject.FindGameObjectWithTag("Cam").transform;
 	}
-
+	List<List<Vector3>> generate_arena2(int nlayers){
+		Vector3 one= new Vector3(-6f,0f,0f),
+		two=new Vector3(-2f,0f,0f), 
+		three= new Vector3(-2f,0f,-2f), 
+		four= new Vector3(2f,0f,-2f),
+		five=new Vector3(2f,0f,0f), 
+		six=new Vector3(6f,0f,0f),
+		sev=new Vector3(6f,0f,3f), 
+		ei=new Vector3(-6f,0f,3f); 
+		List<List<Vector3>> arena= new List<List<Vector3>>();
+		for(int ilayer=0;ilayer<nlayers;ilayer++){
+			one.y= two.y= three.y= four.y=five.y=six.y=sev.y=ei.y=1f*ilayer/2;
+			arena.Add(new List<Vector3>{one, two,three,four,five,six,sev,ei});
+		}
+		return arena;
+	}
 
 	List<List<Vector3>> generate_arena(int nlayers){
 		Vector3 one= new Vector3(-4f,0f,-4f),
@@ -93,18 +102,62 @@ public class CreateLayeredMesh : MonoBehaviour {
 		}
 		return arena;
 	}
+
+	List<List<Vector3>> generate_moving_gaurd(List<List<Vector3>> arena ,int nlayers){
+		udl ("number of nodes= "+arena.Count);
+		Vector3 fo=new Vector3(-4f,0,2.5f), so=new Vector3(-4f,0,0.5f), svo= new Vector3(-5.5f,0,1.5f);
+		Vector3 ff=new Vector3(5.5f,0,2.5f), sf=new Vector3(5.5f,0,0.5f), svf= new Vector3(4f,0,1.5f);
+		int ilayer;
+		Vector3 f= new Vector3(),s=new Vector3(),sv=new Vector3();
+		for(ilayer=0;ilayer<nlayers/4f;ilayer++){
+			f=(ff*ilayer+fo*(nlayers/4 -ilayer))/(nlayers/4);
+			s=(sf*ilayer+so*(nlayers/4 -ilayer))/(nlayers/4);
+			sv=(svf*ilayer+svo*(nlayers/4 -ilayer))/(nlayers/4);
+			f.y=s.y=sv.y= 1f*ilayer/2f;
+			arena[ilayer].Add(f);arena[ilayer].Add(s);arena[ilayer].Add(sv);
+		}
+
+		var theta = 180f/(nlayers/2f);
+		for(;ilayer<3f*nlayers/4f;ilayer++){
+			f=RotatePointAroundPivot(f,sv,new Vector3(0, -theta, 0));
+			s=RotatePointAroundPivot(s,sv,new Vector3(0, -theta, 0));
+			f.y=s.y=sv.y=1f*ilayer/2f;
+			
+			arena[ilayer].Add(f);arena[ilayer].Add(s);arena[ilayer].Add(sv);
+		}
+
+		fo=f;so=s;svo=sv;
+		ff.x=-5.5f; sf.x=-5.5f; svf.x=-4f;
+		float n= nlayers/4;
+		for(float i=0f;ilayer<nlayers;ilayer++, i+=1/n){
+			f=(sf*i+fo*(1-i));
+			s=ff*i+so*(1-i);
+			sv=svf*i+svo*(1-i);
+			f.y=s.y=sv.y= 1f*ilayer/2f;
+			
+			arena[ilayer].Add(f);arena[ilayer].Add(s);arena[ilayer].Add(sv);
+		}
+		udl ("number of nodes final= "+arena.Count);
+		return arena;
+	}
+
 	List<List<Vector3>> generate_rotating_gaurd(List<List<Vector3>> arena ,int nlayers){
-		Vector3 f=new Vector3(-2f,0,-2f), s=new Vector3(-2f,0,2f), sv= new Vector3(2f,0,0f);
+		Vector3 f=new Vector3(-2f,0,-1f), s=new Vector3(-2f,0,3f), sv= new Vector3(2f,0,1f);
 		for(int ilayer=0;ilayer<nlayers;ilayer++){
-			var q=Quaternion.Euler(0, -5f*ilayer, 0);
-			f= q * f;
-			s= q * s;
+			f=RotatePointAroundPivot(f,sv,new Vector3(0, -18f, 0));
+			s=RotatePointAroundPivot(s,sv,new Vector3(0, -18f, 0));
 			//sv=q * sv;
 			f.y=s.y=sv.y=1f*ilayer;
 
 			arena[ilayer].Add(f);arena[ilayer].Add(s);arena[ilayer].Add(sv);
 		}
 		return arena;
+	}
+ 	Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 angles) {
+		Vector3 dir = point - pivot; // get point direction relative to pivot
+		dir = Quaternion.Euler(angles) * dir; // rotate it
+		point = dir + pivot; // calculate rotated point
+		return point; // return it
 	}
 	public static void udl(object s){
 		UnityEngine.Debug.Log(s);
@@ -117,10 +170,10 @@ public class CreateLayeredMesh : MonoBehaviour {
 	}
 
 	int n=0;
-	List<Vector3> ply_vertices;
-	List<int> ply_triangles;
+//	List<Vector3> ply_vertices;
+//	List<int> ply_triangles;
 
-	void writePLY(string outputfile){
+	void writePLY(string outputfile,List<Vector3> ply_vertices, List<int> ply_triangles){
 		using (System.IO.StreamWriter file= new System.IO.StreamWriter(outputfile)){
 			file.WriteLine(ply_vertices.Count);
 			file.WriteLine(ply_triangles.Count/3);
@@ -134,11 +187,14 @@ public class CreateLayeredMesh : MonoBehaviour {
 		}
 	}
 	/// <summary>
-	/// Finds ply_vertices and traingles from list of layers and polygons
+	/// Obtains vertices and traingles from list of layers and list of closed polygons.
+	/// Used to apply medial skeleton algo and also create mesh
 	/// </summary>
 	/// <param name="layers">Layers.</param>
 	/// <param name="polygons">Polygons.</param>
-	void assignPLY(List<List<Vector3>> layers, List<List<int>> polygons){
+	VertTria assignPLY(List<List<Vector3>> layers, List<List<int>> polygons){
+		List<Vector3> ply_vertices; 
+		List<int> ply_triangles;
 		ply_vertices= new List<Vector3>();
 		ply_triangles= new List<int>();
 		foreach(var layer in layers){
@@ -169,6 +225,8 @@ public class CreateLayeredMesh : MonoBehaviour {
 				vertices_yet+=n;
 			}
 		}
+		VertTria vt= new VertTria(ply_vertices,ply_triangles);
+		return vt;
 	}
 	/// <summary>
 	/// Subdivides the each layer.
@@ -246,7 +304,7 @@ public class CreateLayeredMesh : MonoBehaviour {
 	void Update () {
 	}
 
-	void buildplyObject(GameObject go){
+	void buildplyObject(GameObject go,List<Vector3> ply_vertices, List<int> ply_triangles){
 		List <Vector3> newVertices;
 		List <int> newTriangles;
 		int nvertices = Convert.ToInt16(ply_vertices.Count) * 2;
@@ -283,11 +341,6 @@ public class CreateLayeredMesh : MonoBehaviour {
 		l.AddRange(Enumerable.Repeat(Vector3.down,nvertices/2).ToList());
 		mesh.normals = l.ToArray();
 		mesh.triangles = newTriangles.ToArray();
-//		Color32[] colors= new Color32[mesh.vertices.Count()];
-//		for (int i=0; i<nvertices; i++) {
-//			colors[i]= new Color32((byte)UnityEngine.Random.Range(0,255),(byte)UnityEngine.Random.Range(0,255),(byte)UnityEngine.Random.Range(0,255),100);
-//		}
-//		mesh.colors32= colors;
 	}
 	void buildObject(string InputFile, GameObject go){
 		List <Vector3> newVertices;
@@ -349,7 +402,20 @@ public class CreateLayeredMesh : MonoBehaviour {
 		mesh.colors32= colors;
 	}
 
-
+	class VertTria{
+		List<Vector3> ply_vertices;
+		List<int> ply_triangles;
+		public VertTria(List <Vector3> vertices, List<int>triangles){
+			this.ply_vertices=vertices;
+			this.ply_triangles=triangles;
+		}
+		public List<Vector3> getVertices(){
+			return this.ply_vertices;
+		}
+		public List<int> getTriangles(){
+			return this.ply_triangles;
+		}
+	}
 	class comb{
 		List<List<int>> poly;
 		List<List<Vector3>> lay;
