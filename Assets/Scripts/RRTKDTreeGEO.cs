@@ -16,7 +16,7 @@ namespace Exploration {
 		public KDTree tree;
 		public List<NodeGeo> explored;
 		// Only do noisy calculations if enemies is different from null
-		public Enemy[] enemies;
+		public Enemy[] enemies = null;
 		//public Vector3 min;
 		//public float tileSizeX, tileSizeZ;
 
@@ -179,6 +179,9 @@ namespace Exploration {
 
 		//Check for collision of a path with the enemies
 		public bool checkCollEs(float startX, float startY,int startT, float endX, float endY,  int endT, Enemy[] enems){
+			if(enems == null){
+				return false;
+			}
 			int numSteps = endT - startT;
 			float stepX = (endX - startX) / ((float) numSteps);
 			float stepY = (endY - startY) / ((float) numSteps);

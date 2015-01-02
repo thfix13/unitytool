@@ -11,6 +11,8 @@ namespace EditorArea {
 		
 		// Options
 		public bool drawMap = true, drawNeverSeen = false, drawHeatMap = true, drawPath = false, editGrid = false, drawFoVOnly = false, drawCombatLines = false;
+
+		public bool drawPathGeo = false;
 		
 		// Caller must set these up
 		public Cell[][][] fullMap;
@@ -23,6 +25,9 @@ namespace EditorArea {
 		public Dictionary<Path, bool> paths = new Dictionary<Path, bool> ();
 		public Cell[][] editingGrid;
 		public List<Tuple<Vector3, string>> textDraw;
+
+
+		public Dictionary<PathGeo, bool> pathsGeo = new Dictionary<PathGeo, bool> ();
 		
 		// We are just maintaning a bunch of maps so we can color them accordinlly
 		public int[,] heatMap, deathHeatMap, combatHeatMap;
@@ -135,36 +140,73 @@ namespace EditorArea {
 			// All Paths drawning
 			if (drawPath) {
 				Gizmos.color = Color.blue;
-				foreach (KeyValuePair<Path, bool> kv in paths)
-				if (kv.Value) {
-					foreach (Node n in kv.Key.points) {
-						Gizmos.color = kv.Key.color;
-						if (n.parent != null) {
-							Gizmos.DrawLine (new Vector3
-							                 ((n.x * tileSize.x + zero.x),
-							 0.1f,
-							 (n.y * tileSize.x + zero.y)),
-							                 
-							                 new Vector3
-							                 ((n.parent.x * tileSize.y + zero.x),
-							 0.1f,
-							 (n.parent.y * tileSize.y + zero.y)));
-							
-							if (drawCombatLines && n.parent.fighting != null && n.parent.fighting.Count > 0 && n.t >= timeSlice && n.parent.t <= timeSlice) {
-								Gizmos.color = Color.red;
+				foreach (KeyValuePair<Path, bool> kv in paths){
+					if (kv.Value) {
+						foreach (Node n in kv.Key.points) {
+							Gizmos.color = kv.Key.color;
+							if (n.parent != null) {
+								Gizmos.DrawLine (new Vector3
+								                 ((n.x * tileSize.x + zero.x),
+								 0.1f,
+								 (n.y * tileSize.x + zero.y)),
+								                 
+								                 new Vector3
+								                 ((n.parent.x * tileSize.y + zero.x),
+								 0.1f,
+								 (n.parent.y * tileSize.y + zero.y)));
 								
-								for (int ei = 0; ei < n.parent.fighting.Count; ei++)
-									Gizmos.DrawLine (new Vector3
-									                 ((n.x * tileSize.x + zero.x),
-									 0.1f,
-									 (n.y * tileSize.x + zero.y)),
-									                 n.parent.fighting[ei].positions[timeSlice]);
+								if (drawCombatLines && n.parent.fighting != null && n.parent.fighting.Count > 0 && n.t >= timeSlice && n.parent.t <= timeSlice) {
+									Gizmos.color = Color.red;
+									
+									for (int ei = 0; ei < n.parent.fighting.Count; ei++)
+										Gizmos.DrawLine (new Vector3
+										                 ((n.x * tileSize.x + zero.x),
+										 0.1f,
+										 (n.y * tileSize.x + zero.y)),
+										                 n.parent.fighting[ei].positions[timeSlice]);
+								}
 							}
 						}
 					}
 				}
 			}
-			
+
+			if(drawPathGeo){
+
+				Gizmos.color = Color.blue;
+				foreach (KeyValuePair<PathGeo, bool> kv in pathsGeo) {
+
+					if (kv.Value) {
+						foreach (NodeGeo n in kv.Key.points) {
+							Gizmos.color = kv.Key.color;
+							if (n.parent != null) {
+								Gizmos.DrawLine (new Vector3
+								                 ((n.x),
+								 0.1f,
+								 (n.y)),
+								                 
+								                 new Vector3
+								                 ((n.parent.x),
+								 0.1f,
+								 (n.parent.y)));
+								
+								/*if (drawCombatLines && n.parent.fighting != null && n.parent.fighting.Count > 0 && n.t >= timeSlice && n.parent.t <= timeSlice) {
+									Gizmos.color = Color.red;
+									
+									for (int ei = 0; ei < n.parent.fighting.Count; ei++)
+										Gizmos.DrawLine (new Vector3
+										                 ((n.x * tileSize.x + zero.x),
+										 0.1f,
+										 (n.y * tileSize.x + zero.y)),
+										                 n.parent.fighting[ei].positions[timeSlice]);
+								}*/
+							}
+						}
+					}
+				}
+
+			}
+
 			GUIStyle style = new GUIStyle();
 			style.normal.textColor = Color.red;
 			style.fontSize = 16;

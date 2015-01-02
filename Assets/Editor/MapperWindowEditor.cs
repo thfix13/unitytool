@@ -35,7 +35,10 @@ namespace EditorArea {
 		private static List<Path> arrangedByTime, arrangedByLength, arrangedByDanger, arrangedByLoS, arrangedByDanger3, arrangedByLoS3, arrangedByDanger3Norm, arrangedByLoS3Norm, arrangedByCrazy, arrangedByVelocity;
 
 		//GEONEW
-
+		public static Triangulation triangles;
+		public static List<PathGeo> pathsgeo = new List<PathGeo> ();
+		public static bool drawPathGeo = true;
+		private static Dictionary<PathGeo, bool> toggleStatusGeo = new Dictionary<PathGeo, bool> ();
 
 		// Helping stuff
 		private static Vector2 scrollPos = new Vector2 ();
@@ -319,8 +322,13 @@ namespace EditorArea {
 			#region experimental
 			RRTKDTreeGEO rrtgeo = new RRTKDTreeGEO();
 
+
+
 			if (GUILayout.Button ("Compute Path Geo")) {
+				triangles = GameObject.Find ("Triangulation").GetComponent<Triangulation>();
+				List<Geometry> obstacles = triangles.TriangulationSpace();
 				
+
 				float playerSpeed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
 				float playerMaxHp = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().maxHp;
 				
@@ -414,14 +422,21 @@ namespace EditorArea {
 					// We have this try/catch block here to account for the issue that we don't solve when we find a path when t is near the limit
 					try {
 
-						nodes = rrtgeo.ComputeGeo (startX, startY, endX, endY, 0, 5000, 0, 5000,5000, null, attemps, playerSpeed);
+						nodes= rrtgeo.ComputeGeo (startX, startY, endX, endY, -10, 10, -10, 10, 1000, obstacles, attemps, playerSpeed);
 
 						//nodes = rrt.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
 
-
+						Debug.Log (nodes.Count);
+						if(nodes.Count <= 0){
+							Debug.Log ("FAILER PANTS");
+						}
 
 						// Did we found a path?
 						if (nodes.Count > 0) {
+							pathsgeo.Add (new PathGeo(nodes));
+							toggleStatusGeo.Add(pathsgeo.Last(), true);
+							Debug.Log ("Count1 is : " + toggleStatusGeo.Count);
+							pathsgeo.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
 							//paths.Add (new Path (nodes));
 							//toggleStatus.Add (paths.Last (), true);
 							//paths.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
@@ -445,15 +460,17 @@ namespace EditorArea {
 					}
 				}
 				// Set the map to be drawn
-				drawer.fullMap = fullMap;
-				ComputeHeatMap (paths, deaths);
+				//drawer.fullMap = fullMap;
+				//ComputeHeatMap (paths, deaths);
 				
 				// Compute the summary about the paths and print it
 				String summary = "Summary:\n";
 				summary += "Seed used:" + seed;
 				summary += "\nSuccessful paths found: " + paths.Count;
 				summary += "\nDead paths: " + deaths.Count;
-				
+
+				/*
+
 				// How many paths killed how many enemies
 				Dictionary<int, int> map = new Dictionary<int, int>();
 				for (int i = 0; i <= SpaceState.Editor.enemies.Length; i++)
@@ -473,8 +490,10 @@ namespace EditorArea {
 				foreach (int k in map.Keys) {
 					summary += "\n" + map[k] + " paths killed " + k + " enemies";
 				}
-				
-				// Debug.Log(summary);
+
+				*/
+
+				 Debug.Log(summary);
 				
 			}
 			
@@ -626,6 +645,9 @@ namespace EditorArea {
 			drawDeathHeatMap3d = EditorGUILayout.Toggle ("--> Draw 3d death heat map", drawDeathHeatMap3d);
 			drawPath = EditorGUILayout.Toggle ("Draw path", drawPath);
 			drawCombatLines = EditorGUILayout.Toggle ("Draw combat lines", drawCombatLines);
+
+			//GEO
+			drawPathGeo = EditorGUILayout.Toggle ("Draw path Geo", drawPathGeo);
 			
 			if (drawer != null) 
 			{
@@ -913,6 +935,10 @@ namespace EditorArea {
 				drawer.drawCombatLines = drawCombatLines;
 				drawer.paths = toggleStatus;
 				drawer.textDraw = textDraw;
+
+				drawer.pathsGeo = toggleStatusGeo;
+				//Debug.Log ("The count is:" + drawer.pathsGeo.Count);
+				drawer.drawPathGeo = drawPathGeo;
 				
 			}
 			
