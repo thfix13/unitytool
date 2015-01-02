@@ -16,7 +16,7 @@ namespace Exploration {
 		public KDTree tree;
 		public List<NodeGeo> explored;
 		// Only do noisy calculations if enemies is different from null
-		public Enemy[] enemies = null;
+		public EnemyGeo[] enemies = null;
 		//public Vector3 min;
 		//public float tileSizeX, tileSizeZ;
 
@@ -113,7 +113,7 @@ namespace Exploration {
 				}
 				
 				//Check for collision with guard line of sight
-				if(checkCollEs(p2.x, p2.z, (int)p2.y, p1.x, p1.z, (int)p1.y, enemies)){
+				if(checkCollEs(p2.x, p2.z, (int)p2.y, p1.x, p1.z, (int)p1.y, enemies, obstacles)){
 					continue;
 				}
 				
@@ -142,7 +142,7 @@ namespace Exploration {
 					NodeGeo endNode = GetNodeGeo ((int)pd.y, pd.x, pd.z);
 
 
-					if (!checkCollObs(p1.x, p1.z, p2.x, p2.z, obstacles) && !checkCollEs(p1.x, p1.z, (int)p1.y, p2.x, p2.z, (int)p2.y, enemies)) {
+					if (!checkCollObs(p1.x, p1.z, p2.x, p2.z, obstacles) && !checkCollEs(p1.x, p1.z, (int)p1.y, p2.x, p2.z, (int)p2.y, enemies, obstacles)) {
 						//Debug.Log ("Done3");
 						endNode.parent = nodeVisiting;
 						return ReturnPathGeo (endNode, smooth);
@@ -178,7 +178,7 @@ namespace Exploration {
 		}
 
 		//Check for collision of a path with the enemies
-		public bool checkCollEs(float startX, float startY,int startT, float endX, float endY,  int endT, Enemy[] enems){
+		public bool checkCollEs(float startX, float startY,int startT, float endX, float endY,  int endT, EnemyGeo[] enems, List<Geometry> obs){
 			if(enems == null){
 				return false;
 			}
@@ -190,8 +190,8 @@ namespace Exploration {
 			float checkY = startY;
 
 			for(int t = startT; t <= endT; t++){
-				foreach(Enemy e in enems){
-					if(checkColE(e, checkX, t, checkY)){
+				foreach(EnemyGeo e in enems){
+					if(checkCollE(e, checkX, t, checkY, obs)){
 						return true;
 					}
 				}
@@ -203,10 +203,16 @@ namespace Exploration {
 			return false;
 		}
 
-		//TODO
-		//Check if an enemy can see you at a certain time/place
-		public bool checkColE(Enemy e, float x, int t, float y){
-			return false;
+		public bool checkCollE(EnemyGeo e, float x, int t, float y, List<Geometry> obs){
+			Vector2 posE = e.getPosition(t);
+			Vector2 posP = new Vector2(x,y);
+			if(Vector2.Distance(posE, posP) > e.fovDistance){
+				return false;
+			}
+			if(Vector2.Angle((posP-posE), e.getForward(t)) > e.fovAngle*0.5){
+				return false;
+			}
+			return checkCollObs(x, y, posE.x, posE.y, obs);
 		}
 
 
