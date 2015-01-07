@@ -230,7 +230,8 @@ public class Geometry
 		return (float)Math.Atan2 (delz, delx);
 	}
 	
-	public void DrawVertex(GameObject parent){//Called by no one but maybe useful
+	public void DrawVertex(GameObject parent){
+		//Called by no one but maybe useful
 		//Find vertex
 		List<Vector3> vertex = GetVertex ();
 		
@@ -240,6 +241,11 @@ public class Geometry
 			inter.transform.position = v;
 			inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
 			inter.transform.parent = parent.transform;
+		}
+		//Draw the lines using vectrocity
+		foreach(Line l in edges)
+		{
+			l.DrawVector(parent);
 		}
 	}
 	

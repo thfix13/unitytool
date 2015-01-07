@@ -19,6 +19,17 @@ public class TriangulationEditor : Editor {
 				tObject.TriangulationSpace(); 
 			}
 		}
+		if(GUILayout.Button("RoadMap"))
+		{
+			//Start the triangulation
+			GameObject g = GameObject.Find("Triangulation"); 
+
+			if(g != null)
+			{
+				Triangulation tObject = g.GetComponent<Triangulation>(); 
+				tObject.RoadMap(); 
+			}
+		}
 		else if(GUILayout.Button("Clear"))
 		{
 			//Start the triangulation

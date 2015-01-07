@@ -25,13 +25,7 @@ public class Triangulation : MonoBehaviour
 	public Geometry mapBG = new Geometry ();
 	public Geometry tour = new Geometry ();
 	
-	public bool drawTriangles = false; 
-	public bool drawRoadMap = false; 
-	public bool drawMinSpanTree = false;
-	public bool drawGeometry = false;
-	public bool stopAll = false;
-	private bool drawn = false;
-
+	
 	//Contains roadmap traversing triangles
 	public List<Line> roadMap = new List<Line> ();
 
@@ -41,20 +35,7 @@ public class Triangulation : MonoBehaviour
 	
 	public void Clear()
 	{
-		linesMinSpanTree.Clear(); 
-		triangles.Clear(); 
-		lines.Clear(); 
-		points.Clear(); 
-		colours.Clear();
-		obsGeos.Clear ();
-		GameObject temp = GameObject.Find("temp");
-		DestroyImmediate(temp);
-		GameObject vptmp = GameObject.Find("vptmp");
-		DestroyImmediate(vptmp);
-		cameras.Clear ();
-		drawn = false;
-		stopAll = true;
-		roadMap.Clear ();
+
 	}
 	void OnDrawGizmosSelected( ) 
 	{
@@ -76,70 +57,6 @@ public class Triangulation : MonoBehaviour
 	}
 	public void Update()
 	{
-		if ( stopAll )
-			return;
-		
-		if(drawMinSpanTree){
-			GameObject temp = GameObject.Find("temp"); 
-			foreach(Line l in linesMinSpanTree)
-				Debug.DrawLine(l.vertex[0], l.vertex[1],Color.red);
-		}
-		
-		if (drawGeometry) {
-			//			foreach(Geometry g in finalPoly){
-			//
-			//			}
-			if( !drawn ){
-				totalGeo.DrawGeometry(GameObject.Find("temp"));
-				drawn = true;
-			}
-		}
-
-		if (drawRoadMap) {
-			foreach(Line l in roadMap){
-				Debug.DrawLine(l.vertex[0],l.vertex[1],Color.green);
-			}
-		}
-
-
-		foreach(Triangle tt in triangles){
-			if(drawTriangles){	
-				tt.DrawDebug();
-				//foreach(Vector3 v in tt.getVertexMiddle())
-				//	points.Add(v);
-				//foreach(Color v in tt.colourVertex)
-				//	colours.Add(v);
-			}
-			
-//			if(drawRoadMap)	{
-//					Line[] ll = tt.GetSharedLines(); 
-//				
-//	
-//					if(ll.Length == 1)
-//					{
-//						Debug.DrawLine(ll[0].MidPoint(), tt.GetCenterTriangle(),Color.red);
-//						//Debug.Log("Drawing Red Line at: " + ll[0].MidPoint() + " " + tt.GetCenterTriangle());
-//					}
-//					else if(ll.Length > 2)
-//					{
-//						for(int i = 0; i<ll.Length; i++)
-//						{
-//							Debug.DrawLine(ll[i].MidPoint(), tt.GetCenterTriangle(),Color.red);
-//							//Debug.Log("Drawing Red Line at: " + ll[i].MidPoint() + " " + tt.GetCenterTriangle());
-//						}
-//	
-//					}
-//					
-//					else
-//					{
-//						for(int i = 0; i<ll.Length; i++)
-//						{
-//							Debug.DrawLine(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint(),Color.red);
-//						}
-//					}
-//				//tour.DrawGeometry( GameObject.Find("temp") );
-//			}
-		}
 		
 	}
 	
@@ -153,6 +70,143 @@ public class Triangulation : MonoBehaviour
 		colours.Add(c); 
 	}
 	
+	public void SetObstacles()
+	{
+		//Compute one step of the discritzation
+		//Find this is the view
+		GameObject floor = (GameObject)GameObject.Find ("Floor");
+		Vector3 [] vertex = new Vector3[4]; 
+		//First geometry is the outer one
+		List<Geometry> geos = new List<Geometry> ();
+		//Drawing lines
+		//Floor
+		Vector3[] f = new Vector3[4];
+		MeshFilter mesh = (MeshFilter)(floor.GetComponent ("MeshFilter"));
+		Vector3[] t = mesh.sharedMesh.vertices; 
+		
+		Geometry tempGeometry = new Geometry (); 
+		
+		//Get floor points manually
+		vertex [0] = mesh.transform.TransformPoint (t [0]);
+		vertex [2] = mesh.transform.TransformPoint (t [120]);
+		vertex [1] = mesh.transform.TransformPoint (t [110]);
+		vertex [3] = mesh.transform.TransformPoint (t [10]);
+		
+		//Working in 2D geometry using x and z. y is always 1.
+		vertex [0].y = 1; 
+		vertex [1].y = 1; 
+		vertex [2].y = 1; 
+		vertex [3].y = 1; 
+		
+		Vector3 [] mapBoundary = new Vector3[4]; //the map's four corners
+		
+		for (int i = 0; i < 4; i++) 
+			mapBoundary [i] = vertex [i];
+		
+		mapBG = new Geometry (); //Countains the map polygon
+		for (int i = 0; i < 4; i++)
+			mapBG.edges.Add( new Line( mapBoundary[i], mapBoundary[(i + 1) % 4]) );
+		
+		GameObject[] obs = GameObject.FindGameObjectsWithTag ("Obs");
+		
+		if (obs == null)
+			return; 
+		
+		//data holder
+		Triangulation triangulation = GameObject.Find ("Triangulation").GetComponent<Triangulation> (); 
+		triangulation.points.Clear ();
+		triangulation.colours.Clear (); 
+		
+		//Get all polygon
+		foreach (GameObject o in obs){
+			mesh = (MeshFilter)(o.GetComponent ("MeshFilter"));
+			t = mesh.sharedMesh.vertices;
+			tempGeometry = new Geometry();
+			
+			vertex [0] = mesh.transform.TransformPoint (t [6]);
+			vertex [1] = mesh.transform.TransformPoint (t [8]);
+			vertex [3] = mesh.transform.TransformPoint (t [7]);
+			vertex [2] = mesh.transform.TransformPoint (t [9]);
+			
+			vertex [0].y = 1;
+			vertex [2].y = 1;
+			vertex [1].y = 1;
+			vertex [3].y = 1;
+			for (int i = 0; i< vertex.Length; i+=1) {
+				if (i < vertex.Length - 1)
+					tempGeometry.edges.Add (new Line (vertex [i], vertex [i + 1]));
+				else 	       
+					tempGeometry.edges.Add (new Line (vertex [0], vertex [i]));
+			}	
+			geos.Add (tempGeometry);
+		}
+		
+		//lines are defined by all the points in  obs
+		lines = new List<Line> ();
+		
+		obsGeos.Clear ();
+		foreach (Geometry g in geos)
+			obsGeos.Add(g);
+		
+		//Create empty GameObject
+		GameObject temp = GameObject.Find("temp");
+		DestroyImmediate(temp);
+		temp = new GameObject("temp");
+		
+		//CODESPACE
+		//Merge obstacles that are intersecting
+		for (int i = 0; i < obsGeos.Count; i++) {
+			for (int j = i + 1; j < obsGeos.Count; j++) {
+				//Check to see if two geometries intersect
+				if( obsGeos[i].GeometryIntersect( obsGeos[j] ) ){
+					Geometry tmpG = obsGeos[i].GeometryMerge( obsGeos[j] ); 
+					//remove item at position i, decrement i since it will be incremented in the next step, break
+					obsGeos.RemoveAt(j);
+					obsGeos.RemoveAt(i);
+					obsGeos.Add(tmpG);
+					i--;
+					break;
+				}
+			}
+		}
+		
+		finalPoly = new List<Geometry> ();//Contains all polygons that are fully insde the map
+		//Check for obstacles that intersect the map boundary
+		//and change the map boundary to exclude them
+		foreach ( Geometry g in obsGeos ) {
+			if( mapBG.GeometryIntersect( g ) && !mapBG.GeometryInside( g ) ){
+				mapBG = mapBG.GeometryMergeInner( g );
+				mapBG.BoundGeometry( mapBoundary );
+			}
+			else
+				finalPoly.Add(g);
+		}
+		
+		List<Vector3> allVertex = new List<Vector3>();
+		List<Vector3> tempVertex = new List<Vector3>();
+		totalGeo = new Geometry ();
+		
+		//Getting all vertices
+		foreach (Geometry g in finalPoly) {
+			tempVertex = g.GetVertex();
+			foreach( Vector3 v in tempVertex )
+				allVertex.Add(v);
+			foreach( Line l in g.edges )
+				totalGeo.edges.Add(l);
+		}
+		
+		tempVertex = mapBG.GetVertex();
+		foreach( Vector3 v in tempVertex )
+			allVertex.Add(v);
+		foreach( Line l in mapBG.edges )
+			totalGeo.edges.Add(l);
+		lines.Clear ();
+
+
+		
+	}
+
+
 	public void TriangulationSpace (){
 		//Compute one step of the discritzation
 		//Find this is the view
@@ -283,6 +337,16 @@ public class Triangulation : MonoBehaviour
 		foreach( Line l in mapBG.edges )
 			totalGeo.edges.Add(l);
 		lines.Clear ();
+		mapBG.DrawGeometry(temp);
+
+
+		foreach( Geometry g in finalPoly)
+		{
+			g.DrawGeometry(temp);
+		}
+
+
+
 		//---End of obstacle merging---
 		
 		//-----------START MST CODE------------------//
@@ -593,6 +657,19 @@ public class Triangulation : MonoBehaviour
 			masterReflex.Add( v );
 		int hh = 0;
 
+
+	}
+
+	public void RoadMap()
+	{
+
+		//todo Clean the roadMap
+
+		foreach(Line l in roadMap)
+		{
+			GameObject temp = GameObject.Find ("temp");
+			l.DrawVector(temp); 
+		}
 	}
 
 	void drawSphere( Vector3 v ){
