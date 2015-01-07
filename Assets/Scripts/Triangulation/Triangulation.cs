@@ -337,13 +337,8 @@ public class Triangulation : MonoBehaviour
 		foreach( Line l in mapBG.edges )
 			totalGeo.edges.Add(l);
 		lines.Clear ();
-		mapBG.DrawGeometry(temp);
 
 
-		foreach( Geometry g in finalPoly)
-		{
-			g.DrawGeometry(temp);
-		}
 
 
 
@@ -378,15 +373,19 @@ public class Triangulation : MonoBehaviour
 		toCheckNode.Add (start); 
 		Line LinetoAdd = start.voisinsLine [0];
 
+
+
 		//Straight Porting//
 		while (LinetoAdd != null) {
 			LinetoAdd = null; 
 			Geometry qToAdd = null; 
 			
 			//Check all 
-			foreach (Geometry q in toCheckNode) {
+			foreach (Geometry q in toCheckNode) 
+			{
 				
-				for (int i = 0; i<q.voisins.Count; i++) {
+				for (int i = 0; i<q.voisins.Count; i++) 
+				{
 					if (! q.voisins [i].visited) {
 						if (LinetoAdd != null) {
 							//get the shortest line
@@ -596,66 +595,15 @@ public class Triangulation : MonoBehaviour
 				
 			}
 		}
-		return; 
-		
-		foreach (Color c in coloursPoints) {
-			if (c == Color.red)
-				count [0]++;
-			else if (c == Color.blue)
-				count [1]++;
-			else
-				count [2]++; 
-			
-		}
-		
-		triangulation.points = points; 
-		triangulation.colours = coloursPoints; 
-		
-		//Get points with the least colour
-		Color cGuard = Color.cyan; 
-		int lowest = 100000000; 
-		
-		for (int i = 0; i<count.Length; i++) {
-			if (count [i] < lowest) {
-				if (i == 0)
-					cGuard = Color.red;
-				else if (i == 1)
-					cGuard = Color.blue;
-				else
-					cGuard = Color.green;
-				lowest = count [i];
-			}
-		}
-		
-		vlcnt = 0;
-		for( int i = 0; i < points.Count; i++ )
+
+
+		finalPoly.Insert(0,mapBG);
+		foreach( Geometry g in finalPoly)
 		{
-			if( colours[i] == cGuard ){
-				Vector3 v = points[i];
-				cameras.Add( points[i] );
-				//				GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-				//				inter.transform.renderer.material.color = coloursPoints[i];
-				//				inter.transform.position = v;
-				//				inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
-				//				inter.transform.parent = temp.transform;
-				//				vlcnt++;
-				//				inter.gameObject.name = vlcnt.ToString();
-			}
+			g.DrawGeometry(temp);
 		}
-		//		makeTour ( totalGeo );
-		List<Vector3> masterReflex = new List<Vector3> ();
-		foreach (Geometry g in finalPoly) {
-			List<Vector3> lv = new List<Vector3>();
-			lv = g.GetReflexVertex();
-			foreach( Vector3 v in lv )
-				masterReflex.Add( v );
-		}
-		List<Vector3> lv2 = new List<Vector3>();
-		lv2 = mapBG.GetReflexVertexComplement();
-		//lv2 = mapBG.GetVertex ();
-		foreach( Vector3 v in lv2 )
-			masterReflex.Add( v );
-		int hh = 0;
+
+
 
 
 	}
@@ -664,7 +612,49 @@ public class Triangulation : MonoBehaviour
 	{
 
 		//todo Clean the roadMap
+		//Get set of points
+		List<Vector3> pointsRoad = new List<Vector3>(); 		
 
+		foreach(Line l in roadMap)
+		{
+			pointsRoad.Add(l.vertex[0]);
+		}
+		pointsRoad.Add(roadMap[roadMap.Count - 1].vertex[1]);
+
+		//Cleaning
+		List<Line> newRoad = new List<Line>(); 
+
+		for(int i = 0; i<pointsRoad.Count; i++)
+		{
+
+
+			int j = i+1; //a-b-c //try a-c 
+			bool collisionFree = true; 
+
+			while(collisionFree && j+1<pointsRoad.Count)
+			{
+
+				j++; //get to the next point
+				Line tempLine = new Line(pointsRoad[i],pointsRoad[j]);
+
+				foreach(Geometry g in finalPoly)
+				{
+					if(g.LineCollision(tempLine))
+					{
+						collisionFree = false; 
+						break;
+					}
+				}
+			}
+
+			if(j<pointsRoad.Count && collisionFree)
+			{	
+				newRoad.Add(new Line(pointsRoad[i],pointsRoad[j]));
+			}
+		}
+
+		Debug.Log(pointsRoad.Count);
+		
 		foreach(Line l in roadMap)
 		{
 			GameObject temp = GameObject.Find ("temp");
