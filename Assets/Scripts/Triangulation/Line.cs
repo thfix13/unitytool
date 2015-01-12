@@ -9,8 +9,8 @@ using Vectrosity;
 //Used my implementation of line intersection function called: LineIntersectionMuntac (will change name later)
 //Another function called GetIntersectionPoint
 [Serializable]
-public class Line 
-{
+public class Line :IEquatable<Line>
+{ 
 	public float eps = 1e-5f;//the margin of accuracy for all floating point equivalence checks
 	public Vector3[] vertex = new Vector3[2];
 	public Color[] colours = new Color[2]; 
@@ -19,6 +19,8 @@ public class Line
 	public List<int> valueGrid = new List<int>();
 	public Color costColor = Color.black;
 	
+
+
 	public Line(Vector3 v1, Vector3 v2)
 	{
 		vertex[0] = v1; 
@@ -103,6 +105,32 @@ public class Line
 		line.Draw3D();
 	}
 	
+	public void DrawVector()
+	{
+		GameObject parent = GameObject.Find("temp");
+		Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
+		                           UnityEngine.Random.Range(0.0f,1.0f),
+		                           UnityEngine.Random.Range(0.0f,1.0f)) ;
+		
+		// Color c = Color.blue;
+		VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
+		line.vectorObject.transform.parent = parent.transform;
+		line.vectorObject.name = name;
+		line.Draw3D();
+	}
+
+
+	public void DrawVector(Color c)
+	{
+		GameObject parent = GameObject.Find("temp");
+		
+		// Color c = Color.blue;
+		VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
+		line.vectorObject.transform.parent = parent.transform;
+		line.vectorObject.name = name;
+		line.Draw3D();
+	}
+
 	public void DrawVector(GameObject parent,Color c)
 	{
 		VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
@@ -360,6 +388,7 @@ class LineEqualityComparer : IEqualityComparer<Line>
 	
 	public int GetHashCode(Line bx)
 	{
+		
 		int hCode = (int)(bx.MidPoint().sqrMagnitude);
 		return hCode.GetHashCode();
 	}	

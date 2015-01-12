@@ -27,7 +27,7 @@ public class Triangulation : MonoBehaviour
 	
 	
 	//Contains roadmap traversing triangles
-	public List<Line> roadMap = new List<Line> ();
+	public RoadMap roadMap = new RoadMap();
 
 	public void Start(){
 		
@@ -35,6 +35,17 @@ public class Triangulation : MonoBehaviour
 	
 	public void Clear()
 	{
+		triangles.Clear(); 
+		lines.Clear(); 
+		obsGeos.Clear(); 
+		finalPoly.Clear(); 
+		roadMap.Clear(); 
+
+		mapBG=null; 
+		tour = null; 
+
+		GameObject temp = GameObject.Find("temp");
+		DestroyImmediate(temp);
 
 	}
 	void OnDrawGizmosSelected( ) 
@@ -72,6 +83,9 @@ public class Triangulation : MonoBehaviour
 	
 	public void SetObstacles()
 	{
+		//First we want to clear
+		this.Clear(); 
+
 		//Compute one step of the discritzation
 		//Find this is the view
 		GameObject floor = (GameObject)GameObject.Find ("Floor");
@@ -208,6 +222,11 @@ public class Triangulation : MonoBehaviour
 
 
 	public void TriangulationSpace (){
+
+		//We want to clear first 
+		this.Clear(); 
+
+
 		//Compute one step of the discritzation
 		//Find this is the view
 		GameObject floor = (GameObject)GameObject.Find ("Floor");
@@ -552,14 +571,19 @@ public class Triangulation : MonoBehaviour
 			{
 				for(int i = 0; i<ll.Length; i++)
 				{
-					roadMap.Add(new Line(ll[i].MidPoint(), tt.GetCenterTriangle()));
+					Line lineTemp = new Line(ll[i].MidPoint(), tt.GetCenterTriangle());
+					if(!roadMap.Contains(lineTemp))
+						roadMap.Add(lineTemp);
 				}				
 			}
 			else
 			{
 				for(int i = 0; i<ll.Length; i++)
 				{
-					roadMap.Add(new Line(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint()));
+
+					Line lineTemp = new Line(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint());
+					if(!roadMap.Contains(lineTemp))
+						roadMap.Add(lineTemp);
 				}
 			}
 		}
@@ -610,56 +634,18 @@ public class Triangulation : MonoBehaviour
 
 	public void RoadMap()
 	{
+		//Triangulate first
+		if(roadMap.Count() == 0)
+			this.TriangulationSpace(); 
 
-		//todo Clean the roadMap
-		//Get set of points
-		List<Vector3> pointsRoad = new List<Vector3>(); 		
+		GameObject temp = GameObject.Find ("temp");
 
-		foreach(Line l in roadMap)
-		{
-			pointsRoad.Add(l.vertex[0]);
-		}
-		pointsRoad.Add(roadMap[roadMap.Count - 1].vertex[1]);
+		roadMap.SetVoisins(); 
 
-		//Cleaning
-		List<Line> newRoad = new List<Line>(); 
-
-		for(int i = 0; i<pointsRoad.Count; i++)
-		{
-
-
-			int j = i+1; //a-b-c //try a-c 
-			bool collisionFree = true; 
-
-			while(collisionFree && j+1<pointsRoad.Count)
-			{
-
-				j++; //get to the next point
-				Line tempLine = new Line(pointsRoad[i],pointsRoad[j]);
-
-				foreach(Geometry g in finalPoly)
-				{
-					if(g.LineCollision(tempLine))
-					{
-						collisionFree = false; 
-						break;
-					}
-				}
-			}
-
-			if(j<pointsRoad.Count && collisionFree)
-			{	
-				newRoad.Add(new Line(pointsRoad[i],pointsRoad[j]));
-			}
-		}
-
-		Debug.Log(pointsRoad.Count);
+		roadMap.CleanRoadMap(); 
 		
-		foreach(Line l in roadMap)
-		{
-			GameObject temp = GameObject.Find ("temp");
-			l.DrawVector(temp); 
-		}
+
+			
 	}
 
 	void drawSphere( Vector3 v ){

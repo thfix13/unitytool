@@ -348,11 +348,12 @@ namespace EditorArea {
 				Triangulation triangulation = GameObject.Find("Triangulation").GetComponent<Triangulation>();
 				
 				//Get the triangulation
-				if(triangulation.roadMap.Count == 0)
+				if(triangulation.roadMap.Count() == 0)
 				{
 					triangulation.TriangulationSpace();   
 				}
-				roadMap = triangulation.roadMap;
+
+				roadMap = triangulation.roadMap.getList();
 
 
 				//Check if the map is precomputed
