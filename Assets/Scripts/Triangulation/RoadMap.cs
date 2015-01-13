@@ -86,12 +86,11 @@ public class RoadMap
 
 
 
-		
+		List<Line> linesPlayedWith = new List<Line>(); 
 
 		foreach(Line l in candidates)
 		{
-			l.DrawVector(Color.red); 
-
+			// l.DrawVector(Color.red); 
 			int i = segments.IndexOf(l);
 
 			List<Line>lineToClean = new List<Line>(); 
@@ -107,7 +106,12 @@ public class RoadMap
 
 			foreach(Line tobe in voisins[i])
 			{
-				if (!candidates.Contains(tobe) && visited[segments.IndexOf(tobe)] != 1)
+				if ( 
+					( !candidates.Contains(tobe) 
+					  || voisins[segments.IndexOf(tobe)].Count==1
+					) 
+					&& visited[segments.IndexOf(tobe)] != 1)
+					
 					toBeNext = tobe;
 			}
 
@@ -119,6 +123,9 @@ public class RoadMap
 			List<Line>oldNext = null; 
 			int count = 0; 
 
+			// l.DrawVector(Color.red);
+			// continue; 
+
 			do
 			{
 
@@ -128,46 +135,123 @@ public class RoadMap
 				//if we have one voisin then we add and are done 
 				
 				//Add to my list
-				lineToClean.Add( segments[voisins.IndexOf(next)] );
-				visited[voisins.IndexOf(next)] = 1; 
-				
-				if(next.Count == 0 )
-					continue; 
-
+				if(!lineToClean.Contains(segments[voisins.IndexOf(next)] ))
+				{
+					lineToClean.Add( segments[voisins.IndexOf(next)] );
+					visited[voisins.IndexOf(next)] = 1; 
+				}				
+				if(next.Count==3)
+					break; 
+				else if(next.Count == 1)
+				{
+					
+					if(!lineToClean.Contains(next[0] ))
+					{
+						lineToClean.Add( next[0]);
+						visited[segments.IndexOf(next[0])] = 1; 	
+					}
+				}
 
 				// find where to go from the two places
-				if (lineToClean.Contains(next[0]))
+				else if (lineToClean.Contains(next[0]))
 				{
-					lineToClean.Add(next[1]);
-					visited[segments.IndexOf(next[1])] = 1; 
 
 					next = voisins[segments.IndexOf(next[1])];						
 				}  
 				else
 				{
-					lineToClean.Add(next[0]);
-					visited[segments.IndexOf(next[0])] = 1; 
 
 					next = voisins[segments.IndexOf(next[0])];
 
 				}
-						
-				count++; 
 				
 			}
-			while(oldNext != next && next.Count == 2 );	
+			while(oldNext != next);	
 
 			Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
 	                    UnityEngine.Random.Range(0.0f,1.0f),
         	            UnityEngine.Random.Range(0.0f,1.0f)) ;
 
+			
 			foreach(Line l1 in lineToClean)
 			{
+				linesPlayedWith.Add(l1);
 				l1.DrawVector(c);
 			}
 
-		}
+			//Clean the road now. 
+			//Need to keep first point and last point
+			List<Vector3> points = new List<Vector3>(); 
+				
+			Vector3 toAdd = lineToClean[0].getNotSharedVertex(lineToClean[1]); 
+			points.Add(toAdd);
+			
+			int k = 0; 
+
+			for(int j = 0; j<lineToClean.Count; j+=1)
+			{	
+				if(!containListVertex( points,lineToClean[j].getOtherVertex(points[k])))
+				{
+					points.Add(lineToClean[j].getOtherVertex(points[k]));
+					k++;
+				}
+			}
+			//points.Add(lineToClean[lineToClean.Count-1].getOtherVertex(points[points.Count-1]));
+
+			int w = 0; 
+			foreach(Vector3 v in points)
+			{
+				DrawSphere(v,w+"");
+				w++;
+			}
+			return;
+		}	
 		
+	}
+
+	bool containListVertex(List<Vector3> vs, Vector3 v)
+	{
+		foreach(Vector3 v1 in vs)
+		{
+			if(Line.VectorApprox(v1,v))
+				return true; 
+		}
+		return false;
+	}
+
+	void DrawSphere( Vector3 v, Color x )
+	{
+		GameObject temp = GameObject.Find ("temp");
+		GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+		inter.name = "balle";
+		inter.transform.renderer.material.color = x;
+		inter.transform.position = v;
+		inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f);
+		inter.transform.parent = temp.transform;
+		//inter.gameObject.name = vlcnt.ToString();
+	}
+	void DrawSphere( Vector3 v )
+	{
+
+		GameObject temp = GameObject.Find ("temp");
+		GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+		inter.name = "Balle";
+		inter.transform.position = v;
+		inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
+		inter.transform.parent = temp.transform;
+		//inter.gameObject.name = vlcnt.ToString();
+	}
+
+	void DrawSphere( Vector3 v,string s )
+	{
+
+		GameObject temp = GameObject.Find ("temp");
+		GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+		inter.name = "Balle " + s;
+		inter.transform.position = v;
+		inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
+		inter.transform.parent = temp.transform;
+		//inter.gameObject.name = vlcnt.ToString();
 	}
 
 }

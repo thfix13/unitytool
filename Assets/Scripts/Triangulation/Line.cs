@@ -11,7 +11,7 @@ using Vectrosity;
 [Serializable]
 public class Line :IEquatable<Line>
 { 
-	public float eps = 1e-5f;//the margin of accuracy for all floating point equivalence checks
+	public static float eps = 1e-5f;//the margin of accuracy for all floating point equivalence checks
 	public Vector3[] vertex = new Vector3[2];
 	public Color[] colours = new Color[2]; 
 	public string name = "Vector Line";
@@ -152,6 +152,28 @@ public class Line :IEquatable<Line>
 		return false; 
 	}
 	
+	public bool ContainsVertex(Vector3 v)
+	{
+		if(VectorApprox(v,vertex[0])||VectorApprox(v,vertex[1]))
+			return true; 
+		else 
+			return false; 
+	}
+
+	public Vector3 getNotSharedVertex(Line l)
+	{
+		if(l.ContainsVertex(vertex[0]))
+			return vertex[1];
+		else
+			return vertex[0];
+	}
+	public Vector3 getOtherVertex(Vector3 v)
+	{
+		if (VectorApprox(v,vertex[0]))
+			return vertex[1];
+		else
+			return vertex[0];
+	}
 	public Vector3 getSharedVertex(Line l)
 	{
 		foreach(Vector3 v in vertex)
@@ -339,7 +361,7 @@ public class Line :IEquatable<Line>
 		}
 		return false;
 	}
-	public bool VectorApprox ( Vector3 a, Vector3 b ){
+	public static bool VectorApprox ( Vector3 a, Vector3 b ){
 		if( Math.Abs (a.x - b.x) < eps && Math.Abs (a.z - b.z) < eps )
 			return true;
 		else
