@@ -9,14 +9,18 @@ public class Triangulation : MonoBehaviour
 {
 	public float eps = 1e-5f;//the margin of accuracy for all floating point equivalence checks
 	//Data holder to display and save
+	[HideInInspector]
 	public List<Vector3> points = new List<Vector3>();
+	[HideInInspector]
 	public List<Color> colours = new List<Color>();
+	[HideInInspector]
 	public List<Vector3> cameras = new List<Vector3>();
 	// Use this for initialization
 	
 	public List<Triangle> triangles = new List<Triangle>();
+	[HideInInspector]
 	public List<Line> lines = new List<Line>(); 
-	
+	[HideInInspector]
 	public List<Line> linesMinSpanTree = new List<Line>(); 
 	public List<Geometry> obsGeos = new List<Geometry> (); 
 	public List<Geometry> finalPoly = new List<Geometry> ();
@@ -24,10 +28,13 @@ public class Triangulation : MonoBehaviour
 	//Contains Map
 	public Geometry mapBG = new Geometry ();
 	public Geometry tour = new Geometry ();
+	[HideInInspector]
+	public List<Vector3> pointsGeo = new List<Vector3>(); 	
 	
-	
+
 	//Contains roadmap traversing triangles
 	public RoadMap roadMap = new RoadMap();
+	public List<Line> roadMapSegments = new List<Line>(); 	
 
 	public void Start(){
 		
@@ -39,7 +46,11 @@ public class Triangulation : MonoBehaviour
 		lines.Clear(); 
 		obsGeos.Clear(); 
 		finalPoly.Clear(); 
-		roadMap.Clear(); 
+		
+		if(roadMap != null)
+			roadMap.Clear(); 
+
+		roadMapSegments.Clear(); 
 
 		mapBG=null; 
 		tour = null; 
@@ -559,7 +570,6 @@ public class Triangulation : MonoBehaviour
 
 		
 
-
 		////////ROADMAP//////////
 		foreach(Triangle tt in triangles)
 		{
@@ -587,6 +597,8 @@ public class Triangulation : MonoBehaviour
 				}
 			}
 		}
+		roadMapSegments = roadMap.segments; 
+
 
 		////////COLORING//////////
 		/// ported code/////
@@ -620,31 +632,51 @@ public class Triangulation : MonoBehaviour
 			}
 		}
 
+		//Save the list of points of the geometries
 
 		finalPoly.Insert(0,mapBG);
+
 		foreach( Geometry g in finalPoly)
 		{
+			pointsGeo.AddRange(g.GetVertex());			
 			g.DrawGeometry(temp);
 		}
 
+		lines.Clear(); 
+
+		foreach(Vector3 v in pointsGeo)
+		{
+			drawSphere(v);
+		}
+		
 
 
+	}
 
+	public void FindCusps()
+	{
+		if(roadMapSegments.Count>0)
+			roadMap.segments = roadMapSegments;
+
+		roadMap.FindCusps(finalPoly,pointsGeo);
 	}
 
 	public void RoadMap()
 	{
 		//Triangulate first
-		if(roadMap.Count() == 0)
+		if(roadMapSegments.Count>0)
+			roadMap.segments = roadMapSegments;
+
+		if(roadMapSegments == null || roadMap.Count() == 0)
 			this.TriangulationSpace(); 
 
 		GameObject temp = GameObject.Find ("temp");
 
 		roadMap.SetVoisins(); 
 
-		roadMap.CleanRoadMap(); 
+		roadMap.CleanRoadMap(finalPoly); 
 		
-
+		roadMapSegments = roadMap.segments; 
 			
 	}
 
@@ -652,7 +684,7 @@ public class Triangulation : MonoBehaviour
 
 		GameObject temp = GameObject.Find ("temp");
 		GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-		inter.transform.renderer.material.color = Color.gray;
+		// inter.transform.renderer.material.color = Color.gray;
 		inter.transform.position = v;
 		inter.transform.localScale = new Vector3(0.1f,0.1f,0.1f); 
 		inter.transform.parent = temp.transform;

@@ -75,6 +75,7 @@ public class Line :IEquatable<Line>
 
 	public void SetColour(float inter)
 	{
+		
 	}
 	
 	
@@ -372,6 +373,45 @@ public class Line :IEquatable<Line>
 		return Math.Abs (a - b) < eps;
 	}
 	
+
+	public List<Vector3> BreakConstantRate(float rate)
+	{
+		Vector3 dir = vertex[1] - vertex[0];
+		
+		
+
+		float maxDistance = dir.magnitude; 
+
+		dir.Normalize();
+		dir *= rate;
+
+		//Now lets move on the line dir + v0 until greater than 
+		//v1. 
+		List<Vector3> toReturn = new List<Vector3>(); 
+		toReturn.Add(vertex[0]);
+
+
+
+
+		float distDone = 0; 
+		do
+		{
+			distDone+=dir.magnitude;
+			if(distDone<maxDistance)				
+				toReturn.Add(toReturn[toReturn.Count-1]+dir);
+		}
+		while(distDone<maxDistance);
+
+
+		// foreach(Vector3 v in toReturn)
+		// {
+		// 	DrawSphere(v,"");
+		// }
+
+
+		return toReturn; 
+	}
+
 	public bool floatCompare ( float a, float b, string condition ){
 		switch (condition) {
 		case(">="):
@@ -395,6 +435,24 @@ public class Line :IEquatable<Line>
 		Vector3 m2 = this.MidPoint(); 
 
 		return VectorApprox(m1,m2);
+	}
+	public int GetHashCode(Line bx)
+	{
+		
+		int hCode = (int)(bx.MidPoint().sqrMagnitude);
+		return hCode.GetHashCode();
+	}
+	void DrawSphere( Vector3 v,string s )
+	{
+
+		GameObject temp = GameObject.Find ("temp");
+		GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+		inter.name = "Balle " + s;
+		inter.tag = "sphere";	
+		inter.transform.position = v;
+		inter.transform.localScale = new Vector3(0.1f,0.1f,0.1f); 
+		inter.transform.parent = temp.transform;
+		//inter.gameObject.name = vlcnt.ToString();
 	}
 }
 

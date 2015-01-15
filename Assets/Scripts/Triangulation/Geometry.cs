@@ -30,7 +30,9 @@ public class Geometry
 	public bool LineCollision(Line Lparam){//Called by getClosestLine
 		// if( this.PointInside( Lparam.MidPoint() ) )
 		// 	return true;
-		foreach(Line l1 in edges){
+
+		foreach(Line l1 in edges)
+		{
 			if( Lparam.LineIntersectMuntac(l1) == 1 )
 				return true;
 		}

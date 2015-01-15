@@ -1,7 +1,11 @@
 using System.Collections.Generic;
+using System.Collections; 
 using UnityEngine; 
 using Vectrosity;
+using System.Linq;
+using System; 
 
+[Serializable]
 public class RoadMap
 {
 	public List<Line> segments = new List<Line>();
@@ -67,7 +71,7 @@ public class RoadMap
 
 
 	}
-	public void CleanRoadMap()
+	public void CleanRoadMap(List<Geometry> geos)
 	{
 		//Find long segments with only 2 neigbhoors.
 		//Start place with 1 voisins. 
@@ -83,10 +87,8 @@ public class RoadMap
 				candidates.Add(segments[i]);
 			}			
 		}	
-
-
-
 		List<Line> linesPlayedWith = new List<Line>(); 
+		List<Line> newSegments = new List<Line>(); 
 
 		foreach(Line l in candidates)
 		{
@@ -176,7 +178,7 @@ public class RoadMap
 			foreach(Line l1 in lineToClean)
 			{
 				linesPlayedWith.Add(l1);
-				l1.DrawVector(c);
+				//l1.DrawVector(c);
 			}
 
 			//Clean the road now. 
@@ -198,15 +200,132 @@ public class RoadMap
 			}
 			//points.Add(lineToClean[lineToClean.Count-1].getOtherVertex(points[points.Count-1]));
 
-			int w = 0; 
-			foreach(Vector3 v in points)
+			//Now with the list of point time to clear it. 
+
+			//The first one is the exterior one of the geos. 
+				
+
+
+			List<Vector3> toKeep = new List<Vector3>(); 
+			toKeep.Add(points[0]);
+			for(int j = 0; j<points.Count;j++)
 			{
-				DrawSphere(v,w+"");
-				w++;
+				Vector3 v1 = points[j];
+
+				int p2 = j; 
+				do
+				{
+					
+					p2++; 
+				}
+				while(p2 < points.Count && CollisionFree(geos, v1,points[p2]));
+
+				//if(points.Count==p2)
+				p2--;
+
+				toKeep.Add(points[p2]);
+				j=p2; 
 			}
-			return;
+
+
+			for(int j = 0; j<toKeep.Count-1; j++)
+			{
+				newSegments.Add(new Line(toKeep[j],toKeep[j+1]));
+			}
+			
 		}	
 		
+
+		List<Line> differenceQuery = new List<Line>(); 
+
+		foreach(Line l1 in segments)
+		{
+			bool found = false; 
+			foreach(Line l2 in linesPlayedWith)
+			{
+				if (l1.Equals(l2))
+				{
+					found = true; 
+					break; 
+				}
+			}
+			if(!found)
+				newSegments.Add(l1);
+		}
+
+		// Debug.Log(differenceQuery);
+
+		foreach(Line l1 in newSegments)
+		{
+			l1.DrawVector(); 
+		}
+		segments = newSegments; 	
+	}
+
+
+	public void FindCusps(List<Geometry> geos,List<Vector3> obsListPoint)
+	{
+		Debug.Log(segments.Count);
+
+		GameObject[] spheres = GameObject.FindGameObjectsWithTag("sphere");
+
+		foreach(GameObject g in spheres)
+		{
+			GameObject.DestroyImmediate(g);
+
+		}
+
+		foreach(Line l in segments)
+		{
+			//Get the line to be broken appart.
+			List<Vector3> points = l.BreakConstantRate(1f);
+			
+			//Find the points that be seen
+
+			foreach(Vector3 v1 in points)
+			{
+				List<Vector3> canSee = new List<Vector3>(); 
+
+				foreach(Vector3 v2 in obsListPoint)
+				{
+					if(CollisionFree(geos,v1,v2))
+					{
+						canSee.Add(v2);
+					}
+				}
+				//Create sphere at v1
+
+				GameObject tBalle = DrawSphere(v1);
+				CubeVision cVision = tBalle.AddComponent("CubeVision") as CubeVision;
+
+				cVision.pointsCanSee = canSee; 
+//				return;
+			}
+
+		}
+
+	}
+
+	bool CollisionFree(List<Geometry> geos,Vector3 v1, Vector3 v2)
+	{
+		Line l = new Line(v1,v2);
+
+		for(int i = 0; i<geos.Count; i++)
+		{
+			if(geos[i].LineCollision(l))
+				return false; 
+		}
+		return true; 
+	}
+
+	bool CollisionFree(List<Geometry> geos,Line l)
+	{
+		for(int i = 0; i<geos.Count; i++)
+		{
+			if(geos[i].LineCollision(l))
+				return false; 
+		}
+		return true; 
 	}
 
 	bool containListVertex(List<Vector3> vs, Vector3 v)
@@ -230,7 +349,7 @@ public class RoadMap
 		inter.transform.parent = temp.transform;
 		//inter.gameObject.name = vlcnt.ToString();
 	}
-	void DrawSphere( Vector3 v )
+	GameObject DrawSphere( Vector3 v )
 	{
 
 		GameObject temp = GameObject.Find ("temp");
@@ -240,6 +359,7 @@ public class RoadMap
 		inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f); 
 		inter.transform.parent = temp.transform;
 		//inter.gameObject.name = vlcnt.ToString();
+		return inter;
 	}
 
 	void DrawSphere( Vector3 v,string s )

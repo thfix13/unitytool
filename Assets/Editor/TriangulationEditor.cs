@@ -30,6 +30,19 @@ public class TriangulationEditor : Editor {
 				tObject.RoadMap(); 
 			}
 		}
+
+		if(GUILayout.Button("Cusps"))
+		{
+			//Start the triangulation
+			GameObject g = GameObject.Find("Triangulation"); 
+
+			if(g != null)
+			{
+				Triangulation tObject = g.GetComponent<Triangulation>(); 
+				tObject.FindCusps(); 
+			}
+		}
+
 		else if(GUILayout.Button("Clear"))
 		{
 			//Start the triangulation
