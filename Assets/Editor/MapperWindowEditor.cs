@@ -1227,8 +1227,10 @@ namespace EditorArea {
 						pos.z += floor.collider.bounds.min.z;
 						pos.y = 0f;
 
+						
 						each.Value.transform.position = pos;
-						textDraw.Add(Tuple.New<Vector3, string>(new Vector3(pos.x, pos.y + 1f, pos.z), "H:" + p.playerhp));
+						if(simulateCombat)
+							textDraw.Add(Tuple.New<Vector3, string>(new Vector3(pos.x, pos.y + 1f, pos.z), "H:" + p.playerhp));
 					}
 				}
 			}
