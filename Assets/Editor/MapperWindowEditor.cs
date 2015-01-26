@@ -716,7 +716,8 @@ namespace EditorArea {
 				long l = DateTime.Now.Ticks - previous.Ticks;
 				playTime += l;
 				accL += l;
-				if (playTime > stepInTicks) {
+				if (playTime > stepInTicks) 
+				{
 					playTime -= stepInTicks;
 					timeSlice++;
 					if (timeSlice >= timeSamples) {
@@ -1180,7 +1181,7 @@ namespace EditorArea {
 						pos.y = 0f;
 
 						each.Value.transform.position = pos;
-						textDraw.Add(Tuple.New<Vector3, string>(new Vector3(pos.x, pos.y + 1f, pos.z), "H:" + p.playerhp));
+						//textDraw.Add(Tuple.New<Vector3, string>(new Vector3(pos.x, pos.y + 1f, pos.z), "H:" + p.playerhp));
 					}
 				}
 			}

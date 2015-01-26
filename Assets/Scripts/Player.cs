@@ -46,7 +46,9 @@ namespace Objects {
 		
 		private short state = 0;
 		
-		void OnGUI () {
+		void OnGUI () 
+		{
+			
 			GUIStyle s = new GUIStyle ();
 			s.fontSize = 144;
 			if (state == 1)
