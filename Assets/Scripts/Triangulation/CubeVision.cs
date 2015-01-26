@@ -9,6 +9,8 @@ public class CubeVision : MonoBehaviour {
 
 	public List<Vector3> pointsCanSee = new List<Vector3>(); 
 	public bool selected = false; 
+	public List<GameObject> friends = new List<GameObject>(); 
+
 	// Use this for initialization
 	void Start () 
 	{
@@ -23,6 +25,12 @@ public class CubeVision : MonoBehaviour {
 			foreach(Vector3 v in pointsCanSee)
 			{
 				Debug.DrawLine(gameObject.transform.position,v,Color.blue);
+			}
+			//Friends links
+			foreach(GameObject g in friends)
+			{
+				Vector3 v = g.transform.position; 
+				Debug.DrawLine(gameObject.transform.position,v,Color.red);
 			}
 		}
 		else

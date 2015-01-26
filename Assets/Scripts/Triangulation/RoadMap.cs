@@ -269,16 +269,22 @@ public class RoadMap
 
 		GameObject[] spheres = GameObject.FindGameObjectsWithTag("sphere");
 
+		float breakRate = 0.5f; 
+
+
 		foreach(GameObject g in spheres)
 		{
 			GameObject.DestroyImmediate(g);
 
 		}
 
+		List<GameObject> allPoints = new List<GameObject>(); 	
+
+
 		foreach(Line l in segments)
 		{
 			//Get the line to be broken appart.
-			List<Vector3> points = l.BreakConstantRate(1f);
+			List<Vector3> points = l.BreakConstantRate(breakRate);
 			
 			//Find the points that be seen
 
@@ -299,11 +305,72 @@ public class RoadMap
 				CubeVision cVision = tBalle.AddComponent("CubeVision") as CubeVision;
 
 				cVision.pointsCanSee = canSee; 
-//				return;
+				allPoints.Add(tBalle);
+			}
+		}
+
+		for(int i = 0; i<allPoints.Count; i++)
+		{
+			for(int j = 0; j<allPoints.Count; j++)
+			{
+				if (i == j)
+					continue; 
+				Vector3 v1 = allPoints[i].transform.position; 
+				Vector3 v2 = allPoints[j].transform.position; 
+
+				CubeVision c1 = allPoints[i].GetComponent<CubeVision>(); 
+				CubeVision c2 = allPoints[j].GetComponent<CubeVision>(); 
+
+				//Check the distance. 
+
+				if (Vector3.Distance(v1,v2)<breakRate+1f)
+				{
+					if(!ContainsFriend(c1.friends,c2.gameObject))
+					{
+						c1.friends.Add(c2.gameObject);
+						c2.friends.Add(c1.gameObject);
+
+					}
+				}
+
+			}
+		}
+
+		//Now friends and everyone has been set up. 
+		//Find the places that different than there friends. 
+
+		foreach(GameObject g in allPoints)
+		{
+			CubeVision c = g.GetComponent<CubeVision>(); 
+			//assume it is a cusp
+			bool isCusp = true;
+			foreach(GameObject gFriend in c.friends)
+			{
+				CubeVision cFriend = gFriend.GetComponent<CubeVision>();
+				if (c.pointsCanSee.Count <= cFriend.pointsCanSee.Count)
+				{
+					isCusp =false; 
+					break; 
+				} 
+			}
+			if (isCusp)
+			{
+				c.gameObject.transform.renderer.material.color = Color.red;
 			}
 
 		}
 
+
+	}
+
+	bool ContainsFriend( List<GameObject> friends,GameObject g)
+	{
+		foreach(GameObject gFriend in friends)
+		{
+			if (gFriend == g)
+				return true;  
+		}
+		return false; 
 	}
 
 	bool CollisionFree(List<Geometry> geos,Vector3 v1, Vector3 v2)
