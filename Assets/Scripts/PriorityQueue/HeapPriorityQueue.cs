@@ -71,8 +71,19 @@ namespace Priority_Queue
         #endif
         public bool Contains(T node)
         {
-            return (_nodes[node.QueueIndex] == node);
+            return (_nodes[node.QueueIndex].Equals( node));
         }
+
+		/// <summary>
+		/// Returns (in O(1)!) the priority of the given node if it is in the queue.  O(1)
+		/// </summary>
+		#if NET_VERSION_4_5
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		#endif
+		public double GetPriority(T node)
+		{
+			return (_nodes[node.QueueIndex].Priority);
+		}
 
         /// <summary>
         /// Enqueue a node - .Priority must be set beforehand!  O(log n)
@@ -84,7 +95,11 @@ namespace Priority_Queue
         {
             node.Priority = priority;
             _numNodes++;
+
             _nodes[_numNodes] = node;
+			
+
+			
             node.QueueIndex = _numNodes;
             node.InsertionIndex = _numNodesEverEnqueued++;
             CascadeUp(_nodes[_numNodes]);
