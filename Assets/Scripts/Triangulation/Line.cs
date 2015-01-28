@@ -26,7 +26,15 @@ public class Line
 
 	public  bool Equals(Line l)
 	{
-		return this.MidPoint().Equals(l.MidPoint());
+		//if(this.MidPoint().Equals(l.MidPoint()))
+		if(comparePoints(this.MidPoint(),l.MidPoint()))
+		{
+			if((comparePoints(vertex[0],l.vertex[1]) && comparePoints(vertex[1],l.vertex[0])) || (comparePoints(vertex[0],l.vertex[0]) && comparePoints(vertex[1],l.vertex[1])))
+			{
+				return true;
+			}
+		}
+		return false;
 		//return vertex[0].Equals(l.vertex[0]) && vertex[1].Equals(l.vertex[1]); 
 		
 	}
@@ -56,10 +64,8 @@ public class Line
 
 	public void DrawLine()
 	{
-		Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
-		                           UnityEngine.Random.Range(0.0f,1.0f),
-		                           UnityEngine.Random.Range(0.0f,1.0f)) ;
-
+		//Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),UnityEngine.Random.Range(0.0f,1.0f),UnityEngine.Random.Range(0.0f,1.0f)) ;
+		Color c = Color.red;
 		Debug.DrawLine(this.vertex[0],this.vertex[1],c); 
 	}
 	public void DrawVector(GameObject parent)
@@ -124,6 +130,10 @@ public class Line
 		//	return true; 
 		
 		
+	}
+	public float LengthOfLine()
+	{
+		return Vector3.Distance (vertex [0], vertex [1]);
 	}
 	public float Magnitude()
 	{
@@ -203,7 +213,7 @@ public class Line
 
 		//return Vector3.zero; 
 	}
-	private bool CounterClockWise(Vector3 v1,Vector3 v2,Vector3 v3)
+	public bool CounterClockWise(Vector3 v1,Vector3 v2,Vector3 v3)
 	{
 		//v1 = a,b
 		//v2 = c,d
@@ -279,7 +289,8 @@ public class Line
 	}
 	private bool comparePoints(Vector3 v1,Vector3 v2)
 	{
-		float limit = 0.0001f;
+		//old //float limit = 0.0001f;
+		float limit = 0.01f;
 		float minVal = Vector3.SqrMagnitude (v1 - v2);
 		if (minVal <= limit)
 			return true;
@@ -291,6 +302,22 @@ public class Line
 		   || comparePoints(vertex[1],param.vertex[0]) || comparePoints(vertex[1],param.vertex[1]))
 			return true;
 		return false;
+	}
+	public Vector3? getCommonEndPoint(Line param)
+	{
+		if(CommonEndPoint(param))
+		{
+			if( comparePoints(vertex[0],param.vertex[0]) || comparePoints(vertex[0],param.vertex[1]))
+			{
+				return vertex[0];
+			}
+			else if(comparePoints(vertex[1],param.vertex[0]) || comparePoints(vertex[1],param.vertex[1]))
+			{
+				return vertex[1];
+			}   
+			   
+		}
+		return null;
 	}
 	public int LineIntersectMuntacEndPt (Line param){
 		Vector3 a = this.vertex [0];

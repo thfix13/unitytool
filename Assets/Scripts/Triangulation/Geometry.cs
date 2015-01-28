@@ -21,8 +21,8 @@ public class Geometry
                            UnityEngine.Random.Range(0.0f,1.0f)) ;
 
 		foreach (Line l in edges) {
-			//l.DrawVector (parent, c);
-			l.DrawLine(c);
+			l.DrawVector (parent, c);
+			//l.DrawLine(c);
 		}
 		//DrawVertex (parent);
 	}
@@ -79,19 +79,40 @@ public class Geometry
 	//TODO: Fix for lines colinear
 	public bool PointInside( Vector3 pt )
 	{
-		Line lray = new Line(pt, new Vector3(-100,1,-100)); 
-		int count = 0; 
-		foreach(Line myLine in edges){
-			if( myLine.LineIntersectMuntacEndPt(lray) > 0 ){
-				count++;
-				//Check if the intersection point is on the polygon edge
-				//Note: other checks tried but precision error kept coming up in cases
-				Vector3 vtemp = myLine.GetIntersectionPoint(lray);
-				if( Math.Abs( vtemp.x - pt.x ) < 0.01 && Math.Abs(vtemp.z - pt.z) < 0.01 )
-					return false;
+		//Line lray = new Line(pt, new Vector3(-100,1,-100)); 
+		int count = 0;
+		List<Line> lRayList = new List<Line> ();
+		int extreme = 100;
+		lRayList.Add (new Line (pt, new Vector3 (-extreme, 1,-extreme)));
+		lRayList.Add (new Line (pt, new Vector3 (extreme, 1, -extreme)));
+		lRayList.Add (new Line (pt, new Vector3 (extreme, 1, extreme)));
+		lRayList.Add (new Line (pt, new Vector3 (-extreme, 1, extreme)));
+		int count1 = 0;
+		foreach(Line lray in lRayList)
+		{
+			count=0;
+			foreach(Line myLine in edges)
+			{
+				if( myLine.LineIntersectMuntacEndPt(lray) > 0 )
+				{
+					count++;
+					//Check if the intersection point is on the polygon edge
+					//Note: other checks tried but precision error kept coming up in cases
+					Vector3 vtemp = myLine.GetIntersectionPoint(lray);
+					if( Math.Abs( vtemp.x - pt.x ) < 0.01 && Math.Abs(vtemp.z - pt.z) < 0.01 )
+						return false;
+				}
+			}
+			if(count%2 != 1)
+			{
+				count1++;
+				//return false;
 			}
 		}
-		return count%2 == 1; 
+		if (count1 >= lRayList.Count/2)
+			return false;
+		//return count%2 == 1; 
+		return true;
 	}
 
 	public List<Vector3> GetVertex()
