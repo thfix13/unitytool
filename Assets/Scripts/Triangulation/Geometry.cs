@@ -27,11 +27,23 @@ public class Geometry
 		}
 	}
 
+	//Checks collision with geometry unless the collision point is an vertex of the line or the geometry
 	public bool LineCollision(Line Lparam){//Called by getClosestLine
 		if( this.PointInside( Lparam.MidPoint() ) )
 		   return true;
 		foreach(Line l1 in edges){
 			if( Lparam.LineIntersectMuntac(l1) == 1 )
+				return true;
+		}
+		return false; 
+	}
+
+	//Checks collision with geometry unless the collision point is a shared vertex of line and the geometry
+	public bool LineCollisionEndPoint(Line Lparam){//Called from outside
+		if( this.PointInside( Lparam.MidPoint() ) )
+			return true;
+		foreach(Line l1 in edges){
+			if( Lparam.LineIntersectMuntacEndPt(l1) == 1 )
 				return true;
 		}
 		return false; 
@@ -221,10 +233,6 @@ public class Geometry
 	}
 
 	float getAngle( Vector3 v1, Vector3 v2 ){//Called by getReflexVertex
-//		float adj = v1.x - v2.x;
-//		float hyp = (adj*adj) + ( (v1.z - v2.z) * (v1.z - v2.z) );
-//		hyp = (float)Math.Sqrt( hyp );
-		//return adj / hyp;		
 		float delx = v1.x - v2.x;
 		float delz = v1.z - v2.z;
 		return (float)Math.Atan2 (delz, delx);
@@ -453,10 +461,9 @@ public class Geometry
 		Line toReturn = null;
 		float dist = 1000000; 
 		
-		
 		foreach(Vector3 v2 in g.GetVertex())
 		{
-			Line l = new Line(v,v2);
+			Line l = new Line(v, v2);
 			
 			//Check collision
 			bool collisionFree = true;
@@ -472,7 +479,7 @@ public class Geometry
 			}
 
 			foreach( Line borderLine in mapBG.edges ){
-				if( borderLine.LineIntersectMuntac(l) != 0 ){
+				if( borderLine.LineIntersectMuntacEndPt(l) != 0 ){
 					collisionFree = false;
 					break;
 				}
@@ -498,25 +505,25 @@ public class Geometry
 	public Geometry findClosestQuad(Vector3 v,List<Geometry> geos, Geometry mapBG)//Called from outside
 	{
 		Geometry toReturn = null; 
-		float dist = 100000000; 
-		
+		float dist = 100000000f; 
+
 		foreach(Geometry g in geos)
 		{
 			if(g == this)
 				continue;
-			
-			Line l = this.GetClosestLine(v,g,geos,mapBG); 
+
+			Line l = this.GetClosestLine( v, g, geos, mapBG );
 			
 			if(l == null)
 				continue;
-			
+
 			if( l.Magnitude() < dist)
 			{
 				toReturn = g; 
 				dist = l.Magnitude (); 
 			}
 		}
-		
+
 		return toReturn; 
 		
 	}
@@ -534,35 +541,39 @@ public class Geometry
 
 	public List<KeyValuePair<Vector3, float>> GetVertexAngleSorted( Vector3 vSrc, List<Vector3> verts ){
 		List< angclass > angList = new List< angclass >();
-		Vector3 infv = new Vector3 ();
-		infv.x = -1000f; infv.y = 1; infv.z = -1000f;
-		Vector3 v1 = verts [0] - vSrc;
-		v1.y = 1;
+		Vector3 outpoint = new Vector3 ();
+		outpoint.x = -100;
+		outpoint.y = 1;
+		outpoint.z = 100;
+		Line tmpline = new Line (vSrc, outpoint);
+		tmpline.name = "Line Outpoint";
+		tmpline.DrawVector (GameObject.Find ("temp"));
 		foreach (Vector3 v in verts) {
-//			if( v.Equals(verts[0]) ){
-//				angList.Add(new angclass(v, 1000f, 0f));
-//			}
-//			else{
-				float angle;
-				Vector3 v2 = v - vSrc;
-				v2.y = 1;
-				angle = (float)Math.Atan2((v2.x * v1.z) - (v1.x * v2.z), (v1.x * v2.x) - (v1.z * v2.z));
-				Line ls = new Line(vSrc, v2);
-				angList.Add(new angclass(v, angle, ls.Magnitude()));
-			//}
+			if( v == vSrc ){
+				angList.Add(new angclass(v, 0, 0 ));
+				continue;
+			}
+		    float angle;
+			Line AB = new Line( vSrc, outpoint );
+			Line AC = new Line( vSrc, v );
+			Line BC = new Line ( v, outpoint );
+
+			angle = (AB.Magnitude() * AB.Magnitude()) + (AC.Magnitude() * AC.Magnitude()) - (BC.Magnitude() * BC.Magnitude());
+			angle /= (2.0f * AB.Magnitude() * AC.Magnitude() );
+			angle = (float)Math.Acos((double)angle);
+			if( !isLeft( vSrc, outpoint, v ) )
+				angle = (float)Math.PI + (float)Math.PI - angle;
+			angList.Add(new angclass(v, angle, AC.Magnitude()));
 		}
-		//Sort list by angle
-		//angList.Sort (CompareAngle);
 		angList.Sort( delegate(angclass a, angclass b){
 			int xdiff = a.angle.CompareTo(b.angle);
-			if (xdiff > eps) return xdiff;
+			if (xdiff != 0) return xdiff;
 			else return a.distance.CompareTo(b.distance);
 		});
-		//List<Vector3> retlist = new List<Vector3> ();
+
 		int cnt = 0;
 		List<KeyValuePair<Vector3, float>> retlist = new List<KeyValuePair<Vector3, float>>();
 		foreach (angclass ang in angList) {
-			//Debug.Log( cnt++ + " " + kv.Value);
 			retlist.Add( new KeyValuePair<Vector3,float>( ang.vect, ang.angle ) );
 		}
 		return retlist;

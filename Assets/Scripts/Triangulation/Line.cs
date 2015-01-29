@@ -27,7 +27,7 @@ public class Line
 	public  bool Equals(Line l)
 	{
 		if (VectorApprox (l.vertex [0], vertex [0]) && VectorApprox (l.vertex [1], vertex [1]))
-				return true;
+			return true;
 		else if (VectorApprox (l.vertex [0], vertex [1]) && VectorApprox (l.vertex [1], vertex [0]))
 			return true;
 		else
@@ -74,7 +74,7 @@ public class Line
 //		                           UnityEngine.Random.Range(0.0f,1.0f),
 //		                           UnityEngine.Random.Range(0.0f,1.0f)) ;
 //
-		Color c = Color.blue;
+		Color c = Color.white;
 		VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
 		line.vectorObject.transform.parent = parent.transform;
 		line.vectorObject.name = name;
@@ -113,6 +113,13 @@ public class Line
 			}
 		}
 		return vertex[0]; 
+	}
+
+	public bool isEndPoint( Vector3 v ){
+		if (VectorApprox (v, vertex [0]) || VectorApprox (v, vertex [1]))
+			return true;
+		else
+			return false;
 	}
 
 	public float Magnitude()
@@ -194,7 +201,9 @@ public class Line
 		return 0;
 	}
 
-	//Detects regular intersections unless the lines share a vertex
+	//Detects regular intersections UNLESS the lines share a vertex
+	//An endpoint of one line could intersect the middle of another line (i.e. such an intersection would count as
+	//intersectsion)
 	public int LineIntersectMuntacEndPt (Line param){
 		Vector3 a = this.vertex [0];
 		Vector3 b = this.vertex[1];
