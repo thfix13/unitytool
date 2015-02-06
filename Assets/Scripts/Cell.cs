@@ -23,5 +23,9 @@ namespace Common {
 			copy.cluster = this.cluster;
 			return copy;
 		}
+		public bool IsWalkable()
+		{
+			return blocked; 
+		}
 	}
 }
