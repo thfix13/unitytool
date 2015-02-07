@@ -33,7 +33,7 @@ namespace ClusteringSpace
 			Clustering.reset();
 		}
 		
-        public static List<PathCollection> DoDBSCAN(List<Path> paths, int distMetric_, int eps, int minPathsForCluster)
+        public static List<PathCollection> DoDBSCAN(List<Path> paths, int distMetric_, float eps, int minPathsForCluster)
 		{
 			if (paths.Count == 0)
 			{
@@ -45,7 +45,7 @@ namespace ClusteringSpace
 
 			clustTime.Start();
 			
-			List<PathCollection> clusters = cluster(paths, (double)eps, minPathsForCluster);
+			List<PathCollection> clusters = cluster(paths, System.Convert.ToDouble(eps), minPathsForCluster);
 						
 			clustTime.Stop();
 			

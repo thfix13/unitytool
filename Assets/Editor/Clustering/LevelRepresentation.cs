@@ -16,14 +16,14 @@ namespace ClusteringSpace
 	
 	public class LevelRepresentation
 	{
-		public Vector2[] floorPositions;
-        public Vector2[] floorScales;
-		public Vector2 startPos;
+		public Vector2 startPos = new Vector2();
 		public List<Line> obstacles = new List<Line>();
 		public List<Line> smallerObstacles = new List<Line>();
 		
 		public static Vector2 zero = new Vector2 ();
 		public static Vector2 tileSize = new Vector2 ();
+		
+		public const int OBSTACLE_LAYER = 8;
 				
 		public void loadPlatformerLevel()
 		{
@@ -34,8 +34,8 @@ namespace ClusteringSpace
 				loaded = (PlatformerLevelInfo)ser.Deserialize (stream);
 				stream.Close ();
 			}
-			floorPositions = loaded.floorPositions;
-			floorScales = loaded.floorScales;
+			Vector2[] floorPositions = loaded.floorPositions;
+			Vector2[] floorScales = loaded.floorScales;
 			startPos = loaded.startPos;
 			
 			// destroy current floor
@@ -88,6 +88,68 @@ namespace ClusteringSpace
 			//		Debug.Log("Midpoint " + count2 +" : " + midpoints[count2]);
 					smallerObstacles.Add(new Line(midpoints[count2], midpoints[(count2+1)%midpoints.Count]));
 				}
+			}
+		}
+		
+		public void loadStealthLevel()
+		{
+			// get start pos
+			GameObject start = GameObject.Find("Start");
+			startPos.x = start.transform.localPosition.x;
+			startPos.y = start.transform.localPosition.z;
+			
+			List<Vector2> floorPositions = new List<Vector2>();
+			List<Vector2> floorScales = new List<Vector2>();
+			
+			// get all obstacles
+			// ref : http://answers.unity3d.com/questions/329395/how-to-get-all-gameobjects-in-scene.html
+			//GameObject[] objs = UnityEngine.Object.FindObjectsOfType<GameObject>();
+		    Transform[] objs = GameObject.FindObjectsOfType(typeof(Transform)) as Transform[];
+			
+			foreach (Transform obj in objs)
+			{
+		        if (obj.gameObject.layer == OBSTACLE_LAYER)
+		        {
+//					floorPositions.Add(new Vector2(obj.localPosition.x / tileSize.x - zero.x, obj.localPosition.z / tileSize.x - zero.y));
+//					floorScales.Add(new Vector2(obj.localScale.x / tileSize.x, obj.localScale.z / tileSize.y));
+					floorPositions.Add(new Vector2(obj.localPosition.x, obj.localPosition.z));
+					floorScales.Add(new Vector2(obj.localScale.x, obj.localScale.z));
+			//		Debug.Log("Obs found");
+		        }
+			}
+			
+			obstacles.Clear();
+			smallerObstacles.Clear();
+			for (int count = 0; count < floorPositions.Count; count ++)
+			{
+				List<Vector2> midpoints = new List<Vector2>();
+				midpoints.Add(new Vector2(floorPositions[count].x, floorPositions[count].y));
+				midpoints.Add(new Vector2(floorPositions[count].x + floorScales[count].x, floorPositions[count].y));
+				midpoints.Add(new Vector2(floorPositions[count].x + floorScales[count].x, floorPositions[count].y - floorScales[count].y));
+				midpoints.Add(new Vector2(floorPositions[count].x, floorPositions[count].y - floorScales[count].y));
+				for (int count2 = 0; count2 < midpoints.Count; count2 ++)
+				{
+					obstacles.Add(new Line(midpoints[count2], midpoints[(count2+1)%midpoints.Count]));
+				}
+			}
+			
+			for (int count = 0; count < floorPositions.Count; count ++)
+			{
+				List<Vector2> midpoints = new List<Vector2>();
+				midpoints.Add(new Vector2(floorPositions[count].x + (floorScales[count].x/2), floorPositions[count].y));
+				midpoints.Add(new Vector2(floorPositions[count].x + floorScales[count].x, floorPositions[count].y - (floorScales[count].y/2)));
+				midpoints.Add(new Vector2(floorPositions[count].x + (floorScales[count].x/2), floorPositions[count].y - floorScales[count].y));
+				midpoints.Add(new Vector2(floorPositions[count].x, floorPositions[count].y - (floorScales[count].y/2)));
+				for (int count2 = 0; count2 < midpoints.Count; count2 ++)
+				{
+			//		Debug.Log("Midpoint " + count2 +" : " + midpoints[count2]);
+					smallerObstacles.Add(new Line(midpoints[count2], midpoints[(count2+1)%midpoints.Count]));
+				}
+			}
+			
+			foreach(Line l in obstacles)
+			{
+				Debug.Log("Obs line starting at " + l.start.x + ", " + l.start.y);
 			}
 		}
 	}

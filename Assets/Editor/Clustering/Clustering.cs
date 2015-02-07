@@ -64,7 +64,8 @@ namespace ClusteringSpace
 		}
 		
 		private static void normalizePaths(List<Path> paths)
-		{			
+		{
+			Array.Clear(normalizedPaths, 0, normalizedPaths.Count());
 			// get max vals for x,y,t,d3norm,los3norm,crazy.
 			float maxX = -1f, maxY = -1f, maxT = -1f, maxD3 = -1f, maxLOS3 = -1f, maxCrazy = -1f, maxNodeD3 = -1f;
 			float minX = Single.PositiveInfinity, minY = Single.PositiveInfinity, minT = Single.PositiveInfinity, minD3 = Single.PositiveInfinity, minLOS3 = Single.PositiveInfinity, minCrazy = Single.PositiveInfinity, minNodeD3 = Single.PositiveInfinity;

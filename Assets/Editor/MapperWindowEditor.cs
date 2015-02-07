@@ -34,10 +34,11 @@ namespace EditorArea {
 		private static String[] dimensions = new String[] { "X", "Y", "Time", "Danger", "LOS", "Near Miss" };
 		private static String[] dimensionsShort = new String[] { "X", "Y", "T", "DNG", "LOS", "NM" };
 		public static bool[] dimensionEnabled = new bool[] { true, true, false, false, false, false };
-		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.grey };
-		private static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Grey"};
+		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.cyan, new Color32(164, 211, 238, 255), new Color32(189, 252, 201, 255), new Color32(255, 165, 0, 255), new Color32(255, 182, 193, 255), new Color32(0, 206, 209, 255), new Color32(102, 205, 170, 255), new Color32(128, 128, 0, 255), new Color32(210, 180, 140, 255), new Color32(160, 82, 45, 255), new Color32(197, 193, 170, 255), Color.grey };
+		private static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Cyan", "Light Sky Blue", "Mint", "Orange", "Light Pink", "Turquoise", "Aquamarine", "Olive", "Tan", "Brown", "Bright Grey", "Grey"};
 		public static int clustAlg = 1;
-		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, numPasses = 1, rdpTolerance = 4, maxClusters = 4, dbsScanEps = 15, minPathsForCluster = 3;
+		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, numPasses = 1, rdpTolerance = 4, maxClusters = 4, minPathsForCluster = 3;
+		private static float dbsScanEps = 15.0f;
 		private static List<Path> clusterCentroids = new List<Path>(), origPaths = new List<Path>();
 		private static bool[] showPaths = new bool[colors.Count()];
 		private static bool autoSavePaths = true, discardHighDangerPaths = true, drawHeatMapColored = false, useColors = false, showNoise = false;
@@ -393,7 +394,7 @@ namespace EditorArea {
 					paths.Add(p);
 				}
 
-				if (drawer == null) precomputeMaps();
+				precomputeMaps();
 
 				ComputeHeatMap (paths, deaths);
 				SetupArrangedPaths (paths);
@@ -412,6 +413,26 @@ namespace EditorArea {
 						if (n.t != 0 && n.tD == 0) n.tD = n.t;
 					}
 				}
+				
+		//		rep = new LevelRepresentation();
+		//		LevelRepresentation.tileSize = SpaceState.Editor.tileSize;
+		//		Vector2 blah = new Vector2(floor.collider.bounds.min.x, floor.collider.bounds.min.z);
+		//		LevelRepresentation.zero = blah;
+		//		rep.loadStealthLevel();
+				
+		/*		paths.Clear();
+				ClearPathsRepresentation();
+				foreach (ClusteringSpace.Line l in rep.obstacles)
+				{
+					Path p = new Path();
+					p.points.Add(new Node(l.end.x, l.end.y, 1));
+					p.points.Add(new Node(l.start.x, l.start.y, 1));
+					for (int i = p.points.Count - 1; i > 0; i--) {
+						p.points [i].parent = p.points [i - 1];
+					}
+					paths.Add(p);
+					toggleStatus.Add(p, true);
+				} */
 				
 				chosenFileIndex = -1;
 			}
@@ -795,7 +816,7 @@ namespace EditorArea {
 			else if (clustAlg == 1)
 			{
 				maxClusters = EditorGUILayout.IntSlider("Max clusters", maxClusters, 1, colors.Count()-1);
-				dbsScanEps = EditorGUILayout.IntSlider("Eps value", dbsScanEps, 1, 50);
+				dbsScanEps = EditorGUILayout.FloatField("Eps value", dbsScanEps);
 				minPathsForCluster = EditorGUILayout.IntSlider("Min paths for cluster", minPathsForCluster, 1, 15);
 				showNoise = EditorGUILayout.Toggle("Show noise", showNoise);
 			}
@@ -847,22 +868,19 @@ namespace EditorArea {
 					return;
 				}
 
-				if (distMetric == 0 || distMetric == 3)
+				int numSelectedDimensions = 0;
+				for (int dim = 0; dim < dimensionEnabled.Count(); dim ++)
 				{
-					int numSelected = 0;
-					for (int dim = 0; dim < dimensionEnabled.Count(); dim ++)
+					if (dimensionEnabled[dim])
 					{
-						if (dimensionEnabled[dim])
-						{
-							numSelected ++;
-						}
+						numSelectedDimensions ++;
 					}
-				
-					if (numSelected < 1)
-					{
-						Debug.Log("You must first select at least one dimension.");
-						return;
-					}
+				}
+			
+				if (numSelectedDimensions < 1 && (distMetric == 0 || distMetric == 3))
+				{
+					Debug.Log("You must first select at least one dimension.");
+					return;
 				}
 				
 				if (origPaths.Count() == 0)
@@ -881,16 +899,6 @@ namespace EditorArea {
 					{
 						Debug.Log("Removing avg. centroid");
 						paths.Remove(p);
-					}
-				}
-
-
-				int numSelectedDimensions = 0;
-				for (int dim = 0; dim < MapperWindowEditor.dimensionEnabled.Count(); dim ++)
-				{
-					if (MapperWindowEditor.dimensionEnabled[dim])
-					{
-						numSelectedDimensions ++;
 					}
 				}
 				
@@ -1245,7 +1253,7 @@ namespace EditorArea {
 				
 				for (int color = 0; color < colors.Count(); color ++)
 				{
-					showPaths[color] = (color < curColor) ? true : false;
+					showPaths[color] = true; //(color < curColor) ? true : false;
 				}
 				
 				chosenFileIndex = -1;
