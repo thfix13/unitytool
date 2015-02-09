@@ -80,10 +80,11 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 			if (end == null) {
 				end = GameObject.Find ("End");	
 			}
-			
+
 			endX = (int)((end.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Running.tileSize.x);
 			endY = (int)((end.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Running.tileSize.y);
 			
+
 			obstaclesMap [endX] [endY].goal = true;
 			
 			// Run this once before enemies moving so we compute the first iteration of map
@@ -128,6 +129,10 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 			curr.cell = fullMap [curr.t] [curr.x] [curr.y];
 			curr.parent = last;
 			last = curr;
+
+
+			if(curr.x == endX && curr.y == endY)
+				SpaceState.Running.fullMap [SpaceState.Running.timeSlice - 1] [curr.x] [curr.y].goal = true;
 			
 			playerPath.points.Add (last);
 			playerPoints.Add (player.transform.position);

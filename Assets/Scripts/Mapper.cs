@@ -47,10 +47,11 @@ public class Mapper : MonoBehaviour {
 		populate.tileSize = new Vector2 (tileSizeX, tileSizeZ);
 		populate.floorMin = floorMin;
 	}
-	
+
 	// Precompute a timestamps number of maps in the future by simulating the enemies movement across the map
 	// Stores withiin [populate] the variables [fullMap, enemies, tileSize] with the computed data
 	public Cell[][][] PrecomputeMaps (SpaceState populate, Vector3 floorMin, Vector3 floorMax, int cellsX, int cellsZ, int timestamps, float stepSize, int ticksBehind = 0, Cell[][] baseMap = null) {
+		Debug.Log ("PRE COMPUTE MAPS");
 		// Initial computation
 		ComputeTileSize (populate, floorMin, floorMax, cellsX, cellsZ);
 		
@@ -108,14 +109,20 @@ public class Mapper : MonoBehaviour {
 
 		foreach (Enemy e in enemies)
 			e.ComputeSeenCells(fullMap);
+
 		
 		populate.enemies = enemies;
 		populate.fullMap = fullMap;
 		
 		return fullMap;
 	}
+
 	
 	public Cell[][] ComputeMap (Cell[][] baseMap, Enemy[] enemies, List<List<Vector2>> cellsByEnemy) {
+		GameObject player = GameObject.FindGameObjectWithTag ("Player")as GameObject;
+
+//		Debug.Log (player.transform.position.x);
+
 		Cell[][] im = new Cell[cellsX][];
 		
 		for (int x = 0; x < cellsX; x++) {
@@ -155,8 +162,12 @@ public class Mapper : MonoBehaviour {
 					
 					// Skip cells that are staticly blocked or seen by other enemies
 					// Don't skip cells seen by other enemies or we won't have the correct seenCells computed
+
+					//Debug.Log (im[x][y].blocked + " , " + im[x][y].safe);
+
 					if (im [x] [y].blocked || im [x] [y].safe)
 						continue;
+
 
 					// This enemy haven't seen it yet
 					bool seen = false;

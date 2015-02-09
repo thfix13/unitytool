@@ -6,6 +6,7 @@ namespace Objects {
 	public class Player : MonoBehaviour {
 		public float speed;
 		public float maxHp;
+		public Cell[][][] seenCells;
 		private Vector3 initialPosition;
 		private Quaternion initialRotation;
 		
@@ -26,11 +27,10 @@ namespace Objects {
 			d.x *= speed * Time.deltaTime;
 			d.z *= speed * Time.deltaTime;
 			transform.Translate (d);
-			
+
 			Vector2 pos = new Vector2 ((transform.position.x - SpaceState.Running.floorMin.x) / SpaceState.Running.tileSize.x, (transform.position.z - SpaceState.Running.floorMin.z) / SpaceState.Running.tileSize.y);
 			int mapX = (int)pos.x;
 			int mapY = (int)pos.y;
-
 			if (SpaceState.Running.fullMap != null) {
 				if (SpaceState.Running.fullMap [SpaceState.Running.timeSlice - 1] [mapX] [mapY].goal)
 					state = 1;
@@ -54,5 +54,6 @@ namespace Objects {
 			else if (state == 2)
 				GUI.Box (new Rect (10, 10, 200, 50), "Lose", s);
 		}
+
 	}
 }

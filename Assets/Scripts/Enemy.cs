@@ -155,6 +155,7 @@ namespace Objects {
 		}
 
 		public void ComputeSeenCells(Cell[][][] fullmap) {
+			Debug.Log ("yo");
 			seenCells = new Cell[fullmap.Length][][];
 
 			for (int t = 0; t < fullmap.Length; t++) {
