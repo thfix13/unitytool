@@ -23,7 +23,7 @@ public class CreateLayeredMesh : MonoBehaviour {
 	void Start () {}
 
 	public void buildArena(int selGridInt){
-		Arena a= new Arena(selGridInt);
+		ArenasGenerator a= new ArenasGenerator(selGridInt);
 		switch (selGridInt){
 		case 0:file_prefix="moving_gaurd"; 
 			break;

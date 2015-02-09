@@ -10,60 +10,71 @@ public class Moving_guard_arena : MonoBehaviour {
 
 	public GameObject boxprefab, start, end;
 	public Transform map;
-
+	public Material black;
 	//="convex";//"moving_gaurd";
 	string file_prefix;
-	Arena a= null;
-	float layer_division=10f;
+	ArenasGenerator a= null;
+	float layer_division=0.2f;
 	string multi_triangle_input_file, dir=@"/Users/dhsingh/Documents/Thesis/SM03Skeleton/";
-	int t=0;
-	MedialGraphUtil MGU;
+	double t=0;
+	GraphUtil MGU;
 	bool generate2Dcheck=false;
-
+	GameObject player2Dprojection;
 
 	void Start () {
-		buildArena(0);
+		buildTriangulatedTimeVaryingArena(0);
 	}
+
 	// Update is called once per frame
 	void Update () {
-		if(generate2Dcheck)
-			a.generate2D_movinggaurdarena((int)t);
+		if(generate2Dcheck){
+			a.generate2D_movinggaurdarena(t);
+			Vector3 playerpos= MGU.movePlayer((float)t);
+			if(playerpos!= Vector3.zero)
+				player2Dprojection.transform.position= playerpos;//new Vector3(playerpos.x,player2Dprojection.transform.position.y,playerpos.z);
+			t+=0.013;
+		}
 
 	}
-	public void incrementt(){
-		t++;
+
+	public void playpause(){
+		generate2Dcheck=!generate2Dcheck;
 	}
-	public void buildArena(int selGridInt){
-		a= new Arena(selGridInt);
-		switch (selGridInt){
-		case 0:file_prefix="moving_gaurd";
-			break;
-		case 1:file_prefix="convex";
-			break;
-		case 2:file_prefix="arena";
-			break;
-		}
+
+	//t to be set equal to layers[0].y
+	public void initT(float val){
+		t= (double)val;
+	}
+	public void buildTriangulatedTimeVaryingArena(int selGridInt){
+		a= new ArenasGenerator(selGridInt);
+		file_prefix="moving_gaurd";
+
 		
 		List <List<Vector3>> layers =a.getLayers();
 		List<List<int>> polygons= a.getPolygons();
 		List<int[]>[] covers=a.getCovers();
+		udl (layers.Count+" "+layers[0].Count);
 
-
-		//divide each line in each layer in 10 parts horizontally
-		comb combb= subdivide_layer(layers,polygons,layer_division);
+		//divide each line in each layer in multiple parts horizontally of length= layer_division
+		PolyLayerAndMap combb= LayerPolygonUtil.subdivide_layer(layers,polygons,layer_division);
 		layers=combb.getLayer();
 		polygons=combb.getPoly();
-		
+		List<int> mappingOriginalIndexToNewIndexOfPolygons= 
+			combb.getMappingOriginalIndexToNewIndexOfPolygons();
+		udl (layers[0].Count+" "+layers[1].Count);
+		//init t
+		initT(layers[0][0].y);
+
 		//add 4 layers in-between every two layers.
-//				layers=addLayers(layers,4f);
+				layers=LayerPolygonUtil.addLayers(layers,4f);
 		
 		
 		//TriangulateFirstandLastLayer(layers,polygons);
 		
-		List<VertTria> vt= assignPLY(layers,polygons,covers);
+		List<VertTria> vt= PLYUtil.assignPLY(layers,polygons,covers, mappingOriginalIndexToNewIndexOfPolygons);
 		
 		multi_triangle_input_file= file_prefix+".ply2";
-		writePLY(dir+multi_triangle_input_file,vt[0].getVertices(),vt[0].getTriangles());
+		PLYUtil.writePLY(dir+multi_triangle_input_file,vt[0].getVertices(),vt[0].getTriangles());
 
 		//create 'Map' Gameobject
 
@@ -75,11 +86,11 @@ public class Moving_guard_arena : MonoBehaviour {
 			var go=(GameObject) Instantiate(boxprefab);
 			go.name="Box"+goi;
 			go.transform.parent=map;
-			buildplyObject (go,vt[goi].getVertices(),vt[goi].getTriangles());
+			PLYUtil.buildplyObject (go,vt[goi].getVertices(),vt[goi].getTriangles());
 			SetAlpha(go.renderer.material,0.9f);
 		}
 	}
-	public void BuildMedial()
+	public void buildMedial()
 	{
 
 		runaProcess("/Users/dhsingh/Documents/Thesis/SM03Skeleton/run.sh",multi_triangle_input_file);
@@ -91,19 +102,23 @@ public class Moving_guard_arena : MonoBehaviour {
 		SetAlpha(gameobj2.renderer.material,0.6f);
 
 	}
-	public void BuildPath(){
+
+	public void projectPath(){
 		MGU.createGraph();
 		MGU.findNearest(start.transform.position,end.transform.position);
 		MGU.findPath();
 		MGU.showPath();
-	}
 
-	public void Projectpath(){
 		var plane= GameObject.CreatePrimitive(PrimitiveType.Cube);
 		plane.transform.localScale=new Vector3(16,0.1f,16);
 		plane.transform.position= new Vector3(0,20.2f,0);
-		generate2Dcheck=true;
-	}
+		plane.renderer.material=black;
+
+		player2Dprojection= GameObject.CreatePrimitive(PrimitiveType.Sphere);
+		player2Dprojection.transform.localScale= new Vector3(0.3f,0.3f,0.3f);
+		player2Dprojection.transform.position=new Vector3(0,20.35f,0);
+
+		generate2Dcheck=true;}
 
 	void runaProcess(string filename,string arguments){
 		ProcessStartInfo startInfo = new ProcessStartInfo()
@@ -126,236 +141,8 @@ public class Moving_guard_arena : MonoBehaviour {
 		color.a = value;
 		material.color = color;
 	}
+	
 
-	/// <summary>
-	/// Writes the vertices and triangles to PLY2 format file
-	/// The file can then be used to run Skeleton
-	/// </summary>
-	/// <param name="outputfile">Outputfile.</param>
-	/// <param name="ply_vertices">Ply_vertices.</param>
-	/// <param name="ply_triangles">Ply_triangles.</param>
-	void writePLY(string outputfile,List<Vector3> ply_vertices, List<int> ply_triangles){
-		using (System.IO.StreamWriter file= new System.IO.StreamWriter(outputfile)){
-			file.WriteLine(ply_vertices.Count);
-			file.WriteLine(ply_triangles.Count/3);
-			foreach(Vector3 vertex in ply_vertices){
-				file.WriteLine(vertex.x+" "+vertex.y+" "+vertex.z);
-			}
-			for(int ii=0;ii<ply_triangles.Count;ii=ii+3){
-				file.WriteLine("3 " +ply_triangles[ii]+" "+ply_triangles[ii+1]+" "+ply_triangles[ii+2]);
-			}
-			file.Close();
-		}
-	}
-
-
-	/// <summary>
-	/// Obtains vertices and triangles required in the PLY2 format 
-	/// from list of layers and list of closed polygons.
-	/// Used to apply medial skeleton algo and also create mesh
-	/// </summary>
-	/// <param name="layers">Layers.</param>
-	/// <param name="polygons">Polygons.</param>
-	List<VertTria> assignPLY(List<List<Vector3>> layers, List<List<int>> polygons, List<int[]>[]covers){
-
-		//a List of vertices for each polygon, so that we can draw different meshes for different polygons
-		//the first list however is the whole set of all the vertices in the given object, used to find medial skeleton
-		//plus two more for top and bottom cover
-		List<List<Vector3>> ply_vertices=new List<List<Vector3>>(1+polygons.Count+2);
-		//similarly with triangle list
-		List<List<int>> ply_triangles=new List<List<int>>(1+polygons.Count+2);
-
-		for(int i=0;i<1+polygons.Count+2;i++){
-			ply_vertices.Add( new List<Vector3>());
-			ply_triangles.Add(new List<int>());
-		}
-		foreach(var layer in layers){
-			ply_vertices[0].AddRange(layer);
-			int n=0;
-			int ipolygon=0;
-			foreach(var polygon in polygons){
-				ipolygon++;
-
-				ply_vertices[ipolygon].AddRange(layer.GetRange(n,polygon.Count));
-				n+=polygon.Count;
-			}
-		}
-
-		int nn=layers[0].Count;
-		for(int ilayer=0;ilayer<layers.Count-1;ilayer++){
-			int vertices_yet=0;
-			//for each layer, add the triangulations involved to ply_traingles
-			int i=0;
-			int ipolygon=0;
-			foreach(var polygon in polygons){
-				//number of vertices in the polygon
-				int n=polygon.Count;
-				for(; i<n+vertices_yet;i++){
-					ply_triangles[0].AddRange(new List<int>{((i%n)+nn*ilayer+vertices_yet),
-						(((i+1)%n)+nn*ilayer+vertices_yet),((i%n)+nn*(1+ilayer)+vertices_yet),
-						((i%n)+nn*(1+ilayer)+vertices_yet),
-							(((i+1)%n)+nn*ilayer+vertices_yet),(((i+1)%n)+nn*(1+ilayer)+vertices_yet)
-					});
-
-				}
-				for(int pi=0; pi<n;pi++)
-				{
-					ply_triangles[ipolygon+1].AddRange(new List<int>{(pi%n)+n*ilayer,(((pi+1)%n)+n*ilayer)
-						,((pi%n)+n*(1+ilayer)),((pi%n)+n*(1+ilayer))
-						,(((pi+1)%n)+n*ilayer),(((pi+1)%n)+n*(1+ilayer)) });
-				}
-				vertices_yet+=n;
-				ipolygon++;
-			}
-		}
-
-		//starting point of vertex indices in last layer
-		int vertices_lastlayer=nn*(layers.Count-1);
-		//now add triangles for upper and lower cover using covers[]
-		//we will later subdivide each triangle into smaller triangles
-		ply_vertices[polygons.Count+1].AddRange(layers[0]);
-		ply_vertices[polygons.Count+2].AddRange(layers.Last());
-
-
-		for(int i=0; i<2;i++){
-
-			foreach(var triangles in covers[i]){
-				//series in 0-7 
-				// 9
-				//			10
-				// 8
-				//see paper
-				if(i==1){
-					ply_triangles[0].AddRange(new List<int>{10*triangles[0]+vertices_lastlayer,10*triangles[1]
-					+vertices_lastlayer,vertices_lastlayer+ 10*triangles[2]});
-
-					ply_triangles[polygons.Count+1+i].AddRange(new List<int>{10*triangles[0],10*triangles[1],10*triangles[2]});
-				
-
-				}
-				if(i==0){
-
-					ply_triangles[0].AddRange(new List<int>{10*triangles[0],10*triangles[1], 10*triangles[2]});
-
-					ply_triangles[polygons.Count+1+i].AddRange(new List<int>{10*triangles[0],10*triangles[1],10*triangles[2]});
-
-				}
-
-			}
-		}
-//		udl (ply_vertices[polygons.Count+2].Count);
-		List<VertTria> list_of_vertria=new List<VertTria>();
-		for(int i=0; i<1+polygons.Count+2;i++)
-			list_of_vertria.Add(new VertTria(ply_vertices[i],ply_triangles[i]));
-		return list_of_vertria;
-	}
-
-
-	/// <summary>
-	/// Subdivides the each layer.
-	/// </summary>
-	/// <param name="layers">Layers.</param>
-	/// <param name="polygons">Polygons.</param>
-	comb subdivide_layer(List<List<Vector3>> layers, List<List<int>> polygons, float f){
-		List<List<int>> new_polygons=new List<List<int>>();
-		List<List<Vector3>> new_layers=new List<List<Vector3>>();
-		//for each layer
-		for(int ilayer=0;ilayer<layers.Count;ilayer++){
-			List<Vector3> layer, newlayervertices= new List<Vector3>();
-
-			int nvertex=0;
-			foreach(var polygon in polygons){
-				//number of vertices in the polygon
-				int n=polygon.Count;
-
-				if(ilayer==0)
-				{
-					//udl (Enumerable.Range(nvertex,10*n));
-					new_polygons.Add(Enumerable.Range(nvertex,(int)(f*n)).ToList());
-					nvertex+=10*n;
-				}
-
-				for(int vertex=0;vertex<n;vertex++){
-					layer=layers[ilayer];
-					Vector3 v1= layer[polygon[vertex]],v2=layer[polygon[(vertex+1)%n]];
-					for(float i=0.0f; i<1f;i=i+1f/f){
-						newlayervertices.Add(v1*(1-i)+v2*i);
-					}
-				}
-			}
-			new_layers.Add(newlayervertices);
-		}
-		comb combb= new comb(new_polygons, new_layers);
-		return combb;
-	}
-
-	List<List<Vector3>> addLayers(List<List<Vector3>> layers, float f){
-		List<List<Vector3>> new_layers= new List<List<Vector3>>();
-		for(int ilayer=0;ilayer<layers.Count-1;ilayer++){
-			var current_layer=layers[ilayer];
-
-			new_layers.Add(current_layer);
-			var next_layer= layers[ilayer+1];
-			Vector3 v1,v2;
-			for (float i=1f/f; i<1f;i=i+1f/f){
-				List<Vector3> newlayervertices= new List<Vector3>();
-				for(int j=0; j< current_layer.Count;j++){
-
-					v1=current_layer[j];
-					v2=next_layer[j];
-
-					newlayervertices.Add(v1*(1-i)+v2*i);
-				}
-				new_layers.Add(newlayervertices);
-			}
-			//new_layers.Add(next_layer);
-
-		}
-		new_layers.Add(layers.Last());
-		return new_layers;
-
-	}
-
-
-
-	void buildplyObject(GameObject go,List<Vector3> ply_vertices, List<int> ply_triangles){
-		List <Vector3> newVertices;
-		List <int> newTriangles;
-		int nvertices = Convert.ToInt16(ply_vertices.Count) * 2;
-		int ntriangles = Convert.ToInt16(ply_triangles.Count) *2;
-		newVertices = new List<Vector3>(nvertices);
-		newTriangles =  new List<int>(ntriangles);
-
-
-		MeshFilter ms = go.GetComponent <MeshFilter> ();
-		Mesh mesh = new Mesh ();
-		ms.mesh = mesh;
-
-
-
-		newVertices.AddRange(ply_vertices.AsEnumerable());
-		for(int i=0;i < nvertices/2; i++){
-			newVertices.Add (newVertices[i]);
-		}
-		newTriangles.AddRange(ply_triangles.AsEnumerable());
-		//udl(newTriangles.Count);
-		for (int i=0; i<ntriangles/2; i++) {
-			//udl (" -- "+(ntriangles/2-i-1));
-			newTriangles.Add(newTriangles[ntriangles/2-i-1]);
-			i++;
-			newTriangles.Add(newTriangles[ntriangles/2-i-1]);
-			i++;
-			newTriangles.Add(newTriangles[ntriangles/2-i-1]);
-		}
-
-		int k = 0;
-		mesh.vertices = newVertices.ToArray();
-
-		List<Vector3> l = Enumerable.Repeat (Vector3.up, nvertices/2).ToList();
-		l.AddRange(Enumerable.Repeat(Vector3.down,nvertices/2).ToList());
-		mesh.normals = l.ToArray();
-		mesh.triangles = newTriangles.ToArray();
-	}
 	void buildObject(string InputFile, GameObject go, bool createGraph){
 		
 		char[] delimiterChars = { ' ', '\t' };
@@ -363,8 +150,8 @@ public class Moving_guard_arena : MonoBehaviour {
 		List <int> newTriangles;
 		string []objectFile;
 		objectFile = System.IO.File.ReadAllLines(InputFile);
-		int nvertices = Convert.ToInt16(objectFile [0]) * 2;
-		int ntriangles = Convert.ToInt16(objectFile [1]) *2;
+		int nvertices = Convert.ToInt32(objectFile [0]) * 2;
+		int ntriangles = Convert.ToInt32(objectFile [1]) *2;
 		newVertices = new List<Vector3>(nvertices);
 		newTriangles =  new List<int>(ntriangles);
 
@@ -389,13 +176,13 @@ public class Moving_guard_arena : MonoBehaviour {
 		int j=0;
 		for(i=0; j< ntriangles/2 ;i=i+3,j++,vPointer++){
 			parsed= objectFile[vPointer].Split(delimiterChars);
-			newTriangles.Add(Convert.ToInt16(parsed[1]));
-			newTriangles.Add(Convert.ToInt16(parsed[2]));
-			newTriangles.Add(Convert.ToInt16(parsed[3]));
+			newTriangles.Add(Convert.ToInt32(parsed[1]));
+			newTriangles.Add(Convert.ToInt32(parsed[2]));
+			newTriangles.Add(Convert.ToInt32(parsed[3]));
 		}
 
 		if(createGraph){
-			MGU= new MedialGraphUtil(newVertices,newTriangles);
+			MGU= new GraphUtil(newVertices,newTriangles);
 
 		}
 		for(i=0;i < nvertices/2; i++){
@@ -423,34 +210,7 @@ public class Moving_guard_arena : MonoBehaviour {
 		}
 		mesh.colors32= colors;
 	}
+	
 
-	class VertTria{
-		List<Vector3> ply_vertices;
-		List<int> ply_triangles;
-		public VertTria(List <Vector3> vertices, List<int>triangles){
-			this.ply_vertices=vertices;
-			this.ply_triangles=triangles;
-		}
-		public List<Vector3> getVertices(){
-			return this.ply_vertices;
-		}
-		public List<int> getTriangles(){
-			return this.ply_triangles;
-		}
-	}
-	class comb{
-		List<List<int>> poly;
-		List<List<Vector3>> lay;
-		public comb(List<List<int>> poly,List<List<Vector3>> lay)
-		{
-			this.poly=poly;this.lay=lay;
-		}
-		public List<List<int>> getPoly(){
-			return this.poly;
-		}
-		public List<List<Vector3>> getLayer(){
-			return this.lay;
-		}
-	}
 
 }

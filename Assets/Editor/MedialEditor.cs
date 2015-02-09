@@ -49,23 +49,18 @@ public class  MedialEditor2: Editor {
 		if(GUILayout.Button("Get Medial Skeleton"))
 		{
 			
-			obj.BuildMedial();
-		}
-		if(GUILayout.Button("Get Path"))
-		{
-			
-			obj.BuildPath();
+			obj.buildMedial();
 		}
 		GUILayout.BeginHorizontal("box");
 		if(GUILayout.Button("Project",GUILayout.Width(100)))
 		{
 			
-			obj.Projectpath();
+			obj.projectPath();
 		}
-		if(GUILayout.Button("Next",GUILayout.Width(100)))
+		if(GUILayout.Button("Pause/Play",GUILayout.Width(100)))
 		{
 			
-			obj.incrementt();
+			obj.playpause();
 		}
 		GUILayout.EndHorizontal();
 	}
