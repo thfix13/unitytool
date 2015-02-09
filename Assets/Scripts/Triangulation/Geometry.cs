@@ -35,7 +35,7 @@ public class Geometry
 			if( Lparam.LineIntersectMuntac(l1) == 1 )
 				return true;
 		}
-		return false; 
+		return false;
 	}
 
 	//Checks collision with geometry unless the collision point is a shared vertex of line and the geometry
@@ -67,6 +67,10 @@ public class Geometry
 	}
 
 	//TODO: Fix for lines colinear
+	//Finds out if a point lies inside a polygon.
+	//BUG: Returns false even if it's on the edge.
+	//SOLN: Change LineIntersectMuntacEndPt to return -1 when there's an intersection at shared endpoints
+	//instead of 0. And change condition here to only accept 0
 	public bool PointInside( Vector3 pt ){//Called by LineInside, GeometryInside and LineCollision
 		Line lray = new Line(pt, new Vector3(-100, 1f, -100)); 
 		int count = 0; 
