@@ -12,7 +12,13 @@ public class testprog : MonoBehaviour {
 	void Start () {
 		Vector3 one= new Vector3(0f,0f,0f),two=new Vector3(1f,0f,0f), three= new Vector3(1f,0f,1f), four= new Vector3(0f,0f,1f);
 		Vector3 one1= new Vector3(0.5f,1f,0f),two1=new Vector3(1.5f,1f,0f), three1= new Vector3(1.5f,1f,1f), four1= new Vector3(0.5f,1f,1f);
-		writePLY(new List<Vector3>{one,two,three,four},new List<Vector3>{one1,two1,three1,four1},new List<List<int>>{new List<int>{0,1,2,3}});
+		List<string> input = new List<string>{ "Brachiosaurus", 
+			"Amargasaurus", 
+			"Mamenchisaurus","asdasd","oinonasd" };
+		List<string> output=input.GetRange(1,2);
+
+
+		//writePLY(new List<Vector3>{one,two,three,four},new List<Vector3>{one1,two1,three1,four1},new List<List<int>>{new List<int>{0,1,2,3}});
 	}
 	public static void udl(object s){
 		UnityEngine.Debug.Log(s);
