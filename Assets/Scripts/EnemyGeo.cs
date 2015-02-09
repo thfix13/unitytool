@@ -31,16 +31,19 @@ namespace Objects {
 		private Quaternion dummyRotation;
 		//
 		*/
-		private Vector3 initialPosition;
-		private Vector3 initialForward;
+		public Vector3 initialPosition;
+		public Vector3 initialForward;
 		//private Quaternion initialRotation;
-		private WaypointGeo initialTarget;
+		public WaypointGeo initialTarget;
 		//
 		//private Vector3 currentPosition;
 		//private Quaternion currentRotation;
 		public Color LineForFOV = new Color (1.0f, 0.3f, 0.0f, 1f);
 
-
+		public void setInitialOrientationToCurrent(){
+			initialPosition = transform.position;
+			initialForward = transform.forward;
+		}
 
 
 		public Vector3 getPosition(int t){
