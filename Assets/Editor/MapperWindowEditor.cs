@@ -73,7 +73,7 @@ namespace EditorArea {
 					drawer = floor.gameObject.GetComponent<MapperEditorDrawer> ();
 					if (drawer == null) {
 						drawer = floor.gameObject.AddComponent<MapperEditorDrawer> ();
-						drawer.hideFlags = HideFlags.HideInInspector;
+						//drawer.hideFlags = HideFlags.HideInInspector;
 					}
 				}
 				if (mapper == null) {
@@ -1019,7 +1019,7 @@ namespace EditorArea {
 				drawer = floor.gameObject.GetComponent<MapperEditorDrawer> ();
 				if (drawer == null) {
 					drawer = floor.gameObject.AddComponent<MapperEditorDrawer> ();
-					drawer.hideFlags = HideFlags.HideInInspector;
+					//drawer.hideFlags = HideFlags.HideInInspector;
 				}
 			}
 			

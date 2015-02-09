@@ -18,6 +18,8 @@ namespace Objects {
 		//public float maxHealth = 100;
 		// The first index is always the time span you want to peek
 
+		private int playingTime = 0;
+
 		/*
 		[HideInInspector]
 		public Vector3[] positions;
@@ -123,6 +125,14 @@ namespace Objects {
 						forw = trgt.transform.forward;
 					}
 		}
+		void FixedUpdate(){
+			playingTime++;
+			transform.position = getPosition(playingTime);
+			transform.forward = getForward(playingTime);
+
+		}
+
+
 /*
 		// This moves the enemy in the game running environment
 		void Update () {
