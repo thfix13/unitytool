@@ -22,7 +22,8 @@ namespace ClusteringSpace
 		Time,
 		Danger,
 		LOS,
-		NearMiss
+		NearMiss,
+		Health
 	}
 	
 	public class Clustering

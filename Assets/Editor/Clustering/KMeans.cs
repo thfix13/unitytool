@@ -516,6 +516,7 @@ namespace ClusteringSpace
 							else if (j == (int)Dimensions.Danger) curve[curvePos] = path1.points[i].danger3;
 							else if (j == (int)Dimensions.LOS) curve[curvePos] = path1.los3;//+(path1.los3/(10+i));
 							else if (j == (int)Dimensions.NearMiss) curve[curvePos] = path1.crazy;//+(path1.crazy/(10+i));
+							else if (j == (int)Dimensions.Health) curve[curvePos] = path1.points[i].playerhp;//+(path1.crazy/(10+i));
 							curvePos ++;
 						}
 					}
@@ -536,6 +537,7 @@ namespace ClusteringSpace
 							else if (j == (int)Dimensions.Danger) curve[curvePos] = path2.points[i].danger3;
 							else if (j == (int)Dimensions.LOS) curve[curvePos] = path2.los3;//+(path2.los3/(10+i));
 							else if (j == (int)Dimensions.NearMiss) curve[curvePos] = path2.crazy;//+(path2.crazy/(10+i));
+							else if (j == (int)Dimensions.Health) curve[curvePos] = path2.points[i].playerhp;//+(path1.crazy/(10+i));
 							curvePos ++;
 						}
 					}

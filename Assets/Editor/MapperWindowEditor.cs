@@ -31,9 +31,9 @@ namespace EditorArea {
 		private static String[] clustAlgs = new String[] { "KMeans++", "DBScan" };
 		private static String[] clustAlgsShort = new String[] { "KM", "DBS" };
 		private static String[] distMetricsShort = new String[] { "FRE", "TRI", "INTPOL", "H" };
-		private static String[] dimensions = new String[] { "X", "Y", "Time", "Danger", "LOS", "Near Miss" };
-		private static String[] dimensionsShort = new String[] { "X", "Y", "T", "DNG", "LOS", "NM" };
-		public static bool[] dimensionEnabled = new bool[] { true, true, false, false, false, false };
+		private static String[] dimensions = new String[] { "X", "Y", "Time", "Danger", "LOS", "Near Miss", "Health" };
+		private static String[] dimensionsShort = new String[] { "X", "Y", "T", "DNG", "LOS", "NM", "H" };
+		public static bool[] dimensionEnabled = new bool[] { true, true, false, false, false, false, false };
 		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.cyan, new Color32(164, 211, 238, 255), new Color32(189, 252, 201, 255), new Color32(255, 165, 0, 255), new Color32(255, 182, 193, 255), new Color32(0, 206, 209, 255), new Color32(102, 205, 170, 255), new Color32(128, 128, 0, 255), new Color32(210, 180, 140, 255), new Color32(160, 82, 45, 255), new Color32(197, 193, 170, 255), Color.grey };
 		private static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Cyan", "Light Sky Blue", "Mint", "Orange", "Light Pink", "Turquoise", "Aquamarine", "Olive", "Tan", "Brown", "Bright Grey", "Grey"};
 		public static int clustAlg = 1;
@@ -885,11 +885,21 @@ namespace EditorArea {
 				
 				if (origPaths.Count() == 0)
 				{
-					origPaths = new List<Path>(paths);
+					origPaths = new List<Path>();
+					foreach (Path p in paths)
+					{
+						origPaths.Add(new Path(p));
+					}
+					Clustering.initWithPaths(paths, (numSelectedDimensions > 1) ? true : false);
 				}
 				
-				paths = new List<Path>(origPaths);
-				
+				paths.Clear();
+				paths = new List<Path>();
+				foreach (Path p in origPaths)
+				{
+					paths.Add(new Path(p));
+				}
+								
 				useColors = true;
 				
 				// scan the paths and remove any avg. centroid paths that were computed
@@ -901,8 +911,6 @@ namespace EditorArea {
 						paths.Remove(p);
 					}
 				}
-				
-				Clustering.initWithPaths(paths, (numSelectedDimensions > 1) ? true : false);
 
 				KMeans.clustTime = new System.Diagnostics.Stopwatch();
 				KMeans.distTime = new System.Diagnostics.Stopwatch();
@@ -1239,12 +1247,12 @@ namespace EditorArea {
 				}
 				
 				if (drawer == null) precomputeMaps();
-				ComputeHeatMap(paths, deaths);
+			//	ComputeHeatMap(paths, deaths);
 				
-				heatMapColored = Analyzer.Compute2DHeatMapColored (paths, gridSize, gridSize, out maxHeatMap);
-				drawer.heatMapColored = heatMapColored;
-				drawer.heatMapMax = maxHeatMap;
-				drawer.tileSize.Set (SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y);
+			//	heatMapColored = Analyzer.Compute2DHeatMapColored (paths, gridSize, gridSize, out maxHeatMap);
+			//	drawer.heatMapColored = heatMapColored;
+			//	drawer.heatMapMax = maxHeatMap;
+			//	drawer.tileSize.Set (SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y);
 				
 				for (int count = 0; count < paths.Count(); count ++)
 				{
