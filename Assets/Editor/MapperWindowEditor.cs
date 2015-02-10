@@ -322,10 +322,17 @@ namespace EditorArea {
 			#region experimental
 			RRTKDTreeGEO rrtgeo = new RRTKDTreeGEO();
 
-
+			if(GUILayout.Button("Clear Paths"))
+			{
+				GameObject g = GameObject.Find("temp");
+				DestroyImmediate(g);
+				g = new GameObject("temp");
+			}
 
 			if (GUILayout.Button ("Compute Path Geo")) {
 				triangles = GameObject.Find ("Triangulation").GetComponent<Triangulation>();
+
+
 				List<Geometry> obstacles = triangles.TriangulationSpace();
 				
 
@@ -440,6 +447,25 @@ namespace EditorArea {
 							//paths.Add (new Path (nodes));
 							//toggleStatus.Add (paths.Last (), true);
 							//paths.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
+
+
+
+							//Create path lines using the line objects 
+							List<Line> path = new List<Line>(); 
+							for(int i =0; i<nodes.Count-1;i++)
+							{
+								path.Add(new Line(nodes[i].GetVector3Draw(),nodes[i+1].GetVector3Draw()));
+							}
+
+							GameObject temp = GameObject.Find("temp");
+							Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
+		                           UnityEngine.Random.Range(0.0f,1.0f),
+		                           UnityEngine.Random.Range(0.0f,1.0f)) ;
+
+							foreach(Line l in path)
+							{
+								l.DrawVector(temp,c);
+							}
 						}
 
 

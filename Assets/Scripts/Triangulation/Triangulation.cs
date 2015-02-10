@@ -8,30 +8,49 @@ using Vectrosity;
 public class Triangulation : MonoBehaviour 
 {
 	//Data holder to display and save
+	[HideInInspector]
 	public List<Vector3> points = new List<Vector3>();
+	[HideInInspector]
 	public List<Color> colours = new List<Color>();
 	// Use this for initialization
+	[HideInInspector]
 
 	public List<Triangle> triangles = new List<Triangle>(); 
+	[HideInInspector]
 	public List<Line> lines = new List<Line>(); 
+	[HideInInspector]
 
 	public List<Line> linesMinSpanTree = new List<Line>(); 
+	[HideInInspector]
+
 	public List<Geometry> obsGeos = new List<Geometry> (); 
 	//Contains Map
+	[HideInInspector]
 	public Geometry mapBG = new Geometry ();
 
 	public bool drawTriangles = false; 
 	public bool drawRoadMap = false; 
 	public bool drawMinSpanTree = false;
 	public bool stopAll = false;
+	[HideInInspector]
+
 	public List<int>[] G = new List<int>[110];
+	[HideInInspector]
+
 	public int[] colorG = new int[110];
+	[HideInInspector]
+
 	public bool[] visitedG = new bool[110];
 	public const int red = 1;
 	public const int green = 2;
 	public const int blue = 3;
-	public List<Line> roadMap = new List<Line>(); 
+	[HideInInspector]
 
+	public List<Line> roadMap = new List<Line>();
+
+	//Stuff for alex
+	[HideInInspector]
+	List<Geometry> toReturn = new List<Geometry> ();
 
 	public void Start(){
 	
@@ -46,6 +65,8 @@ public class Triangulation : MonoBehaviour
 		colours.Clear();
 		obsGeos.Clear ();
 		roadMap.Clear(); 
+		toReturn.Clear(); 
+
 		GameObject temp = GameObject.Find("temp"); 
 		DestroyImmediate(temp); 
 
@@ -73,7 +94,7 @@ public class Triangulation : MonoBehaviour
 	public void Update()
 	{
 		//TODO: move to vectrocity for the drawing. 
-
+		return;
 
 
 		//return; 
@@ -160,7 +181,9 @@ public class Triangulation : MonoBehaviour
 
 	public List<Geometry> TriangulationSpace ()
 	{
-		List<Geometry> toReturn = new List<Geometry> ();
+
+		if (toReturn.Count>0)
+			return toReturn; 
 
 		//Compute one step of the discritzation
 		//Find this is the view

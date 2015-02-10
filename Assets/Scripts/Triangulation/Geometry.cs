@@ -5,6 +5,7 @@ using Common;
 using Exploration;
 using Objects;
 
+// [Serializable]
 public class Geometry
 {
 	public List<Line> edges = new List<Line> ();

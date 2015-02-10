@@ -44,7 +44,11 @@ namespace Common {
 		public Vector3 GetVector3 () {
 			return new Vector3 (x, t, y);	
 		}
-
+		public Vector3 GetVector3Draw () 
+		{
+			return new Vector3 (x, 1, y);	
+		}
+		
 		public double[] GetArray () {
 			return new double[] {x, t, y};
 		}
