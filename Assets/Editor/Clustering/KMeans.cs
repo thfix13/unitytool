@@ -486,7 +486,7 @@ namespace ClusteringSpace
 			}
 			else
 			{
-				Debug.Log("Note - not storing this distance.");
+				//Debug.Log("Note - not storing this distance.");
 				
 				path1 = path1_;
 				path2 = path2_;

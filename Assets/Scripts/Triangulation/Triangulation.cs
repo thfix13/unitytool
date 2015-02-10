@@ -54,10 +54,7 @@ public class Triangulation : MonoBehaviour
 	public void Update()
 	{
 
-		//return; 
-		//points.Clear(); 
-		//colours.Clear();  
-
+		return;
 		
 
 		if(drawMinSpanTree)
@@ -155,11 +152,12 @@ public class Triangulation : MonoBehaviour
 	
 	public float TriangulationCurves(Vector3[] path1, Vector3[] path2, bool display = false)
 	{
-		GameObject temp = GameObject.Find("temp");
-		if(temp != null)
-			GameObject.DestroyImmediate(temp);
-		
-		temp = new GameObject("temp");
+		//Debug.Log ("hello");
+//		GameObject temp = GameObject.Find("temp");
+//		if(temp != null)
+//			GameObject.DestroyImmediate(temp);
+//		
+//		temp = new GameObject("temp");
 		
 		Clear();
 		
@@ -218,16 +216,7 @@ public class Triangulation : MonoBehaviour
 
 		//Debug.Log(vertex.Count);
 
-		foreach(Vector3 v in vertex)
-		{
-			//Testing
 
-	        GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-	        sphere.transform.parent = temp.transform;
-       
-	        //Find the position of collision
-	        sphere.transform.position = v; 
-		}
 
 		//Triangulate
 
@@ -253,7 +242,7 @@ public class Triangulation : MonoBehaviour
 
 				Line rayTest = new Line(center,rayEnd);
 
-				//rayTest.DrawVector(temp); 
+
 
 				foreach(Line l in poly)
 				{
@@ -378,6 +367,7 @@ public class Triangulation : MonoBehaviour
 
 	private List<Line> GetLines(Vector3[] path1, Vector3[] path2)
 	{
+
 		List<Line>ToReturnLine = new List<Line>(); 
 		for(int i = 0; i<path1.Length-1; i+=2)
 		{
@@ -410,20 +400,13 @@ public class Triangulation : MonoBehaviour
 				{
 					continue; 
 				}
-				GameObject temp = GameObject.Find("temp");
 
 				if(LineIntersection(path1[i],path1[i+1],path2[j],path2[j+1]))
 				{
 					//Debug.Log("Collide p1 with p2");
 					vs.Add(	LineIntersectVect(path1[i],path1[i+1],path2[j],path2[j+1]) );
 					//Testing
-                    GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                    sphere.transform.parent = temp.transform;
-                   
-                    //Find the position of collision
-                    sphere.transform.position = LineIntersectVect(path1[i],path1[i+1],
-                        path2[j],path2[j+1]);
-
+                    
                     //Debug.Log(sphere.transform.position);   
 
                     //Draw the two lines

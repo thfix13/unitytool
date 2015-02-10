@@ -1013,7 +1013,7 @@ namespace EditorArea {
 						{
 							foreach(Path path in clusters[c])
 							{
-								Debug.Log(c);
+								//Debug.Log(c);
 								path.color = colors[c];
 								if (path.Equals(clusterCentroids[c]))
 								{
