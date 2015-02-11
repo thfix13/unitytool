@@ -370,7 +370,12 @@ namespace EditorArea {
 				
 				goodPathFiles.Add(pathsInfo[count].Name);
 			}
-			
+
+			int nbPaths = 100; 
+
+			nbPaths = (int)EditorGUILayout.IntField("nbPaths",nbPaths);
+
+
 			String[] pathFileNames = goodPathFiles.ToArray();
 			chosenFileIndex = EditorGUILayout.Popup("Import paths", chosenFileIndex, pathFileNames);
 			if (chosenFileIndex != -1)
@@ -382,13 +387,21 @@ namespace EditorArea {
 				origPaths = new List<Path>();
 				
 				List<Path> pathsImported = PathBulk.LoadPathsFromFile(pathFileNames[chosenFileIndex]);
-				
+
+				List<Path> tempRandomPaths = new List<Path>(); 
+
+				for(int i =0; i<nbPaths;i++)
+				{
+					tempRandomPaths.Add(pathsImported[]
+				}
+
 				foreach (Path p in pathsImported) {
 					if (p.points.Last().playerhp <= 0) {
 						deaths.Add(p);
 					} else {
 						p.name = "Imported " + (++imported);
-						p.color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
+						p.color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), 
+							                     UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
 						toggleStatus.Add (p, true);
 					}
 					paths.Add(p);
