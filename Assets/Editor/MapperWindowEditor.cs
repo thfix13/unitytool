@@ -25,7 +25,7 @@ namespace EditorArea {
 		private static bool drawMap = false, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = true, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false, limitImportablePathsToCurLevel = true;
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10;
 		private static int randomSeed = -1;
-		
+		private static int nbPaths = 10;
 		// Clustering
 		private static String[] distMetrics = new String[] { "Frechet", "Area (Triangulation)", "Area (Interpolation) 3D", "Hausdorff" };
 		private static String[] clustAlgs = new String[] { "KMeans++", "DBScan" };
@@ -371,7 +371,7 @@ namespace EditorArea {
 				goodPathFiles.Add(pathsInfo[count].Name);
 			}
 
-			int nbPaths = 100; 
+			 
 
 			nbPaths = (int)EditorGUILayout.IntField("nbPaths",nbPaths);
 
@@ -392,8 +392,12 @@ namespace EditorArea {
 
 				for(int i =0; i<nbPaths;i++)
 				{
-					tempRandomPaths.Add(pathsImported[]
+					int posRandom = UnityEngine.Random.Range(0,pathsImported.Count); 
+					if(!tempRandomPaths.Contains(pathsImported[posRandom]))
+						tempRandomPaths.Add(pathsImported[posRandom]);
 				}
+
+				pathsImported = tempRandomPaths;
 
 				foreach (Path p in pathsImported) {
 					if (p.points.Last().playerhp <= 0) {
