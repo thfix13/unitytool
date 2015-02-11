@@ -125,11 +125,30 @@ namespace Objects {
 						forw = trgt.transform.forward;
 					}
 		}
-		void FixedUpdate(){
-			playingTime++;
-			transform.position = getPosition(playingTime);
-			transform.forward = getForward(playingTime);
+		public void goToFrame(int t){
+			Debug.Log ("GO TO FRAME");
+			transform.position = getPosition(t);
+			Debug.Log ("POSITION SET");
+			transform.forward = getForward(t);
+			Debug.Log ("FORWARD SET");
 
+		}
+
+		public void Start(){
+			playingTime = 0;
+			tim= 0;
+		}
+
+		private int tim = 0;
+		public void Update(){
+			tim++;
+			if(tim == 5){
+				//tim = 0;
+				Debug.Log (playingTime++);
+				//goToFrame(playingTime);
+				//getPosition(playingTime);
+				Debug.Log ("...?");
+			}
 		}
 
 
