@@ -1356,7 +1356,7 @@ namespace EditorArea {
 				{
 					Path reducedPath = new Path(p);
 					reducedPath.points = LineReduction.DouglasPeuckerReduction(rep, p.points, rdpTolerance, true);
-					reducedPath.color = p.color;
+					reducedPath.color = new Color(p.color.r, p.color.g, p.color.b, p.color.a);
 					for (int i = reducedPath.points.Count - 1; i > 0; i--) {
 						reducedPath.points [i].parent = reducedPath.points [i - 1];
 					}
