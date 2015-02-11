@@ -212,12 +212,21 @@ namespace Exploration {
 			Vector2 posE = e.getPosition(t);
 			Vector2 posP = new Vector2(x,y);
 			if(Vector2.Distance(posE, posP) > e.fovDistance){
+				Debug.Log ("Too Far Away");
 				return false;
 			}
 			if(Vector2.Angle((posP-posE), e.getForward(t)) > e.fovAngle*0.5){
+				Debug.Log ("Angle Too Big");
 				return false;
 			}
-			return checkCollObs(x, y, posE.x, posE.y, obs);
+			bool toReturn = checkCollObs(x, y, posE.x, posE.y, obs);
+			if(toReturn){
+				Debug.Log ("Obstacle to enemy detected");
+			}
+			else{
+				Debug.Log ("Collision with enemy");
+			}
+			return toReturn;
 		}
 
 

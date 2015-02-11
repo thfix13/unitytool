@@ -44,6 +44,8 @@ namespace EditorArea {
 		private static GameObject[] enemygeoobjs = null;
 		private static List<EnemyGeo> enemygeos = null;
 		private static bool playingGeo = false;
+		private static int curFrame = 0, realFrame = 0, totalFrames = 0;
+		private static bool ignoreFrameLimit = true;
 
 		// Helping stuff
 		private static Vector2 scrollPos = new Vector2 ();
@@ -332,6 +334,9 @@ namespace EditorArea {
 			#endregion not mine
 
 			#region experimental
+			EditorGUILayout.LabelField ("");
+			EditorGUILayout.LabelField ("");
+
 			RRTKDTreeGEO rrtgeo = new RRTKDTreeGEO();
 
 			if(GUILayout.Button("Clear Paths"))
@@ -340,6 +345,22 @@ namespace EditorArea {
 				DestroyImmediate(g);
 				g = new GameObject("temp");
 			}
+
+			EditorGUILayout.LabelField ("");
+			
+			if (GUILayout.Button (playingGeo ? "StopGeo" : "PlayGeo")) {
+				playingGeo = !playingGeo;
+			}
+
+			if (GUILayout.Button ("Reset playtime")){
+				playingGeo = false;
+				curFrame = 0;
+				realFrame = 0;
+				goToFrame(0);
+			}
+			
+			EditorGUILayout.LabelField ("");
+
 
 			if (GUILayout.Button ("Compute Path Geo")) {
 				if(enemygeoobjs  == null){
@@ -551,7 +572,8 @@ namespace EditorArea {
 
 
 
-
+			EditorGUILayout.LabelField ("");
+			EditorGUILayout.LabelField ("");
 
 
 
@@ -1000,6 +1022,86 @@ namespace EditorArea {
 		}
 
 
+		private void goToFrame(int t){
+			foreach(EnemyGeo e in enemygeos){
+				e.goToFrame(t);
+			}
+			goToFrameP(t);
+		}
+
+		private void goToFrameP(int t){
+			List<NodeGeo> path = pathsgeo.Last().points;
+			NodeGeo current = path.First();
+			Vector2 position = Vector2.zero;
+			if(t > path.Last().t){
+				return;
+			}
+			for(int i = 0; i < path.Count; i++){
+				current = path[i];
+				if(current.t > t){
+					position = Vector2.Lerp(new Vector2(current.parent.x, current.parent.y), new Vector2(current.x, current.y), (((float)t) - ((float)current.parent.t)) / (((float)current.t) - ((float)current.parent.t)));
+					break;
+				}
+			}
+
+			GameObject P = GameObject.Find ("Player");
+			Vector3 position3 = P.transform.position;
+			position3.x = position.x;
+			position3.z = position.y;
+			P.transform.position = position3;
+		}
+
+		public void Update(){
+			/*if(!clean){
+				cleanUp();
+				clean = true;
+			}
+			
+			if(prevDrawPaths != drawPaths){
+				DestroyImmediate(paths);
+				paths = new GameObject("paths");
+				paths.transform.parent = players.transform;
+				if(drawPaths){
+					foreach(movementModel model in mModels){
+						if(model != null){
+							model.drawPath(paths);
+						}
+					}
+				}
+			}
+			prevDrawPaths = drawPaths;*/
+			
+			
+
+			if(playingGeo){
+				ignoreFrameLimit = true;
+				if(realFrame != curFrame){
+					
+					goToFrame(curFrame);
+					realFrame = curFrame;
+				}
+				else if(curFrame <= totalFrames || ignoreFrameLimit){
+					curFrame++;
+					realFrame = curFrame;
+					goToFrame(curFrame);
+					Debug.Log (curFrame);
+					//MOVE STUFF!
+
+					//if(!isOne){
+					//	goToFrame(curFrame);
+					//}
+					
+				}
+				
+			}
+			else{
+				if(realFrame != curFrame){
+					goToFrame(curFrame);
+					realFrame = curFrame;
+				}
+			}
+		}
+
 		#region notmineL
 
 		public List<Vector2> ComputeLine(Vector2 v1, Vector2 v2)
@@ -1104,7 +1206,7 @@ namespace EditorArea {
 			previous = DateTime.Now;
 
 		}
-		public void Update () {
+		/*public void Update () {
 			textDraw.Clear();
 			if (playing) {
 				long l = DateTime.Now.Ticks - previous.Ticks;
@@ -1127,7 +1229,7 @@ namespace EditorArea {
 			}
 				
 			previous = DateTime.Now;
-		}
+		}*/
 		
 		private void ClearPathsRepresentation () {
 			toggleStatus.Clear ();
