@@ -355,9 +355,11 @@ public class Triangulation : MonoBehaviour
 		}
 		
 		//Get the area of the triangles
-		float area = 0.0f; 
+		float area = 1.0f; 
 		foreach(Triangle tt in triangles)
 			area += tt.GetArea(); 
+
+
 
 		return area;
 
@@ -468,6 +470,7 @@ public class Triangulation : MonoBehaviour
 
 			}
 		}
+
 		return ToReturnLine; 
 	}
 
