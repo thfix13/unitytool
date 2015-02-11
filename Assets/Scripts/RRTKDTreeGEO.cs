@@ -16,7 +16,7 @@ namespace Exploration {
 		public KDTree tree;
 		public List<NodeGeo> explored;
 		// Only do noisy calculations if enemies is different from null
-		public List<EnemyGeo> enemies = null;
+		public List<EnemyGeo> enemies;
 		//public Vector3 min;
 		//public float tileSizeX, tileSizeZ;
 
@@ -184,6 +184,7 @@ namespace Exploration {
 		public bool checkCollEs(float startX, float startY,int startT, float endX, float endY,  int endT, List<EnemyGeo> enems, List<Geometry> obs){
 			Debug.Log ("CheckCollEs");
 			if(enems == null){
+				Debug.Log ("no enems");
 				return false;
 			}
 			int numSteps = endT - startT;
@@ -203,13 +204,14 @@ namespace Exploration {
 				checkX += stepX;
 				checkY += stepY;
 			}
-
+			Debug.Log ("All enmes checked");
 			return false;
 		}
 
 		public bool checkCollE(EnemyGeo e, float x, int t, float y, List<Geometry> obs){
 			Debug.Log ("CheckCollE");
-			Vector2 posE = e.getPosition(t);
+			Vector3 posE3 = e.getPosition (t);
+			Vector2 posE = new Vector2(posE3.x, posE3.z);
 			Vector2 posP = new Vector2(x,y);
 			if(Vector2.Distance(posE, posP) > e.fovDistance){
 				Debug.Log ("Too Far Away");
@@ -226,7 +228,7 @@ namespace Exploration {
 			else{
 				Debug.Log ("Collision with enemy");
 			}
-			return toReturn;
+			return !toReturn;
 		}
 
 

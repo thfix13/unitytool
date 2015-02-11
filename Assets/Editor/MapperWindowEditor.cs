@@ -370,9 +370,9 @@ namespace EditorArea {
 						enemygeos.Add(g.GetComponent<EnemyGeo>());
 
 					}
-					rrtgeo.enemies = enemygeos;
-				}
 
+				}
+				rrtgeo.enemies = enemygeos;
 				triangles = GameObject.Find ("Triangulation").GetComponent<Triangulation>();
 
 
