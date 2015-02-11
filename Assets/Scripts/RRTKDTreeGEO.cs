@@ -16,7 +16,7 @@ namespace Exploration {
 		public KDTree tree;
 		public List<NodeGeo> explored;
 		// Only do noisy calculations if enemies is different from null
-		public EnemyGeo[] enemies = null;
+		public List<EnemyGeo> enemies = null;
 		//public Vector3 min;
 		//public float tileSizeX, tileSizeZ;
 
@@ -36,6 +36,8 @@ namespace Exploration {
 
 
 		public List<NodeGeo> ComputeGeo (float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, List<Geometry> obstacles, int attemps, float speed,  bool smooth = false) {
+			Debug.Log ("COMPUTEGEO");
+
 			// Initialization
 			tree = new KDTree (3);
 			explored = new List<NodeGeo> ();
@@ -164,6 +166,7 @@ namespace Exploration {
 
 		//Check for collision of a path with the obstacles, x, t, y
 		public bool checkCollObs(float startX, float startY, float endX, float endY, List<Geometry> obs){
+			Debug.Log ("checkCollObs");
 			Vector3 start = new Vector3(startX, 1, startY);
 			Vector3 end = new Vector3(endX, 1, endY);
 			Line path = new Line(start, end);
@@ -178,7 +181,8 @@ namespace Exploration {
 		}
 
 		//Check for collision of a path with the enemies
-		public bool checkCollEs(float startX, float startY,int startT, float endX, float endY,  int endT, EnemyGeo[] enems, List<Geometry> obs){
+		public bool checkCollEs(float startX, float startY,int startT, float endX, float endY,  int endT, List<EnemyGeo> enems, List<Geometry> obs){
+			Debug.Log ("CheckCollEs");
 			if(enems == null){
 				return false;
 			}
@@ -204,6 +208,7 @@ namespace Exploration {
 		}
 
 		public bool checkCollE(EnemyGeo e, float x, int t, float y, List<Geometry> obs){
+			Debug.Log ("CheckCollE");
 			Vector2 posE = e.getPosition(t);
 			Vector2 posP = new Vector2(x,y);
 			if(Vector2.Distance(posE, posP) > e.fovDistance){

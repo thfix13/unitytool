@@ -59,14 +59,13 @@ namespace Objects {
 			return forT;
 		}
 
-		private int curT;
-		private Vector3 posT;
-		private Vector3 forT;
+		private int curT = 0;
+		private Vector3 posT = Vector3.zero;
+		private Vector3 forT = Vector3.zero;
 
-		int timeLeft;
+		int timeLeft = 0;
 		WaypointGeo nextWay;
-		Vector3 pos;
-		Vector3 forw;
+
 		
 		
 		private void computeAtTime(int t){
@@ -74,20 +73,28 @@ namespace Objects {
 				curT = t;
 				timeLeft = t;
 				nextWay = initialTarget;
-				pos = initialPosition;
-				forw = initialForward;
+				posT = initialPosition;
+				forT = initialForward;
 
-				while(timeLeft > 0){
-
+				//int bob = 100;
+				//Debug.Log (timeLeft);
+				while(timeLeft > 0){// && bob > 0){
+					//bob--;
+					//Debug.Log ("bob");
+					//Debug.Log (bob);
+					//Debug.Log ("end bob");
 					switch (nextWay.type)
 					{
 					case "wait" :
+						//Debug.Log ("wait");
 						timeLeft = timeLeft - nextWay.waitTime;
 						break;
 					case "move" :
+						//Debug.Log ("move");
 						tryMove(nextWay);
 						break;
 					case "rot" :
+						//Debug.Log ("rot");
 						tryRot(nextWay);
 						break;
 					default:
@@ -97,58 +104,77 @@ namespace Objects {
 
 					nextWay = nextWay.next;
 				}
-					 
+
+
+				//if(bob == 0){
+				//	Debug.Log (timeLeft);
+				//}
 
 			}
 		}
 
 		private void tryMove(WaypointGeo trgt){
-			float distance = Vector3.Distance(pos, trgt.transform.position);
+			//Debug.Log (posT);
+			//Debug.Log (trgt.transform.position);
+			float distance = Vector3.Distance(posT, trgt.transform.position);
+			//Debug.Log(distance);
 			int steps = Mathf.CeilToInt(distance / trgt.movSpeed);
+			//Debug.Log (steps);
+			//Debug.Log (((float)steps) / ((float)timeLeft));
 			if(steps > timeLeft){
-				pos = Vector3.Lerp(pos, trgt.transform.position, ((float)steps) / ((float)timeLeft));
+				posT = Vector3.Lerp(posT, trgt.transform.position, ((float)timeLeft) / ((float)steps));
+				//Debug.Log (posT);
+				timeLeft = 0;
 			}
 			else{
 				timeLeft = timeLeft - steps;
-				pos = trgt.transform.position;
+				posT = trgt.transform.position;
 			}
 		}
 
 		private void tryRot(WaypointGeo trgt){
-					float angleDif = Vector3.Angle(forw, trgt.transform.forward);
+					float angleDif = Vector3.Angle(forT, trgt.transform.forward);
 					int steps = Mathf.CeilToInt(angleDif / trgt.rotSpeed);
 					if(steps > timeLeft){
-						Vector3.Slerp(forw, trgt.transform.forward, ((float)steps) / ((float)timeLeft));
+						Vector3.Slerp(forT, trgt.transform.forward, ((float)timeLeft) / ((float)steps));
+						timeLeft = 0;
 					}
 					else{
 						timeLeft = timeLeft - steps;
-						forw = trgt.transform.forward;
+						forT = trgt.transform.forward;
 					}
 		}
 		public void goToFrame(int t){
-			Debug.Log ("GO TO FRAME");
-			transform.position = getPosition(t);
-			Debug.Log ("POSITION SET");
+			Vector3 tmp = getPosition(t);
+			//Debug.Log ("At time " + t + " the position was " + tmp);
+			transform.position = tmp;
+
 			transform.forward = getForward(t);
-			Debug.Log ("FORWARD SET");
 
 		}
 
 		public void Start(){
 			playingTime = 0;
-			tim= 0;
+			//tim= 0;
+			setInitialOrientationToCurrent();
 		}
 
-		private int tim = 0;
+		//private int tim = 5;
 		public void Update(){
-			tim++;
-			if(tim == 5){
+			//tim++;
+			//if(tim == 5){
 				//tim = 0;
-				Debug.Log (playingTime++);
-				//goToFrame(playingTime);
+
+				//Debug.Log (playingTime++);
+				playingTime++;
+				goToFrame(playingTime);
 				//getPosition(playingTime);
-				Debug.Log ("...?");
-			}
+				//computeAtTime(1);
+				//posT = initialPosition;
+				//timeLeft = 15;
+				//tryMove(initialTarget);
+				//Debug.Log ("...?");
+			//}
 		}
 
 

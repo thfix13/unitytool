@@ -14,6 +14,8 @@ using Objects;
 namespace EditorArea {
 	public class MapperWindowEditor : EditorWindow {
 
+		#region variables
+
 		// Data holders
 		private static Cell[][][] fullMap, original;
 		public static List<Path> paths = new List<Path> (), deaths = new List<Path>();
@@ -39,6 +41,9 @@ namespace EditorArea {
 		public static List<PathGeo> pathsgeo = new List<PathGeo> ();
 		public static bool drawPathGeo = true;
 		private static Dictionary<PathGeo, bool> toggleStatusGeo = new Dictionary<PathGeo, bool> ();
+		private static GameObject[] enemygeoobjs = null;
+		private static List<EnemyGeo> enemygeos = null;
+		private static bool playingGeo = false;
 
 		// Helping stuff
 		private static Vector2 scrollPos = new Vector2 ();
@@ -53,7 +58,9 @@ namespace EditorArea {
 		private MapperEditorDrawer drawer;
 		private DateTime previous = DateTime.Now;
 		private long accL = 0L;
-		
+
+		#endregion variables
+
 		[MenuItem("Window/Mapper")]
 		static void Init () {
 			MapperWindowEditor window = (MapperWindowEditor)EditorWindow.GetWindow (typeof(MapperWindowEditor));
@@ -146,7 +153,9 @@ namespace EditorArea {
 			// ----------------------------------
 			
 			#region 4. Path
-			
+
+			#region not mine
+
 			EditorGUILayout.LabelField ("4. Path");
 			
 			start = (GameObject)EditorGUILayout.ObjectField ("Start", start, typeof(GameObject), true);
@@ -189,6 +198,8 @@ namespace EditorArea {
 			}
 
 			if (GUILayout.Button ("Compute Path")) {
+
+
 
 				float playerSpeed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
 				float playerMaxHp = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().maxHp;
@@ -318,6 +329,7 @@ namespace EditorArea {
 
 			}
 			
+			#endregion not mine
 
 			#region experimental
 			RRTKDTreeGEO rrtgeo = new RRTKDTreeGEO();
@@ -330,6 +342,16 @@ namespace EditorArea {
 			}
 
 			if (GUILayout.Button ("Compute Path Geo")) {
+				if(enemygeoobjs  == null){
+					enemygeoobjs  = GameObject.FindGameObjectsWithTag("EnemyGeo");
+					enemygeos = new List<EnemyGeo>();
+					foreach(GameObject g in enemygeoobjs){
+						enemygeos.Add(g.GetComponent<EnemyGeo>());
+
+					}
+					rrtgeo.enemies = enemygeos;
+				}
+
 				triangles = GameObject.Find ("Triangulation").GetComponent<Triangulation>();
 
 
@@ -442,7 +464,7 @@ namespace EditorArea {
 						if (nodes.Count > 0) {
 							pathsgeo.Add (new PathGeo(nodes));
 							toggleStatusGeo.Add(pathsgeo.Last(), true);
-							Debug.Log ("Count1 is : " + toggleStatusGeo.Count);
+							//Debug.Log ("Count1 is : " + toggleStatusGeo.Count);
 							pathsgeo.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
 							//paths.Add (new Path (nodes));
 							//toggleStatus.Add (paths.Last (), true);
@@ -976,6 +998,9 @@ namespace EditorArea {
 			SceneView.RepaintAll ();
 
 		}
+
+
+		#region notmineL
 
 		public List<Vector2> ComputeLine(Vector2 v1, Vector2 v2)
 		{
@@ -1566,5 +1591,7 @@ namespace EditorArea {
 			}
 		}
 		
+		#endregion notmineL
+	
 	}
 }
