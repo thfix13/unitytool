@@ -25,7 +25,7 @@ namespace EditorArea {
 		private static bool drawMap = false, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = true, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false, limitImportablePathsToCurLevel = true;
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10;
 		private static int randomSeed = -1;
-		
+		private static int nbPaths = -1;
 		// Clustering
 		private static String[] distMetrics = new String[] { "Frechet", "Area (Triangulation)", "Area (Interpolation) 3D", "Hausdorff" };
 		private static String[] clustAlgs = new String[] { "KMeans++", "DBScan" };
@@ -370,7 +370,12 @@ namespace EditorArea {
 				
 				goodPathFiles.Add(pathsInfo[count].Name);
 			}
-			
+
+			 
+
+			nbPaths = (int)EditorGUILayout.IntField("nbPaths",nbPaths);
+
+
 			String[] pathFileNames = goodPathFiles.ToArray();
 			chosenFileIndex = EditorGUILayout.Popup("Import paths", chosenFileIndex, pathFileNames);
 			if (chosenFileIndex != -1)
@@ -382,13 +387,27 @@ namespace EditorArea {
 				origPaths = new List<Path>();
 				
 				List<Path> pathsImported = PathBulk.LoadPathsFromFile(pathFileNames[chosenFileIndex]);
-				
+
+				List<Path> tempRandomPaths = new List<Path>(); 
+
+				if(nbPaths != -1)
+				{
+					for(int i =0; i<nbPaths;i++)
+					{
+						int posRandom = UnityEngine.Random.Range(0,pathsImported.Count); 
+						if(!tempRandomPaths.Contains(pathsImported[posRandom]))
+							tempRandomPaths.Add(pathsImported[posRandom]);
+					}
+
+					pathsImported = tempRandomPaths;
+				}
 				foreach (Path p in pathsImported) {
 					if (p.points.Last().playerhp <= 0) {
 						deaths.Add(p);
 					} else {
 						p.name = "Imported " + (++imported);
-						p.color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
+						p.color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), 
+							                     UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
 						toggleStatus.Add (p, true);
 					}
 					paths.Add(p);
@@ -862,6 +881,7 @@ namespace EditorArea {
 			
 			if (GUILayout.Button ("Cluster on path similarity"))
 			{
+				resetClusteringData();
 				if (paths.Count < numClusters)
 				{
 					Debug.Log("You have less paths than you have desired clusters - either compute more paths or decrease cluster amount.");
@@ -1013,7 +1033,7 @@ namespace EditorArea {
 						{
 							foreach(Path path in clusters[c])
 							{
-								Debug.Log(c);
+								//Debug.Log(c);
 								path.color = colors[c];
 								if (path.Equals(clusterCentroids[c]))
 								{
