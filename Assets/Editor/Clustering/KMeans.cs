@@ -28,15 +28,19 @@ namespace ClusteringSpace
 				
 		public static double[] weights;
 		public static int numPaths = -1;
-				
+
+		public static System.Random rand = new System.Random(12345);
+
 		public static void reset()
 		{
+
 			distMetric = -1;
 			clustVal = 0.0;
 			numPaths = -1;
 			numSelectedDimensions = -1;
 			init = false;
 			Clustering.reset();
+			System.Random rand = new System.Random(12345);
 		}
 		
         private static List<PathCollection> initializeCentroids(List<Path> paths, int numClusters, double[] weights_)
@@ -49,7 +53,7 @@ namespace ClusteringSpace
             bool[] usedPoint = new bool[paths.Count()];
 
             //Pick 1st centroid at random
-            int c1 = new System.Random().Next(0, paths.Count() - 1);
+			int c1 = rand.Next(0, paths.Count() - 1);
             usedPoint[c1] = true;
 			clusters.Add(new PathCollection(paths[c1]));
 
@@ -113,8 +117,12 @@ namespace ClusteringSpace
 			
             bool[] usedPoint = new bool[paths.Count()];
 
+			
+
             //Pick 1st centroid at random
-            int c1 = new System.Random().Next(0, paths.Count() - 1);
+
+
+			int c1 = rand.Next(0, paths.Count() - 1);
             usedPoint[c1] = true;
 			centroids.Add(paths[c1]);
 				
@@ -142,7 +150,7 @@ namespace ClusteringSpace
 					}
 					
 					double pathProbability = oversamplingFactor * minDist / currentClustCost;
-					double chance = new System.Random().NextDouble();
+					double chance = rand.NextDouble();
 					
 					if (chance <= pathProbability)
 					{ // if sampled, add to centroid list

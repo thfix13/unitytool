@@ -394,8 +394,7 @@ namespace EditorArea {
 				{
 					for(int i =0; i<nbPaths;i++)
 					{
-						int posRandom = (int)UnityEngine.Random.Range(0,pathsImported.Count); 
-
+						int posRandom = UnityEngine.Random.Range(0,pathsImported.Count); 
 						if(!tempRandomPaths.Contains(pathsImported[posRandom]))
 							tempRandomPaths.Add(pathsImported[posRandom]);
 					}
@@ -882,6 +881,7 @@ namespace EditorArea {
 			
 			if (GUILayout.Button ("Cluster on path similarity"))
 			{
+				resetClusteringData();
 				if (paths.Count < numClusters)
 				{
 					Debug.Log("You have less paths than you have desired clusters - either compute more paths or decrease cluster amount.");
