@@ -20,6 +20,7 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 	private List<List<Vector2>> cells;
 	private Path playerPath;
 	private List<Vector3> playerPoints;
+	private List<Vector3> playerRot;
 	
 	
 	// Use this for initialization
@@ -76,6 +77,7 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 			
 			playerPath = new Path (new List<Node> ());
 			playerPoints = new List<Vector3> ();
+			playerRot = new List<Vector3>();
 			
 			if (end == null) {
 				end = GameObject.Find ("End");	
@@ -121,11 +123,17 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 			Vector2 pos = new Vector2 ((player.transform.position.x - SpaceState.Running.floorMin.x) / SpaceState.Running.tileSize.x, (player.transform.position.z - SpaceState.Running.floorMin.z) / SpaceState.Running.tileSize.y);
 			int mapX = (int)pos.x;
 			int mapY = (int)pos.y;
-			
+			float mapXRot = player.transform.rotation.x;
+			float mapYRot = player.transform.rotation.y;
+			float mapZRot = player.transform.rotation.z;
+
 			Node curr = new Node ();
 			curr.t = SpaceState.Running.timeSlice;
 			curr.x = mapX;
 			curr.y = mapY;
+			curr.xRot = mapXRot;
+			curr.yRot = mapYRot;
+			curr.zRot = mapZRot;
 			curr.cell = fullMap [curr.t] [curr.x] [curr.y];
 			curr.parent = last;
 			last = curr;
@@ -136,6 +144,7 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 			
 			playerPath.points.Add (last);
 			playerPoints.Add (player.transform.position);
+			playerRot.Add (new Vector3(player.transform.rotation.x, player.transform.rotation.y, player.transform.rotation.z));
 			
 			SpaceState.Running.timeSlice++;
 			acc -= stepSize;
@@ -167,7 +176,7 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 		List<Path> paths = new List<Path> ();
 		paths.Add (playerPath);
 		PathBulk.SavePathsToFile ("playerPath.xml", paths);
-		new PathML (SpaceState.Running).SavePathsToFile ("playerML.xml", playerPoints);
+		new PathML (SpaceState.Running).SavePathsToFile ("playerML.xml", playerPoints, playerRot);
 	}
 
 	public Node GetNode (int t, int x, int y) {

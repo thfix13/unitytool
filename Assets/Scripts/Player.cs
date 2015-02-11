@@ -31,6 +31,7 @@ namespace Objects {
 			Vector2 pos = new Vector2 ((transform.position.x - SpaceState.Running.floorMin.x) / SpaceState.Running.tileSize.x, (transform.position.z - SpaceState.Running.floorMin.z) / SpaceState.Running.tileSize.y);
 			int mapX = (int)pos.x;
 			int mapY = (int)pos.y;
+
 			if (SpaceState.Running.fullMap != null) {
 				if (SpaceState.Running.fullMap [SpaceState.Running.timeSlice - 1] [mapX] [mapY].goal)
 					state = 1;

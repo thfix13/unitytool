@@ -90,30 +90,44 @@ namespace Common {
 			this.state = state;
 		}
 		
-		public void SavePathsToFile (string file, List<Vector3> points) {
+		public void SavePathsToFile (string file, List<Vector3> points, List<Vector3> rot) {
 
 			for (int i = 0; i < points.Count; i++) {
 				
 				TimeStamp ts = new TimeStamp ();
 				ts.t = i;
 				ts.playerPos = points [i];
-				
+				ts.playerRot = rot[i];
+
 				for (int k = 0; k < SpaceState.Running.enemies.Length; k++) {
 
 					EnemyStamp es = new EnemyStamp ();
 					es.id = k;
 					es.position = SpaceState.Running.enemies [k].positions [i];
-					
+					es.rotation = new Vector3(SpaceState.Running.enemies[k].gameObject.transform.rotation.x,
+					                          SpaceState.Running.enemies[k].gameObject.transform.rotation.y,
+					                          SpaceState.Running.enemies[k].gameObject.transform.rotation.z);
+
 					int mapPX = (int)((ts.playerPos.x - SpaceState.Running.floorMin.x) / SpaceState.Running.tileSize.x);
 					int mapPY = (int)((ts.playerPos.z - SpaceState.Running.floorMin.z) / SpaceState.Running.tileSize.y);
+					float mapRX = ts.playerRot.x;
+					float mapRY = ts.playerRot.y;
+					float mapRZ = ts.playerRot.z;
 					
 					int mapEX = (int)((es.position.x - SpaceState.Running.floorMin.x) / SpaceState.Running.tileSize.x);
 					int mapEY = (int)((es.position.z - SpaceState.Running.floorMin.z) / SpaceState.Running.tileSize.y);
 					
+					float mapERX = es.rotation.x;
+					float mapERY = es.rotation.y;
+					float mapERZ = es.rotation.z;
+
+
+
 					Node n1 = new Node ();
 					n1.x = mapPX;
 					n1.t = ts.t;
 					n1.y = mapPY;
+					n1.xRot = mapRX;
 					n1.cell = SpaceState.Running.fullMap [n1.t] [n1.x] [n1.y];
 					
 					Node n2 = new Node ();
@@ -156,9 +170,9 @@ namespace Common {
 	public class TimeStamp {
 		
 		[XmlAttribute]
-		public int
-			t;
+		public int	t;
 		public Vector3 playerPos;
+		public Vector3 playerRot;
 		public List<EnemyStamp> enemies = new List<EnemyStamp> ();
 		
 	}
@@ -166,9 +180,9 @@ namespace Common {
 	public class EnemyStamp {
 		
 		[XmlAttribute]
-		public int
-			id;
+		public int id;
 		public Vector3 position;
+		public Vector3 rotation;
 		public bool los;
 		public float angle;
 		
