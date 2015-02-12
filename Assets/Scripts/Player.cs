@@ -7,7 +7,7 @@ namespace Objects {
 		public float speed;
 		public float maxHp;
 		public FlashLight flashlight;
-		public Cell[][] cells;
+		public Vector2[][] cells;
 		private Vector3 initialPosition;
 		private Quaternion initialRotation;
 		

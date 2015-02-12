@@ -28,7 +28,7 @@ namespace Objects {
 
 
 		[HideInInspector]
-		public Vector2[][] cells; // The second index goes from 0 to the amount of seen cells in that time span
+		public Vector2[][] cells; 
 		[HideInInspector]
 		public Cell[][][] seenCells;
 		[HideInInspector]

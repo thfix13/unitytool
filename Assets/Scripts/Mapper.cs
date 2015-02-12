@@ -71,7 +71,7 @@ public class Mapper : MonoBehaviour {
 			enemies [i].seesPlayer = new bool[timestamps];
 		}
 		GameObject p = GameObject.FindGameObjectWithTag ("Player") as GameObject;
-		Player player = p.GetComponent ("Player");
+		Player player = p.GetComponent<Player>();
 		player.cells = new Vector2[timestamps][];
 
 		Cell[][][] fullMap = new Cell[timestamps][][];
@@ -125,7 +125,7 @@ public class Mapper : MonoBehaviour {
 	
 	public Cell[][] ComputeMap (Cell[][] baseMap, Enemy[] enemies, List<List<Vector2>> cellsByEnemy) {
 		GameObject pl = GameObject.FindGameObjectWithTag ("Player") as GameObject;
-		Player player = p.GetComponent ("Player");
+		Player player = pl.GetComponent<Player>();
 
 		Cell[][] im = new Cell[cellsX][];
 		
