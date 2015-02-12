@@ -124,8 +124,8 @@ public class Mapper : MonoBehaviour {
 
 	
 	public Cell[][] ComputeMap (Cell[][] baseMap, Enemy[] enemies, List<List<Vector2>> cellsByEnemy) {
-		GameObject pl = GameObject.FindGameObjectWithTag ("Player") as GameObject;
-		Player player = pl.GetComponent<Player>();
+		//GameObject pl = GameObject.FindGameObjectWithTag ("Player") as GameObject;
+		//Player player = pl.GetComponent<Player>();
 
 		Cell[][] im = new Cell[cellsX][];
 		

@@ -56,7 +56,8 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 				enemies [i].cells = new Vector2[10000][];
 				enemies [i].seesPlayer = new bool[10000];
 			}
-			play.cells = new Vector2[10000][];
+
+//			play.cells = new Vector2[10000][];
 			
 			cells = new List<List<Vector2>> ();
 			// Prepare the cells by enemy
