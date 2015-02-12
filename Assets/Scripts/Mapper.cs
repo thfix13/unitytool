@@ -68,7 +68,12 @@ public class Mapper : MonoBehaviour {
 			enemies [i].forwards = new Vector3[timestamps];
 			enemies [i].rotations = new Quaternion[timestamps];
 			enemies [i].cells = new Vector2[timestamps][];
+			enemies [i].seesPlayer = new bool[timestamps];
 		}
+		GameObject p = GameObject.FindGameObjectWithTag ("Player") as GameObject;
+		Player player = p.GetComponent ("Player");
+		player.cells = new Vector2[timestamps][];
+
 		Cell[][][] fullMap = new Cell[timestamps][][];
 		
 		List<List<Vector2>> cells = new List<List<Vector2>> ();
@@ -119,9 +124,8 @@ public class Mapper : MonoBehaviour {
 
 	
 	public Cell[][] ComputeMap (Cell[][] baseMap, Enemy[] enemies, List<List<Vector2>> cellsByEnemy) {
-		GameObject player = GameObject.FindGameObjectWithTag ("Player")as GameObject;
-
-//		Debug.Log (player.transform.position.x);
+		GameObject pl = GameObject.FindGameObjectWithTag ("Player") as GameObject;
+		Player player = p.GetComponent ("Player");
 
 		Cell[][] im = new Cell[cellsX][];
 		
@@ -194,9 +198,11 @@ public class Mapper : MonoBehaviour {
 					// If this enemy has seen it
 					if (seen)
 						cellsByEnemy [i].Add (new Vector2 (x, y));
-
 					// Now take into account other enemies before modifying the cells value
 					im [x] [y].seen = im [x] [y].seen || seen;
+
+
+
 				}
 			}
 		}

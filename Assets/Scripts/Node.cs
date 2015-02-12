@@ -10,7 +10,9 @@ namespace Common {
 	// Structure that holds the information used in the AStar cells
 		public class Node : Priority_Queue.PriorityQueueNode {
 		public int x, y, t;
-		public float xRot, yRot, zRot;
+		public Quaternion rot;
+		public float visRange, visAngle;
+		public bool seen;
 		public float playerhp;
 		[XmlIgnore]
 		public Dictionary<Enemy, float> enemyhp;
@@ -50,7 +52,7 @@ namespace Common {
 		}
 
 		public Boolean equalTo (Node b) {
-			if (this.x == b.x & this.y == b.y & this.t == b.t &this.xRot == b.xRot & this.yRot == b.yRot)
+			if (this.x == b.x & this.y == b.y & this.t == b.t &this.rot == b.rot )
 				return true;
 			return false; 
 		}

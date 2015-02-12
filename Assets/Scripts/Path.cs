@@ -90,7 +90,7 @@ namespace Common {
 			this.state = state;
 		}
 		
-		public void SavePathsToFile (string file, List<Vector3> points, List<Vector3> rot) {
+		public void SavePathsToFile (string file, List<Vector3> points, List<Quaternion> rot, List<Vector2> los) {
 
 			for (int i = 0; i < points.Count; i++) {
 				
@@ -98,28 +98,34 @@ namespace Common {
 				ts.t = i;
 				ts.playerPos = points [i];
 				ts.playerRot = rot[i];
+				ts.playerLOS = los[i];
 
 				for (int k = 0; k < SpaceState.Running.enemies.Length; k++) {
 
 					EnemyStamp es = new EnemyStamp ();
 					es.id = k;
 					es.position = SpaceState.Running.enemies [k].positions [i];
-					es.rotation = new Vector3(SpaceState.Running.enemies[k].gameObject.transform.rotation.x,
-					                          SpaceState.Running.enemies[k].gameObject.transform.rotation.y,
-					                          SpaceState.Running.enemies[k].gameObject.transform.rotation.z);
+					es.rotation = SpaceState.Running.enemies [k].rotations[i];
+					es.LOS = new Vector2(SpaceState.Running.enemies[k].fovDistance,
+					                     SpaceState.Running.enemies[k].fovAngle);
+					es.los = SpaceState.Running.enemies[k].seesPlayer[i];
+
+					//es.los = SpaceState.Running.enemies[k]
 
 					int mapPX = (int)((ts.playerPos.x - SpaceState.Running.floorMin.x) / SpaceState.Running.tileSize.x);
 					int mapPY = (int)((ts.playerPos.z - SpaceState.Running.floorMin.z) / SpaceState.Running.tileSize.y);
-					float mapRX = ts.playerRot.x;
-					float mapRY = ts.playerRot.y;
-					float mapRZ = ts.playerRot.z;
-					
+					Quaternion mapR = ts.playerRot;
+					float mapVR = ts.playerLOS.x;
+					float mapVA = ts.playerLOS.y;
+
+
 					int mapEX = (int)((es.position.x - SpaceState.Running.floorMin.x) / SpaceState.Running.tileSize.x);
 					int mapEY = (int)((es.position.z - SpaceState.Running.floorMin.z) / SpaceState.Running.tileSize.y);
 					
-					float mapERX = es.rotation.x;
-					float mapERY = es.rotation.y;
-					float mapERZ = es.rotation.z;
+					Quaternion mapER = es.rotation;
+					float mapELOSRange = es.LOS.x;
+					float mapELOSAngle = es.LOS.y;
+
 
 
 
@@ -127,20 +133,22 @@ namespace Common {
 					n1.x = mapPX;
 					n1.t = ts.t;
 					n1.y = mapPY;
-					n1.xRot = mapRX;
+					n1.rot = mapR;
+					n1.visRange = mapVR;
+					n1.visAngle = mapVA;
 					n1.cell = SpaceState.Running.fullMap [n1.t] [n1.x] [n1.y];
 					
 					Node n2 = new Node ();
 					n2.x = mapEX;
 					n2.t = ts.t;
 					n2.y = mapEY;
+					n2.rot = mapER;
+					n2.visRange = mapELOSRange;
+					n2.visAngle = mapELOSAngle;
 					n2.cell = SpaceState.Running.fullMap [n2.t] [n2.x] [n2.y];
 					
 					es.angle = Vector3.Angle (SpaceState.Running.enemies [k].forwards [i], (ts.playerPos - es.position).normalized);
-					
-					//es.los = ! CheckCollision (n1, n2, 0);
-					es.los = ! Extra.Collision.CheckCollision (n1, n2, this, state);
-					
+		
 					ts.enemies.Add (es);
 				}
 				
@@ -172,7 +180,8 @@ namespace Common {
 		[XmlAttribute]
 		public int	t;
 		public Vector3 playerPos;
-		public Vector3 playerRot;
+		public Quaternion playerRot;
+		public Vector2 playerLOS;
 		public List<EnemyStamp> enemies = new List<EnemyStamp> ();
 		
 	}
@@ -182,7 +191,8 @@ namespace Common {
 		[XmlAttribute]
 		public int id;
 		public Vector3 position;
-		public Vector3 rotation;
+		public Quaternion rotation;
+		public Vector2 LOS;
 		public bool los;
 		public float angle;
 		

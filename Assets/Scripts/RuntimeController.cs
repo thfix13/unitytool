@@ -17,14 +17,18 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 	private Cell[][][] fullMap;
 	private int endX, endY;
 	private GameObject player;
+	private Player play;
 	private List<List<Vector2>> cells;
 	private Path playerPath;
 	private List<Vector3> playerPoints;
-	private List<Vector3> playerRot;
+	private List<Quaternion> playerRot;
+	private List<Vector2> playerLOS;
+	private List<bool> playerSeen;
 	
 	
 	// Use this for initialization
 	void Start () {
+
 		// First prepare the mapper class
 		if (floor == null)
 			floor = GameObject.Find ("Floor");
@@ -43,14 +47,16 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 			
 			GameObject[] en = GameObject.FindGameObjectsWithTag ("Enemy") as GameObject[];
 			Enemy[] enemies = new Enemy[en.Length];
-			
+
 			for (int i = 0; i < en.Length; i++) {
 				enemies [i] = en [i].GetComponent<Enemy> ();
 				enemies [i].positions = new Vector3[10000];
 				enemies [i].forwards = new Vector3[10000];
 				enemies [i].rotations = new Quaternion[10000];
 				enemies [i].cells = new Vector2[10000][];
+				enemies [i].seesPlayer = new bool[10000];
 			}
+			play.cells = new Vector2[10000][];
 			
 			cells = new List<List<Vector2>> ();
 			// Prepare the cells by enemy
@@ -74,10 +80,14 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 			player = GameObject.FindGameObjectWithTag ("Player");
 			if (player == null)
 				player = GameObject.FindGameObjectWithTag ("AI");
-			
+
+			play = player.GetComponent<Player>();
+
 			playerPath = new Path (new List<Node> ());
 			playerPoints = new List<Vector3> ();
-			playerRot = new List<Vector3>();
+			playerRot = new List<Quaternion>();
+			playerLOS = new List<Vector2>();
+			playerSeen = new List<bool>();
 			
 			if (end == null) {
 				end = GameObject.Find ("End");	
@@ -105,35 +115,63 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 	// After all Update() are called, this method is invoked
 	void LateUpdate () {
 		if (acc > stepSize) {
+			bool seen = false;
+
 			for (int en = 0; en < SpaceState.Running.enemies.Length; en++)
 				cells [en].Clear ();
-			
+
+			//CELLS IS A LIST OF LISTS OF VECTOR 2s
+			//in other words a 2d array, 
+			//1d -> enemy
+			//2d -> seen cells for that enemy (vector 2 of x and y)
 			Cell[][] computed = mapper.ComputeMap (obstaclesMap, SpaceState.Running.enemies, cells);
 			fullMap [SpaceState.Running.timeSlice] = computed;
 			
 			// Store the seen cells in the enemy class
 			List<Vector2>[] arr = cells.ToArray ();
 			for (int i = 0; i < SpaceState.Running.enemies.Length; i++) {
+
 				SpaceState.Running.enemies [i].cells [SpaceState.Running.timeSlice] = arr [i].ToArray ();
 				SpaceState.Running.enemies [i].positions [SpaceState.Running.timeSlice] = SpaceState.Running.enemies [i].transform.position;
+				SpaceState.Running.enemies [i].rotations [SpaceState.Running.timeSlice] = SpaceState.Running.enemies [i].transform.rotation;
 				SpaceState.Running.enemies [i].forwards [SpaceState.Running.timeSlice] = SpaceState.Running.enemies [i].transform.forward;
 				arr [i].Clear ();
+
+				//If player is seen by enemy
+				bool seesPlayer = false;
+				foreach(Vector2 v in SpaceState.Running.enemies[i].cells[SpaceState.Running.timeSlice])
+				{
+					if(play.inCell(SpaceState.Running.timeSlice,(int)v.x,(int)v.y))
+					{
+						seesPlayer = true;
+						seen = true;
+					}
+				}
+				SpaceState.Running.enemies[i].seesPlayer[SpaceState.Running.timeSlice] = (seesPlayer);
 			}
+
+
+
+			
 			
 			Vector2 pos = new Vector2 ((player.transform.position.x - SpaceState.Running.floorMin.x) / SpaceState.Running.tileSize.x, (player.transform.position.z - SpaceState.Running.floorMin.z) / SpaceState.Running.tileSize.y);
 			int mapX = (int)pos.x;
 			int mapY = (int)pos.y;
-			float mapXRot = player.transform.rotation.x;
-			float mapYRot = player.transform.rotation.y;
-			float mapZRot = player.transform.rotation.z;
+			Quaternion mapRot = player.transform.rotation;
+			float mapRange = play.flashlight.getLightVector().x;
+			float mapAngle = play.flashlight.getLightVector().y;
+
+
+			//float mapRange = 
 
 			Node curr = new Node ();
 			curr.t = SpaceState.Running.timeSlice;
 			curr.x = mapX;
 			curr.y = mapY;
-			curr.xRot = mapXRot;
-			curr.yRot = mapYRot;
-			curr.zRot = mapZRot;
+			curr.rot = mapRot;
+			curr.visAngle = mapAngle;
+			curr.visRange = mapRange;
+			curr.seen = seen;
 			curr.cell = fullMap [curr.t] [curr.x] [curr.y];
 			curr.parent = last;
 			last = curr;
@@ -144,8 +182,9 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 			
 			playerPath.points.Add (last);
 			playerPoints.Add (player.transform.position);
-			playerRot.Add (new Vector3(player.transform.rotation.x, player.transform.rotation.y, player.transform.rotation.z));
-			
+			playerRot.Add (player.transform.rotation);
+			playerLOS.Add (play.flashlight.getLightVector());
+			playerSeen.Add (seen);
 			SpaceState.Running.timeSlice++;
 			acc -= stepSize;
 		}
@@ -176,7 +215,7 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 		List<Path> paths = new List<Path> ();
 		paths.Add (playerPath);
 		PathBulk.SavePathsToFile ("playerPath.xml", paths);
-		new PathML (SpaceState.Running).SavePathsToFile ("playerML.xml", playerPoints, playerRot);
+		new PathML (SpaceState.Running).SavePathsToFile ("playerML.xml", playerPoints, playerRot, playerLOS);
 	}
 
 	public Node GetNode (int t, int x, int y) {

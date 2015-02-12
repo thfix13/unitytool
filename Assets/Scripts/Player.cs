@@ -6,7 +6,8 @@ namespace Objects {
 	public class Player : MonoBehaviour {
 		public float speed;
 		public float maxHp;
-		public Cell[][][] seenCells;
+		public FlashLight flashlight;
+		public Cell[][] cells;
 		private Vector3 initialPosition;
 		private Quaternion initialRotation;
 		
@@ -46,7 +47,17 @@ namespace Objects {
 		}
 		
 		private short state = 0;
-		
+		public bool inCell(int t, int x, int y)
+		{
+			Vector2 pos = new Vector2 ((transform.position.x - SpaceState.Running.floorMin.x) / SpaceState.Running.tileSize.x, (transform.position.z - SpaceState.Running.floorMin.z) / SpaceState.Running.tileSize.y);
+			int mapX = (int)pos.x;
+			int mapY = (int)pos.y;
+			if (SpaceState.Running.timeSlice == t && mapX == x && mapY == y)
+				return true;
+			return false;
+
+		}
+
 		void OnGUI () {
 			GUIStyle s = new GUIStyle ();
 			s.fontSize = 144;

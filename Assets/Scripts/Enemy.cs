@@ -16,6 +16,7 @@ namespace Objects {
 		public float radius = 0.5f;
 		public float dps = 2;
 		public float maxHealth = 100;
+
 		// The first index is always the time span you want to peek
 		[HideInInspector]
 		public Vector3[] positions;
@@ -23,10 +24,16 @@ namespace Objects {
 		public Vector3[] forwards;
 		[HideInInspector]
 		public Quaternion[] rotations;
+		//[HideInInspector]
+
+
 		[HideInInspector]
 		public Vector2[][] cells; // The second index goes from 0 to the amount of seen cells in that time span
 		[HideInInspector]
 		public Cell[][][] seenCells;
+		[HideInInspector]
+		public bool[] seesPlayer;
+
 		//
 		private Waypoint dummyTarget;
 		private Vector3 dummyPosition;
@@ -54,8 +61,21 @@ namespace Objects {
 			
 			currentPosition = transform.position;
 			currentRotation = transform.rotation;
+
+
+
 		}
-		
+		//returns true if in cell x,y at t
+		public bool inCell(int t, int x, int y)
+		{
+			Vector2 pos = new Vector2 ((transform.position.x - SpaceState.Running.floorMin.x) / SpaceState.Running.tileSize.x, (transform.position.z - SpaceState.Running.floorMin.z) / SpaceState.Running.tileSize.y);
+			int mapX = (int)pos.x;
+			int mapY = (int)pos.y;
+			if (SpaceState.Running.timeSlice == t && mapX == x && mapY == y)
+				return true;
+			return false;
+			
+		}
 		// Reset back the dummy and actual gameobject back to the initial position
 		public void ResetSimulation () {
 			transform.position = initialPosition;
