@@ -25,7 +25,7 @@ namespace EditorArea {
 		private static bool drawMap = false, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = true, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false, limitImportablePathsToCurLevel = true;
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10;
 		private static int randomSeed = -1;
-		private static int nbPaths = -1;
+		private static int nbPaths = -1, nbBatch = -1,fileloaded = -1;
 		// Clustering
 		private static String[] distMetrics = new String[] { "Frechet", "Area (Triangulation)", "Area (Interpolation) 3D", "Hausdorff" };
 		private static String[] clustAlgs = new String[] { "KMeans++", "DBScan" };
@@ -380,6 +380,9 @@ namespace EditorArea {
 			chosenFileIndex = EditorGUILayout.Popup("Import paths", chosenFileIndex, pathFileNames);
 			if (chosenFileIndex != -1)
 			{
+				
+				fileloaded = chosenFileIndex; 
+
 				useColors = false;
 				paths.Clear ();
 				ClearPathsRepresentation ();
@@ -879,287 +882,385 @@ namespace EditorArea {
 				}
 			}
 			
-			if (GUILayout.Button ("Cluster on path similarity"))
+			nbBatch = (int)EditorGUILayout.IntField("nbBatches",nbBatch);
+
+			String title = "Cluster on path similarity"; 
+
+			if (nbBatch>0)
+				title = nbBatch + " batchs cluster on path similarity";
+
+			if (GUILayout.Button (title))
 			{
-				resetClusteringData();
-				if (paths.Count < numClusters)
-				{
-					Debug.Log("You have less paths than you have desired clusters - either compute more paths or decrease cluster amount.");
-					return;
-				}
 
-				int numSelectedDimensions = 0;
-				for (int dim = 0; dim < dimensionEnabled.Count(); dim ++)
+				int counter = 0; 
+				do //For batch computation
 				{
-					if (dimensionEnabled[dim])
+					Debug.Log("Pass nb " + counter);
+					resetClusteringData();
+					//Reload the data  
+
+					if(nbBatch>0)
 					{
-						numSelectedDimensions ++;
-					}
-				}
-			
-				if (numSelectedDimensions < 1 && (distMetric == 0 || distMetric == 3))
-				{
-					Debug.Log("You must first select at least one dimension.");
-					return;
-				}
-				
-				if (origPaths.Count() == 0)
-				{
-					origPaths = new List<Path>();
-					foreach (Path p in paths)
-					{
-						origPaths.Add(new Path(p));
-					}
-					Clustering.initWithPaths(paths, (numSelectedDimensions > 1) ? true : false);
-				}
-				
-				paths.Clear();
-				paths = new List<Path>();
-				foreach (Path p in origPaths)
-				{
-					paths.Add(new Path(p));
-				}
-								
-				useColors = true;
-				
-				// scan the paths and remove any avg. centroid paths that were computed
-				foreach (Path p in paths)
-				{
-					if (p.name == "AvgCentroid")
-					{
-						Debug.Log("Removing avg. centroid");
-						paths.Remove(p);
-					}
-				}
-
-				KMeans.clustTime = new System.Diagnostics.Stopwatch();
-				KMeans.distTime = new System.Diagnostics.Stopwatch();
-
-				System.Diagnostics.Stopwatch clustTime = new System.Diagnostics.Stopwatch();
-				clustTime.Start();
-
-				double clustVal = 0.0;
-
-				if (clustAlg == 0) // kmeans++
-				{
-					if (paths.Count > 99)
-					{
-						Debug.Log("Paths: " + paths.Count());
-						List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/20, distMetric, numPasses);
-						clustVal = KMeans.clustVal;
-				
-						List<Path> tempCentroids = new List<Path>();
-						foreach(PathCollection pc in clusters)
+						if(fileloaded == -1)
 						{
-					//		if (altCentroidComp) tempCentroids.Add(pc.getCenterDistPath());
-					//		else
-								tempCentroids.Add(pc.Centroid);
+							Debug.Log("no previous file loaded, please load some traces if you 
+								want to to do batches.");
+
+							return;
 						}
-				
-				//		if (altCentroidComp) altCentroidComp = false;
-				
-						double[] weights = new double[paths.Count()];
-						for(int i = 0; i < paths.Count(); i ++) { weights[i] = 1.0; }
-						List<PathCollection> newClusters = KMeans.DoKMeans(tempCentroids, numClusters, distMetric, numPasses, weights);
-				
+						chosenFileIndex = fileloaded;
+
+						useColors = false;
 						paths.Clear ();
 						ClearPathsRepresentation ();
+						resetClusteringData();
+						origPaths = new List<Path>();
+						
+						List<Path> pathsImported = PathBulk.LoadPathsFromFile(pathFileNames[chosenFileIndex]);
 
-						clusterCentroids.Clear();
-						int cluster = 0;
-						foreach(PathCollection pc in newClusters)
+						List<Path> tempRandomPaths = new List<Path>(); 
+
+						if(nbPaths != -1)
 						{
-							Path centroid = pc.Centroid;
-							centroid.color = colors[cluster];
-							centroid.color.a = 0.5f;
-							pc.Add(centroid);
-							clusterCentroids.Add(centroid);
-							if (!paths.Contains(centroid))
+							for(int i =0; i<nbPaths;i++)
 							{
-								paths.Add(centroid);
-								toggleStatus.Add(paths.Last(), true);
+								int posRandom = UnityEngine.Random.Range(0,pathsImported.Count); 
+								if(!tempRandomPaths.Contains(pathsImported[posRandom]))
+									tempRandomPaths.Add(pathsImported[posRandom]);
 							}
-								
-							cluster ++;
+
+							pathsImported = tempRandomPaths;
+						}
+						foreach (Path p in pathsImported) {
+							if (p.points.Last().playerhp <= 0) {
+								deaths.Add(p);
+							} else {
+								p.name = "Imported " + (++imported);
+								p.color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), 
+									                     UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
+								toggleStatus.Add (p, true);
+							}
+							paths.Add(p);
 						}
 
-						for (int c = 0; c < newClusters.Count; c ++)
+						precomputeMaps();
+
+						ComputeHeatMap (paths, deaths);
+						SetupArrangedPaths (paths);
+						
+						for (int count = 0; count < paths.Count(); count ++)
 						{
-							for (int c2 = 0; c2 < tempCentroids.Count; c2 ++)
+							paths[count].name = count.ToString();
+						}
+
+						foreach (Path p in paths)
+						{ // check if x != xD, etc.
+							foreach (Node n in p.points)
 							{
-								if (newClusters[c].Contains(tempCentroids[c2]))
-								{ // then all paths of clusters[c2] list should be of the same color!
-									foreach (Path path in clusters[c2])
-									{
-										path.color = colors[c];
-										if (path.Equals(tempCentroids[c2]))
+								if (n.x != 0 && n.xD == 0) n.xD = n.x;
+								if (n.y != 0 && n.yD == 0) n.yD = n.y;
+								if (n.t != 0 && n.tD == 0) n.tD = n.t;
+							}
+						}
+
+						chosenFileIndex = -1; 
+					}
+
+
+
+					if (paths.Count < numClusters)
+					{
+						Debug.Log("You have less paths than you have desired clusters - either compute more paths or decrease cluster amount.");
+						return;
+					}
+
+					int numSelectedDimensions = 0;
+					for (int dim = 0; dim < dimensionEnabled.Count(); dim ++)
+					{
+						if (dimensionEnabled[dim])
+						{
+							numSelectedDimensions ++;
+						}
+					}
+				
+					if (numSelectedDimensions < 1 && (distMetric == 0 || distMetric == 3))
+					{
+						Debug.Log("You must first select at least one dimension.");
+						return;
+					}
+					
+					if (origPaths.Count() == 0)
+					{
+						origPaths = new List<Path>();
+						foreach (Path p in paths)
+						{
+							origPaths.Add(new Path(p));
+						}
+						Clustering.initWithPaths(paths, (numSelectedDimensions > 1) ? true : false);
+					}
+					
+					paths.Clear();
+					paths = new List<Path>();
+					foreach (Path p in origPaths)
+					{
+						paths.Add(new Path(p));
+					}
+									
+					useColors = true;
+					
+					// scan the paths and remove any avg. centroid paths that were computed
+					foreach (Path p in paths)
+					{
+						if (p.name == "AvgCentroid")
+						{
+							Debug.Log("Removing avg. centroid");
+							paths.Remove(p);
+						}
+					}
+
+					KMeans.clustTime = new System.Diagnostics.Stopwatch();
+					KMeans.distTime = new System.Diagnostics.Stopwatch();
+
+					System.Diagnostics.Stopwatch clustTime = new System.Diagnostics.Stopwatch();
+					clustTime.Start();
+
+					double clustVal = 0.0;
+
+					if (clustAlg == 0) // kmeans++
+					{
+						if (paths.Count > 99)
+						{
+							Debug.Log("Paths: " + paths.Count());
+							List<PathCollection> clusters = KMeans.DoKMeans(paths, paths.Count/20, distMetric, numPasses);
+							clustVal = KMeans.clustVal;
+					
+							List<Path> tempCentroids = new List<Path>();
+							foreach(PathCollection pc in clusters)
+							{
+						//		if (altCentroidComp) tempCentroids.Add(pc.getCenterDistPath());
+						//		else
+									tempCentroids.Add(pc.Centroid);
+							}
+					
+					//		if (altCentroidComp) altCentroidComp = false;
+					
+							double[] weights = new double[paths.Count()];
+							for(int i = 0; i < paths.Count(); i ++) { weights[i] = 1.0; }
+							List<PathCollection> newClusters = KMeans.DoKMeans(tempCentroids, numClusters, distMetric, numPasses, weights);
+					
+							paths.Clear ();
+							ClearPathsRepresentation ();
+
+							clusterCentroids.Clear();
+							int cluster = 0;
+							foreach(PathCollection pc in newClusters)
+							{
+								Path centroid = pc.Centroid;
+								centroid.color = colors[cluster];
+								centroid.color.a = 0.5f;
+								pc.Add(centroid);
+								clusterCentroids.Add(centroid);
+								if (!paths.Contains(centroid))
+								{
+									paths.Add(centroid);
+									toggleStatus.Add(paths.Last(), true);
+								}
+									
+								cluster ++;
+							}
+
+							for (int c = 0; c < newClusters.Count; c ++)
+							{
+								for (int c2 = 0; c2 < tempCentroids.Count; c2 ++)
+								{
+									if (newClusters[c].Contains(tempCentroids[c2]))
+									{ // then all paths of clusters[c2] list should be of the same color!
+										foreach (Path path in clusters[c2])
 										{
-											path.color.a = 0.5f;
-										}
-										if (!paths.Contains(path))
-										{
-											paths.Add(path);
-											toggleStatus.Add(paths.Last (), true);
+											path.color = colors[c];
+											if (path.Equals(tempCentroids[c2]))
+											{
+												path.color.a = 0.5f;
+											}
+											if (!paths.Contains(path))
+											{
+												paths.Add(path);
+												toggleStatus.Add(paths.Last (), true);
+											}
 										}
 									}
 								}
 							}
 						}
+						else
+						{
+							Debug.Log("<99 paths");
+							List<PathCollection> clusters = KMeans.DoKMeans(paths, numClusters, distMetric, numPasses);
+							for (int i = 0; i < clusters.Count(); i ++)
+							{
+								Debug.Log("Cluster #" + i + " has " + clusters[i].Count() + " paths");
+							}
+							clustVal = KMeans.clustVal;
+						
+							clusterCentroids.Clear();
+							foreach(PathCollection pc in clusters)
+							{
+		//						clusterCentroids.Add(pc.Centroid);
+						//		if (altCentroidComp) clusterCentroids.Add(pc.getCenterDistPath());
+						//		else
+									clusterCentroids.Add(pc.Centroid);
+							}
+									
+							paths.Clear ();
+							deaths.Clear ();
+							ClearPathsRepresentation ();
+
+							for(int c = 0; c < clusters.Count; c ++)
+							{
+								foreach(Path path in clusters[c])
+								{
+									//Debug.Log(c);
+									path.color = colors[c];
+									if (path.Equals(clusterCentroids[c]))
+									{
+										path.color.a = 0.5f;
+									}
+									if (!paths.Contains(path))
+									{
+										paths.Add(path);
+										toggleStatus.Add(paths.Last (), true);
+									}
+								}
+							}
+						}					
 					}
-					else
-					{
-						Debug.Log("<99 paths");
-						List<PathCollection> clusters = KMeans.DoKMeans(paths, numClusters, distMetric, numPasses);
-						for (int i = 0; i < clusters.Count(); i ++)
-						{
-							Debug.Log("Cluster #" + i + " has " + clusters[i].Count() + " paths");
-						}
-						clustVal = KMeans.clustVal;
-					
-						clusterCentroids.Clear();
-						foreach(PathCollection pc in clusters)
-						{
-	//						clusterCentroids.Add(pc.Centroid);
-					//		if (altCentroidComp) clusterCentroids.Add(pc.getCenterDistPath());
-					//		else
-								clusterCentroids.Add(pc.Centroid);
-						}
-								
+					else if (clustAlg == 1)
+					{ // dbscan
+						List<PathCollection> clusters = DBSCAN.DoDBSCAN(paths, distMetric, dbsScanEps, minPathsForCluster);
+						
 						paths.Clear ();
 						deaths.Clear ();
 						ClearPathsRepresentation ();
-
-						for(int c = 0; c < clusters.Count; c ++)
-						{
-							foreach(Path path in clusters[c])
+						
+						Debug.Log("Num clusters returned from DBSCAN: " + clusters.Count);
+						numClusters = clusters.Count;
+						
+						if (clusters.Count > maxClusters)
+						{ // too many clusters. reduce using kmeans.
+							List<Path> clusterCentroids = new List<Path>();
+							foreach(PathCollection c in clusters)
 							{
-								//Debug.Log(c);
-								path.color = colors[c];
-								if (path.Equals(clusterCentroids[c]))
-								{
-									path.color.a = 0.5f;
-								}
-								if (!paths.Contains(path))
-								{
-									paths.Add(path);
-									toggleStatus.Add(paths.Last (), true);
-								}
+								c.UpdateCentroid();
+								clusterCentroids.Add(c.Centroid);
 							}
-						}
-					}					
-				}
-				else if (clustAlg == 1)
-				{ // dbscan
-					List<PathCollection> clusters = DBSCAN.DoDBSCAN(paths, distMetric, dbsScanEps, minPathsForCluster);
-					
-					paths.Clear ();
-					deaths.Clear ();
-					ClearPathsRepresentation ();
-					
-					Debug.Log("Num clusters returned from DBSCAN: " + clusters.Count);
-					numClusters = clusters.Count;
-					
-					if (clusters.Count > maxClusters)
-					{ // too many clusters. reduce using kmeans.
-						List<Path> clusterCentroids = new List<Path>();
-						foreach(PathCollection c in clusters)
-						{
-							c.UpdateCentroid();
-							clusterCentroids.Add(c.Centroid);
-						}
-						
-						double[] weights = new double[paths.Count()];
-						for(int i = 0; i < paths.Count(); i ++) { weights[i] = 1.0; }
-						List<PathCollection> newClusters = KMeans.DoKMeans(clusterCentroids, maxClusters, distMetric, 5, weights);
-						
-						for (int c = 0; c < newClusters.Count; c ++)
-						{
-							for (int c2 = 0; c2 < clusterCentroids.Count; c2 ++)
+							
+							double[] weights = new double[paths.Count()];
+							for(int i = 0; i < paths.Count(); i ++) { weights[i] = 1.0; }
+							List<PathCollection> newClusters = KMeans.DoKMeans(clusterCentroids, maxClusters, distMetric, 5, weights);
+							
+							for (int c = 0; c < newClusters.Count; c ++)
 							{
-								if (newClusters[c].Contains(clusterCentroids[c2]))
-								{ // then all paths of clusters[c2] list should be of the same color!
-									foreach (Path path in clusters[c2])
-									{
-										path.color = colors[c];
-										if (path.Equals(clusterCentroids[c2]))
+								for (int c2 = 0; c2 < clusterCentroids.Count; c2 ++)
+								{
+									if (newClusters[c].Contains(clusterCentroids[c2]))
+									{ // then all paths of clusters[c2] list should be of the same color!
+										foreach (Path path in clusters[c2])
 										{
-											path.color.a = 0.5f;
-										}
-										if (!paths.Contains(path))
-										{
-											paths.Add(path);
-											toggleStatus.Add(paths.Last (), true);
+											path.color = colors[c];
+											if (path.Equals(clusterCentroids[c2]))
+											{
+												path.color.a = 0.5f;
+											}
+											if (!paths.Contains(path))
+											{
+												paths.Add(path);
+												toggleStatus.Add(paths.Last (), true);
+											}
 										}
 									}
 								}
 							}
 						}
-					}
-					else
-					{
-						for(int c = 0; c < clusters.Count; c ++)
+						else
 						{
-							foreach(Path path in clusters[c])
+							for(int c = 0; c < clusters.Count; c ++)
 							{
-								path.color = colors[c];
-								if (!paths.Contains(path))
+								foreach(Path path in clusters[c])
 								{
-									paths.Add(path);
-									toggleStatus.Add(paths.Last (), true);
+									path.color = colors[c];
+									if (!paths.Contains(path))
+									{
+										paths.Add(path);
+										toggleStatus.Add(paths.Last (), true);
+									}
 								}
 							}
 						}
-					}
-					
-					int noisy = 0;
-					foreach (Path path in origPaths)
-					{
-						if (!paths.Contains(path))
+						
+						int noisy = 0;
+						foreach (Path path in origPaths)
 						{
-							path.clusterID = Path.NOISE;
-							noisy ++;
-							path.color = colors[colors.Count() - 1];
-							path.color.a = 1;
-							
-							paths.Add(path);
-							toggleStatus.Add(paths.Last(), true);
-						}
-					}
-					Debug.Log("Noisy paths: " + noisy);
-				}
-				
-				clustTime.Stop();
-
-				TimeSpan totalTime = clustTime.Elapsed;
-				Debug.Log ("Total: " + totalTime + ", clust val: " + clustVal);
-				
-				if (autoSavePaths)
-				{
-					String currentTime = System.DateTime.Now.ToString("s");
-					currentTime = currentTime.Replace(':', '-');
-					String totalTimeStr = new DateTime(Math.Abs(totalTime.Ticks)).ToString("HHmmss");
-					
-					String distMetricStr = distMetricsShort[distMetric];
-					if (distMetric == 0 || distMetric == 3)
-					{ // frechet, hausdorff
-						distMetricStr += "-";
-						for (int dim = 0; dim < dimensionEnabled.Count(); dim ++)
-						{
-							if (dimensionEnabled[dim])
+							if (!paths.Contains(path))
 							{
-								distMetricStr += dimensionsShort[dim];
+								path.clusterID = Path.NOISE;
+								noisy ++;
+								path.color = colors[colors.Count() - 1];
+								path.color.a = 1;
+								
+								paths.Add(path);
+								toggleStatus.Add(paths.Last(), true);
 							}
 						}
+						Debug.Log("Noisy paths: " + noisy);
 					}
 					
-					PathBulk.SavePathsToFile ("clusteringdata/" + nameFile + "_" + clustAlgsShort[clustAlg] + "-" + numClusters + "c-" + distMetricStr + "-" + paths.Count() + "p-" + (int)clustVal + "v-" + totalTimeStr + "t@" + currentTime + ".xml", paths);
-				}
-				
-				for (int color = 0; color < colors.Count(); color ++)
-				{
-					showPaths[color] = (color < numClusters) ? true : false;
-				}
+					clustTime.Stop();
+
+					TimeSpan totalTime = clustTime.Elapsed;
+					Debug.Log ("Total: " + totalTime + ", clust val: " + clustVal);
+					
+					if (autoSavePaths)
+					{
+						String currentTime = System.DateTime.Now.ToString("s");
+						currentTime = currentTime.Replace(':', '-');
+						String totalTimeStr = new DateTime(Math.Abs(totalTime.Ticks)).ToString("HHmmss");
+						
+						String distMetricStr = distMetricsShort[distMetric];
+						if (distMetric == 0 || distMetric == 3)
+						{ // frechet, hausdorff
+							distMetricStr += "-";
+							for (int dim = 0; dim < dimensionEnabled.Count(); dim ++)
+							{
+								if (dimensionEnabled[dim])
+								{
+									distMetricStr += dimensionsShort[dim];
+								}
+							}
+						}
+						String NameFile = "clusteringdata/" + nameFile + "_" + 
+							clustAlgsShort[clustAlg] + "-" + numClusters + "c-" + distMetricStr + 
+							"-" + paths.Count() + "p-" + (int)clustVal + "v-" + totalTimeStr + "t@" + 
+							currentTime;
+						//if batch please add the batch
+						if(nbBatch>0)
+							NameFile+= "_"+(counter+1)+"_of_"+nbBatch;
+
+						NameFile+=".xml";
+						PathBulk.SavePathsToFile (NameFile, paths);
+					}
+					
+					for (int color = 0; color < colors.Count(); color ++)
+					{
+						showPaths[color] = (color < numClusters) ? true : false;
+					}
+
+					counter ++; //batch counter
+					
+				}while(counter < nbBatch);
+
 			}
+
+
 			if (clustAlg == 1)
 			{
 				foreach (Path p in paths)
@@ -1237,6 +1338,7 @@ namespace EditorArea {
 			
 			String[] fileNames = goodFiles.ToArray();
 			chosenFileIndex = EditorGUILayout.Popup("Load saved results", chosenFileIndex, fileNames);
+			
 			if (chosenFileIndex != -1)
 			{
 				paths.Clear ();

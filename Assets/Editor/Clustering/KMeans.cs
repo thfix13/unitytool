@@ -40,7 +40,7 @@ namespace ClusteringSpace
 			numSelectedDimensions = -1;
 			init = false;
 			Clustering.reset();
-			System.Random rand = new System.Random(12345);
+			// System.Random rand = new System.Random(12345);
 		}
 		
         private static List<PathCollection> initializeCentroids(List<Path> paths, int numClusters, double[] weights_)
