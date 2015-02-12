@@ -1,5 +1,6 @@
 from copy import deepcopy
 import glob
+import sys
 from matplotlib.colors import LogNorm
 from pylab import *
 import numpy as np
@@ -43,18 +44,40 @@ def readDataToPaths(name):
 	numPaths = 0
 	paths = [] 
 	pathTemp = []
+	
+	idClusters = []
 
 	maxX = -10; maxY = -10
 	xs = []
 	ys = [] 
-
+	idCluster = 0
 
 	for i,l in enumerate(data):
 		if "</Path>" in l:
 			if len(pathTemp)>2:
-				
+				idClusters.append(idCluster)
 				paths.append((pathTemp))
 			pathTemp = []
+
+		# <r>0</r>
+  #       <g>0</g>
+  #       <b>1</b>
+  		if "<color>" in l:
+			c1 = int(data[i+1].replace("<r>","").replace("</r>",""))
+			c2 = int(data[i+2].replace("<g>","").replace("</g>",""))
+			c3 = int(data[i+3].replace("<b>","").replace("</b>",""))
+			# print c1,c2,c3
+			if c1 == 1 and c2 == 0 and c3 == 0:
+				# print "hello"
+				idCluster = 0
+			elif c1 == 0 and c2 == 1 and c3 == 0:
+				idCluster = 1	
+			elif c1 == 0 and c2 == 0 and c3 == 1:
+				idCluster = 2
+			else:
+				idCluster = 3
+
+
 		if "<Node>" in l: 
 			#Cleaning
 			x = float(data[i+1].replace("<x>","").replace("</x>",""))
@@ -73,13 +96,17 @@ def readDataToPaths(name):
 
 	#Create the data, make sure they are lines
 
-	mapData = [[0]*60 for _ in range(60)]
+	# mapData = [[0]*60 for _ in range(60)]
+	mapData = [[[0]*60 for _ in range(60)],[[0]*60 for _ in range(60)],[[0]*60 for _ in range(60)],[[0]*60 for _ in range(60)]]
+	
 
 	xs = []
 	ys = []
 
+	
+	posPath = 0
 	for path in paths:
-		
+			
 		for i,v in enumerate(path):
 			
 			if i+1 == len(path):
@@ -87,15 +114,38 @@ def readDataToPaths(name):
 			output = line(int(v[0]),int(v[1]),int(path[i+1][0]),int(path[i+1][1]))
 			#print"point"
 			for point in output:
-				
-				
 				xs.append(point[0])
 				ys.append(point[1])
 
+			
 
-	for i in range(len(xs)):
-		mapData[int(xs[i])][int(ys[i])]+=1
+			for i in range(len(xs)):
 
+				mapData[idClusters[posPath]][int(xs[i])][int(ys[i])]+=1
+
+			xs = []
+			ys = []
+		posPath+=1
+
+
+	# print len(mapData[0])
+
+
+	r = [[1]*60 for _ in range(60)]
+
+
+
+	for m in mapData:
+		for n in mapData:
+			if m is n:
+				continue
+			for j in range(len(m)):
+				for i in range(len(m)):
+					if m[i][j] >0 and n[i][j]>0:
+						r[i][j]+=1
+
+
+	mapData = r
 	#create grayScale map
 	#Find max value
 	maxValue = 0
@@ -119,23 +169,21 @@ def readDataToPaths(name):
 
 #This code will read and plot the heatmaps
 
-files = glob.glob('*.xml')
+f = "triangle.xml"
+a = []
+a = readDataToPaths(f)				 
 
-for f in files:
-	print f
-	a = []
-	a = readDataToPaths(f)				 
+aFinal = np.array(a[0])
+aFinal = np.rot90(aFinal)
 
-	aFinal = np.array(a[0])
-	aFinal = np.rot90(aFinal)
-
-	clf()
-	imshow(aFinal,cmap="Blues",interpolation="nearest",norm=LogNorm())
-	title("Nb paths:"+ str(a[1]))
-	axis("off2")
-	f = f.replace(".xml",".pdf")
-	savefig(f,bbox_inches='tight')
-	# show()
+clf()
+imshow(aFinal,cmap="Blues",interpolation="nearest",norm=LogNorm())
+# imshow(a[0],cmap="Reds",interpolation="nearest",norm=LogNorm())
+# title("Nb paths:"+ str(a[1]))
+axis("off")
+f = f.replace(".xml",".pdf")
+savefig(f,bbox_inches='tight')
+show()
 
 
 
