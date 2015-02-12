@@ -855,8 +855,7 @@ public class Triangulation : MonoBehaviour
 		for (int i = 0; i < tour.Count - 1; i++) {
 			Vector3 v = numToVect[tour[i]];
 			if( cameras.Contains( v ) ){
-				//if( xcnt == 1 ){
-				if( xcnt == 1 ){
+				if( xcnt == 17 ){
 					vpdraw = visibilityPolygon (numToVect [tour [i]]);
 					vpdraw.DrawGeometry(GameObject.Find ("temp"));
 					vplist.Add(vpdraw);
@@ -978,15 +977,15 @@ public class Triangulation : MonoBehaviour
 //			tmpline.DrawVector(GameObject.Find("temp"), Color.cyan);
 //		}
 //		return new Geometry();
-		//Step 3 - Find rest of the points and connect in order
+
+		//Step 3 - Extend where applicable and find rest of the points
 		//foreach (KeyValuePair<Vector3, float> kvp in anglist) {
-		List<Vector3> vispol = new List<Vector3>();
+		List<KeyValuePair<Vector3, float>> anglistExt = new List<KeyValuePair<Vector3, float>> ();
 		for( int i = 0; i < anglist.Count; i++ ){
 			Vector3 v = anglist[i].Key;
+			float angle = anglist[i].Value;
 			if( v == kernel )
 				continue;
-
-			List<Vector3> templist = new List<Vector3>();
 			Vector3 nv = v;
 			Vector3 prevv = kernel;
 
@@ -994,66 +993,181 @@ public class Triangulation : MonoBehaviour
 			int depth = 0;
 			while( mrpts.Key ){
 				++depth;
-				templist.Add( nv );
+				anglistExt.Add( new KeyValuePair<Vector3, float>( nv, angle ));
 				//if( depth > 2 ) break;
 				mrpts = morePoints(prevv, nv, i);
 				prevv = nv;
 				nv = mrpts.Value;
 			}
-			//Check whether connection from current last point in polygon list can be used to connect
-			//to the farthest extended point in current angle/ray
-			Line connectNext;
-			if( vispol.Count != 0 ){
-				connectNext = new Line( templist[templist.Count - 1], vispol[vispol.Count - 1] );
-				//If connection to last element is possible. Involves reversing list.
-				//Don't do if previous element i.e. vispol[vispol.Count - 1] is kernel
-				if( !collisionGeneral( connectNext, 1, i ) && !VectorApprox( vispol[vispol.Count - 1], kernel ) ){
-//					if( i == 2 )
-//						Debug.Log ("reversed");
-					templist.Reverse();
-				}
-				else{
-					connectNext = new Line( templist[0], vispol[vispol.Count - 1] );
-					//if connection to first element not possible either
-					if( collisionGeneral(connectNext, 1, i) )
-						vispol.Add(kernel);//Add kernel if not
-				}
-			}
-			foreach( Vector3 polyv in templist )
-				vispol.Add(polyv);
-			if( i < anglist.Count - 1 && anglist[i + 1].Value - anglist[i].Value > Math.PI ){
-				//Remove kernel
-				if( vispol.Contains( kernel ) )
-					vispol.Remove( kernel );
-				//Add kernel to last
-				vispol.Add(kernel);
-			}
 		}
-		//If kernel hasn't been added yet
-		if (!vispol.Contains (kernel)) {
+		//Step 4 - Order the points
+		List<Vector3> vispol = new List<Vector3>();
+		string startfrom = "none";
+		for( int i = 0; i < anglistExt.Count; i++ ){
+			Vector3 vx = anglistExt[i].Key;
+			if( vx == kernel )
+				continue;
+			bool printsome = false;
+//			if( i <= 10 ){
+//				new Line( kernel, vx ).DrawVector( GameObject.Find ("temp"), Color.red );
+//				printsome = true;
+//			}
+			List<Vector3> templistA = new List<Vector3>();
+			List<Vector3> templistB = new List<Vector3>();
+			int indA, indB;
+			float angleA = anglistExt[i].Value;
+			for( indA = i; indA < anglistExt.Count && anglistExt[indA].Value == angleA; indA++, i++ ){
+				templistA.Add( anglistExt[indA].Key );
+			}
+			if( indA == anglistExt.Count ){
+				//TODO:double check this scenario
+				if( startfrom == "last" )
+					templistA.Reverse();
+				foreach( Vector3 v in templistA )
+					vispol.Add( v );
+				break;
+			}
+			float angleB = anglistExt[i].Value;
+			for( indB = i; indB < anglistExt.Count && anglistExt[indB].Value == angleB; indB++ ){
+				templistB.Add( anglistExt[indB].Key );
+			}
+			i = indA - 1;//since it'll be incremented after the end of the loop
+			indA = templistA.Count - 1;
+			indB = templistB.Count - 1;
+			bool connected = false;
+			bool addkernel = false;
+			if( templistA.Count != indA + 1 )
+				Debug.Log ( "counter error A");
+			if( templistB.Count != indB + 1 )
+				Debug.Log ( "counter error B");
+			if( angleB - angleA > Math.PI ){
+				//FP to kernel;
+				startfrom = "none";
+				templistA.Reverse();
+				addkernel = true;
+			}
+			else{
+				bool LL = connectable( templistA[indA], templistB[indB] );
+				bool LF = connectable( templistA[indA], templistB[0] );
+				bool FL = connectable( templistA[0], templistB[indB] );
+				bool FF = connectable ( templistA[0], templistB[0] );
+				if( startfrom != "last" ){ 
+					if( LL && LF && FL && FF  ){
+						//LP to LP
+						startfrom = "last";
+						connected = true;
+					}
+					else if( LF ){
+						//LP to FP
+						startfrom = "first";
+						connected = true;
+					}
+				}
+				if( !connected && startfrom != "first" ){
+					if( FL ){
+						//FP to LP
+						templistA.Reverse();
+						startfrom = "last";
+						connected = true;
+					}	
+					else if( FF ){
+						//FP to FP
+						templistA.Reverse();
+						startfrom = "first";
+						connected = true;
+					}
+				}
+				if( !connected ){
+					//FP to Kernel
+					templistA.Reverse();
+					startfrom = "none";
+					connected = true;
+					addkernel = true;
+				}
+			}
+			foreach( Vector3 v in templistA )
+				vispol.Add( v );
+			if( addkernel )
+				vispol.Add( kernel );
+			if( printsome )
+				Debug.Log ( startfrom );
+
+		}
+
+		//
+//			
+//			//Check whether connection from current last point in polygon list can be used to connect
+//			//to the farthest extended point in current angle/ray
+//			Line connectNext;
+//			if( vispol.Count != 0 ){
+//				connectNext = new Line( templist[templist.Count - 1], vispol[vispol.Count - 1] );
+//				//If connection to last element is possible. Involves reversing list.
+//				//Don't do if previous element i.e. vispol[vispol.Count - 1] is kernel
+//				if( !collisionGeneral( connectNext, 1, i ) && !VectorApprox( vispol[vispol.Count - 1], kernel ) ){
+////					if( i == 2 )
+////						Debug.Log ("reversed");
+//					templist.Reverse();
+//				}
+//				else{
+//					connectNext = new Line( templist[0], vispol[vispol.Count - 1] );
+//					//if connection to first element not possible either
+//					if( collisionGeneral(connectNext, 1, i) ){
+//						Line lfirst = new Line( kernel, templist[0] );
+//						Line llast = new Line( kernel, templist[templist.Count - 1] );
+//						if( lfirst.Magnitude() < llast.Magnitude() )
+//							templist.Reverse();
+//						vispol.Add(kernel);//Add kernel if not
+//					}
+//				}
+//			}
+//			if( vispol.Count == 0 ){
+//				templist.Reverse();
+//			}
+//			foreach( Vector3 polyv in templist )
+//				vispol.Add(polyv);
+//			if( i < anglist.Count - 1 && anglist[i + 1].Value - anglist[i].Value > Math.PI ){
+//				//Remove kernel
+//				if( vispol.Contains( kernel ) )
+//					vispol.Remove( kernel );
+//				//Add kernel to last
+//				vispol.Add(kernel);
+//			}
+//		//If kernel hasn't been added yet
+        if (!vispol.Contains (kernel)) {
 			vispol.Add (kernel);
 			//drawSphere( kernel, Color.red, -1 );
 		}
 		Debug.Log (vispol.Count);
+		Debug.Log (vispol.Count);
 		cnt = 0;
 		foreach (Vector3 v in vispol) {
-			drawSphere( v, Color.cyan );
-			Line tmpline = new Line( kernel, v );			
-			tmpline.name = "Line" + cnt++;
+			drawSphere( v, Color.cyan, cnt++ );
+			//Line tmpline = new Line( kernel, v );			
+			//tmpline.name = "Line" + cnt++;
 			//tmpline.DrawVector(GameObject.Find("temp"), Color.yellow);
 		}
+		cnt = 0;
+		//return new Geometry();
 		Geometry VPret = new Geometry ();
 		for( int i = 0; i < vispol.Count; i++ ){
 			Line tmpline = new Line( kernel, vispol[i] );
-			if( i == vispol.Count - 1 )
+			if( i == vispol.Count - 1 ){
 				tmpline = new Line( vispol[i], vispol[0] );
-			else
+				//tmpline = null;
+			}
+			else{
 				tmpline = new Line( vispol[i], vispol[i + 1] );
+			}
 			tmpline.name = "Line" + cnt++;
 			VPret.edges.Add(tmpline);
 			//tmpline.DrawVector(GameObject.Find("temp"), Color.cyan);
 		}
 		return VPret;
+	}
+
+	bool connectable( Vector3 A, Vector3 B ){
+		Line tmpline = new Line (A, B);
+		return !collisionGeneral( tmpline, 0, 0 );
 	}
 
 	KeyValuePair<bool, Vector3> morePoints( Vector3 vA, Vector3 vB, int i ){
@@ -1155,10 +1269,6 @@ public class Triangulation : MonoBehaviour
 		foreach( Geometry g in finalPoly ){
 			if( g.PointInside( tmpLine.MidPoint() ) ){
 				collides = true;
-//				if( fid == 5 ){
-//					Debug.Log("0Foreign id is");
-//					Debug.Log (fid);
-//				}
 				return collides;
 			}
 		}
@@ -1173,8 +1283,6 @@ public class Triangulation : MonoBehaviour
 					if( colinear( l, tmpLine ) )
 						continue;
 					collides = true;
-//					if( fid == 5 )
-//						Debug.Log("1Foreign id is" + fid.ToString() );
 					return collides;
 				}
 			}
@@ -1187,11 +1295,6 @@ public class Triangulation : MonoBehaviour
 					if( colinear( l, tmpLine ) )
 						continue;
 					collides = true;
-//					if( fid == 5 ){
-//						Debug.Log("2Foreign id is" + fid.ToString() );
-//						l.name = "crazyline";
-//						l.DrawVector( GameObject.Find("temp"), Color.red );
-//					}
 					return collides;
 				}
 			}
