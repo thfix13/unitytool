@@ -26,6 +26,7 @@ namespace EditorArea {
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10;
 		private static int randomSeed = -1;
 		private static int nbPaths = -1, nbBatch = -1,fileloaded = -1;
+		private static bool only2DTriangulation = true; 
 		// Clustering
 		private static String[] distMetrics = new String[] { "Frechet", "Area (Triangulation)", "Area (Interpolation) 3D", "Hausdorff" };
 		private static String[] clustAlgs = new String[] { "KMeans++", "DBScan" };
@@ -881,7 +882,11 @@ namespace EditorArea {
 					}
 				}
 			}
-			
+			if (distMetric == 1)
+			{
+				
+				only2DTriangulation = EditorGUILayout.Toggle("Only 2d triangulation", only2DTriangulation);
+			}
 			nbBatch = (int)EditorGUILayout.IntField("nbBatches",nbBatch);
 
 			String title = "Cluster on path similarity"; 
@@ -903,8 +908,7 @@ namespace EditorArea {
 					{
 						if(fileloaded == -1)
 						{
-							Debug.Log("no previous file loaded, please load some traces if you 
-								want to to do batches.");
+							Debug.Log("no previous file loaded, please load some traces if you want to to do batches.");
 
 							return;
 						}

@@ -146,12 +146,15 @@ public class Triangulation : MonoBehaviour
 
 
 		
-		float area = TriangulationCurves(path1, path2, true);
+		float area = TriangulationCurves(path1, path2);
 		Debug.Log("Area: " + area);
 	}
 	
-	public float TriangulationCurves(Vector3[] path1, Vector3[] path2, bool display = false)
+	public float TriangulationCurves(Vector3[] path1, Vector3[] path2,bool dimensionsTime = false )
 	{
+
+		//TODO: Not using the 3D version and drop the time. 
+
 		//Debug.Log ("hello");
 //		GameObject temp = GameObject.Find("temp");
 //		if(temp != null)
@@ -195,6 +198,18 @@ public class Triangulation : MonoBehaviour
 		for(int i =0; i<path2.Length;i+=2)
 			poly.Add(new Line(path2[i],path2[i+1]));
 
+
+		//Remove time component
+		if(dimensionsTime)
+		{
+			foreach(Line l in lines)
+			{
+				for(int i =0; i<2;i++)
+				{
+					l.vertex[i].y = 0; 
+				}
+			}
+		}	
 
 		//Draw polygon
 	/*	foreach(Line l in poly)
