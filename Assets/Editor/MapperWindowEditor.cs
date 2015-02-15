@@ -884,7 +884,6 @@ namespace EditorArea {
 			}
 			if (distMetric == 1)
 			{
-				
 				only2DTriangulation = EditorGUILayout.Toggle("Only 2d triangulation", only2DTriangulation);
 			}
 			nbBatch = (int)EditorGUILayout.IntField("nbBatches",nbBatch);
