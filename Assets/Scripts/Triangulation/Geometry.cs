@@ -71,6 +71,8 @@ public class Geometry
 	//BUG: Returns false even if it's on the edge.
 	//SOLN: Change LineIntersectMuntacEndPt to return -1 when there's an intersection at shared endpoints
 	//instead of 0. And change condition here to only accept 0
+	//Note don't know if this should be treated as a bug as a lot of other logic now
+	//depends on assuming PointInside will return false when a point is on the edge
 	public bool PointInside( Vector3 pt ){//Called by LineInside, GeometryInside and LineCollision
 		Line lray = new Line(pt, new Vector3(-100, 1f, -100)); 
 		int count = 0; 
@@ -393,6 +395,50 @@ public class Geometry
 		return true;
 	}
 
+	public bool GeometryInsideExt( Geometry G2 ){
+		List<Vector3> allvert = GetVertex ();
+		List<Vector3> interpts = GetVertex ();
+		foreach (Line L in edges) {
+			foreach(Line L2 in G2.edges){
+				if( L.LineIntersectMuntac( L2 ) == 1 )
+					return false;
+				if( L.LineIntersectMuntacEndPt( L2 ) == 1 ){
+					//more checks here to avoid instance
+					//where intersection point is corner of
+					//potentially enclosing polygon
+				}
+			}
+		}
+		foreach (Line L in G2.edges) {
+			if( !( PointInside(L.vertex[0]) || allvert.Contains(L.vertex[0]) ) ){
+				//TODO: more sophisticated check here
+				bool found = false;
+				foreach( Line LB in edges ){
+					if( floatCompare( new Line( LB.vertex[0], L.vertex[0] ).Magnitude() + new Line(LB.vertex[1], L.vertex[0]).Magnitude(),
+					                 LB.Magnitude() ) ){
+						found = true;
+						break;
+					}
+				}
+				if( !found )
+					return false;
+			}
+			if( !( PointInside(L.vertex[1]) || allvert.Contains(L.vertex[1]) ) ){
+				bool found = false;
+				foreach( Line LB in edges ){
+					if( floatCompare( new Line( LB.vertex[0], L.vertex[1] ).Magnitude() + new Line(LB.vertex[1], L.vertex[1]).Magnitude(),
+					                 LB.Magnitude() ) ){
+						found = true;
+						break;
+					}
+				}
+				if( !found )
+					return false;
+			}
+		}
+		return true;
+	}
+
 	//From this point all code is ported from Jonatha's MST calculation
 	//ported code. src:"Triangulation"
 
@@ -549,9 +595,9 @@ public class Geometry
 		outpoint.x = -100;
 		outpoint.y = 1;
 		outpoint.z = 100;
-		Line tmpline = new Line (vSrc, outpoint);
-		tmpline.name = "Line Outpoint";
-		tmpline.DrawVector (GameObject.Find ("temp"));
+//		Line tmpline = new Line (vSrc, outpoint);
+//		tmpline.name = "Line Outpoint";
+//		tmpline.DrawVector (GameObject.Find ("temp"));
 		foreach (Vector3 v in verts) {
 			if( v == vSrc ){
 				angList.Add(new angclass(v, 0, 0 ));

@@ -24,22 +24,29 @@ public class Triangulation : MonoBehaviour
 	public List<Geometry> obsGeos = new List<Geometry> (); //has all merged polygons. doesn't have proper border/obstacles.
 	public List<Geometry> finalPoly = new List<Geometry> ();//has proper obstacles
 	public Geometry totalGeo = new Geometry ();
-		//Contains Map
+	//Contains Map
 	public Geometry mapBG;
-	public Geometry tour = new Geometry ();
-
+	//Camera
+	public List<KeyValuePair<Vector3,Geometry>> cameraVPS = new List<KeyValuePair<Vector3, Geometry>>();
+	//Contains all the visibility polygons for cameras
+	public int vpnum = -1;
+	
 	public bool drawTriangles = false;
-	public bool drawRoadMap = false;
+	public bool drawSPRoadMap = false;
 	public bool drawMinSpanTree = false;
 	public bool drawGeometry = false;
 	public bool drawCameras = false;
+	public bool drawVP = false;
 	public bool stopAll = false;
-	private bool drawn = false;
+	private bool geometryDrawn = false;
+	private bool sprDrawn = false;
 
 	List<Vector3> masterReflex = new List<Vector3>();
 
-	//
-	private List<Line> roadMap = new List<Line> ();
+	//Tour
+	private List<Line> spRoadMap = new List<Line> ();
+	private List<Vector3> explorationTour = new List<Vector3> ();
+	private Geometry tourEdges = new Geometry ();
 	//Dijkstra
 	List<edges>[] EL = new List<edges>[5000];
 	//Stores shortest path calculations with node i as source on all nodes j
@@ -61,13 +68,16 @@ public class Triangulation : MonoBehaviour
 		geos.Clear();
 		linesMinSpanTree.Clear();
 		masterReflex.Clear ();
-		roadMap.Clear ();
+		spRoadMap.Clear ();
 		GameObject temp = GameObject.Find("temp");
 		DestroyImmediate(temp);
 		GameObject vptmp = GameObject.Find("vptmp");
 		DestroyImmediate(vptmp);
-		drawn = false;
+		geometryDrawn = false;
+		sprDrawn = false;
 		stopAll = true;
+		explorationTour.Clear ();
+		cameraVPS.Clear ();
 	}
 
 	public void Update()
@@ -82,18 +92,35 @@ public class Triangulation : MonoBehaviour
 		}
 
 		if (drawGeometry) {
-			if( !drawn ){
+			if( !geometryDrawn ){
 				//totalGeo.DrawGeometry(GameObject.Find("temp"));
 				mapBG.DrawGeometry(GameObject.Find("temp"));
-				drawn = true;
+				geometryDrawn = true;
 			}
 		}
 
-//		if (drawCameras) {
-//			foreach( Vector3 v in cameras ){
-//				drawSphere( v, Color.blue );
-//			}		
-//		}
+		if (drawCameras) {
+			drawCameras = false;
+			int cntcam = 0;
+			foreach( Vector3 v in cameras ){
+//				if( cntcam == 15 || cntcam == 16 )
+//					visibilityPolygon( v ).DrawGeometry( GameObject.Find("temp") );
+				drawSphere( v, Color.blue, cntcam++ );
+			}		
+		}
+
+		if (drawSPRoadMap){
+				GameObject temp = GameObject.Find("temp"); 
+				foreach(Line l in spRoadMap)
+					l.DrawLine( Color.yellow );
+		}
+
+		if( drawVP && vpnum != -1 ){
+			Line tmpline = new Line (cameraVPS[vpnum].Key, new Vector3(-100,1,100));
+			tmpline.DrawLine(Color.white);
+			foreach( Line l in cameraVPS[vpnum].Value.edges )
+				l.DrawLine( Color.blue );
+		}
 
 		foreach(Triangle tt in triangles){
 			if(drawTriangles){	
@@ -124,9 +151,14 @@ public class Triangulation : MonoBehaviour
 		makeSPRoadMap ();
 		/*STEP 8 - RUN DIJKSTRA FOR EVERY CAMERA PAIR*/
 		makeTourOnSPR ();
-
 		/*STEP 9 - CREATE TOUR USING NEAREST NEIGHBOUR*/
 		//happens in makeTourOnSPR
+
+		/***PHASE D: VISIBILITY***/
+		/*STEP 10 - GET VISIBILITY POLYGONS OF CAMERAS*/
+		getCameraVPS ();
+		/*STEP 11 - CHECK CAMERA VISIBILITY NESTING*/
+		//cameraNesting ();
 	}
 
 	void getPolygons(){
@@ -544,21 +576,21 @@ public class Triangulation : MonoBehaviour
 		foreach( Vector3 v in lv2 )
 			masterReflex.Add( v );
 
-		roadMap = new List<Line> ();
+		spRoadMap = new List<Line> ();
 		//Connect all reflex vertices
 		foreach (Vector3 vA in masterReflex) {
 			//drawSphere( vA, Color.blue, cnt++);
 			foreach (Vector3 vB in masterReflex) {
 				if( vA == vB || VectorApprox( vA, vB ) ) continue;
 				Line tmpLine = new Line( vA, vB );
-				if( roadMap.Contains( tmpLine ) ) continue;
+				if( spRoadMap.Contains( tmpLine ) ) continue;
 				bool added = false;
 				//Add link if already an obstacle edge
 				foreach( Line l in totalGeo.edges ){
 					//This function only checks mid point. Might want to use something else.
 					if( l.Equals( tmpLine ) ){
 //						tmpLine.name = "Vector Line" + lineCnt; //DBG
-						roadMap.Add( tmpLine );
+						spRoadMap.Add( tmpLine );
 						//tmpLine.DrawVector( GameObject.Find("temp"), Color.cyan );
 //						lineCnt++; //DBG
 						added = true;
@@ -612,7 +644,7 @@ public class Triangulation : MonoBehaviour
 				}
 				if( !collides ){
 					//tmpLine.name = "Vector Line" + lineCnt; //for debugging
-					roadMap.Add(tmpLine);
+					spRoadMap.Add(tmpLine);
 					//tmpLine.DrawVector( GameObject.Find("temp"), Color.cyan );
 					//lineCnt++; //for debugging
 				}
@@ -644,7 +676,7 @@ public class Triangulation : MonoBehaviour
 			//drawSphere( v, Color.blue);
 		}
 
-		foreach (Line l in roadMap) {
+		foreach (Line l in spRoadMap) {
 			int u = dict[l.vertex[0]];
 			int v = dict[l.vertex[1]];
 			EL[u].Add(new edges( v, l.Magnitude() ));
@@ -676,7 +708,7 @@ public class Triangulation : MonoBehaviour
 				int v = dict[v2];
 				Line tmpLine = new Line( v1, v2 );
 				bool collides = false;
-				if( roadMap.Contains( tmpLine ) ) continue;
+				if( spRoadMap.Contains( tmpLine ) ) continue;
 				bool added = false;
 				//Add link if already an obstacle or map edge
 				foreach( Line l in totalGeo.edges ){
@@ -838,12 +870,14 @@ public class Triangulation : MonoBehaviour
 		for( int i = 0; i < tour.Count - 1; i++ ){
 			Line tmpline = new Line( numToVect[tour[i]], numToVect[tour[i + 1]] );
 			//tmpline.DrawVector( GameObject.Find("temp"), Color.yellow );
+			tourEdges.edges.Add(tmpline);
 			Vector3 v = numToVect[tour[i]];
 			if( cameras.Contains( v ) && !drawnCameras.Contains(v)){
 				//drawSphere( v, Color.green, xcnt++ );
 				drawnCameras.Add(v);
 			}
 		}
+
 		Vector3 vv = numToVect [tour [tour.Count - 1]];
 		if( cameras.Contains( vv ) && !drawnCameras.Contains(vv)){
 			//drawSphere( vv, Color.green, xcnt++ );
@@ -852,18 +886,24 @@ public class Triangulation : MonoBehaviour
 		xcnt = 0;
 		Geometry vpdraw = new Geometry ();
 		List<Geometry> vplist = new List<Geometry> ();
+		Debug.Log ("Exp tour" + explorationTour.Count);
 		for (int i = 0; i < tour.Count - 1; i++) {
 			Vector3 v = numToVect[tour[i]];
+			explorationTour.Add(v);
 			if( cameras.Contains( v ) ){
-				if( xcnt == 17 ){
-					vpdraw = visibilityPolygon (numToVect [tour [i]]);
-					vpdraw.DrawGeometry(GameObject.Find ("temp"));
-					vplist.Add(vpdraw);
+				if( xcnt == 6 ){
+					//vpdraw = visibilityPolygon (numToVect [tour [i]]);
+					//Line tmpline = new Line( v, new Vector3(-100,1,100) );
+					//vpdraw.DrawGeometry(GameObject.Find ("temp"));
+					//tmpline.DrawVector(GameObject.Find("temp"));
+					//vplist.Add(vpdraw);
 				}
 				xcnt++;
 			}
 		}
-		//vplist[0].GeometryMerge(vplist[1]).DrawGeometry(GameObject.Find("temp"));
+		explorationTour.Add (numToVect[tour[tour.Count - 1]]);
+		Debug.Log ("Exp tour after" + explorationTour.Count);
+		Debug.Log ("Tour size" + tour.Count);
 	}
 
 	private void Dijkstra( int id, int N ){
@@ -930,8 +970,11 @@ public class Triangulation : MonoBehaviour
 	Geometry visibilityPolygon( Vector3 kernel ){
 		List<Vector3> allpoints = totalGeo.GetVertex ();
 		List<Vector3> vp = new List<Vector3> ();
+		int cnt = 0;
 		//Step 1 - Find all points that are initially visible
 		foreach (Vector3 v in allpoints){
+//			cnt++;
+//			drawSphere( v, Color.green, cnt);
 			Line tmpLine = new Line( kernel, v );
 			bool collides = false;
 			//TODO: same check, also in more points
@@ -939,33 +982,81 @@ public class Triangulation : MonoBehaviour
 			foreach( Geometry g in finalPoly ){
 				if( g.LineCollision(tmpLine) ){ 
 					collides = true;
-					break;
+//					if( cnt == 35 ){
+//						Debug.Log ("35 in g.linecoll");
+//						foreach(Line l1 in g.edges){
+//							if( tmpLine.LineIntersectMuntac(l1) == 1 ){
+//								l1.DrawVector(GameObject.Find("temp"), Color.yellow);
+//								tmpLine.DrawVector(GameObject.Find("temp"), Color.red);
+//								drawSphere( l1.GetIntersectionPoint(tmpLine), Color.white);
+//								Debug.Log("fuck");
+//								Vector3 vtmp = l1.GetIntersectionPoint(tmpLine);
+//								Debug.Log ( l1.vertex[0] + "" + l1.vertex[1] + "" + vtmp );
+//								if( l1.isEndPoint( vtmp ) || VectorApprox( vtmp, l1.vertex[0], 0 ) )
+//									Debug.Log("Is an endpoint for 35 inter");
+//							}
+//						}
+//					}
 				}
+				else{
+					//This is for cases where the midpoint is not located inside the geometry
+					//but the line crosses the geometry anyway and intersects only at endpoints
+					//of the geometry's edge (midpoint scenario happens only in this case)
+					foreach( Line l in g.edges ){
+						if( l.LineIntersectMuntacEndPt( tmpLine ) == 1 ){
+							Vector3 interv = l.GetIntersectionPoint( tmpLine );
+							if( l.isEndPoint( interv ) ){
+								Line TLA = new Line( tmpLine.vertex[0], interv );
+								Line TLB = new Line( tmpLine.vertex[1], interv );
+								if( g.PointInside( TLA.MidPoint() ) || g.PointInside( TLB.MidPoint() ) ){
+									collides = true;
+									if( cnt == 35 )	Debug.Log ("35 in else of g.linecoll");
+									break;
+								}
+							}
+						}
+					}
+				}
+				if( collides )
+					break;
 			}
 			//Check for collision with map boundary
 			//Note: Was buggy before LineIntersectMuntac's final check started using eps
+			int printvar = -1;
 			foreach( Line l in mapBG.edges ){
 				if( l.LineIntersectMuntac( tmpLine ) == 1 ){
+					if( cnt == 35 )	Debug.Log ("35 in mapbg");
 					collides = true;
 					break;
 				}
+				//TODO: I think this is still needed. Uncomment shortly.
+//				if( l.LineIntersectMuntacEndPt( tmpLine ) == 1 ){
+//					if( l.isEndPoint( l.GetIntersectionPoint( tmpLine ) ) ){
+//						collides = true;
+//						break;
+//					}
+//				}
 			}
-			if( !mapBG.PointInside( tmpLine.MidPoint() ) ){
+			//The point inside function doesn't (always?) work
+			//when the poin is on the polygon edge.
+			if( !collides && !mapBG.PointInside( tmpLine.MidPoint() ) ){
 				collides = true;
 				foreach( Line lb in mapBG.edges ){
 					if( VectorApprox( lb.MidPoint(), tmpLine.MidPoint() ) ){
+						if( cnt == 35 )	Debug.Log ("35 in pointinside");
 						collides = false;
 						break;
 					}
 				}
 
 			}
-
 			if(!collides){
 				vp.Add ( v );
-			}
+//				Line tmpline = new Line( kernel, v );
+//				tmpline.name = "Line" + cnt;
+//				tmpline.DrawVector(GameObject.Find("temp"), Color.cyan);
+ 			}
 		}
-		int cnt = 0;
 		//Step 2- Sort the points by angle
 		Geometry x = new Geometry ();
 		List<KeyValuePair<Vector3, float>> anglist = x.GetVertexAngleSorted (kernel, vp);
@@ -973,6 +1064,7 @@ public class Triangulation : MonoBehaviour
 //		Line temp2 = new Line (kernel, anglist[0].Key);
 //		foreach(KeyValuePair<Vector3, float> kvp in anglist) {
 //			Line tmpline = new Line( kernel, kvp.Key );
+//			drawSphere( kvp.Key );
 //			tmpline.name = "Line" + cnt++ + " " + kvp.Value;
 //			tmpline.DrawVector(GameObject.Find("temp"), Color.cyan);
 //		}
@@ -986,6 +1078,9 @@ public class Triangulation : MonoBehaviour
 			float angle = anglist[i].Value;
 			if( v == kernel )
 				continue;
+//			Line dbgline = new Line( kernel, v );
+//			dbgline.name = "Line" + i;
+//			dbgline.DrawVector(GameObject.Find("temp"), Color.yellow);
 			Vector3 nv = v;
 			Vector3 prevv = kernel;
 
@@ -994,7 +1089,6 @@ public class Triangulation : MonoBehaviour
 			while( mrpts.Key ){
 				++depth;
 				anglistExt.Add( new KeyValuePair<Vector3, float>( nv, angle ));
-				//if( depth > 2 ) break;
 				mrpts = morePoints(prevv, nv, i);
 				prevv = nv;
 				nv = mrpts.Value;
@@ -1036,10 +1130,10 @@ public class Triangulation : MonoBehaviour
 			indB = templistB.Count - 1;
 			bool connected = false;
 			bool addkernel = false;
-			if( templistA.Count != indA + 1 )
-				Debug.Log ( "counter error A");
-			if( templistB.Count != indB + 1 )
-				Debug.Log ( "counter error B");
+//			if( templistA.Count != indA + 1 )
+//				Debug.Log ( "counter error A");
+//			if( templistB.Count != indB + 1 )
+//				Debug.Log ( "counter error B");
 			if( angleB - angleA > Math.PI ){
 				//FP to kernel;
 				startfrom = "none";
@@ -1094,54 +1188,14 @@ public class Triangulation : MonoBehaviour
 
 		}
 
-		//
-//			
-//			//Check whether connection from current last point in polygon list can be used to connect
-//			//to the farthest extended point in current angle/ray
-//			Line connectNext;
-//			if( vispol.Count != 0 ){
-//				connectNext = new Line( templist[templist.Count - 1], vispol[vispol.Count - 1] );
-//				//If connection to last element is possible. Involves reversing list.
-//				//Don't do if previous element i.e. vispol[vispol.Count - 1] is kernel
-//				if( !collisionGeneral( connectNext, 1, i ) && !VectorApprox( vispol[vispol.Count - 1], kernel ) ){
-////					if( i == 2 )
-////						Debug.Log ("reversed");
-//					templist.Reverse();
-//				}
-//				else{
-//					connectNext = new Line( templist[0], vispol[vispol.Count - 1] );
-//					//if connection to first element not possible either
-//					if( collisionGeneral(connectNext, 1, i) ){
-//						Line lfirst = new Line( kernel, templist[0] );
-//						Line llast = new Line( kernel, templist[templist.Count - 1] );
-//						if( lfirst.Magnitude() < llast.Magnitude() )
-//							templist.Reverse();
-//						vispol.Add(kernel);//Add kernel if not
-//					}
-//				}
-//			}
-//			if( vispol.Count == 0 ){
-//				templist.Reverse();
-//			}
-//			foreach( Vector3 polyv in templist )
-//				vispol.Add(polyv);
-//			if( i < anglist.Count - 1 && anglist[i + 1].Value - anglist[i].Value > Math.PI ){
-//				//Remove kernel
-//				if( vispol.Contains( kernel ) )
-//					vispol.Remove( kernel );
-//				//Add kernel to last
-//				vispol.Add(kernel);
-//			}
-//		//If kernel hasn't been added yet
+		//If kernel hasn't been added yet
         if (!vispol.Contains (kernel)) {
 			vispol.Add (kernel);
 			//drawSphere( kernel, Color.red, -1 );
 		}
-		Debug.Log (vispol.Count);
-		Debug.Log (vispol.Count);
 		cnt = 0;
 		foreach (Vector3 v in vispol) {
-			drawSphere( v, Color.cyan, cnt++ );
+			//drawSphere( v, Color.cyan, cnt++ );
 			//Line tmpline = new Line( kernel, v );			
 			//tmpline.name = "Line" + cnt++;
 			//tmpline.DrawVector(GameObject.Find("temp"), Color.yellow);
@@ -1151,6 +1205,7 @@ public class Triangulation : MonoBehaviour
 		Geometry VPret = new Geometry ();
 		for( int i = 0; i < vispol.Count; i++ ){
 			Line tmpline = new Line( kernel, vispol[i] );
+			//drawSphere( vispol[i], Color.red );
 			if( i == vispol.Count - 1 ){
 				tmpline = new Line( vispol[i], vispol[0] );
 				//tmpline = null;
@@ -1175,7 +1230,8 @@ public class Triangulation : MonoBehaviour
 		Vector2 vA2 = new Vector2( vA.x, vA.z );
 		Vector2 vB2 = new Vector2( vB.x, vB.z );
 		Vector2 dirA2 = vB2 - vA2;//Direction from A towards B
-		float alp = 1.02f;
+		float alp = 1.08f;
+		//float alp = 1.01f;
 		Vector2 vB_new2 = vA2 + (alp * dirA2);
 		Vector3 vB_new = new Vector3( vB_new2.x, 1, vB_new2.y );
 		bool collides = false;
@@ -1190,8 +1246,9 @@ public class Triangulation : MonoBehaviour
 			}
 		}
 		//For the case where line is coliner to a map edge and then point goes out of map but midpoint of line stays in
-		if (!mapBG.PointInside (vB_new))
-				collides = true;
+		if (!mapBG.PointInside (vB_new)) {
+			collides = true;
+		}
 		if (collides)
 			return new KeyValuePair<bool, Vector3> (false, new Vector3());
 		//Extend ray widely and find closest intersection point
@@ -1238,6 +1295,39 @@ public class Triangulation : MonoBehaviour
 			}
 		}
 		return new KeyValuePair< bool, Vector3 >(true, retvect);
+	}
+
+	void getCameraVPS(){
+		List<Vector3> tempcam = new List<Vector3> ();
+		foreach (Vector3 v in explorationTour) {
+			if( cameras.Contains(v) && !tempcam.Contains(v) ){
+				tempcam.Add(v);
+				cameraVPS.Add ( new KeyValuePair<Vector3, Geometry>( v, visibilityPolygon( v ) ) );
+			}
+		}
+	}
+
+	void cameraNesting(){
+		Debug.Log ("Cameras in cameraVPS");
+		Debug.Log (cameraVPS.Count);
+		Debug.Log (explorationTour.Count);
+		Debug.Log (cameras.Count);
+		int cnt = 0;
+		List<Vector3> allpoints = totalGeo.GetVertex ();
+		List<Geometry> allvps = new List<Geometry> ();
+		for (int i = 0; i < cameraVPS.Count; i++) {
+			Geometry vpA = cameraVPS[i].Value;
+//			if( i == 1 )
+//				vpA.DrawGeometry(GameObject.Find("temp"));
+//			for( int j = 0; j < cameraVPS.Count; j++ ){
+//				if( i == j ) continue;
+//				Geometry vpB = cameraVPS[j].Value;
+//				if( vpA.GeometryInside( vpB ) )
+//					cnt++;
+//			}
+		}
+		Debug.Log (cnt);
+		//foreach( Vector3 v in 
 	}
 
 	public bool OnSameLine( Vector3 v1, Vector3 v2 ){
@@ -1288,10 +1378,8 @@ public class Triangulation : MonoBehaviour
 			}
 			else{
 				if( l.LineIntersectMuntacEndPt(tmpLine) == 1 ){
-					//3.Ignore colinear intersecting points i.e. corners
+					//3.Ignore colinear intersecting points
 					Vector3 intpoint = l.GetIntersectionPoint(tmpLine);
-					if( l.isEndPoint( intpoint ) || tmpLine.isEndPoint( intpoint ) )
-						continue;
 					if( colinear( l, tmpLine ) )
 						continue;
 					collides = true;
@@ -1328,7 +1416,20 @@ public class Triangulation : MonoBehaviour
 		else
 			return false;
 	}
-	
+
+	public bool VectorApprox ( Vector3 a, Vector3 b, int debug ){
+		if (Math.Abs (a.x - b.x) < eps && Math.Abs (a.z - b.z) < eps)
+			return true;
+		else {
+			//Debug.Log ( Math.Abs (a.x - b.x) + " " + Math.Abs (a.z - b.z) + " " + eps );
+			//Debug.Log ( Math.Abs (a.x - b.x) );
+			Debug.Log (Math.Abs (a.z));
+			Debug.Log (Math.Abs (b.z));
+			Debug.Log (eps );
+			return false;
+		}
+	}
+
 	public bool floatCompare ( float a, float b ){
 		return Math.Abs (a - b) < eps;
 	}
