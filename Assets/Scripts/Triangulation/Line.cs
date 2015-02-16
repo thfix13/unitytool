@@ -22,6 +22,7 @@ public class Line
 
 	public  bool Equals(Line l)
 	{
+		
 		return this.MidPoint().Equals(l.MidPoint());
 		//return vertex[0].Equals(l.vertex[0]) && vertex[1].Equals(l.vertex[1]); 
 		

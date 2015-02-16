@@ -26,7 +26,7 @@ namespace EditorArea {
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10;
 		private static int randomSeed = -1;
 		private static int nbPaths = -1, nbBatch = -1,fileloaded = -1;
-		private static bool only2DTriangulation = true; 
+		public static bool only2DTriangulation = true; 
 		// Clustering
 		private static String[] distMetrics = new String[] { "Frechet", "Area (Triangulation)", "Area (Interpolation) 3D", "Hausdorff" };
 		private static String[] clustAlgs = new String[] { "KMeans++", "DBScan" };
@@ -411,7 +411,8 @@ namespace EditorArea {
 					} else {
 						p.name = "Imported " + (++imported);
 						p.color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), 
-							                     UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
+							                     UnityEngine.Random.Range (0.0f, 1.0f), 
+							                     UnityEngine.Random.Range (0.0f, 1.0f));
 						toggleStatus.Add (p, true);
 					}
 					paths.Add(p);
@@ -420,6 +421,10 @@ namespace EditorArea {
 				precomputeMaps();
 
 				ComputeHeatMap (paths, deaths);
+
+
+
+
 				SetupArrangedPaths (paths);
 				
 				for (int count = 0; count < paths.Count(); count ++)
@@ -437,6 +442,17 @@ namespace EditorArea {
 					}
 				}
 				
+				//Store the paths in the data holder for 3d debug view
+				GameObject dataCurve = GameObject.Find("DataPath");
+					
+				if (dataCurve != null)
+				{
+					Debug.Log("hello");
+					dataCurve.GetComponent<PathsHolder>().paths = paths;
+					
+				}
+
+
 		//		rep = new LevelRepresentation();
 		//		LevelRepresentation.tileSize = SpaceState.Editor.tileSize;
 		//		Vector2 blah = new Vector2(floor.collider.bounds.min.x, floor.collider.bounds.min.z);
@@ -884,6 +900,8 @@ namespace EditorArea {
 			}
 			if (distMetric == 1)
 			{
+				//This is used directly trhough the static reference 
+				//by AreaDist.cs
 				only2DTriangulation = EditorGUILayout.Toggle("Only 2d triangulation", only2DTriangulation);
 			}
 			nbBatch = (int)EditorGUILayout.IntField("nbBatches",nbBatch);

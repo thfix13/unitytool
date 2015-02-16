@@ -135,51 +135,76 @@ public class Triangulation : MonoBehaviour
 		
 			
 		if (dataCurve == null || 
-			dataCurve.GetComponent<PathsHolder>().paths.Count==0)
+			dataCurve.GetComponent<PathsHolder>().paths.Count<=1)
 		{
 			Debug.Log("No curves");
 			return; 
 		}
+		int i =  (int)UnityEngine.Random.Range(0,dataCurve.GetComponent<PathsHolder>().paths.Count);
+		int j =  (int)UnityEngine.Random.Range(0,dataCurve.GetComponent<PathsHolder>().paths.Count);
+		 
+		while(i == j)
+		{
+			j =  (int)UnityEngine.Random.Range(0,dataCurve.GetComponent<PathsHolder>().paths.Count);
+		}
 
-		Vector3[] path1 = dataCurve.GetComponent<PathsHolder>().paths[0].getPoints3DFlat();
-		Vector3[] path2 = dataCurve.GetComponent<PathsHolder>().paths[1].getPoints3DFlat();
+		// i = 52;
+		// j = 813; 
 
 
-		
-		float area = TriangulationCurves(path1, path2);
-		Debug.Log("Area: " + area);
+		Vector3[] path1 = dataCurve.GetComponent<PathsHolder>().paths[i].getPoints3D();
+		Vector3[] path2 = dataCurve.GetComponent<PathsHolder>().paths[j].getPoints3D();
+
+
+		//813 and 52
+		float area = TriangulationCurves(path1, path2,false,true);
+		Debug.Log("Area: " + area + " : ID " + i + "," + j);
 	}
 	
-	public float TriangulationCurves(Vector3[] path1, Vector3[] path2,bool dimensionsTime = false )
+	public float TriangulationCurves(Vector3[] path1, Vector3[] path2,bool removeTimeDimension = false, bool viewPaths = false )
 	{
 
 		//TODO: Not using the 3D version and drop the time. 
 
+
+		//Remove time component
+		if(removeTimeDimension)
+		{
+			for(int i =0; i<path1.Length; i++)
+			{
+				path1[i].y = 0; 
+			}
+			for(int i =0; i<path2.Length; i++)
+			{
+				path2[i].y = 0; 
+			}
+		}	
+
 		//Debug.Log ("hello");
-//		GameObject temp = GameObject.Find("temp");
-//		if(temp != null)
-//			GameObject.DestroyImmediate(temp);
-//		
-//		temp = new GameObject("temp");
+		GameObject temp = null; 
+		if(viewPaths)
+		{
+			temp = GameObject.Find("temp");
+			if(temp != null)
+				GameObject.DestroyImmediate(temp);
 		
+			temp = new GameObject("temp");
+		}
 		Clear();
 		
 		//Draw the two paths:
+		if(viewPaths)
+		{
 
-	//	VectorLine line1 = new VectorLine("1",path1,Color.red,null,10.0f);
-
-	//	line1.Draw3D();
-
-	//	line1.vectorObject.transform.parent = temp.transform;
-
-		//Second line
-
-	//	VectorLine line2 = new VectorLine("2",path2,Color.blue,null,10.0f);
-		
-	//	line2.Draw3D();
-
-	//	line2.vectorObject.transform.parent = temp.transform;
-		
+			// VectorLine line1 = new VectorLine("1",path1,Color.red,null,10.0f);
+			// line1.Draw3D();
+			// line1.vectorObject.transform.parent = temp.transform;
+			
+			// //Second line
+			// VectorLine line2 = new VectorLine("2",path2,Color.blue,null,10.0f);
+			// line2.Draw3D();
+			// line2.vectorObject.transform.parent = temp.transform;
+		}
 		//Constructing the geometry
 		//Find all the vectors that are colliding and there position. 
 		lines.Clear(); 
@@ -190,6 +215,7 @@ public class Triangulation : MonoBehaviour
 		foreach(Line l in GetLines(path2,path1))
 			lines.Add(l);
 
+
 		//Keep polygon in memory
 		List<Line> poly = new List<Line>(); 
 
@@ -199,23 +225,22 @@ public class Triangulation : MonoBehaviour
 			poly.Add(new Line(path2[i],path2[i+1]));
 
 
-		//Remove time component
-		if(dimensionsTime)
+
+		//Closing the polygon
+		if(!removeTimeDimension)
 		{
-			foreach(Line l in lines)
-			{
-				for(int i =0; i<2;i++)
-				{
-					l.vertex[i].y = 0; 
-				}
-			}
-		}	
+			lines.Add(new Line(path1[path1.Length-1],path2[path2.Length-1]));
+		}
+
+
+
+
+
+
+
 
 		//Draw polygon
-	/*	foreach(Line l in poly)
-		{
-			l.DrawVector(temp,Color.gray);
-		} */
+		
 
 		//Get the vertex
 		List<Vector3> vertex = new List<Vector3>(); 
@@ -225,11 +250,23 @@ public class Triangulation : MonoBehaviour
 			foreach(Vector3 v in l.vertex)
 			{
 				if(!vertex.Contains(v))
+				{	
 					vertex.Add(v);
+
+				}
 			}
 		}	
 
 		//Debug.Log(vertex.Count);
+
+
+		// if(viewPaths)
+		// {
+		// 	foreach(Line l in lines)
+		// 	{
+		// 		l.DrawVector(temp);
+		// 	}
+		// }	
 
 
 
@@ -292,7 +329,18 @@ public class Triangulation : MonoBehaviour
 				}
 
 
-				if(collisionFree && !lines.Contains(t))
+				bool isAlreadyThere = false;
+
+				foreach(Line lToCheck in lines)
+				{
+					if(lToCheck.Equals(t))
+					{
+						isAlreadyThere = true; 
+						break;
+					}
+				} 
+
+				if(collisionFree && !isAlreadyThere)
 				{
 					//Add the line	
 					lines.Add(t);
@@ -300,45 +348,69 @@ public class Triangulation : MonoBehaviour
 			}
 		}
 
+
+		if(viewPaths)
+		{
+			foreach(Line l in lines)
+			{
+				l.DrawVector(temp);
+			}
+		}	
+
 		//Find the triangles
 		//Find the centers 
 		triangles = new List<Triangle> (); 
+		
+
 		//Well why be efficient when you can be not efficient
-		foreach (Line l in lines) {
+		foreach (Line l in lines) 
+		{
 			Vector3 v1 = l.vertex [0]; 
 			Vector3 v2 = l.vertex [1];
-			foreach (Line l2 in lines) {
+			
+			foreach (Line l2 in lines) 
+			{
 				if (l == l2)
 					continue;
 				Vector3 v3 = Vector3.zero; 
 				
 				
-				if (l2.vertex [0].Equals (v2)) {
+				if (l2.vertex [0].Equals (v2)) 
+				{
 					v3 = l2.vertex [1];
 					//have to check if closes
-				} else if (l2.vertex [1].Equals (v2)) {
+				} 
+				else if (l2.vertex [1].Equals (v2)) 
+				{
 					v3 = l2.vertex [0];
 				}
 				
-				if (v3 != Vector3.zero) {
-					foreach (Line l3 in lines) {
+				if (v3 != Vector3.zero) 
+				{
+
+					foreach (Line l3 in lines) 
+					{
 						if (l3 == l2 || l3 == l)
 							continue; 
-						if ((l3.vertex [0].Equals (v1) && l3.vertex [1].Equals (v3))
-						    || (l3.vertex [1].Equals (v1) && l3.vertex [0].Equals (v3))) {
-							//Debug.DrawLine(v1,v2,Color.red); 
-							//Debug.DrawLine(v2,v3,Color.red); 
-							//Debug.DrawLine(v3,v1,Color.red); 
+
+						if ( (VectorApprox(l3.vertex [0],v1) && VectorApprox(l3.vertex [1],v3)) 
+							 || VectorApprox(l3.vertex [1],v1) && VectorApprox(l3.vertex [1],v3))
+						{
+						// if ((l3.vertex [0].Equals (v1) && l3.vertex [1].Equals (v3))
+						//     || (l3.vertex [1].Equals (v1) && l3.vertex [0].Equals (v3))) 
+						// {
+						 
 							
 							//Add the traingle
-							Triangle toAddTriangle = new Triangle (
-								v1,v2,v3);
+							Triangle toAddTriangle = new Triangle (v1,v2,v3);
 							
 							
 							Boolean isAlready = false; 
-							foreach (Triangle tt in triangles) {
-								if (tt.Equals (toAddTriangle)) {
-									//Debug.Log(toAddTriangle.refPoints[0]+", "+
+							foreach (Triangle tt in triangles) 
+							{
+								if (tt.Equals (toAddTriangle)) 
+								{
+									// Debug.Log(toAddTriangle.refPoints[0]+", "+
 									//          toAddTriangle.refPoints[1]+", "+
 									//          toAddTriangle.refPoints[2]+", "); 
 									isAlready = true; 
@@ -346,7 +418,9 @@ public class Triangulation : MonoBehaviour
 								}
 								
 							}
-							if (!isAlready) {
+							
+							if (!isAlready) 
+							{
 								triangles.Add (toAddTriangle);
 							}
 							
@@ -356,18 +430,14 @@ public class Triangulation : MonoBehaviour
 			}
 		}
 		
-		
-		//Find shared edge and triangle structure
-		
-		foreach (Triangle tt in triangles) {
-			foreach (Triangle ttt in triangles) {
-				if (tt == ttt)
-					continue; 
-				tt.ShareEdged (ttt);
-				
-			}
-			
-		}
+		// if(viewPaths)
+		// {
+		// 	foreach (Triangle tt in triangles) 
+		// 	{
+		// 		// Debug.Log("tests");
+		// 		tt.DrawTriangle(temp);
+		// 	}
+		// }	
 		
 		//Get the area of the triangles
 		float area = 1.0f; 
@@ -375,11 +445,9 @@ public class Triangulation : MonoBehaviour
 			area += tt.GetArea(); 
 
 
-
 		return area;
 
-		//foreach(Line l in lines)
-			//l.DrawVector(temp);
+		
 	}
 
 	private List<Line> GetLines(Vector3[] path1, Vector3[] path2)
@@ -634,9 +702,12 @@ public class Triangulation : MonoBehaviour
 					foreach (Line l3 in lines) {
 						if (l3 == l2 || l3 == l)
 							continue; 
-						if ((l3.vertex [0].Equals (v1) && l3.vertex [1].Equals (v3))
-						    || (l3.vertex [1].Equals (v1) && l3.vertex [0].Equals (v3))) {
-							//Debug.DrawLine(v1,v2,Color.red); 
+						if ( (VectorApprox(l3.vertex [0],v1) && VectorApprox(l3.vertex [1],v3)) 
+							 || VectorApprox(l3.vertex [1],v1) && VectorApprox(l3.vertex [1],v3))
+						{
+						// if ((l3.vertex [0].Equals (v1) && l3.vertex [1].Equals (v3))
+						//     || (l3.vertex [1].Equals (v1) && l3.vertex [0].Equals (v3))) {
+						// 	//Debug.DrawLine(v1,v2,Color.red); 
 							//Debug.DrawLine(v2,v3,Color.red); 
 							//Debug.DrawLine(v3,v1,Color.red); 
 							
@@ -671,8 +742,10 @@ public class Triangulation : MonoBehaviour
 		
 		//Find shared edge and triangle structure
 		
-		foreach (Triangle tt in triangles) {
-			foreach (Triangle ttt in triangles) {
+		foreach (Triangle tt in triangles) 
+		{
+			foreach (Triangle ttt in triangles) 
+			{
 				if (tt == ttt)
 					continue; 
 				tt.ShareEdged (ttt);
@@ -686,7 +759,24 @@ public class Triangulation : MonoBehaviour
 		
 		
 	}
-	
+	float eps = 0.001f;
+	public bool VectorApprox ( List<Vector3> obs_pts, Vector3 interPt )
+	{
+		foreach (Vector3 v in obs_pts) 
+		{
+			if( Math.Abs (v.x - interPt.x) < eps && Math.Abs (v.z - interPt.z) < eps )
+				return true;
+		}
+		return false;
+	}
+	public bool VectorApprox ( Vector3 obs_pts, Vector3 interPt )
+	{
+		Vector3 v = obs_pts;
+		if( Math.Abs (v.x - interPt.x) < eps && Math.Abs (v.z - interPt.z) < eps )
+			return true;
+
+		return false;
+	}
 	private Boolean LineIntersect (Vector3 a, Vector3 b, Vector3 c, Vector3 d)
 	{
 		//Debug.Log(a); 

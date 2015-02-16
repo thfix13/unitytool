@@ -80,6 +80,15 @@ public class Triangle
 		}
 
 	}
+
+	public void DrawTriangle(GameObject g)
+	{
+		foreach(Line l in getLines())
+		{
+			l.DrawVector(g);
+		}
+	}
+
 	public Vector3[] getVertexMiddle()
 	{
 		Vector3[] toReturn = new Vector3[3];

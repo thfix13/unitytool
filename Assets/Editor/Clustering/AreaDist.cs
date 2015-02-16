@@ -7,6 +7,7 @@ using System.Linq;
 using Vectrosity; 
 using EditorArea;
 using ClusteringSpace;
+using EditorArea;
 
 public class AreaDist
 {
@@ -78,7 +79,7 @@ public class AreaDist
 		if(g != null)
 		{
 			Triangulation tObject = g.GetComponent<Triangulation>(); 
-			float area = tObject.TriangulationCurves(path1.getPoints3DFlat(), path2.getPoints3DFlat());
+			float area = tObject.TriangulationCurves(path1.getPoints3D(), path2.getPoints3D(),MapperWindowEditor.only2DTriangulation);
 //			Debug.Log("A: "+area);
 			return area;
 		}
