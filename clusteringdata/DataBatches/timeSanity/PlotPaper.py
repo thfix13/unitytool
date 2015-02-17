@@ -12,11 +12,12 @@ import numpy as np
 
 
 
-dataTriangle = [212, 164, 40, 164, 116, 168, 76, 168, 298, 164, 172, 164, 168, 164, 100, 40, 212, 164, 164, 134, 156, 80, 274, 164, 126, 56, 164, 164, 198, 40, 80]
+dataTriangle = [1352, 868, 970, 852, 1146, 738, 992, 860, 1214, 1174, 1340, 1288, 1528, 1336, 994, 1004, 682, 728, 1434, 1306, 926, 1210, 1604, 1090, 886, 940, 862, 988, 1068, 1312, 1374]
+
 dataGerman = [1102, 1484, 1098, 1232, 1136, 1184, 1164, 1264, 1502, 1906, 2116, 1826, 1456, 1310, 1876, 966, 1382, 2024, 1432, 1076, 1220, 878, 1184, 1930, 1408, 1064, 2028, 1418, 1094, 1296, 986]
 dataFrench = [1052, 1704, 2078, 1890, 878, 1628, 856, 1814, 828, 1738, 1600, 2066, 838, 1772, 1550, 846, 936, 830, 1784, 1768, 838, 1870, 1010, 1892, 1656, 1814, 1814, 874, 1562, 890, 986]
 
-
+xminData = min(dataFrench+dataTriangle+dataGerman)
 xmaxData = max(dataFrench);
 ymaxData = 13
 
@@ -38,7 +39,7 @@ plt.subplot(311).set_xticklabels([])
 
 plt.hist(colls,bins=b,range=(0,xmaxData), normed=0,color = '#0000ff',alpha=a)
 # plt.title("avg = " + str(mu) + ", std =" + str(std) + ", med =" + str(med))
-plt.axis([0,xmaxData,0,ymaxData])
+plt.axis([xminData,xmaxData,0,ymaxData])
 
 plt.subplot(311)
 xmin, xmax = plt.xlim()
@@ -64,7 +65,7 @@ plt.hist(colls,bins=b,range=(0,xmaxData), normed=0,color = '#ff00ff',alpha=a)
 # plt.title("avg = " + str(mu) + ", std =" + str(std) + ", med =" + str(med))
 
 
-plt.axis([0,xmaxData,0,ymaxData])
+plt.axis([xminData,xmaxData,0,ymaxData])
 
 
 xmin, xmax = plt.xlim()
@@ -95,7 +96,7 @@ p*=100
 p*=ymaxData
 plt.plot(x, p, 'k', linewidth=1.4,color='#0EB554')
 
-plt.axis([0,xmaxData,0,ymaxData])
+plt.axis([xminData,xmaxData,0,ymaxData])
 
 plt.axvline(mu, color='#0EB554', linestyle='dashed', linewidth=1.2)
 plt.axvline(med, color='#0EB554', linestyle='-.', linewidth=1.2)

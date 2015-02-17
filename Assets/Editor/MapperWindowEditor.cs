@@ -902,7 +902,8 @@ namespace EditorArea {
 			{
 				//This is used directly trhough the static reference 
 				//by AreaDist.cs
-				only2DTriangulation = EditorGUILayout.Toggle("Only 2d triangulation", only2DTriangulation);
+				only2DTriangulation = EditorGUILayout.Toggle("Only 2d triangulation", 
+					only2DTriangulation);
 			}
 			nbBatch = (int)EditorGUILayout.IntField("nbBatches",nbBatch);
 
