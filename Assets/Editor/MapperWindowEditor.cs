@@ -914,7 +914,6 @@ namespace EditorArea {
 
 			if (GUILayout.Button (title))
 			{
-
 				int counter = 0; 
 				do //For batch computation
 				{
@@ -988,8 +987,6 @@ namespace EditorArea {
 						chosenFileIndex = -1; 
 					}
 
-
-
 					if (paths.Count < numClusters)
 					{
 						Debug.Log("You have less paths than you have desired clusters - either compute more paths or decrease cluster amount.");
@@ -1048,6 +1045,7 @@ namespace EditorArea {
 
 					double clustVal = 0.0;
 
+					int noisy = 0;
 					if (clustAlg == 0) // kmeans++
 					{
 						if (paths.Count > 99)
@@ -1219,7 +1217,6 @@ namespace EditorArea {
 							}
 						}
 						
-						int noisy = 0;
 						foreach (Path path in origPaths)
 						{
 							if (!paths.Contains(path))
@@ -1258,6 +1255,11 @@ namespace EditorArea {
 									distMetricStr += dimensionsShort[dim];
 								}
 							}
+						}
+						String clustAlgStr = clustAlgsShort[clustAlg];
+						if (clustAlg == 1)
+						{
+							clustAlgStr += "-" + (int)dbsScanEps + "eps-" + minPathsForCluster + "minpath-" + noisy + "noisy";
 						}
 						String NameFile = "clusteringdata/" + nameFile + "_" + 
 							clustAlgsShort[clustAlg] + "-" + numClusters + "c-" + distMetricStr + 
