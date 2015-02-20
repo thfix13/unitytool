@@ -38,8 +38,8 @@ namespace EditorArea {
 		public static Color[] colors = new Color[] { Color.blue, Color.green, Color.magenta, Color.red, Color.yellow, Color.black, Color.cyan, new Color32(164, 211, 238, 255), new Color32(189, 252, 201, 255), new Color32(255, 165, 0, 255), new Color32(255, 182, 193, 255), new Color32(0, 206, 209, 255), new Color32(102, 205, 170, 255), new Color32(128, 128, 0, 255), new Color32(210, 180, 140, 255), new Color32(160, 82, 45, 255), new Color32(197, 193, 170, 255), Color.grey };
 		private static String[] colorStrings = new String[] { "Blue", "Green", "Magenta", "Red", "Yellow", "Black", "Cyan", "Light Sky Blue", "Mint", "Orange", "Light Pink", "Turquoise", "Aquamarine", "Olive", "Tan", "Brown", "Bright Grey", "Grey"};
 		public static int clustAlg = 1;
-		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, numPasses = 1, rdpTolerance = 4, maxClusters = 4, minPathsForCluster = 3;
-		private static float dbsScanEps = 15.0f;
+		private static int numClusters = 4, distMetric = 0, chosenFileIndex = -1, currentColor = 0, numPasses = 1, rdpTolerance = 4, maxClusters = 17, minPathsForCluster = 5;
+		private static float dbsScanEps = 11.0f;
 		private static List<Path> clusterCentroids = new List<Path>(), origPaths = new List<Path>();
 		private static bool[] showPaths = new bool[colors.Count()];
 		private static bool autoSavePaths = true, discardHighDangerPaths = true, drawHeatMapColored = false, useColors = false, showNoise = false;
@@ -876,10 +876,10 @@ namespace EditorArea {
 
 				origPaths = new List<Path>();
 				
-				for (int count = 0; count < paths.Count(); count ++)
-				{
-					paths[count].name = count.ToString();
-				}
+		//		for (int count = 0; count < paths.Count(); count ++)
+		//		{
+		//			paths[count].name = count.ToString();
+		//		}
 			}
 			
 			if (prevMetric != distMetric)
@@ -969,10 +969,10 @@ namespace EditorArea {
 						ComputeHeatMap (paths, deaths);
 						SetupArrangedPaths (paths);
 						
-						for (int count = 0; count < paths.Count(); count ++)
-						{
-							paths[count].name = count.ToString();
-						}
+		//				for (int count = 0; count < paths.Count(); count ++)
+		//				{
+		//					paths[count].name = count.ToString();
+		//				}
 
 						foreach (Path p in paths)
 						{ // check if x != xD, etc.
@@ -1400,10 +1400,10 @@ namespace EditorArea {
 			//	drawer.heatMapMax = maxHeatMap;
 			//	drawer.tileSize.Set (SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y);
 				
-				for (int count = 0; count < paths.Count(); count ++)
-				{
-					paths[count].name = count.ToString();
-				}
+			//	for (int count = 0; count < paths.Count(); count ++)
+			//	{
+			//		paths[count].name = count.ToString();
+			//	}
 				
 				for (int color = 0; color < colors.Count(); color ++)
 				{
@@ -1422,6 +1422,91 @@ namespace EditorArea {
 				LevelRepresentation.tileSize = SpaceState.Editor.tileSize;
 				LevelRepresentation.zero.Set(floor.collider.bounds.min.x, floor.collider.bounds.min.z);
 				rep.loadPlatformerLevel();
+			}
+			
+			if (GUILayout.Button("Use orig paths with current colors"))
+			{
+				// assume saved results are already loaded in.
+				List<Path> resultPaths = new List<Path>();
+				foreach (Path p in paths)
+				{
+					resultPaths.Add(new Path(p));
+				}
+				List<Color> pathColors = new List<Color>();
+				foreach (Path p in paths)
+				{
+					pathColors.Add(new Color(p.color.r, p.color.g, p.color.b, p.color.a));
+				}
+				
+				// load the original paths in.
+				paths.Clear ();
+				ClearPathsRepresentation ();
+				resetClusteringData();
+				clusterCentroids.Clear();
+				origPaths = new List<Path>();
+				
+				DirectoryInfo batchDir = new DirectoryInfo("batchpaths/");
+				FileInfo[] batchInfo = batchDir.GetFiles("*.xml");
+			
+				List<String> pathFilenames = new List<String>();
+				for (int count = 0; count < batchInfo.Count(); count ++)
+				{
+					if (batchInfo[count].Name == "levelinfo.xml") continue;
+					pathFilenames.Add(batchInfo[count].Name);
+				}
+				
+				List<Path> pathsImported = new List<Path>();
+				int pathNum = 0;
+				foreach (String file in pathFilenames)
+				{
+					XmlSerializer ser = new XmlSerializer (typeof(PlatformerPathBridge));
+					PlatformerPathBridge loaded = null;
+					using (FileStream stream = new FileStream ("batchpaths/" + file, FileMode.Open)) {
+						loaded = (PlatformerPathBridge)ser.Deserialize (stream);
+						stream.Close ();
+					}
+					
+					List<Node> pathPoints = new List<Node>();
+					for (int count = 0; count < loaded.positionsField.Count(); count ++)
+					{
+						pathPoints.Add(new Node(loaded.positionsField[count].xField, loaded.positionsField[count].yField, count));
+					}
+					if (pathPoints.Count() <= 3) continue;
+					
+					Path path = new Path();
+					path.points = pathPoints; //LineReduction.DouglasPeuckerReduction(rep, pathPoints, rdpTolerance, true); //shortestPathAroundObstacles(pathPoints)));
+					path.name = pathNum.ToString(); // name comes from the order in which it is loaded - which comes from the natural ordering of the files 1.xml 2.xml etc.
+					pathNum ++;
+					
+					pathsImported.Add(path);
+				}
+				
+				// Setup parenting
+				foreach (Path p in pathsImported) {
+					for (int i = p.points.Count - 1; i > 0; i--) {
+						p.points [i].parent = p.points [i - 1];
+					}
+				}
+					
+				foreach (Path p in pathsImported)
+				{
+					// loop through resultPaths for path with same name and use same color as that one
+					bool found = false;
+					for (int count = 0; count < resultPaths.Count(); count ++)
+					{
+						if (p.name == resultPaths[count].name)
+						{
+							p.color = new Color(pathColors[count].r, pathColors[count].g, pathColors[count].b, pathColors[count].a);
+							found = true;
+						}
+					}
+					if (!found) {
+						Debug.Log("error");
+						p.color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
+					}
+					toggleStatus.Add (p, true);
+					paths.Add(p);
+				}
 			}
 			
 			if (GUILayout.Button("Import Platformer Paths & RDP"))
