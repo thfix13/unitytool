@@ -989,7 +989,7 @@ namespace EditorArea {
 
 					if (paths.Count < numClusters)
 					{
-						Debug.Log("You have less paths than you have desired clusters - either compute more paths or decrease cluster amount.");
+						Debug.Log("You have less paths than you have desired clusters - either compute/import more paths or decrease cluster amount.");
 						return;
 					}
 

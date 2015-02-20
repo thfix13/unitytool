@@ -193,6 +193,7 @@ namespace EditorArea {
 									new Vector3(n.x * tileSize.x + zero.x, (danger3), (n.y * tileSize.x + zero.y)), 
 									new Vector3(n.parent.x * tileSize.y + zero.x, (danger3Parent), (n.parent.y * tileSize.y + zero.y))
 									);
+							//	Gizmos.DrawLine (new Vector3(n.x * tileSize.x + zero.x, 0.1f + (n.danger3*100), (n.y * tileSize.x + zero.y)), new Vector3(n.parent.x * tileSize.y + zero.x, 0.1f + (n.parent.danger3*100), (n.parent.y * tileSize.y + zero.y)));
 							}
 							else
 							{
@@ -200,6 +201,7 @@ namespace EditorArea {
 													(System.Convert.ToSingle(n.yD) * tileSize.x + zero.y)), 
 												new Vector3((float)(n.parent.xD * tileSize.y + zero.x), (danger3Parent),
 												 	(float)(n.parent.yD * tileSize.y + zero.y)));
+							//	Gizmos.DrawLine (new Vector3((System.Convert.ToSingle(n.xD) * tileSize.x + zero.x), 0.1f + (n.danger3*100), (System.Convert.ToSingle(n.yD) * tileSize.x + zero.y)), new Vector3((float)(n.parent.xD * tileSize.y + zero.x), 0.1f + (n.parent.danger3*100), (float)(n.parent.yD * tileSize.y + zero.y)));
 							}
 
 
