@@ -908,11 +908,11 @@ public class Triangulation : MonoBehaviour
 			Vector3 v = numToVect[tour[i]];
 			explorationTour.Add(v);
 			if( cameras.Contains( v ) ){
-				if( xcnt == 21 ){
-//					vpdraw = visibilityPolygon (numToVect [tour [i]]);
+				if( xcnt == 8 ){
 //					Line tmpline = new Line( v, new Vector3(-100,1,100) );
-//					vpdraw.DrawGeometry(GameObject.Find ("temp"));
 //					tmpline.DrawVector(GameObject.Find("temp"));
+//					vpdraw = visibilityPolygon (numToVect [tour [i]]);
+//					vpdraw.DrawGeometry(GameObject.Find ("temp"));
 					//vplist.Add(vpdraw);
 				}
 				xcnt++;
@@ -1056,7 +1056,7 @@ public class Triangulation : MonoBehaviour
 				collides = true;
 				foreach( Line lb in mapBG.edges ){
 					if( VectorApprox( lb.MidPoint(), tmpLine.MidPoint() ) ){
-						if( cnt == 35 )	Debug.Log ("35 in pointinside");
+//						if( cnt == 35 )	Debug.Log ("35 in pointinside");
 						collides = false;
 						break;
 					}
@@ -1131,9 +1131,10 @@ public class Triangulation : MonoBehaviour
 			cnt++;
 		}
 		cnt = 0;
-//		foreach (KeyValuePair<Vector3, float> kvp in anglistExt) {
-//			drawSphere( kvp.Key, Color.blue, kvp.Value );		
-//		}
+		foreach (KeyValuePair<Vector3, float> kvp in anglistExt) {
+			//drawSphere( kvp.Key, Color.blue, cnt++ );		
+		}
+		cnt = 0;
 		//Step 4 - Order the points
 		List<Vector3> vispol = new List<Vector3>();
 		string startfrom = "none";
@@ -1364,12 +1365,14 @@ public class Triangulation : MonoBehaviour
 
 	void getCameraVPS(){
 		List<Vector3> tempcam = new List<Vector3> ();
+		Debug.Log ("Camera count is " + cameras.Count);
 		foreach (Vector3 v in explorationTour) {
 			if( cameras.Contains(v) && !tempcam.Contains(v) ){
 				tempcam.Add(v);
 				cameraVPS.Add ( new KeyValuePair<Vector3, Geometry>( v, visibilityPolygon( v ) ) );
 			}
 		}
+		Debug.Log ("Temp cam count is " + tempcam.Count);
 	}
 
 	void cameraNesting(){
