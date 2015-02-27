@@ -908,7 +908,7 @@ public class Triangulation : MonoBehaviour
 			Vector3 v = numToVect[tour[i]];
 			explorationTour.Add(v);
 			if( cameras.Contains( v ) ){
-				if( xcnt == 1 ){
+				if( xcnt == 21 ){
 //					vpdraw = visibilityPolygon (numToVect [tour [i]]);
 //					Line tmpline = new Line( v, new Vector3(-100,1,100) );
 //					vpdraw.DrawGeometry(GameObject.Find ("temp"));
@@ -1117,8 +1117,9 @@ public class Triangulation : MonoBehaviour
 				mrpts = morePoints(prevv, nv, cnt);
 				prevv = nv;
 				nv = mrpts.Value;
+				//if ( cnt == 2 ) break;
 			}
-			if(cnt == 4){
+			if(cnt < 100){
 				foreach( Vector3 vn in tmplist ){
 					//Line dbgline = new Line( kernel, vn );
 					//dbgline.name = "Line" + i;
@@ -1275,7 +1276,7 @@ public class Triangulation : MonoBehaviour
 		//float alp = 1.01f;
 		Vector2 vB_new2d = vA2d + (alp * dirA2d);
 		Vector3 vB_new = new Vector3( vB_new2d.x, 1, vB_new2d.y );
-//		if (i == 4) {
+//		if (i == 2) {
 //			drawSphere( vB_new, Color.blue );
 //		}
 		bool collides = false;
@@ -1302,7 +1303,9 @@ public class Triangulation : MonoBehaviour
 		//Extend ray widely and find closest intersection point
 		Vector2 dirB2d = vB_new2d - vB2d;//Direction from B towards B_new
 		//alp = 100f / new Line( vA, vB ).Magnitude();//In case original line is too small
-		alp = 10f;
+		//TODO:Tweak if errors
+		//alp = 10f;
+		alp = 50f;
 		vB_new2d = vB2d + (alp * dirA2d);
 		vB_new = new Vector3( vB_new2d.x, 1, vB_new2d.y );
 		collides = false;
@@ -1310,7 +1313,7 @@ public class Triangulation : MonoBehaviour
 		Line ray = new Line (vB, vB_new);
 		float mindist = 1000f;
 		Vector3 retvect = new Vector3 ();
-//		if (i == 6)
+//		if (i == 2)
 //			ray.DrawVector (GameObject.Find ("temp"), Color.green);
 		int cnt2 = 0;
 
@@ -1329,7 +1332,7 @@ public class Triangulation : MonoBehaviour
 					if( tmpline.Magnitude() < mindist ){
 						mindist = tmpline.Magnitude();
 						retvect = v;
-//						if( i == 6 )
+//						if( i == 2 )
 //							drawSphere( v, Color.gray );
 					}
 				}
@@ -1344,6 +1347,8 @@ public class Triangulation : MonoBehaviour
 				if( tmpline.Magnitude() < mindist ){
 					mindist = tmpline.Magnitude();
 					retvect = v;
+//					if( i == 2 )
+//						drawSphere( v, Color.gray );
 				}
 			}
 		}
