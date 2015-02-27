@@ -28,6 +28,7 @@ public class Triangulation : MonoBehaviour
 	public Geometry mapBG;
 	//Camera
 	public List<KeyValuePair<Vector3,Geometry>> cameraVPS = new List<KeyValuePair<Vector3, Geometry>>();
+	public List<KeyValuePair<Vector3,Geometry>> cameraVPS2 = new List<KeyValuePair<Vector3, Geometry>>();
 	//Contains all the visibility polygons for cameras
 	public int vpnum = -1;
 	
@@ -82,6 +83,7 @@ public class Triangulation : MonoBehaviour
 		stopAll = true;
 		explorationTour.Clear ();
 		cameraVPS.Clear ();
+		cameraVPS2.Clear ();
 		GameObject vpa = GameObject.Find("vpA");
 		if( vpa != null )
 			DestroyImmediate(vpa);
@@ -175,7 +177,7 @@ public class Triangulation : MonoBehaviour
 		/*STEP 10 - GET VISIBILITY POLYGONS OF CAMERAS*/
 		getCameraVPS ();
 		/*STEP 11 - CHECK CAMERA VISIBILITY NESTING*/
-		//cameraNesting ();
+		cameraNesting ();
 	}
 
 	void getPolygons(){
@@ -1365,14 +1367,14 @@ public class Triangulation : MonoBehaviour
 
 	void getCameraVPS(){
 		List<Vector3> tempcam = new List<Vector3> ();
-		Debug.Log ("Camera count is " + cameras.Count);
+		//Debug.Log ("Camera count is " + cameras.Count);
 		foreach (Vector3 v in explorationTour) {
 			if( cameras.Contains(v) && !tempcam.Contains(v) ){
 				tempcam.Add(v);
 				cameraVPS.Add ( new KeyValuePair<Vector3, Geometry>( v, visibilityPolygon( v ) ) );
 			}
 		}
-		Debug.Log ("Temp cam count is " + tempcam.Count);
+		//Debug.Log ("Temp cam count is " + tempcam.Count);
 	}
 
 	void cameraNesting(){
@@ -1380,43 +1382,56 @@ public class Triangulation : MonoBehaviour
 		new GameObject ("vpB");
 		new GameObject ("vpMerged");
 		int x = cameraVPS.Count - 1;
-		Debug.Log (x);
 		Geometry incrementalCover = new Geometry ();
 		incrementalCover = cameraVPS [0].Value;
 		int cnt = 0;
+		Debug.Log ("Total Cameras:" + x);
 		for (int i = 1; i < x; i++) {
-
-			//cameraVPS.Add( new KeyValuePair<Vector3, Geometry> ( cameraVPS[i].Key, vpA.GeometryMerge( vpB ) ) );
-			if( incrementalCover.GeometryInside(cameraVPS[i].Value) ){
+			if( incrementalCover.GeometryInsideExt(cameraVPS[i].Value) ){
 				cnt++;
+				Debug.Log("Overlapped at camera: " + cnt);
+//				incrementalCover.DrawGeometry( GameObject.Find("temp") );
+//				cameraVPS[i].Value.DrawGeometry( GameObject.Find("temp") );
+//				return;
 			}
-			incrementalCover = incrementalCover.GeometryMerge(cameraVPS[i].Value);
-//			if( i == 20 ){
-//				vpA.DrawGeometry( GameObject.Find("vpA") );
-//				vpB.DrawGeometry( GameObject.Find("vpB") );
+			if( i == 7 ){
+				//incrementalCover.DrawGeometry( GameObject.Find("vpA") );
+				//cameraVPS[i].Value.DrawGeometry( GameObject.Find("vpB") );
+			}
+			cameraVPS2.Add( new KeyValuePair<Vector3, Geometry>( cameraVPS[i].Key, incrementalCover ) );
+			incrementalCover = incrementalCover.GeometryMergeCamera(cameraVPS[i].Value, i);
+			if( i == 7 ){
+				//incrementalCover.DrawGeometry( GameObject.Find("vpMerged") );
+				//break;
+				//cameraVPS[i].Value.DrawGeometry( GameObject.Find("temp") );
 //				//vpA.GeometryMergeVP(vpB).DrawGeometry( GameObject.Find("vpMerged") );
-//			}
+				//break;
+			}
 		}
 		//incrementalCover.DrawGeometry (GameObject.Find ("temp"));
-		Debug.Log("Found Inside" + cnt);
-		return;
-		cnt = 0;
-		for (int i = 0; i < cameraVPS.Count; i++) {
-			Geometry vpA = cameraVPS[i].Value;
-			//cameraVPS.Add( new KeyValuePair<Vector3, Geometry> ( cameraVPS[i].Key, vpA.GeometryMerge( vpB ) ) );
-			for( int j = 0; j < cameraVPS.Count; j++ ){
-				if( i == j ) continue;
-				Geometry vpB = cameraVPS[j].Value;
-				if( vpA.GeometryInside( vpB ) ){
-					cnt++;
-//					if( cnt == 3 ){
-//						vpA.DrawGeometry(GameObject.Find("temp"));
-//						vpB.DrawGeometry(GameObject.Find("temp"));
-//					}
-				}
-			}
+		cameraVPS.Clear ();
+		foreach( KeyValuePair<Vector3, Geometry> kvp in cameraVPS2 ){
+			cameraVPS.Add(kvp);
 		}
-		Debug.Log ("Overlapping" + cnt);
+		Debug.Log("Number of Overlaps: " + cnt);
+		return;
+//		cnt = 0;
+//		for (int i = 0; i < cameraVPS.Count; i++) {
+//			Geometry vpA = cameraVPS[i].Value;
+//			//cameraVPS.Add( new KeyValuePair<Vector3, Geometry> ( cameraVPS[i].Key, vpA.GeometryMerge( vpB ) ) );
+//			for( int j = 0; j < cameraVPS.Count; j++ ){
+//				if( i == j ) continue;
+//				Geometry vpB = cameraVPS[j].Value;
+//				if( vpA.GeometryInside( vpB ) ){
+//					cnt++;
+////					if( cnt == 3 ){
+////						vpA.DrawGeometry(GameObject.Find("temp"));
+////						vpB.DrawGeometry(GameObject.Find("temp"));
+////					}
+//				}
+//			}
+//		}
+//		Debug.Log ("Overlapping" + cnt);
 	}
 
 	public bool OnSameLine( Vector3 v1, Vector3 v2 ){

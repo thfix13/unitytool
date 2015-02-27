@@ -53,14 +53,10 @@ public class Geometry
 	public bool LineInside(Line l){//Called by GeometryMerge, GeomtryMergeInner and BoundGeometry
 		//Test if one of my line
 		//This is not the best version should check is colinear instead!
-		/*foreach(Line myLine in edges){
-			foreach(Vector3 v1 in myLine.vertex){
-				foreach(Vector3 v2 in l.vertex){
-					if( VectorApprox(v1, v2) )
-						return false; 
-				}
-			}
-		}*/
+		foreach(Line myLine in edges){
+			if( myLine.Equals( l ) )
+				return false;
+		}
 		//Now we check count the intersection
 		Vector3 mid = l.MidPoint(); 
 		return PointInside (l.MidPoint ());
@@ -86,6 +82,24 @@ public class Geometry
 					return false;
 			}
 		}
+		return count % 2 == 1;
+	}
+
+	public bool PointInsideCam( Vector3 pt ){//Called by LineInside, GeometryInside and LineCollision
+		Line lray = new Line(pt, new Vector3(-100, 1f, -100)); 
+		int count = 0; 
+		foreach(Line myLine in edges){
+			if( myLine.LineIntersectMuntacEndPt(lray) > 0 ){
+				count++;
+				//Check if the intersection point is on the polygon edge
+				//Note: other checks tried but precision error kept coming up in cases
+				Vector3 vtemp = myLine.GetIntersectionPoint(lray);
+				drawSphere( vtemp, Color.blue );
+				if( VectorApprox(vtemp, pt) )
+					return false;
+			}
+		}
+		Debug.Log(count);
 		return count % 2 == 1;
 	}
 
@@ -309,6 +323,7 @@ public class Geometry
 					i--;
 					break;
 				}
+				//TODO:Copy geometry merge camera function here
 			}
 		}
 		//Check: Points inside Polygon
@@ -318,6 +333,249 @@ public class Geometry
 		foreach(Line l in G3.edges){
 			if(!G1.LineInside(l) && !G2.LineInside(l))
 				toReturn.edges.Add(l);
+		}
+		return toReturn;
+	}
+
+	public Geometry GeometryMergeCamera( Geometry G2, int xid ){//Called from outside
+		if (GeometryInside (G2))
+			return this;
+		else if (G2.GeometryInside (this))
+			return G2;
+		Geometry tempGeometry = new Geometry ();
+		//Two Geometry objects - G1 and G2
+		Geometry G1 = this;
+		//Create new called G3 which starts as an union of G1 and G2
+		Geometry G3 = new Geometry ();
+		foreach (Line l in G1.edges)
+			G3.edges.Add(l);		
+		foreach (Line l in G2.edges)
+			G3.edges.Add(l);		
+		int vnt = 0;
+		//Check for intersection points among lines in G3
+		for (int i = 0; i < G3.edges.Count; i++) {
+			for( int j = i + 1; j < G3.edges.Count; j++ ) {
+				Line LA = G3.edges[i];
+				Line LB = G3.edges[j];
+//				if( i == 54 && j == 100 ){
+//					Debug.Log("wasdf");
+//					LA.DrawVector(GameObject.Find("temp"));
+//					LB.DrawVector(GameObject.Find("temp"));
+//				}
+				int caseType = LA.LineIntersectMuntac( LB );
+				if( caseType == 1 ){//Regular intersections
+					Vector3 pt = LA.GetIntersectionPoint( LB );
+					G3.edges.Add( new Line( pt, LA.vertex[0] ) );
+					G3.edges.Add( new Line( pt, LA.vertex[1] ) );
+					G3.edges.Add( new Line( pt, LB.vertex[0] ) );
+					G3.edges.Add( new Line( pt, LB.vertex[1] ));
+					G3.edges.RemoveAt(j);
+					G3.edges.RemoveAt(i);
+					i--;
+					break;
+				}
+				//When colinear, also need to break everything.
+				//Take one extreme point. Find distance with other points. Sort to get ordering.
+				else if( caseType == 2 ){
+					//This condition is to prevent otherwise disjoint lines that share a vertex
+					//from infintely being added and removed from G3
+
+					if( LA.ShareVertex( LB ) ){
+						Vector3 sharedVert = LA.getSharedVertex(LB);
+						Line LAShared = new Line( sharedVert, LA.GetOther(sharedVert) );
+						Line LBShared = new Line( sharedVert, LB.GetOther(sharedVert) );
+						Line LCShared = new Line( LA.GetOther(sharedVert), LB.GetOther(sharedVert) );
+						if( floatCompare( LAShared.Magnitude() + LBShared.Magnitude(),  LCShared.Magnitude() ) ){
+//							if( xid == 7 ){
+//								if( vnt == 42 ){
+//									//drawSphere( sharedVert, Color.blue);
+//									//drawSphere( LA.GetOther(sharedVert), Color.red);	
+//									//drawSphere( LB.GetOther(sharedVert), Color.green);
+//									Debug.Log ("MEtrics");
+//									Debug.Log ( LAShared.Magnitude() + LBShared.Magnitude() + " " + LCShared.Magnitude() );
+//								}
+//								LA.name = vnt.ToString();
+//								LA.DrawVector( GameObject.Find ("temp") );
+//								LB.name = vnt.ToString();
+//								LB.DrawVector( GameObject.Find ("temp") );
+//								vnt++;
+//							}
+							continue;
+						}
+					}
+//					if( xid == 7 ){
+//						LA.name = vnt.ToString();
+//						LA.DrawVector( GameObject.Find ("temp") );
+//						LB.name = vnt.ToString();
+//						LB.DrawVector( GameObject.Find ("temp") );
+//						vnt++;
+//					}
+					float maxlen = 0;
+					Vector3 lowPoint = new Vector3 ( 1000, 1, 1000 );
+					List<Vector3> vlst = new List<Vector3>();
+					if( !vlst.Contains(LA.vertex[0] ) )
+						vlst.Add( LA.vertex[0] );
+					if( !vlst.Contains(LA.vertex[1] ) )
+						vlst.Add( LA.vertex[1] );
+					if( !vlst.Contains(LB.vertex[0] ) )
+						vlst.Add( LB.vertex[0] );
+					if( !vlst.Contains(LB.vertex[1] ) )
+						vlst.Add( LB.vertex[1] );
+
+					foreach( Vector3 v1 in vlst ){
+						if( v1.x < lowPoint.x ){
+							lowPoint = new Vector3( v1.x, 1, v1.z );
+						}
+						else if( floatCompare( v1.x, lowPoint.x ) ){
+							if( v1.z < lowPoint.z )
+								lowPoint = v1;
+						}
+					}
+					List<KeyValuePair<Vector3, float>> distlist = new List<KeyValuePair<Vector3, float>>();
+					foreach( Vector3 v1 in vlst ){
+						if( v1 == lowPoint )
+							distlist.Add( new KeyValuePair<Vector3, float>( v1, 0f ) );
+						else
+							distlist.Add( new KeyValuePair<Vector3, float>( v1, new Line( lowPoint, v1 ).Magnitude() ) );
+					}
+					distlist.Sort(CompareAngle);
+					//Debug.Log("Distlist" + distlist.Count);
+					for( int k = 0; k < distlist.Count - 1; k++ ){
+//						if( xid == 1 && i == 3 )
+//							drawSphere( distlist[k].Key , Color.blue );
+						//Debug.Log ( distlist[k].Key + " " + distlist[k + 1].Key);
+						//Debug.Log ( k + " " + distlist[k].Value + " " + xid + " " + i );
+						//continue;
+//						if( xid == 3 )
+//							new Line( distlist[k].Key, distlist[k + 1].Key ).DrawVector(GameObject.Find("temp"));
+						G3.edges.Add ( new Line( distlist[k].Key, distlist[k + 1].Key ) );
+					}
+
+					G3.edges.RemoveAt(j);
+					G3.edges.RemoveAt(i);
+					i--;
+					break;
+				}
+			}
+		}
+		/****************REDUNDANT*******************/
+		for (int i = 0; i < G3.edges.Count; i++) {
+			for( int j = i + 1; j < G3.edges.Count; j++ ) {
+				Line LA = G3.edges[i];
+				Line LB = G3.edges[j];
+				int caseType = LA.LineIntersectMuntac( LB );
+				if( caseType == 1 ){//Regular intersections
+					Vector3 pt = LA.GetIntersectionPoint( LB );
+					G3.edges.Add( new Line( pt, LA.vertex[0] ) );
+					G3.edges.Add( new Line( pt, LA.vertex[1] ) );
+					G3.edges.Add( new Line( pt, LB.vertex[0] ) );
+					G3.edges.Add( new Line( pt, LB.vertex[1] ));
+					G3.edges.RemoveAt(j);
+					G3.edges.RemoveAt(i);
+					i--;
+					break;
+				}
+				//When colinear, also need to break everything.
+				//Take one extreme point. Find distance with other points. Sort to get ordering.
+				else if( caseType == 2 ){
+					//This condition is to prevent otherwise disjoint lines that share a vertex
+					//from infintely being added and removed from G3
+					
+					if( LA.ShareVertex( LB ) ){
+						Vector3 sharedVert = LA.getSharedVertex(LB);
+						Line LAShared = new Line( sharedVert, LA.GetOther(sharedVert) );
+						Line LBShared = new Line( sharedVert, LB.GetOther(sharedVert) );
+						Line LCShared = new Line( LA.GetOther(sharedVert), LB.GetOther(sharedVert) );
+						if( floatCompare( LAShared.Magnitude() + LBShared.Magnitude(),  LCShared.Magnitude() ) ){
+							continue;
+						}
+					}
+					float maxlen = 0;
+					Vector3 lowPoint = new Vector3 ( 1000, 1, 1000 );
+					List<Vector3> vlst = new List<Vector3>();
+					if( !vlst.Contains(LA.vertex[0] ) )
+						vlst.Add( LA.vertex[0] );
+					if( !vlst.Contains(LA.vertex[1] ) )
+						vlst.Add( LA.vertex[1] );
+					if( !vlst.Contains(LB.vertex[0] ) )
+						vlst.Add( LB.vertex[0] );
+					if( !vlst.Contains(LB.vertex[1] ) )
+						vlst.Add( LB.vertex[1] );
+					
+					foreach( Vector3 v1 in vlst ){
+						if( v1.x < lowPoint.x ){
+							lowPoint = new Vector3( v1.x, 1, v1.z );
+						}
+						else if( floatCompare( v1.x, lowPoint.x ) ){
+							if( v1.z < lowPoint.z )
+								lowPoint = v1;
+						}
+					}
+					List<KeyValuePair<Vector3, float>> distlist = new List<KeyValuePair<Vector3, float>>();
+					foreach( Vector3 v1 in vlst ){
+						if( v1 == lowPoint )
+							distlist.Add( new KeyValuePair<Vector3, float>( v1, 0f ) );
+						else
+							distlist.Add( new KeyValuePair<Vector3, float>( v1, new Line( lowPoint, v1 ).Magnitude() ) );
+					}
+					distlist.Sort(CompareAngle);
+					for( int k = 0; k < distlist.Count - 1; k++ ){
+						G3.edges.Add ( new Line( distlist[k].Key, distlist[k + 1].Key ) );
+					}
+					
+					G3.edges.RemoveAt(j);
+					G3.edges.RemoveAt(i);
+					i--;
+					break;
+				}
+			}
+		}
+		//TODO:Remove TEMPORARY FIX and debug real issue//
+		/****************REDUNDANT*******************/
+		//Check: Points inside Polygon
+		//Check all midpoint of each line in G3 to see if it lies in G1 or G2. If inside remove.
+		Geometry toReturn = new Geometry();
+		int namecnt = 0;
+		if (xid == 7) {
+			Line a1 = G3.edges [54];
+			Line b1 = G3.edges [100];
+			//a1.DrawVector(GameObject.Find("temp"));
+			//b1.DrawVector(GameObject.Find("temp"));
+//			Debug.Log(a1.LineIntersectMuntac(b1) + " " + b1.LineIntersectMuntac(a1) );
+//			Debug.Log(a1.LineIntersectMuntacDebug(b1) + " " + b1.LineIntersectMuntac(a1) );
+//			Debug.Log( a1.vertex[0].x + " " + a1.vertex[1].x );
+//			Debug.Log( b1.vertex[0].x + " " + b1.vertex[1].x );
+//			//Debug.Log(a1.LineIntersectRegular(b1) + " " + b1.LineIntersectRegular(a1) );
+//			//drawSphere( a1.GetIntersectionPoint(b1), Color.grey );
+//			//Debug.Log(a1.GetIntersectionPoint(b1) );
+		}
+		foreach(Line l in G3.edges){
+			if( xid == 7 ){
+				l.name = namecnt.ToString(); 
+//				l.DrawVector( GameObject.Find("temp") );
+			}
+			if(!G1.LineInside(l) && !G2.LineInside(l) && !toReturn.edges.Contains(l)){
+//				if( toReturn.edges.Contains(l) )
+//					Debug.Log("Duplicate found");
+//				if( xid == 3 && namecnt == 13 ){
+//					Debug.Log (!G1.LineInside(l));
+//					Debug.Log (!G2.LineInside(l));
+//				}
+//				if( xid == 3 )
+//					l.DrawVector( GameObject.Find("temp"));
+				toReturn.edges.Add(l);
+			}
+			if( xid == 7 && (namecnt == 54 || namecnt == 100) ){
+//				Debug.Log (!G1.LineInside(l));
+//				Debug.Log (!G2.LineInside(l));
+////				l.DrawVector( GameObject.Find("temp") );
+////				drawSphere( l.MidPoint(), Color.red );
+//				Line lray = new Line(l.MidPoint(), new Vector3(-100, 1f, -100)); 
+//				lray.DrawVector( GameObject.Find("temp"));
+//				G1.DrawGeometry(GameObject.Find("vpB"));
+////				G1.PointInsideCam( l.MidPoint() );
+			}
+			namecnt++;
 		}
 		return toReturn;
 	}
