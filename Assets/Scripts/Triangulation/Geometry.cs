@@ -50,17 +50,17 @@ public class Geometry
 	}
 
 	//TODO: Switch to lineintmuntac
-	public bool LineInside(Line l){//Called by GeomtryMergeInner and BoundGeometry
+	public bool LineInside(Line l){//Called by GeometryMerge, GeomtryMergeInner and BoundGeometry
 		//Test if one of my line
 		//This is not the best version should check is colinear instead!
-		foreach(Line myLine in edges){
+		/*foreach(Line myLine in edges){
 			foreach(Vector3 v1 in myLine.vertex){
 				foreach(Vector3 v2 in l.vertex){
 					if( VectorApprox(v1, v2) )
 						return false; 
 				}
 			}
-		}
+		}*/
 		//Now we check count the intersection
 		Vector3 mid = l.MidPoint(); 
 		return PointInside (l.MidPoint ());
@@ -274,6 +274,8 @@ public class Geometry
 			edges.Remove (l);
 	}
 
+	//Note: Polygons must not be touching edge to edge. i.e. the two touching edges must not be colinear
+	//Extension: In the merging for loop can fix this by adding a new case type and dealing accordingly
 	public Geometry GeometryMerge( Geometry G2 ){//Called from outside
 		if (GeometryInside (G2))
 			return this;
@@ -598,6 +600,7 @@ public class Geometry
 //		Line tmpline = new Line (vSrc, outpoint);
 //		tmpline.name = "Line Outpoint";
 //		tmpline.DrawVector (GameObject.Find ("temp"));
+
 		foreach (Vector3 v in verts) {
 			if( v == vSrc ){
 				angList.Add(new angclass(v, 0, 0 ));
@@ -613,13 +616,26 @@ public class Geometry
 			angle = (float)Math.Acos((double)angle);
 			if( !isLeft( vSrc, outpoint, v ) )
 				angle = (float)Math.PI + (float)Math.PI - angle;
-			angList.Add(new angclass(v, angle, AC.Magnitude()));
+			angList.Add(new angclass(v, (float)Math.Round( angle, 4 ), AC.Magnitude()));
+			//angList.Add(new angclass(v, angle, AC.Magnitude()));
 		}
+
 		angList.Sort( delegate(angclass a, angclass b){
-			int xdiff = a.angle.CompareTo(b.angle);
+			int xdiff;
+			if( floatCompare( a.angle, b.angle ) )
+				xdiff = 0;
+			else if( a.angle - b.angle > 0 )
+				xdiff = 1;
+			else
+				xdiff = -1;
 			if (xdiff != 0) return xdiff;
 			else return a.distance.CompareTo(b.distance);
 		});
+
+//		int num = 0;
+//		foreach (angclass kvp in angList) {
+//			drawSphereSorted (kvp.vect, Color.red, kvp.angle, num++ );
+//		}
 
 		int cnt = 0;
 		List<KeyValuePair<Vector3, float>> retlist = new List<KeyValuePair<Vector3, float>>();
@@ -636,7 +652,26 @@ public class Geometry
 		inter.transform.position = v;
 		inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f);
 		inter.transform.parent = temp.transform;
-		//inter.gameObject.name = vlcnt.ToString();
+	}
+
+	void drawSphere( Vector3 v, Color x, float vlcnt ){
+		GameObject temp = GameObject.Find ("temp");
+		GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+		inter.transform.renderer.material.color = x;
+		inter.transform.position = v;
+		inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f);
+		inter.transform.parent = temp.transform;
+		inter.gameObject.name = "Geo" + vlcnt.ToString();
+	}
+
+	void drawSphereSorted( Vector3 v, Color x, float vlcnt, int num ){
+		GameObject temp = GameObject.Find ("temp");
+		GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+		inter.transform.renderer.material.color = x;
+		inter.transform.position = v;
+		inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f);
+		inter.transform.parent = temp.transform;
+		inter.gameObject.name = "Sorted " + num.ToString() + " " + vlcnt.ToString();
 	}
 
 	public bool VectorApprox ( List<Vector3> obs_pts, Vector3 interPt ){
