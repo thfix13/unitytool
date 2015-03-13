@@ -50,7 +50,7 @@ public class Mapper : MonoBehaviour {
 
 	// Precompute a timestamps number of maps in the future by simulating the enemies movement across the map
 	// Stores withiin [populate] the variables [fullMap, enemies, tileSize] with the computed data
-	public Cell[][][] PrecomputeMaps (SpaceState populate, Vector3 floorMin, Vector3 floorMax, int cellsX, int cellsZ, int timestamps, float stepSize, int ticksBehind = 0, Cell[][] baseMap = null) {
+	public Cell[][][] PrecomputeMaps (SpaceState populate, Vector3 floorMin, Vector3 floorMax, int cellsX, int cellsZ, int timestamps, float stepSize,Player player, int ticksBehind = 0, Cell[][] baseMap = null) {
 		Debug.Log ("PRE COMPUTE MAPS");
 		// Initial computation
 		ComputeTileSize (populate, floorMin, floorMax, cellsX, cellsZ);
@@ -70,8 +70,6 @@ public class Mapper : MonoBehaviour {
 			enemies [i].cells = new Vector2[timestamps][];
 			enemies [i].seesPlayer = new bool[timestamps];
 		}
-		GameObject p = GameObject.FindGameObjectWithTag ("Player") as GameObject;
-		Player player = p.GetComponent<Player>();
 		player.cells = new Vector2[timestamps][];
 
 		Cell[][][] fullMap = new Cell[timestamps][][];
@@ -92,7 +90,7 @@ public class Mapper : MonoBehaviour {
 				e.rotations [counter] = e.GetSimulatedRotation ();
 			}
 				
-			fullMap [counter] = ComputeMap (baseMap, enemies, cells);
+			fullMap [counter] = ComputeMap (baseMap, enemies, cells, player);
 			
 			// Store the seen cells in the enemy class
 			List<Vector2>[] arr = cells.ToArray ();
@@ -123,19 +121,23 @@ public class Mapper : MonoBehaviour {
 	}
 
 	
-	public Cell[][] ComputeMap (Cell[][] baseMap, Enemy[] enemies, List<List<Vector2>> cellsByEnemy) {
+	public Cell[][] ComputeMap (Cell[][] baseMap, Enemy[] enemies, List<List<Vector2>> cellsByEnemy, Player player) {
 		//GameObject pl = GameObject.FindGameObjectWithTag ("Player") as GameObject;
 		//Player player = pl.GetComponent<Player>();
 
 		Cell[][] im = new Cell[cellsX][];
-		
+		Cell[][] p_im = new Cell[cellsX][];
+
 		for (int x = 0; x < cellsX; x++) {
 			im [x] = new Cell[cellsZ];
+			p_im[x] = new Cell[cellsZ];
 			for (int y = 0; y < cellsZ; y++) {
 				im [x] [y] = baseMap [x] [y].Copy ();
+				p_im[x] [y] = baseMap [x][y].Copy ();
 			}
 		}
-		
+
+
 		for (int i = 0; i < enemies.Length; i++) {
 			Enemy enemy = enemies [i];
 			// For every enemy, get their direction and current world position and scale into IM scale
@@ -161,51 +163,41 @@ public class Mapper : MonoBehaviour {
 
 			DDA dda = new DDA(tileSizeX, tileSizeZ, cellsX, cellsZ);
 
-			for (int x = 0; x < cellsX; x++) {
-				for (int y = 0; y < cellsZ; y++) {
-					
-					// Skip cells that are staticly blocked or seen by other enemies
-					// Don't skip cells seen by other enemies or we won't have the correct seenCells computed
-
-					//Debug.Log (im[x][y].blocked + " , " + im[x][y].safe);
-
-					if (im [x] [y].blocked || im [x] [y].safe)
-						continue;
-
-
-					// This enemy haven't seen it yet
-					bool seen = false;
-					
-					for (int px = 0; px <= 1; px++) {
-						for (int py = 0; py <= 1; py++) {
-							
-							// Destination of the ray
-							p.Set (x + px, y + py);
-							
-							// Direction of the ray
-							Vector2 res = (p - pos).normalized;
-							
-							// Is the target within our FoV?
-							if (Vector2.Distance (p, pos) < dist && Vector2.Angle (res, dir) < enemy.fovAngle) {
-
-								// Check if target is seen by this enemy
-								seen = seen || dda.HasLOS(im, p, pos, res, x, y);
-
-							}
-						}
-					}
-
-					// If this enemy has seen it
-					if (seen)
-						cellsByEnemy [i].Add (new Vector2 (x, y));
-					// Now take into account other enemies before modifying the cells value
-					im [x] [y].seen = im [x] [y].seen || seen;
-
-
-
-				}
-			}
+			CheckAllCells (cellsByEnemy[i], im, enemy.fovAngle, dir, pos, p, dist, dda);
 		}
 		return im;
 	}	
+
+	void CheckAllCells (List<Vector2> cellsByEnemy, Cell[][] im, float fovAngle, Vector2 dir, Vector2 pos, Vector2 p, float dist, DDA dda)
+	{
+		for (int x = 0; x < cellsX; x++) {
+			for (int y = 0; y < cellsZ; y++) {
+				// Skip cells that are staticly blocked or seen by other enemies
+				// Don't skip cells seen by other enemies or we won't have the correct seenCells computed
+				//Debug.Log (im[x][y].blocked + " , " + im[x][y].safe);
+				if (im [x] [y].blocked || im [x] [y].safe)
+					continue;
+				// This enemy haven't seen it yet
+				bool seen = false;
+				for (int px = 0; px <= 1; px++) {
+					for (int py = 0; py <= 1; py++) {
+						// Destination of the ray
+						p.Set (x + px, y + py);
+						// Direction of the ray
+						Vector2 res = (p - pos).normalized;
+						// Is the target within our FoV?
+						if (Vector2.Distance (p, pos) < dist && Vector2.Angle (res, dir) < fovAngle) {
+							// Check if target is seen by this enemy
+							seen = seen || dda.HasLOS (im, p, pos, res, x, y);
+						}
+					}
+				}
+				// If this enemy has seen it
+				if (seen)
+					cellsByEnemy.Add (new Vector2 (x, y));
+				// Now take into account other enemies before modifying the cells value
+				im [x] [y].seen = im [x] [y].seen || seen;
+			}
+		}
+	}
 }

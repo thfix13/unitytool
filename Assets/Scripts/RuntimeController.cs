@@ -57,8 +57,7 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 				enemies [i].seesPlayer = new bool[10000];
 			}
 
-//			play.cells = new Vector2[10000][];
-			
+
 			cells = new List<List<Vector2>> ();
 			// Prepare the cells by enemy
 			for (int i = 0; i < enemies.Length; i++) {
@@ -83,6 +82,7 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 				player = GameObject.FindGameObjectWithTag ("AI");
 
 			play = player.GetComponent<Player>();
+			play.cells = new Vector2[10000][];
 
 			playerPath = new Path (new List<Node> ());
 			playerPoints = new List<Vector3> ();
@@ -125,7 +125,7 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 			//in other words a 2d array, 
 			//1d -> enemy
 			//2d -> seen cells for that enemy (vector 2 of x and y)
-			Cell[][] computed = mapper.ComputeMap (obstaclesMap, SpaceState.Running.enemies, cells);
+			Cell[][] computed = mapper.ComputeMap (obstaclesMap, SpaceState.Running.enemies, cells, play);
 			fullMap [SpaceState.Running.timeSlice] = computed;
 			
 			// Store the seen cells in the enemy class
