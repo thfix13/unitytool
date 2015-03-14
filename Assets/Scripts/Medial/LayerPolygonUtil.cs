@@ -23,7 +23,7 @@ public class LayerPolygonUtil{
 		for(int ilayer=0;ilayer<layers.Count;ilayer++){
 			List<Vector3> layer, newlayervertices= new List<Vector3>();
 
-			int NumberOfVertexInPolygon=0, lastIndex=0;
+			int NumberOfVertexInPolygon=0, VertexCounter=0, lastIndex=0;
 			foreach(var polygon in polygons){
 				//number of vertices in the polygon
 				int polygonCount=polygon.Count;
@@ -46,11 +46,13 @@ public class LayerPolygonUtil{
 						newlayervertices.Add(v1*(1-i)+v2*i);
 
 						if(ilayer==0 && i==0.0f){
-							mappingOriginalIndexToNewIndexOfPolygons.Add(NumberOfVertexInPolygon);
+							mappingOriginalIndexToNewIndexOfPolygons.Add(VertexCounter);
 //							udl ("totalpoints "+ NumberOfVertexInPolygon);
 						}
-						if(ilayer==0)
+						if(ilayer==0){
 							NumberOfVertexInPolygon++;
+							VertexCounter++;
+						}
 
 					}
 				}
