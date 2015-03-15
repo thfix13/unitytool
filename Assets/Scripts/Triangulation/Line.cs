@@ -208,11 +208,20 @@ public class Line
 	}
 
 	public int LineIntersectMuntacDebug (Line param){
-		Vector3 a = this.vertex [0];
+//		Vector3 a = this.vertex [0];
+//		Vector3 b = this.vertex[1];
+//		Vector3 c = param.vertex [0];
+//		Vector3 d = param.vertex [1];
+
+		Vector3 a = getMinVert (this.vertex [0], this.vertex [1]);
 		Vector3 b = this.vertex[1];
-		Vector3 c = param.vertex [0];
-		Vector3 d = param.vertex [1];
-		
+		if( a.Equals( this.vertex[1] ) )
+		   b = this.vertex[0];
+		Vector3 c = getMinVert (param.vertex [0], param.vertex [1]);
+		Vector3 d = param.vertex[1];
+		if( c.Equals( param.vertex[1] ) )
+		   d = param.vertex[0];
+
 		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
 		Vector2 p0 = new Vector2 (a.x, a.z);
 		
@@ -225,7 +234,6 @@ public class Line
 		
 		//Case 1 - Colinear
 		//if ( denom == 0 && numerator2 == 0 ) {
-		Debug.Log (denom + " " + numerator2);
 		if ( floatCompare((float)denom, 0) && floatCompare((float)numerator2,0) ) {
 			//Case 2 - Colinear and Overlapping
 			//if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
@@ -248,11 +256,72 @@ public class Line
 		double t = numerator2 / denom;
 		
 		//if ((s > 0 && s < 1) && (t > 0 && t < 1))
+		if ((s > 0 + eps && s < 1 - eps) && (t > 0 + eps && t < 1 - eps))
+			return 1;
+		
+		return 0;
+	}
+
+	public int LineIntersectMuntacDebug2 (Line param){
+		Vector3 a = this.vertex [0];
+		Vector3 b = this.vertex[1];
+		Vector3 c = param.vertex [0];
+		Vector3 d = param.vertex [1];
+
+		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
+		Vector2 p0 = new Vector2 (a.x, a.z);
+		
+		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
+		Vector2 q0 = new Vector2 (c.x, c.z);
+		
+		double numerator1 = CrossProduct ((q0 - p0), v);
+		double numerator2 = CrossProduct ((q0 - p0), u);
+		double denom = CrossProduct (u, v);
+		
+		//Case 1 - Colinear
+		//if ( denom == 0 && numerator2 == 0 ) {
+		Debug.Log ("Denom and Num" + denom + " " + numerator2);
+		if ( floatCompare((float)denom, 0) && floatCompare((float)numerator2,0) ) {
+			//Case 2 - Colinear and Overlapping
+			//if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
+			if( floatCompare( Vector2.Dot( (q0 - p0), u ), 0, ">=" )
+			   && floatCompare( Vector2.Dot( (q0 - p0), u ), Vector2.Dot( u, u ), "<=" ) )
+				return 2;
+			//if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
+			if( floatCompare( Vector2.Dot( (p0 - q0), v ), 0, ">=" )
+			   && floatCompare( Vector2.Dot( (p0 - q0), v ), Vector2.Dot( v, v ), "<=" ) )
+				return 2;
+			Debug.Log ("Colinear but not");
+			return 0;
+		}
+		//Case 3 - Parallel
+		//if (denom == 0 && numerator2 != 0)
+		if ( floatCompare((float)denom, 0) && !floatCompare((float)numerator2,0) )
+			return 0;
+		
+		//Case 4 - Intersects
+		double s = numerator1 / denom;
+		double t = numerator2 / denom;
+		
+		//if ((s > 0 && s < 1) && (t > 0 && t < 1))
 		Debug.Log ("s and t" + s + "," + t);
 		if ((s > 0 + eps && s < 1 - eps) && (t > 0 + eps && t < 1 - eps))
 			return 1;
 		
 		return 0;
+	}
+
+	public Vector3 getMinVert( Vector3 a, Vector3 b ){
+		if ( floatCompare( a.x, b.x ) ){
+			if( a.z < b.z )
+				return a;
+			else
+				return b;
+		}
+		else if ( a.x < b.x )
+			return a;
+		else
+			return b;
 	}
 
 	//Detects regular intersections UNLESS the lines share a vertex
@@ -463,6 +532,8 @@ public class Line
 		}
 		return false;
 	}
+
+
 }
 
 class LineEqualityComparer : IEqualityComparer<Line>

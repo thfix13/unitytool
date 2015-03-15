@@ -353,25 +353,37 @@ public class Geometry
 			G3.edges.Add(l);		
 		int vnt = 0;
 		//Check for intersection points among lines in G3
+		bool once = false;
 		for (int i = 0; i < G3.edges.Count; i++) {
+			//for( int j = i + 1; j < G3.edges.Count; j++ ) {
 			for( int j = i + 1; j < G3.edges.Count; j++ ) {
 				Line LA = G3.edges[i];
 				Line LB = G3.edges[j];
-//				if( i == 54 && j == 100 ){
+				if( xid == 7 && i == 54 && !once ){
 //					Debug.Log("wasdf");
 //					LA.DrawVector(GameObject.Find("temp"));
-//					LB.DrawVector(GameObject.Find("temp"));
-//				}
-				int caseType = LA.LineIntersectMuntac( LB );
+					//LB.DrawVector(GameObject.Find("temp"));
+					//if( LB.name == "Line4" )
+						//Debug.Log ( "this is j:" + j );
+				}
+				int caseType = LA.LineIntersectMuntacDebug(LB);
 				if( caseType == 1 ){//Regular intersections
 					Vector3 pt = LA.GetIntersectionPoint( LB );
 					G3.edges.Add( new Line( pt, LA.vertex[0] ) );
 					G3.edges.Add( new Line( pt, LA.vertex[1] ) );
 					G3.edges.Add( new Line( pt, LB.vertex[0] ) );
 					G3.edges.Add( new Line( pt, LB.vertex[1] ));
+					if( xid == 7 && i == 54 ){
+//						new Line( pt, LA.vertex[0] ).DrawVector(GameObject.Find("temp"));
+//						new Line( pt, LA.vertex[1] ).DrawVector(GameObject.Find("temp"));
+//						new Line( pt, LB.vertex[0] ).DrawVector(GameObject.Find("temp"));
+//						new Line( pt, LB.vertex[1] ).DrawVector(GameObject.Find("temp"));
+					}
 					G3.edges.RemoveAt(j);
 					G3.edges.RemoveAt(i);
 					i--;
+					if( i == 53 )
+						once = true;
 					break;
 				}
 				//When colinear, also need to break everything.
@@ -386,7 +398,7 @@ public class Geometry
 						Line LBShared = new Line( sharedVert, LB.GetOther(sharedVert) );
 						Line LCShared = new Line( LA.GetOther(sharedVert), LB.GetOther(sharedVert) );
 						if( floatCompare( LAShared.Magnitude() + LBShared.Magnitude(),  LCShared.Magnitude() ) ){
-//							if( xid == 7 ){
+							if( xid == 7 && i == 54){
 //								if( vnt == 42 ){
 //									//drawSphere( sharedVert, Color.blue);
 //									//drawSphere( LA.GetOther(sharedVert), Color.red);	
@@ -399,11 +411,12 @@ public class Geometry
 //								LB.name = vnt.ToString();
 //								LB.DrawVector( GameObject.Find ("temp") );
 //								vnt++;
-//							}
+							}
+
 							continue;
 						}
 					}
-//					if( xid == 7 ){
+//					if( xid == 7 && i == 54 ){
 //						LA.name = vnt.ToString();
 //						LA.DrawVector( GameObject.Find ("temp") );
 //						LB.name = vnt.ToString();
@@ -449,84 +462,26 @@ public class Geometry
 //						if( xid == 3 )
 //							new Line( distlist[k].Key, distlist[k + 1].Key ).DrawVector(GameObject.Find("temp"));
 						G3.edges.Add ( new Line( distlist[k].Key, distlist[k + 1].Key ) );
+//						if( xid == 7 )
+//							new Line( distlist[k].Key, distlist[k + 1].Key ).DrawVector(GameObject.Find("temp"));
 					}
 
 					G3.edges.RemoveAt(j);
 					G3.edges.RemoveAt(i);
 					i--;
 					break;
+//					if( xid == 7 && i == 53 )
+//						once = true;
 				}
-			}
-		}
-		/****************REDUNDANT*******************/
-		for (int i = 0; i < G3.edges.Count; i++) {
-			for( int j = i + 1; j < G3.edges.Count; j++ ) {
-				Line LA = G3.edges[i];
-				Line LB = G3.edges[j];
-				int caseType = LA.LineIntersectMuntac( LB );
-				if( caseType == 1 ){//Regular intersections
-					Vector3 pt = LA.GetIntersectionPoint( LB );
-					G3.edges.Add( new Line( pt, LA.vertex[0] ) );
-					G3.edges.Add( new Line( pt, LA.vertex[1] ) );
-					G3.edges.Add( new Line( pt, LB.vertex[0] ) );
-					G3.edges.Add( new Line( pt, LB.vertex[1] ));
-					G3.edges.RemoveAt(j);
-					G3.edges.RemoveAt(i);
-					i--;
-					break;
-				}
-				//When colinear, also need to break everything.
-				//Take one extreme point. Find distance with other points. Sort to get ordering.
-				else if( caseType == 2 ){
-					//This condition is to prevent otherwise disjoint lines that share a vertex
-					//from infintely being added and removed from G3
-					
-					if( LA.ShareVertex( LB ) ){
-						Vector3 sharedVert = LA.getSharedVertex(LB);
-						Line LAShared = new Line( sharedVert, LA.GetOther(sharedVert) );
-						Line LBShared = new Line( sharedVert, LB.GetOther(sharedVert) );
-						Line LCShared = new Line( LA.GetOther(sharedVert), LB.GetOther(sharedVert) );
-						if( floatCompare( LAShared.Magnitude() + LBShared.Magnitude(),  LCShared.Magnitude() ) ){
-							continue;
-						}
-					}
-					float maxlen = 0;
-					Vector3 lowPoint = new Vector3 ( 1000, 1, 1000 );
-					List<Vector3> vlst = new List<Vector3>();
-					if( !vlst.Contains(LA.vertex[0] ) )
-						vlst.Add( LA.vertex[0] );
-					if( !vlst.Contains(LA.vertex[1] ) )
-						vlst.Add( LA.vertex[1] );
-					if( !vlst.Contains(LB.vertex[0] ) )
-						vlst.Add( LB.vertex[0] );
-					if( !vlst.Contains(LB.vertex[1] ) )
-						vlst.Add( LB.vertex[1] );
-					
-					foreach( Vector3 v1 in vlst ){
-						if( v1.x < lowPoint.x ){
-							lowPoint = new Vector3( v1.x, 1, v1.z );
-						}
-						else if( floatCompare( v1.x, lowPoint.x ) ){
-							if( v1.z < lowPoint.z )
-								lowPoint = v1;
-						}
-					}
-					List<KeyValuePair<Vector3, float>> distlist = new List<KeyValuePair<Vector3, float>>();
-					foreach( Vector3 v1 in vlst ){
-						if( v1 == lowPoint )
-							distlist.Add( new KeyValuePair<Vector3, float>( v1, 0f ) );
-						else
-							distlist.Add( new KeyValuePair<Vector3, float>( v1, new Line( lowPoint, v1 ).Magnitude() ) );
-					}
-					distlist.Sort(CompareAngle);
-					for( int k = 0; k < distlist.Count - 1; k++ ){
-						G3.edges.Add ( new Line( distlist[k].Key, distlist[k + 1].Key ) );
-					}
-					
-					G3.edges.RemoveAt(j);
-					G3.edges.RemoveAt(i);
-					i--;
-					break;
+				else{
+//					if( xid == 7 && i == 54 && j == 58 ){
+//						Debug.Log("In here");
+//						LA.DrawVector(GameObject.Find("temp"));
+//						LB.DrawVector(GameObject.Find("temp"));
+//						Debug.Log( LA.vertex[0].x + " " + LA.vertex[0].z + "," + LA.vertex[1].x + " " + LA.vertex[1].z);
+//						Debug.Log( LB.vertex[0].x + " " + LB.vertex[0].z + "," + LB.vertex[1].x + " " + LB.vertex[1].z);
+//						Debug.Log( LA.LineIntersectMuntacDebug( LB ) );
+//					}
 				}
 			}
 		}
@@ -537,8 +492,8 @@ public class Geometry
 		Geometry toReturn = new Geometry();
 		int namecnt = 0;
 		if (xid == 7) {
-			Line a1 = G3.edges [54];
-			Line b1 = G3.edges [100];
+			//Line a1 = G3.edges [54];
+			//Line b1 = G3.edges [100];
 			//a1.DrawVector(GameObject.Find("temp"));
 			//b1.DrawVector(GameObject.Find("temp"));
 //			Debug.Log(a1.LineIntersectMuntac(b1) + " " + b1.LineIntersectMuntac(a1) );

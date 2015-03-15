@@ -1370,6 +1370,7 @@ public class Triangulation : MonoBehaviour
 		//Debug.Log ("Camera count is " + cameras.Count);
 		foreach (Vector3 v in explorationTour) {
 			if( cameras.Contains(v) && !tempcam.Contains(v) ){
+			//if( !tempcam.Contains(v) ){
 				tempcam.Add(v);
 				cameraVPS.Add ( new KeyValuePair<Vector3, Geometry>( v, visibilityPolygon( v ) ) );
 			}
@@ -1378,6 +1379,7 @@ public class Triangulation : MonoBehaviour
 	}
 
 	void cameraNesting(){
+		//return;
 		new GameObject ("vpA");
 		new GameObject ("vpB");
 		new GameObject ("vpMerged");
@@ -1389,7 +1391,7 @@ public class Triangulation : MonoBehaviour
 		for (int i = 1; i < x; i++) {
 			if( incrementalCover.GeometryInsideExt(cameraVPS[i].Value) ){
 				cnt++;
-				Debug.Log("Overlapped at camera: " + cnt);
+				//Debug.Log("Overlapped at camera: " + cnt);
 //				incrementalCover.DrawGeometry( GameObject.Find("temp") );
 //				cameraVPS[i].Value.DrawGeometry( GameObject.Find("temp") );
 //				return;
