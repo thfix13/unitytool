@@ -175,7 +175,75 @@ public class Geometry
 		Line nextL;
 		List<Line> visited = new List<Line> ();
 		List<Line> sortedEdges = new List<Line> ();
-		while ( true ){
+		sortedEdges = getSortedEdges ();
+		//Sort edges//
+//		while ( true ){
+//			nextL = null;//take each edge
+//			foreach( Line l in this.edges ){//find an adjacent edge
+//				if( l.Equals( currL ) ) continue;
+//				if( l.ShareVertex( currL ) && !visited.Contains(l) ){
+//					Vector3 ptA, ptB;
+//					Vector3 commonPoint = l.getSharedVertex( currL );
+//					nextL = l;
+//					if( !visited.Contains(currL) ){//if this is the first edge we're working with
+//						ptA = currL.vertex[0];
+//						ptB = currL.vertex[1];
+//						if( !VectorApprox(ptB, commonPoint) ){
+//							ptA = ptB;
+//							ptB = commonPoint;
+//						}
+//						sortedEdges.Add( new Line( ptA, ptB ) );
+//						visited.Add (currL);
+//					}
+//					ptA = l.vertex[0];
+//					ptB = l.vertex[1];
+//					if( !VectorApprox(ptA, commonPoint) ){
+//						ptB = ptA;
+//						ptA = commonPoint;
+//					}
+//					sortedEdges.Add( new Line( ptA, ptB ) );
+//					visited.Add( l );
+//					currL = nextL;
+//					break;
+//				}
+//			}
+//			if( nextL == null )
+//				break;
+//		}
+		float sum = 0;
+		//Check if order in sorted edges is clockwise
+		//Followed theorem outlined in following link:
+		//http://stackoverflow.com/questions/1165647/how-to-determine-if-a-list-of-polygon-points-are-in-clockwise-order
+		for (int i = 0; i < sortedEdges.Count - 1; i++){
+			sum += (sortedEdges [i].vertex [1].x - sortedEdges [i].vertex [0].x) * (sortedEdges [i].vertex [1].z + sortedEdges [i].vertex [0].z);
+			sum += (sortedEdges [i + 1].vertex[0].x - sortedEdges[i].vertex [1].x) * (sortedEdges [i + 1].vertex [0].z + sortedEdges [i].vertex [1].z);
+			if( i == sortedEdges.Count - 2 ) 
+				sum += (sortedEdges [i + 1].vertex[1].x - sortedEdges[i + 1].vertex [0].x) * (sortedEdges [i + 1].vertex [1].z + sortedEdges [i + 1].vertex [1].z);
+		}
+		bool clockwise = true;
+		if ( floatCompare( sum, 0, "<=") )
+			clockwise = false;
+		//reflexVertex.Add (sortedEdges [1].vertex [1]);
+		int size = sortedEdges.Count;
+		for (int i = 0; i < size; i++) {
+			if( clockwise ){
+				if( sortedEdges[i].PointIsLeft(sortedEdges[(i + 1)% size])  == true )
+				   reflexVertex.Add( sortedEdges[i].vertex[1] );
+			}
+			else{
+				if( sortedEdges[i].PointIsLeft(sortedEdges[(i + 1) % size]) == false )
+				   reflexVertex.Add( sortedEdges[i].vertex[1] );
+			}
+		}
+		return reflexVertex;
+	}
+
+	public List<Line> getSortedEdges(){
+		Line currL = this.edges [0];
+		Line nextL = this.edges [0];
+		List<Line> visited = new List<Line> ();
+		List<Line> sortedEdges = new List<Line> ();
+		while ( nextL != null ){
 			nextL = null;//take each edge
 			foreach( Line l in this.edges ){//find an adjacent edge
 				if( l.Equals( currL ) ) continue;
@@ -205,9 +273,76 @@ public class Geometry
 					break;
 				}
 			}
-			if( nextL == null )
-				break;
+//			if( nextL == null )
+//				break;
 		}
+		return sortedEdges;
+	}
+
+	//Returns the area of the polygon
+	//whether or not it has holes
+	public double getPolygonArea( int xid ){
+		List<Line> tempEdge = new List<Line> ();
+		Geometry tempGeo = new Geometry ();
+		foreach (Line l in this.edges)
+			tempGeo.edges.Add(l);	
+		//float[] areas = new float[500];
+		List<double> areas = new List<double> ();
+		double maxArea = 0;
+		while (tempGeo.edges.Count > 0) {
+			tempEdge = tempGeo.getSortedEdges();
+//			if( polygonClockwise(tempEdge) )
+//				tempEdge.Reverse();
+
+//			Debug.Log(tempEdge.Count);
+//			Debug.Log(tempGeo.edges.Count);
+			foreach( Line lA in tempEdge ){
+				for( int i = 0; i < tempGeo.edges.Count; i++ ){
+					if( lA.Equals( tempGeo.edges[i] ) ){
+						tempGeo.edges.RemoveAt(i);
+						i--;
+					}
+				}
+			}
+			double tempArea = getLocalArea( tempEdge );
+			areas.Add( tempArea );
+			if( maxArea < tempArea )
+				maxArea = tempArea;
+//			Debug.Log(tempGeo.edges.Count);
+//			return tempArea;
+		}
+		areas.Remove (maxArea);
+		double areaOfHoles = 0;
+		foreach( double x in areas )
+			areaOfHoles += x;
+		//if (xid > 12 )
+		//		Debug.Log (maxArea + " " + areaOfHoles);
+		if (maxArea < areaOfHoles)
+			Debug.Log ("MAX AREA less than HOLES");
+		return maxArea - areaOfHoles;
+	}
+
+	//Returns the area of a simple hole-less polygon
+	private double getLocalArea( List<Line> polyedges ){
+		Geometry g = new Geometry ();
+		foreach (Line l in polyedges)
+			g.edges.Add (l);
+		List<Vector3> allVertex = new List<Vector3> ();
+		allVertex = g.GetVertex ();
+		//Points must be in anticlockwise order
+		if (polygonClockwise (polyedges))
+			allVertex.Reverse ();
+		double areaXY = 0;
+		double areaYX = 0;
+		for (int i = 0; i < allVertex.Count; i++) {
+			//drawSphereSorted ( allVertex[i], Color.red, 0f, i );
+			areaXY += ( (double)allVertex[i].x * (double)allVertex[(i + 1)% allVertex.Count].z );
+			areaYX += ( (double)allVertex[i].z * (double)allVertex[(i + 1)% allVertex.Count].x );
+		}
+		return (areaXY - areaYX) / (double)2;
+	}
+
+	bool polygonClockwise( List<Line> sortedEdges ){
 		float sum = 0;
 		//Check if order in sorted edges is clockwise
 		//Followed theorem outlined in following link:
@@ -221,19 +356,7 @@ public class Geometry
 		bool clockwise = true;
 		if ( floatCompare( sum, 0, "<=") )
 			clockwise = false;
-		//reflexVertex.Add (sortedEdges [1].vertex [1]);
-		int size = sortedEdges.Count;
-		for (int i = 0; i < size; i++) {
-			if( clockwise ){
-				if( sortedEdges[i].PointIsLeft(sortedEdges[(i + 1)% size])  == true )
-				   reflexVertex.Add( sortedEdges[i].vertex[1] );
-			}
-			else{
-				if( sortedEdges[i].PointIsLeft(sortedEdges[(i + 1) % size]) == false )
-				   reflexVertex.Add( sortedEdges[i].vertex[1] );
-			}
-		}
-		return reflexVertex;
+		return clockwise;
 	}
 
 	private bool isLeft(Vector3 v1,Vector3 v2,Vector3 v3){//Called by getReflexVertex
@@ -532,6 +655,7 @@ public class Geometry
 			}
 			namecnt++;
 		}
+
 		return toReturn;
 	}
 

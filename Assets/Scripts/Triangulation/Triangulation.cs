@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.IO;
 using Vectrosity;
 
 [ExecuteInEditMode]
@@ -23,7 +24,7 @@ public class Triangulation : MonoBehaviour
 	public Vector3[] mapBoundary = new Vector3[4];
 	public List<Geometry> obsGeos = new List<Geometry> (); //has all merged polygons. doesn't have proper border/obstacles.
 	public List<Geometry> finalPoly = new List<Geometry> ();//has proper obstacles
-	public Geometry totalGeo = new Geometry ();
+	public Geometry totalGeo = new Geometry (); //has both map and merged polygons
 	//Contains Map
 	public Geometry mapBG;
 	//Camera
@@ -178,6 +179,8 @@ public class Triangulation : MonoBehaviour
 		getCameraVPS ();
 		/*STEP 11 - CHECK CAMERA VISIBILITY NESTING*/
 		cameraNesting ();
+		/*STEP 12 - CHECK INCREMENTAL CAMERA AREA COVERAGE*/
+		areaCoverage ();
 	}
 
 	void getPolygons(){
@@ -1380,9 +1383,9 @@ public class Triangulation : MonoBehaviour
 
 	void cameraNesting(){
 		//return;
-		new GameObject ("vpA");
-		new GameObject ("vpB");
-		new GameObject ("vpMerged");
+//		new GameObject ("vpA");
+//		new GameObject ("vpB");
+//		new GameObject ("vpMerged");
 		int x = cameraVPS.Count - 1;
 		Geometry incrementalCover = new Geometry ();
 		incrementalCover = cameraVPS [0].Value;
@@ -1434,6 +1437,50 @@ public class Triangulation : MonoBehaviour
 //			}
 //		}
 //		Debug.Log ("Overlapping" + cnt);
+	}
+
+	void areaCoverage(){
+		List<double> coverageAreas = new List<double> ();
+		int xid = 0;
+		Geometry gA = new Geometry ();
+		Geometry gB = new Geometry ();
+		foreach( KeyValuePair<Vector3, Geometry> kvp in cameraVPS ){
+			Geometry g = kvp.Value;
+			//g.DrawGeometry(GameObject.Find("temp"));
+			double area = g.getPolygonArea(xid);
+			coverageAreas.Add( area );
+			if( xid == 5 )
+				gA = g;			
+			if( xid == 6 )
+				gB = g;
+			Debug.Log (area + " " + xid++ + " " + g.edges.Count);
+			if( xid == 15 ){
+				//g.DrawGeometry(GameObject.Find("vpA"));
+			}
+			//xid++;
+			//break;
+		}
+		xid = 0;
+		string createText = "";
+		string path = @"C:\Users\Asus\Desktop\McGill\Thesis\Week 15\file.txt";
+		foreach (double f in coverageAreas) {
+			//Debug.Log (f + " " + xid++);
+			//createText += f.ToString() + Environment.NewLine;
+			createText += f.ToString() + ", ";
+			//File.WriteAllText(path, createText);
+		}
+		File.WriteAllText(path, createText);
+		//Debug.Log ("total geo " + totalGeo.getPolygonArea () );
+		//Debug.Log ("Polys" + cameraVPS.Count);
+//		StreamWriter writetext = new StreamWriter("write.txt");
+//		writetext.WriteLine("writing in text file");
+//		writetext.Close();
+//		foreach (Line l in gA.edges) {
+//			gB.edges.Remove(l);		
+//		}
+//		gA.DrawGeometry(GameObject.Find ("vpA"));
+//		gB.DrawGeometry(GameObject.Find ("vpB"));
+		//foreach ( Line l in gA.
 	}
 
 	public bool OnSameLine( Vector3 v1, Vector3 v2 ){
