@@ -136,7 +136,7 @@ namespace Objects {
 					float angleDif = Vector3.Angle(forT, trgt.transform.forward);
 					int steps = Mathf.CeilToInt(angleDif / trgt.rotSpeed);
 					if(steps > timeLeft){
-						Vector3.Slerp(forT, trgt.transform.forward, ((float)timeLeft) / ((float)steps));
+						forT = Vector3.Slerp(forT, trgt.transform.forward, ((float)timeLeft) / ((float)steps));
 						timeLeft = 0;
 					}
 					else{
@@ -149,7 +149,8 @@ namespace Objects {
 			//Debug.Log ("At time " + t + " the position was " + tmp);
 			transform.position = tmp;
 
-			transform.forward = getForward(t);
+			Vector3 tmp2 = getForward(t);
+			transform.forward = tmp2;
 
 		}
 

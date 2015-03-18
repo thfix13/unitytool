@@ -358,9 +358,14 @@ namespace EditorArea {
 				realFrame = 0;
 				goToFrame(0);
 			}
-			
+			EditorGUILayout.IntField(curFrame);
+
+
 			EditorGUILayout.LabelField ("");
 
+			if(GUILayout.Button ("Print latest path")){
+				printLatestPath();
+			}
 
 			if (GUILayout.Button ("Compute Path Geo")) {
 				if(enemygeoobjs  == null){
@@ -476,7 +481,7 @@ namespace EditorArea {
 
 						//nodes = rrt.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
 
-						Debug.Log (nodes.Count);
+						//Debug.Log (nodes.Count);
 						if(nodes.Count <= 0){
 							Debug.Log ("FAILER PANTS");
 						}
@@ -1022,6 +1027,16 @@ namespace EditorArea {
 		}
 
 
+		private void printLatestPath(){
+			List<NodeGeo> path = pathsgeo.Last().points;
+			Debug.Log ("This is the latest Path");
+			NodeGeo current = path.First();
+			for(int i = 0; i < path.Count; i++){
+				current = path[i];
+				Debug.Log (current.GetVector3());
+			}
+		}
+
 		private void goToFrame(int t){
 			foreach(EnemyGeo e in enemygeos){
 				e.goToFrame(t);
@@ -1033,22 +1048,35 @@ namespace EditorArea {
 			List<NodeGeo> path = pathsgeo.Last().points;
 			NodeGeo current = path.First();
 			Vector2 position = Vector2.zero;
+			bool lerped = false;
 			if(t > path.Last().t){
 				return;
 			}
 			for(int i = 0; i < path.Count; i++){
 				current = path[i];
 				if(current.t > t){
-					position = Vector2.Lerp(new Vector2(current.parent.x, current.parent.y), new Vector2(current.x, current.y), (((float)t) - ((float)current.parent.t)) / (((float)current.t) - ((float)current.parent.t)));
+					lerped = true;
+					position = Vector2.Lerp(current.parent.GetVector2(), current.GetVector2(), (((float)t) - ((float)current.parent.t)) / (((float)current.t) - ((float)current.parent.t)));
 					break;
 				}
 			}
+
+
+
 
 			GameObject P = GameObject.Find ("Player");
 			Vector3 position3 = P.transform.position;
 			position3.x = position.x;
 			position3.z = position.y;
-			P.transform.position = position3;
+			if(lerped){
+				P.transform.position = position3;
+			}
+			NodeGeo last = path.Last();
+			if(last.t == t){
+				position3.x = last.x;
+				position3.y = last.y;
+				P.transform.position = position3;
+			}
 		}
 
 		public void Update(){
@@ -1084,7 +1112,7 @@ namespace EditorArea {
 					curFrame++;
 					realFrame = curFrame;
 					goToFrame(curFrame);
-					Debug.Log (curFrame);
+					//Debug.Log (curFrame);
 					//MOVE STUFF!
 
 					//if(!isOne){

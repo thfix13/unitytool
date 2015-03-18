@@ -17,6 +17,7 @@ namespace Exploration {
 		public List<NodeGeo> explored;
 		// Only do noisy calculations if enemies is different from null
 		public List<EnemyGeo> enemies;
+		private int depth = 5;
 		//public Vector3 min;
 		//public float tileSizeX, tileSizeZ;
 
@@ -36,7 +37,7 @@ namespace Exploration {
 
 
 		public List<NodeGeo> ComputeGeo (float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, List<Geometry> obstacles, int attemps, float speed,  bool smooth = false) {
-			Debug.Log ("COMPUTEGEO");
+			//Debug.Log ("COMPUTEGEO");
 
 			// Initialization
 			tree = new KDTree (3);
@@ -57,8 +58,8 @@ namespace Exploration {
 			NodeGeo nodeVisiting = null;
 			NodeGeo nodeTheClosestTo = null;
 			
-			float tan = speed / 1;
-			angle = 90f - Mathf.Atan (tan) * Mathf.Rad2Deg;
+			float tan = speed / 1.0f;
+			angle = 90 - Mathf.Atan (tan) * Mathf.Rad2Deg;
 			
 			// WHAT IS THIS??
 			/*
@@ -115,7 +116,7 @@ namespace Exploration {
 				}
 				
 				//Check for collision with guard line of sight
-				if(checkCollEs(p2.x, p2.z, (int)p2.y, p1.x, p1.z, (int)p1.y, enemies, obstacles)){
+				if(checkCollEs(p2.x, p2.z, (int)p2.y, p1.x, p1.z, (int)p1.y, enemies, obstacles, 1, depth)){
 					continue;
 				}
 				
@@ -134,8 +135,7 @@ namespace Exploration {
 					p2 = end.GetVector3 ();
 					p2.y = p1.y;
 					float dist = Vector3.Distance (p1, p2);
-					
-					float t = dist * Mathf.Tan (angle);
+					float t = dist * Mathf.Tan (angle * Mathf.Deg2Rad);
 					pd = p2;
 					pd.y += t;
 
@@ -144,7 +144,7 @@ namespace Exploration {
 					NodeGeo endNode = GetNodeGeo ((int)pd.y, pd.x, pd.z);
 
 
-					if (!checkCollObs(p1.x, p1.z, p2.x, p2.z, obstacles) && !checkCollEs(p1.x, p1.z, (int)p1.y, p2.x, p2.z, (int)p2.y, enemies, obstacles)) {
+					if (!checkCollObs(p1.x, p1.z, p2.x, p2.z, obstacles) && !checkCollEs(p1.x, p1.z, (int)p1.y, pd.x, pd.z, (int)pd.y, enemies, obstacles, 1, depth)) {
 						//Debug.Log ("Done3");
 						endNode.parent = nodeVisiting;
 						return ReturnPathGeo (endNode, smooth);
@@ -166,9 +166,13 @@ namespace Exploration {
 
 		//Check for collision of a path with the obstacles, x, t, y
 		public bool checkCollObs(float startX, float startY, float endX, float endY, List<Geometry> obs){
-			Debug.Log ("checkCollObs");
-			Vector3 start = new Vector3(startX, 1, startY);
-			Vector3 end = new Vector3(endX, 1, endY);
+			//Debug.Log ("checkCollObs");
+			Vector3 start = new Vector3(startX, 0, startY);
+			Vector3 end = new Vector3(endX, 0, endY);
+			int layerMask = 1 << 8;
+			return Physics.Linecast (start, end, layerMask);
+
+			/* OLD WAY
 			Line path = new Line(start, end);
 			foreach(Geometry g in obs){
 				foreach(Line l in g.edges){
@@ -177,16 +181,53 @@ namespace Exploration {
 					}
 				}
 			}
+
 			return false;
+			*/
 		}
 
 		//Check for collision of a path with the enemies
-		public bool checkCollEs(float startX, float startY,int startT, float endX, float endY,  int endT, List<EnemyGeo> enems, List<Geometry> obs){
-			Debug.Log ("CheckCollEs");
+		public bool checkCollEs(float startX, float startY,int startT, float endX, float endY,  int endT, List<EnemyGeo> enems, List<Geometry> obs, int d, int depth){
+			//Debug.Log ("CheckCollEs");
 			if(enems == null){
 				Debug.Log ("no enems");
 				return false;
 			}
+
+			if(d == 1){
+				foreach(EnemyGeo e in enems){
+					if(checkCollE(e, startX, startT, startY, obs)){
+							return true;
+					}
+					if(checkCollE(e, endX, endT, endY, obs)){
+							return true;
+					}
+				}
+			}
+			if(d < depth){
+				float newX = (startX + endX)/2.0f;
+				float newY = (startY + endY) / 2.0f;
+				int newT = (startT + endT) / 2;
+				if(newT == startT || newT == endT){
+					return false;
+				}
+				else{
+					foreach(EnemyGeo e in enems){
+						if(checkCollE(e, newX, newT, newY, obs)){
+							return true;
+						}
+						if(checkCollEs(startX, startY, startT, newX, newY, newT, enems, obs, d+1, depth)){
+							return true;
+						}
+						if(checkCollEs(newX, newY, newT, endX, endY, endT, enems, obs, d+1, depth)){
+							return true;
+						}
+					}
+				}
+					                                      
+			}
+
+			/* OLD WAY CHECK EVERY FRAME
 			int numSteps = endT - startT;
 			float stepX = (endX - startX) / ((float) numSteps);
 			float stepY = (endY - startY) / ((float) numSteps);
@@ -204,9 +245,13 @@ namespace Exploration {
 				checkX += stepX;
 				checkY += stepY;
 			}
-			Debug.Log ("All enmes checked");
+			*/
+
+			//Debug.Log ("All enmes checked");
+
 			return false;
 		}
+		
 
 		public bool checkCollE(EnemyGeo e, float x, int t, float y, List<Geometry> obs){
 			Debug.Log ("CheckCollE");
@@ -214,11 +259,16 @@ namespace Exploration {
 			Vector2 posE = new Vector2(posE3.x, posE3.z);
 			Vector2 posP = new Vector2(x,y);
 			if(Vector2.Distance(posE, posP) > e.fovDistance){
-				Debug.Log ("Too Far Away");
+				Debug.Log ("Too Far Away: " + Vector2.Distance(posE, posP) + " t: " + t );
 				return false;
 			}
-			if(Vector2.Angle((posP-posE), e.getForward(t)) > e.fovAngle*0.5){
-				Debug.Log ("Angle Too Big");
+			Vector2 toPlay = posP-posE;
+			Vector3 forw = e.getForward(t);
+			Vector2 look = new Vector2(forw.x, forw.z);
+
+			if(Vector2.Angle(toPlay, look) > e.fovAngle*0.5){
+				Debug.Log ("Angle Too Big: " + Vector2.Angle((posP-posE), e.getForward(t))+ " t: " + t);
+				//Debug.Log ("poP " + posP + " posE " + posE + " vec " + (posP-posE) + " forw " + e.getForward (t) + " angle "  + Vector2.Angle ((posP-posE), e.getForward (t)));
 				return false;
 			}
 			bool toReturn = checkCollObs(x, y, posE.x, posE.y, obs);
