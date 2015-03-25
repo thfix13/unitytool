@@ -46,6 +46,9 @@ namespace EditorArea {
 		private static bool playingGeo = false;
 		private static int curFrame = 0, realFrame = 0, totalFrames = 0;
 		private static bool ignoreFrameLimit = true;
+		private static bool useDist = false;
+		private static int distTime = 0;
+
 
 		// Helping stuff
 		private static Vector2 scrollPos = new Vector2 ();
@@ -347,7 +350,11 @@ namespace EditorArea {
 			}
 
 			EditorGUILayout.LabelField ("");
-			
+
+			useDist = EditorGUILayout.Toggle ("Use Distraction", useDist);
+			distTime = EditorGUILayout.IntField("Distraction Time", distTime);
+
+
 			if (GUILayout.Button (playingGeo ? "StopGeo" : "PlayGeo")) {
 				playingGeo = !playingGeo;
 			}
@@ -378,10 +385,10 @@ namespace EditorArea {
 
 				}
 				rrtgeo.enemies = enemygeos;
-				triangles = GameObject.Find ("Triangulation").GetComponent<Triangulation>();
+				//triangles = GameObject.Find ("Triangulation").GetComponent<Triangulation>();
 
 
-				List<Geometry> obstacles = triangles.TriangulationSpace();
+				//List<Geometry> obstacles = triangles.TriangulationSpace();
 				
 
 				float playerSpeed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
@@ -477,7 +484,7 @@ namespace EditorArea {
 					// We have this try/catch block here to account for the issue that we don't solve when we find a path when t is near the limit
 					try {
 
-						nodes= rrtgeo.ComputeGeo (startX, startY, endX, endY, -10, 10, -10, 10, 1000, obstacles, attemps, playerSpeed);
+						nodes= rrtgeo.ComputeGeo (startX, startY, endX, endY, -10, 10, -10, 10, 1000, null, attemps, playerSpeed);
 
 						//nodes = rrt.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
 
@@ -1038,6 +1045,13 @@ namespace EditorArea {
 		}
 
 		private void goToFrame(int t){
+			if(useDist){
+				//Debug.Log (distTime);
+				foreach(EnemyGeo e in enemygeos){
+					e.goToFrameDist(t, distTime);
+				}
+			}
+
 			foreach(EnemyGeo e in enemygeos){
 				e.goToFrame(t);
 			}
@@ -1045,7 +1059,13 @@ namespace EditorArea {
 		}
 
 		private void goToFrameP(int t){
-			List<NodeGeo> path = pathsgeo.Last().points;
+			List<NodeGeo> path;
+			try{
+				path = pathsgeo.Last().points;
+			}
+			catch(Exception e){
+				return;
+			}
 			NodeGeo current = path.First();
 			Vector2 position = Vector2.zero;
 			bool lerped = false;

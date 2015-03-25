@@ -17,6 +17,9 @@ namespace Exploration {
 		public List<NodeGeo> explored;
 		// Only do noisy calculations if enemies is different from null
 		public List<EnemyGeo> enemies;
+
+		private int interval = 3;
+		//Not used anymore
 		private int depth = 5;
 		//public Vector3 min;
 		//public float tileSizeX, tileSizeZ;
@@ -204,12 +207,24 @@ namespace Exploration {
 					}
 				}
 			}
-			if(d < depth){
+			//if(d < depth){
 				float newX = (startX + endX)/2.0f;
 				float newY = (startY + endY) / 2.0f;
 				int newT = (startT + endT) / 2;
-				if(newT == startT || newT == endT){
-					return false;
+				if(newT - startT <=interval){
+					if( endT - newT <=interval){
+						return false;
+					}
+					else{
+						if(checkCollEs(newX, newY, newT, endX, endY, endT, enems, obs, d+1, depth)){
+							return true;
+						}
+					}
+				}
+				else if( endT - newT <=interval){
+					if(checkCollEs(startX, startY, startT, newX, newY, newT, enems, obs, d+1, depth)){
+						return true;
+					}
 				}
 				else{
 					foreach(EnemyGeo e in enems){
@@ -225,7 +240,7 @@ namespace Exploration {
 					}
 				}
 					                                      
-			}
+			//}
 
 			/* OLD WAY CHECK EVERY FRAME
 			int numSteps = endT - startT;

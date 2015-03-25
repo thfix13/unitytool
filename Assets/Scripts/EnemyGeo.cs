@@ -47,6 +47,109 @@ namespace Objects {
 			initialForward = transform.forward;
 		}
 
+		public Vector3 getPositionDist(int t, int t2){
+			if(t2 > t){
+				computeAtTime(t);
+			}
+			else{
+				computeAtTimeDist(t, t2);
+			}
+
+			return posT;
+		}
+
+		public Vector3 getForwardDist(int t, int t2){
+			if(t2 > t){
+				computeAtTime(t);
+			}
+			else{
+				computeAtTimeDist(t, t2);
+			}
+			
+			return forT;
+		}
+
+
+
+		private void computeAtTimeDist(int t, int t2){
+			computeAtTime(t2);
+			if(t != curT){
+				curT = t;
+				timeLeft = t-t2;
+				WaypointGeo distWay = nextWay.distractPoint;
+				tryRotDist(distWay);
+				if( timeLeft <= 0){
+
+					return;
+				}
+				tryMove(distWay);
+				if(timeLeft <= 0){
+
+		
+					return;
+				}
+		
+
+				nextWay = distWay.next;
+
+				//int bob = 100;
+				//Debug.Log (timeLeft);
+				while(timeLeft > 0){// && bob > 0){
+					//bob--;
+					//Debug.Log ("bob");
+					//Debug.Log (bob);
+					//Debug.Log ("end bob");
+					switch (nextWay.type)
+					{
+					case "wait" :
+						//Debug.Log ("wait");
+						timeLeft = timeLeft - nextWay.waitTime;
+						break;
+					case "move" :
+						//Debug.Log ("move");
+						tryMove(nextWay);
+						break;
+					case "rot" :
+						//Debug.Log ("rot");
+						tryRot(nextWay);
+						break;
+					default:
+						Debug.LogError("UNIDENTIFIED WAYPOINT FOUND, EVERTHING WILL NOW BREAK");
+						break;
+					}
+					
+					nextWay = nextWay.next;
+				}
+				
+				
+				//if(bob == 0){
+				//	Debug.Log (timeLeft);
+				//}
+				
+			}
+
+		}
+
+
+
+		private void tryRotDist(WaypointGeo dist){
+			Vector3 trgtAngle = dist.gameObject.transform.position - posT;
+			trgtAngle.Normalize();
+
+
+			float angleDif = Vector3.Angle(forT, trgtAngle);
+			int steps = Mathf.CeilToInt(angleDif / dist.rotSpeed);
+			if(steps > timeLeft){
+				forT = Vector3.Slerp(forT, trgtAngle, ((float)timeLeft) / ((float)steps));
+				timeLeft = 0;
+			}
+			else{
+				timeLeft = timeLeft - steps;
+				forT = trgtAngle;
+			}
+		}
+
+
 
 		public Vector3 getPosition(int t){
 			computeAtTime(t);
@@ -66,8 +169,6 @@ namespace Objects {
 		int timeLeft = 0;
 		WaypointGeo nextWay;
 
-		
-		
 		private void computeAtTime(int t){
 			if(t != curT){
 				curT = t;
@@ -152,6 +253,14 @@ namespace Objects {
 			Vector3 tmp2 = getForward(t);
 			transform.forward = tmp2;
 
+		}
+
+		public void goToFrameDist(int t, int t2){
+			Vector3 tmp = getPositionDist(t, t2);
+			transform.position = tmp;
+			
+			Vector3 tmp2 = getForwardDist(t, t2);
+			transform.forward = tmp2;
 		}
 
 		public void Start(){
