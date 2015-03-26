@@ -56,10 +56,27 @@ public class Geometry
 		foreach(Line myLine in edges){
 			if( myLine.Equals( l ) )
 				return false;
+			if( myLine.POL ( l.vertex[0] ) && myLine.POL( l.vertex[1] ) )
+				return false;
 		}
 		//Now we check count the intersection
 		Vector3 mid = l.MidPoint(); 
 		return PointInside (l.MidPoint ());
+	}
+
+    public bool LineInsideDebug(Line l){//Called by GeometryMerge, GeomtryMergeInner and BoundGeometry
+		//Test if one of my line
+		//This is not the best version should check is colinear instead!
+		foreach(Line myLine in edges){
+			if( myLine.Equals( l ) )
+				return false;
+			if( myLine.POL ( l.vertex[0] ) && myLine.POL( l.vertex[1] ) )
+				return false;
+		}
+		Debug.Log ("passed eq");
+		//Now we check count the intersection
+		Vector3 mid = l.MidPoint(); 
+		return PointInsideDebug (l.MidPoint ());
 	}
 
 	//TODO: Fix for lines colinear
@@ -73,34 +90,47 @@ public class Geometry
 		Line lray = new Line(pt, new Vector3(-100, 1f, -100)); 
 		int count = 0; 
 		foreach(Line myLine in edges){
-			if( myLine.LineIntersectMuntacEndPt(lray) > 0 ){
+			if( myLine.LineIntersectMuntac(lray) > 0 )
 				count++;
-				//Check if the intersection point is on the polygon edge
-				//Note: other checks tried but precision error kept coming up in cases
-				Vector3 vtemp = myLine.GetIntersectionPoint(lray);
-				if( VectorApprox(vtemp, pt) )
-					return false;
-			}
+			//Check if the intersection point is on the polygon edge
+			if( myLine.PointOnLine( pt ) && myLine.PointOnLineB( pt ) )
+				return false;
 		}
 		return count % 2 == 1;
 	}
 
-	public bool PointInsideCam( Vector3 pt ){//Called by LineInside, GeometryInside and LineCollision
+	public bool PointInsideDebug( Vector3 pt ){//Called by LineInside, GeometryInside and LineCollision
 		Line lray = new Line(pt, new Vector3(-100, 1f, -100)); 
 		int count = 0; 
 		foreach(Line myLine in edges){
-			if( myLine.LineIntersectMuntacEndPt(lray) > 0 ){
-				count++;
-				//Check if the intersection point is on the polygon edge
-				//Note: other checks tried but precision error kept coming up in cases
-				Vector3 vtemp = myLine.GetIntersectionPoint(lray);
-				drawSphere( vtemp, Color.blue );
-				if( VectorApprox(vtemp, pt) )
-					return false;
+			if( myLine.name.Equals("Line7") ){
+				Debug.Log("PIDbg : " + myLine.LineIntersectMuntacDebug(lray));
 			}
+			if( myLine.LineIntersectMuntac(lray) == 1 ){
+				count++;
+				myLine.DrawVector(GameObject.Find("vpA"));
+				drawSphere(pt,Color.green);
+			}
+			//Check if the intersection point is on the polygon edge
+			if( myLine.PointOnLine( pt ) && myLine.PointOnLineB( pt ) )
+				return false;
 		}
-		Debug.Log(count);
+		Debug.Log ("Count: " + count);
+		lray.DrawVector (GameObject.Find ("temp"));
 		return count % 2 == 1;
+	}
+
+	//Checks if point is explicitly outside the polygon
+	public bool PointOutside( Vector3 pt ){//Called by LineInside, GeometryInside and LineCollision
+		Line lray = new Line(pt, new Vector3(-100, 1f, -100)); 
+		int count = 0; 
+		foreach(Line myLine in edges){
+			if( myLine.LineIntersectMuntac(lray) > 0 )
+				count++;
+			if( myLine.PointOnLine( pt ) && myLine.PointOnLineB( pt ) )
+				return false;
+		}
+		return count % 2 == 0;
 	}
 
 	public List<Vector3> GetVertex()//Called by GetReflexVertex, GetClosestLine
@@ -470,26 +500,34 @@ public class Geometry
 		Geometry G1 = this;
 		//Create new called G3 which starts as an union of G1 and G2
 		Geometry G3 = new Geometry ();
-		foreach (Line l in G1.edges)
+		foreach (Line l in G1.edges){
+			G3.edges.Add(l);
+//			if( xid == 25 )
+//				l.DrawVector(GameObject.Find("temp"));
+		}
+		foreach (Line l in G2.edges){
 			G3.edges.Add(l);		
-		foreach (Line l in G2.edges)
-			G3.edges.Add(l);		
+//			if( xid == 25 )
+//				l.DrawVector(GameObject.Find("temp"));
+		}
 		int vnt = 0;
 		//Check for intersection points among lines in G3
 		bool once = false;
 		for (int i = 0; i < G3.edges.Count; i++) {
 			//for( int j = i + 1; j < G3.edges.Count; j++ ) {
 			for( int j = i + 1; j < G3.edges.Count; j++ ) {
+				bool dbg = false;
 				Line LA = G3.edges[i];
 				Line LB = G3.edges[j];
-				if( xid == 7 && i == 54 && !once ){
+				if( xid == 22 && LA.name.Equals("219") && LB.name.Equals("Line7") ){
+					dbg = true;
 //					Debug.Log("wasdf");
 //					LA.DrawVector(GameObject.Find("temp"));
 					//LB.DrawVector(GameObject.Find("temp"));
 					//if( LB.name == "Line4" )
 						//Debug.Log ( "this is j:" + j );
 				}
-				int caseType = LA.LineIntersectMuntacDebug(LB);
+				int caseType = LA.LineIntersectMuntacGM(LB);
 				if( caseType == 1 ){//Regular intersections
 					Vector3 pt = LA.GetIntersectionPoint( LB );
 					G3.edges.Add( new Line( pt, LA.vertex[0] ) );
@@ -593,69 +631,63 @@ public class Geometry
 					G3.edges.RemoveAt(i);
 					i--;
 					break;
-//					if( xid == 7 && i == 53 )
-//						once = true;
 				}
 				else{
-//					if( xid == 7 && i == 54 && j == 58 ){
-//						Debug.Log("In here");
-//						LA.DrawVector(GameObject.Find("temp"));
-//						LB.DrawVector(GameObject.Find("temp"));
-//						Debug.Log( LA.vertex[0].x + " " + LA.vertex[0].z + "," + LA.vertex[1].x + " " + LA.vertex[1].z);
-//						Debug.Log( LB.vertex[0].x + " " + LB.vertex[0].z + "," + LB.vertex[1].x + " " + LB.vertex[1].z);
-//						Debug.Log( LA.LineIntersectMuntacDebug( LB ) );
-//					}
+					//TODO:
+					//This is done because of precision errors
+					//When two lines intersect at a non-shared endpoint we'll
+					//break up the line poked. Later we'll also check if all lines
+					//have shared endpoints
+					//if( LA.LineIntersectMuntacEndPt( LB ) == 1 )
+
 				}
 			}
 		}
-		//TODO:Remove TEMPORARY FIX and debug real issue//
-		/****************REDUNDANT*******************/
 		//Check: Points inside Polygon
 		//Check all midpoint of each line in G3 to see if it lies in G1 or G2. If inside remove.
 		Geometry toReturn = new Geometry();
 		int namecnt = 0;
-		if (xid == 7) {
-			//Line a1 = G3.edges [54];
-			//Line b1 = G3.edges [100];
-			//a1.DrawVector(GameObject.Find("temp"));
-			//b1.DrawVector(GameObject.Find("temp"));
-//			Debug.Log(a1.LineIntersectMuntac(b1) + " " + b1.LineIntersectMuntac(a1) );
-//			Debug.Log(a1.LineIntersectMuntacDebug(b1) + " " + b1.LineIntersectMuntac(a1) );
-//			Debug.Log( a1.vertex[0].x + " " + a1.vertex[1].x );
-//			Debug.Log( b1.vertex[0].x + " " + b1.vertex[1].x );
-//			//Debug.Log(a1.LineIntersectRegular(b1) + " " + b1.LineIntersectRegular(a1) );
-//			//drawSphere( a1.GetIntersectionPoint(b1), Color.grey );
-//			//Debug.Log(a1.GetIntersectionPoint(b1) );
-		}
+		int doit = 0;
 		foreach(Line l in G3.edges){
-			if( xid == 7 ){
-				l.name = namecnt.ToString(); 
+//			if( xid == 24 && l.name.Equals("236") )
+//				doit = 1;
+			l.name = namecnt++.ToString();
+//			if( xid == 25 )
 //				l.DrawVector( GameObject.Find("temp") );
-			}
-			if(!G1.LineInside(l) && !G2.LineInside(l) && !toReturn.edges.Contains(l)){
-//				if( toReturn.edges.Contains(l) )
-//					Debug.Log("Duplicate found");
-//				if( xid == 3 && namecnt == 13 ){
-//					Debug.Log (!G1.LineInside(l));
-//					Debug.Log (!G2.LineInside(l));
-//				}
-//				if( xid == 3 )
-//					l.DrawVector( GameObject.Find("temp"));
-				toReturn.edges.Add(l);
-			}
-			if( xid == 7 && (namecnt == 54 || namecnt == 100) ){
-//				Debug.Log (!G1.LineInside(l));
-//				Debug.Log (!G2.LineInside(l));
-////				l.DrawVector( GameObject.Find("temp") );
-////				drawSphere( l.MidPoint(), Color.red );
-//				Line lray = new Line(l.MidPoint(), new Vector3(-100, 1f, -100)); 
-//				lray.DrawVector( GameObject.Find("temp"));
-//				G1.DrawGeometry(GameObject.Find("vpB"));
-////				G1.PointInsideCam( l.MidPoint() );
-			}
-			namecnt++;
-		}
+//			if( doit == 1 ){
+//				Debug.Log( !G1.LineInside(l) +" "+ !G2.LineInside(l) +" "+ !toReturn.edges.Contains(l) );
+//				G2.DrawGeometry(GameObject.Find("temp"));
+//				l.DrawVector(GameObject.Find("temp"));
+//				G2.LineInsideDebug(l);
+//			}
+//			if( xid == 25 && namecnt - 1 == 242 ){
+//				Debug.Log( "Game: " + !G1.LineInsideDebug(l) +" "+ !G2.LineInside(l) +" "+ !toReturn.edges.Contains(l) );
+//			}
 
+			if(!G1.LineInside(l) && !G2.LineInside(l) && !toReturn.edges.Contains(l)){
+					//l.name = namecnt++.ToString(); 
+					toReturn.edges.Add(l);
+			}
+			//doit = 0;
+		}
+		//Last bit of filtering for good measure//
+		//All edge vertices should appear twice in the list
+//		List<Line> sortedEdges = toReturn.getSortedEdges ();
+//		toReturn.edges.Clear ();
+//		foreach (Line l in sortedEdges)
+//			toReturn.edges.Add (l);
+		for (int i = 0; i < toReturn.edges.Count; i++) {
+			int partner = 0;
+			for (int j = 0; j < toReturn.edges.Count; j++) {
+				if( i == j ) continue;
+				if( toReturn.edges[i].ShareVertex( toReturn.edges[j] ) )
+					partner++;
+			}
+			if( partner == 0 ){
+				toReturn.edges.RemoveAt(i);
+				i--;
+			}
+		}
 		return toReturn;
 	}
 
@@ -989,7 +1021,8 @@ public class Geometry
 		GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 		inter.transform.renderer.material.color = x;
 		inter.transform.position = v;
-		inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f);
+		//inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f);
+		inter.transform.localScale = new Vector3(0.1f,0.1f,0.1f);
 		inter.transform.parent = temp.transform;
 	}
 
