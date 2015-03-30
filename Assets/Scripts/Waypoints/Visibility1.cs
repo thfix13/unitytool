@@ -138,7 +138,8 @@ public class Visibility1 : MonoBehaviour {
 	}
 	private void writeTimings()
 	{
-		StreamWriter sw = new StreamWriter(fileTimings);
+		string tempFile = fileTimings + "_Temp";
+		StreamWriter sw = new StreamWriter(tempFile);
 		sw.WriteLine(maxTimeEvaded+"");
 		for(int j=0;j<discretePtsX;j++)
 		{
@@ -149,6 +150,10 @@ public class Visibility1 : MonoBehaviour {
 			sw.WriteLine(""); 
 		}
 		sw.Close ();
+		File.Replace(tempFile,fileTimings,"");
+		File.Delete (tempFile);
+		//FileUtil.ReplaceFile (tempFile,fileTimings);
+		//FileUtil.DeleteFileOrDirectory (tempFile);
 	}
 	void resetCase()
 	{
@@ -205,6 +210,7 @@ public class Visibility1 : MonoBehaviour {
 			}
 		}
 		Debug.Log("Selected At ("+m_nCurrDiscretePtIndxX+" , "+m_nCurrDiscretePtIndxZ+")");
+		writeTimings ();
 		currRunTimeEnemny = Time.time;
 	}
 	List<Vector3> enemyPath = null;
