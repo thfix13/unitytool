@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 //using System.Collections.Generic.Dictionary<TKey, TValue>;
 using UnityEngine;
@@ -441,60 +442,15 @@ public class Geometry
 			edges.Remove (l);
 	}
 
-	//Note: Polygons must not be touching edge to edge. i.e. the two touching edges must not be colinear
-	//Extension: In the merging for loop can fix this by adding a new case type and dealing accordingly
-	public Geometry GeometryMerge( Geometry G2 ){//Called from outside
-		if (GeometryInside (G2))
-			return this;
-		else if (G2.GeometryInside (this))
-			return G2;
 
-		Geometry tempGeometry = new Geometry ();
-		//Two Geometry objects - G1 and G2
-		Geometry G1 = this;
-		//Create new called G3 which starts as an union of G1 and G2
-		Geometry G3 = new Geometry ();
-		foreach (Line l in G1.edges)
-			G3.edges.Add(l);		
-		foreach (Line l in G2.edges)
-			G3.edges.Add(l);		
-		
-		//Check for intersection points among lines in G3
-		for (int i = 0; i < G3.edges.Count; i++) {
-			for( int j = i + 1; j < G3.edges.Count; j++ ) {
-				Line LA = G3.edges[i];
-				Line LB = G3.edges[j];
-				int caseType = LA.LineIntersectMuntac( LB );
-				if( caseType == 1 ){//Regular intersections
-					Vector3 pt = LA.GetIntersectionPoint( LB );
-					G3.edges.Add( new Line( pt, LA.vertex[0] ) );
-					G3.edges.Add( new Line( pt, LA.vertex[1] ) );
-					G3.edges.Add( new Line( pt, LB.vertex[0] ) );
-					G3.edges.Add( new Line( pt, LB.vertex[1] ));
-					G3.edges.RemoveAt(j);
-					G3.edges.RemoveAt(i);
-					i--;
-					break;
-				}
-				//TODO:Copy geometry merge camera function here
-			}
-		}
-		//Check: Points inside Polygon
-		//Check all midpoint of each line in G3 to see if it lies in G1 or G2. If inside remove.
-		Geometry toReturn = new Geometry();
-
-		foreach(Line l in G3.edges){
-			if(!G1.LineInside(l) && !G2.LineInside(l))
-				toReturn.edges.Add(l);
-		}
-		return toReturn;
-	}
-
+	//TODO: Check near end of function
 	public Geometry GeometryMergeCamera( Geometry G2, int xid ){//Called from outside
-		if (GeometryInside (G2))
+
+		if (GeometryInsideExt (G2))
 			return this;
-		else if (G2.GeometryInside (this))
+		else if (G2.GeometryInsideExt (this))
 			return G2;
+
 		Geometry tempGeometry = new Geometry ();
 		//Two Geometry objects - G1 and G2
 		Geometry G1 = this;
@@ -502,131 +458,69 @@ public class Geometry
 		Geometry G3 = new Geometry ();
 		foreach (Line l in G1.edges){
 			G3.edges.Add(l);
-//			if( xid == 25 )
-//				l.DrawVector(GameObject.Find("temp"));
 		}
 		foreach (Line l in G2.edges){
 			G3.edges.Add(l);		
-//			if( xid == 25 )
-//				l.DrawVector(GameObject.Find("temp"));
 		}
+
 		int vnt = 0;
 		//Check for intersection points among lines in G3
 		bool once = false;
+		int ccnt = 0;
 		for (int i = 0; i < G3.edges.Count; i++) {
-			//for( int j = i + 1; j < G3.edges.Count; j++ ) {
+			ccnt++;
 			for( int j = i + 1; j < G3.edges.Count; j++ ) {
+
 				bool dbg = false;
 				Line LA = G3.edges[i];
 				Line LB = G3.edges[j];
-				if( xid == 22 && LA.name.Equals("219") && LB.name.Equals("Line7") ){
-					dbg = true;
-//					Debug.Log("wasdf");
-//					LA.DrawVector(GameObject.Find("temp"));
-					//LB.DrawVector(GameObject.Find("temp"));
-					//if( LB.name == "Line4" )
-						//Debug.Log ( "this is j:" + j );
-				}
-				int caseType = LA.LineIntersectMuntacGM(LB);
+				//int caseType = LA.LineIntersectMuntacGM(LB);
+				int caseType = LA.LineIntersectMuntacDebug(LB);
 				if( caseType == 1 ){//Regular intersections
 					Vector3 pt = LA.GetIntersectionPoint( LB );
 					G3.edges.Add( new Line( pt, LA.vertex[0] ) );
 					G3.edges.Add( new Line( pt, LA.vertex[1] ) );
 					G3.edges.Add( new Line( pt, LB.vertex[0] ) );
 					G3.edges.Add( new Line( pt, LB.vertex[1] ));
-					if( xid == 7 && i == 54 ){
-//						new Line( pt, LA.vertex[0] ).DrawVector(GameObject.Find("temp"));
-//						new Line( pt, LA.vertex[1] ).DrawVector(GameObject.Find("temp"));
-//						new Line( pt, LB.vertex[0] ).DrawVector(GameObject.Find("temp"));
-//						new Line( pt, LB.vertex[1] ).DrawVector(GameObject.Find("temp"));
-					}
 					G3.edges.RemoveAt(j);
 					G3.edges.RemoveAt(i);
 					i--;
-					if( i == 53 )
-						once = true;
 					break;
 				}
-				//When colinear, also need to break everything.
-				//Take one extreme point. Find distance with other points. Sort to get ordering.
 				else if( caseType == 2 ){
-					//This condition is to prevent otherwise disjoint lines that share a vertex
-					//from infintely being added and removed from G3
-
-					if( LA.ShareVertex( LB ) ){
-						Vector3 sharedVert = LA.getSharedVertex(LB);
-						Line LAShared = new Line( sharedVert, LA.GetOther(sharedVert) );
-						Line LBShared = new Line( sharedVert, LB.GetOther(sharedVert) );
-						Line LCShared = new Line( LA.GetOther(sharedVert), LB.GetOther(sharedVert) );
-						if( floatCompare( LAShared.Magnitude() + LBShared.Magnitude(),  LCShared.Magnitude() ) ){
-							if( xid == 7 && i == 54){
-//								if( vnt == 42 ){
-//									//drawSphere( sharedVert, Color.blue);
-//									//drawSphere( LA.GetOther(sharedVert), Color.red);	
-//									//drawSphere( LB.GetOther(sharedVert), Color.green);
-//									Debug.Log ("MEtrics");
-//									Debug.Log ( LAShared.Magnitude() + LBShared.Magnitude() + " " + LCShared.Magnitude() );
-//								}
-//								LA.name = vnt.ToString();
-//								LA.DrawVector( GameObject.Find ("temp") );
-//								LB.name = vnt.ToString();
-//								LB.DrawVector( GameObject.Find ("temp") );
-//								vnt++;
+					//Will catch colinear points that are also overlapping only at endpoints
+					//Get all unique points, sort, form line between adjacent points
+					//If lines are same as LA and LB ignore, otherwise add them then remove LA, LB
+					List<Vector3> uniquePts = new List<Vector3>();
+					foreach( Vector3 v in LA.vertex ) uniquePts.Add(v);
+					foreach( Vector3 v in LB.vertex ) uniquePts.Add(v);
+					for( int k = 0; k < uniquePts.Count; k++ ){
+						for( int m = k + 1; m < uniquePts.Count; m++ ){
+							if( k == m ) continue;
+							if( VectorApprox( uniquePts[k], uniquePts[m] ) ){
+								uniquePts.RemoveAt(m);
+								m--;
 							}
-
+						}
+					}
+					uniquePts.Sort(delegate (Vector3 a, Vector3 b) {
+						if( floatCompare(a.x,b.x) ) return a.z.CompareTo(b.z);
+						else return a.x.CompareTo(b.x);
+					});
+					List<Line> linesToAdd = new List<Line>();
+					for( int k = 0; k < uniquePts.Count - 1; k++ ){
+						linesToAdd.Add( new Line(uniquePts[k], uniquePts[k+1]) );
+						//if( xid == 3 )
+						//Debug.Log(uniquePts[k]);
+					}
+					//if( xid == 3 ) return new Geometry();
+					if( linesToAdd.Count == 2 ){
+						if( (LA.Equals(linesToAdd[0]) || LA.Equals(linesToAdd[1]))
+						   && (LB.Equals(linesToAdd[0]) || LB.Equals(linesToAdd[1])) )
 							continue;
-						}
 					}
-//					if( xid == 7 && i == 54 ){
-//						LA.name = vnt.ToString();
-//						LA.DrawVector( GameObject.Find ("temp") );
-//						LB.name = vnt.ToString();
-//						LB.DrawVector( GameObject.Find ("temp") );
-//						vnt++;
-//					}
-					float maxlen = 0;
-					Vector3 lowPoint = new Vector3 ( 1000, 1, 1000 );
-					List<Vector3> vlst = new List<Vector3>();
-					if( !vlst.Contains(LA.vertex[0] ) )
-						vlst.Add( LA.vertex[0] );
-					if( !vlst.Contains(LA.vertex[1] ) )
-						vlst.Add( LA.vertex[1] );
-					if( !vlst.Contains(LB.vertex[0] ) )
-						vlst.Add( LB.vertex[0] );
-					if( !vlst.Contains(LB.vertex[1] ) )
-						vlst.Add( LB.vertex[1] );
-
-					foreach( Vector3 v1 in vlst ){
-						if( v1.x < lowPoint.x ){
-							lowPoint = new Vector3( v1.x, 1, v1.z );
-						}
-						else if( floatCompare( v1.x, lowPoint.x ) ){
-							if( v1.z < lowPoint.z )
-								lowPoint = v1;
-						}
-					}
-					List<KeyValuePair<Vector3, float>> distlist = new List<KeyValuePair<Vector3, float>>();
-					foreach( Vector3 v1 in vlst ){
-						if( v1 == lowPoint )
-							distlist.Add( new KeyValuePair<Vector3, float>( v1, 0f ) );
-						else
-							distlist.Add( new KeyValuePair<Vector3, float>( v1, new Line( lowPoint, v1 ).Magnitude() ) );
-					}
-					distlist.Sort(CompareAngle);
-					//Debug.Log("Distlist" + distlist.Count);
-					for( int k = 0; k < distlist.Count - 1; k++ ){
-//						if( xid == 1 && i == 3 )
-//							drawSphere( distlist[k].Key , Color.blue );
-						//Debug.Log ( distlist[k].Key + " " + distlist[k + 1].Key);
-						//Debug.Log ( k + " " + distlist[k].Value + " " + xid + " " + i );
-						//continue;
-//						if( xid == 3 )
-//							new Line( distlist[k].Key, distlist[k + 1].Key ).DrawVector(GameObject.Find("temp"));
-						G3.edges.Add ( new Line( distlist[k].Key, distlist[k + 1].Key ) );
-//						if( xid == 7 )
-//							new Line( distlist[k].Key, distlist[k + 1].Key ).DrawVector(GameObject.Find("temp"));
-					}
-
+					foreach( Line l in linesToAdd )
+						G3.edges.Add(l);
 					G3.edges.RemoveAt(j);
 					G3.edges.RemoveAt(i);
 					i--;
@@ -639,43 +533,27 @@ public class Geometry
 					//break up the line poked. Later we'll also check if all lines
 					//have shared endpoints
 					//if( LA.LineIntersectMuntacEndPt( LB ) == 1 )
-
 				}
 			}
 		}
+
 		//Check: Points inside Polygon
 		//Check all midpoint of each line in G3 to see if it lies in G1 or G2. If inside remove.
 		Geometry toReturn = new Geometry();
 		int namecnt = 0;
 		int doit = 0;
 		foreach(Line l in G3.edges){
-//			if( xid == 24 && l.name.Equals("236") )
-//				doit = 1;
 			l.name = namecnt++.ToString();
-//			if( xid == 25 )
-//				l.DrawVector( GameObject.Find("temp") );
-//			if( doit == 1 ){
-//				Debug.Log( !G1.LineInside(l) +" "+ !G2.LineInside(l) +" "+ !toReturn.edges.Contains(l) );
-//				G2.DrawGeometry(GameObject.Find("temp"));
-//				l.DrawVector(GameObject.Find("temp"));
-//				G2.LineInsideDebug(l);
-//			}
-//			if( xid == 25 && namecnt - 1 == 242 ){
-//				Debug.Log( "Game: " + !G1.LineInsideDebug(l) +" "+ !G2.LineInside(l) +" "+ !toReturn.edges.Contains(l) );
-//			}
-
-			if(!G1.LineInside(l) && !G2.LineInside(l) && !toReturn.edges.Contains(l)){
-					//l.name = namecnt++.ToString(); 
+		    if(!G1.LineInside(l) && !G2.LineInside(l) && !toReturn.edges.Contains(l)){
 					toReturn.edges.Add(l);
 			}
-			//doit = 0;
 		}
+		//TODO:Fix for last case stated
 		//Last bit of filtering for good measure//
 		//All edge vertices should appear twice in the list
-//		List<Line> sortedEdges = toReturn.getSortedEdges ();
-//		toReturn.edges.Clear ();
-//		foreach (Line l in sortedEdges)
-//			toReturn.edges.Add (l);
+		//Edges missed by precision error and edges 
+		//that are shared by the polygon and appear explicitly within neither
+		//but is in the middle of the merged polygon
 		for (int i = 0; i < toReturn.edges.Count; i++) {
 			int partner = 0;
 			for (int j = 0; j < toReturn.edges.Count; j++) {
@@ -741,10 +619,11 @@ public class Geometry
 	}
 
 	//Check if two geometries intersect
+	//TODO:Update to a more sophisticated function
 	public bool GeometryIntersect( Geometry G2 ){//Called from outside
-		if (GeometryInside (G2))
+		if (GeometryInsideExt (G2))
 			return true;
-		else if (G2.GeometryInside (this))
+		else if (G2.GeometryInsideExt (this))
 			return true;
 
 		foreach( Line La in this.edges ){
@@ -756,15 +635,15 @@ public class Geometry
 		return false;
 	}
 	
-	public bool GeometryInside( Geometry G2 ){//Called from outside
-		foreach (Line L in G2.edges) {
-			if( !PointInside( L.vertex[0] ) )
-				return false;
-			if( !PointInside( L.vertex[1] ) )
-				return false;
-		}
-		return true;
-	}
+//	public bool GeometryInside( Geometry G2 ){//Called from outside
+//		foreach (Line L in G2.edges) {
+//			if( !PointInside( L.vertex[0] ) )
+//				return false;
+//			if( !PointInside( L.vertex[1] ) )
+//				return false;
+//		}
+//		return true;
+//	}
 
 	public bool GeometryInsideExt( Geometry G2 ){
 		List<Vector3> allvert = GetVertex ();
@@ -1081,4 +960,14 @@ public class Geometry
 		}
 		return false;
 	}
+
+//	public class vectorSorter : IComparer{
+//		int IComparer.Compare ( System.Object a, System.Object b ){
+//			Vector3 v1 = Vector3 (a);
+//			Vector3 v2 = Vector3 (b);
+//			if( floatCompare( v1.x, v2.x) )
+//				return true;
+//			else
+//		}
+//	}
 }
