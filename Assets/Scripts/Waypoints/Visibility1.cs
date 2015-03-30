@@ -1,31 +1,13 @@
 using UnityEngine;
 using System.Collections;
+using System.IO;
 using System.Collections.Generic;
 //using System;
 public class Visibility1 : MonoBehaviour {
-	//public List<Vector3> points = new List<Vector3>();
-	//public List<Color> colours = new List<Color>();
-	// Use this for initialization
-	
-	//public List<Triangle> triangles = new List<Triangle>(); 
-	//public List<Line> lines = new List<Line>(); 
-	
-	//public List<Line> linesMinSpanTree = new List<Line>(); 
-	public List<Geometry> obsGeos = new List<Geometry> (); 
+	List<Geometry> obsGeos = new List<Geometry> (); 
 	//Contains Map
-	public Geometry mapBG = new Geometry ();
-	public bool bShowLogs=false;
-	public int pathIndexToShowShadow=0;
-	//public bool drawTriangles = false; 
-	//public bool drawRoadMap = false; 
-	//public bool drawMinSpanTree = false;
-	//public bool stopAll = false;
-	//public List<int>[] G = new List<int>[110];
-	//public int[] colorG = new int[110];
-	//public bool[] visitedG = new bool[110];
-	//public const int red = 1;
-	//public const int green = 2;
-	//public const int blue = 3;
+	Geometry mapBG = new Geometry ();
+	bool bShowLogs=false;
 	List<Geometry> globalPolygon;
 	List<Vector3> pathPoints;
 	float mapDiagonalLength = 0;
@@ -35,6 +17,36 @@ public class Visibility1 : MonoBehaviour {
 	// Use this for initialization
 	GameObject spTemp ;
 	List<GameObject> shadowMeshes;
+	private float startTimePlayer;
+	private float startTimeEnemy;
+	private float journeyLength;
+	public float speedPlayer = 1.0F;
+	public float speedEnemy = 1.0F;
+	GameObject playerObj;
+	public GameObject playerPrefab;
+	public GameObject enemyPrefab;
+	//List<GameObject> m_enemySafest = new List<GameObject>();
+	//public int m_enemySafestNumbers = 1;
+	//public int m_enemyNearestNumbers = 0;
+	public int m_nEnemyStatic = 1;
+	public int m_nEnemyNearMiss = 0;
+	//List<GameObject> m_enemyNearMissList = new List<GameObject>();
+	//List<bool> m_enemyNearMissCaughtList = new List<bool>();
+	//List<Vector3> m_enemyNextPosNearMissList = new List<Vector3>();
+	List<NearMissEnemy> m_enemyNearMissList = new List<NearMissEnemy>();
+	class NearMissEnemy
+	{
+		public GameObject enemyObj;
+		public bool bCaught;
+		public Vector3 vNextPos;
+	}
+	public int nearMissAlgo = 1;
+	public int m_nEnemyCentroid = 0;
+	List<GameObject> m_enemyCentroidList = new List<GameObject>();
+	List<Vector3> m_enemyNextPosCentroidList = new List<Vector3>();
+	public int m_nEnemyPredictor = 0;
+	public int setUpCase = -1;
+	public bool bDisplayAreas = false;
 	void Start () 
 	{
 		spTemp = (GameObject)GameObject.Find ("StartPoint");
@@ -49,14 +61,1013 @@ public class Visibility1 : MonoBehaviour {
 			                    vect, 
 			                    pathSphere.transform.rotation) as GameObject;
 		}
+		if (bDisplayAreas)
+		{
+			readTimings();
+			displayTimingAreas();
+			return;
+		}
 		CalculateVisibilityForPath ();
 		shadowMeshes = new List<GameObject>();
-		//Uncomment
-		//displayShadowMeshes(pathIndexToShowShadow);
-		displayStrategicPoints (pathIndexToShowShadow);
+		playerObj = Instantiate(playerPrefab) as GameObject;
+		playerObj.transform.position = pathPoints [0];
+		foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[0]]).edges)
+		{
+			l.DrawVector(allLineParent);
+		}
+		if(setUpCase==1)
+		{
+			initializeForNearMissCase();
+			return;
+		}
+		setUpEnemyInitialPos ();
 	}
+	private void displayTimingAreas()
+	{
+		for(int i=0;i<discretePtsX;i++)
+		{
+			for(int j=0;j<discretePtsZ;j++)
+			{
+				float greenNum = timingArray[i,j]/maxTimeEvaded;
+				float redNum = 1-greenNum;
+				showPosOfPoint((Vector3)h_mapIndxToPt[new Vector2(i,j)],new Color(redNum,greenNum,0));
+			}
+		}
+	}
+	private void initializeForNearMissCase()
+	{
+		setGlobalVars1 ();
+		timingArray = new float[discretePtsX,discretePtsZ];
+		Vector3 tempVec = (Vector3)h_mapIndxToPt[new Vector2(m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ)];
+		//Vector3 tempVec = new Vector3 (m_nCurrDiscretePtIndxX, 1, m_nCurrDiscretePtIndxZ);
+		placeEnemyNearMissAt(tempVec);
+		resetCase ();
+	}
+	int m_nCurrDiscretePtIndxX=0;
+	int m_nCurrDiscretePtIndxZ=0;
+	float[,] timingArray = null;
+	float maxTimeEvaded = -1.0f;
+	float currRunTimeEnemny = 0f;
+	string fileTimings = "C:\\Users\\Dhaliwal\\Desktop\\timingScene1.txt";
+	private void readTimings()
+	{
+		setGlobalVars1 ();
+		timingArray = new float[discretePtsX,discretePtsZ];
+		StreamReader sr = new StreamReader(fileTimings);
+		int j = 0;
+		int k = 0;
+		maxTimeEvaded = float.Parse(sr.ReadLine());
+		Debug.Log ("maxTimeEvaded read = " + maxTimeEvaded);
+		List<char> sep = new List<char>();
+		sep.Add(',');
+		while(!sr.EndOfStream)
+		{
+			string str = sr.ReadLine();
+			k=0;
+			foreach(string s in str.Split(sep.ToArray()))
+			{
+				//Debug.Log(s);
+				if(s.Length==0)
+					continue;
+				timingArray[j,k] = float.Parse(s);
+				k++;
+			}
+			j++;
+		}
+		sr.Close ();
+	}
+	private void writeTimings()
+	{
+		StreamWriter sw = new StreamWriter(fileTimings);
+		sw.WriteLine(maxTimeEvaded+"");
+		for(int j=0;j<discretePtsX;j++)
+		{
+			for(int k=0;k<discretePtsZ;k++)
+			{
+				sw.Write(", " + timingArray[j,k]);
+			}
+			sw.WriteLine(""); 
+		}
+		sw.Close ();
+	}
+	void resetCase()
+	{
+		if (m_nCurrDiscretePtIndxZ >= discretePtsZ)
+		{
+			Debug.Break();
+			writeTimings();
+			return;
+		}
+		int skipPts = 5;
+		while(true)
+		{
+			Vector3 tempVec = (Vector3)h_mapIndxToPt[new Vector2(m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ)];
+			//Vector3 tempVec = new Vector3 (m_nCurrDiscretePtIndxX, 1, m_nCurrDiscretePtIndxZ);
+			if(pointInShadow(tempVec,0) && timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]==0)
+			{
+				//Assumption:Only one enemy at a time
+				playerObj.transform.position = pathPoints [0];
+				nextPlayerPath = 1;
+				if(setUpCase==1)
+				{
+					m_enemyNearMissList[0].enemyObj.transform.position = tempVec;
+					if(nearMissAlgo==1)
+						m_enemyNearMissList[0].vNextPos = findNextPosEnemyNearMiss1(m_enemyNearMissList[0].enemyObj);
+					else if(nearMissAlgo==2)
+						m_enemyNearMissList[0].vNextPos = findNextPosEnemyNearMiss2(m_enemyNearMissList[0].enemyObj);
+					//currRunTimeEnemny = Time.time;
+					m_enemyNearMissList[0].bCaught = false;
+					break;
+				}
+				else if(setUpCase==2)
+				{
 
+					break;
+				}
 
+			}
+			/*else
+			{
+				Debug.Log(tempVec+" not in shadow. At ("+m_nCurrDiscretePtIndxX+" , "+m_nCurrDiscretePtIndxZ+")");
+			}*/
+			m_nCurrDiscretePtIndxX+=skipPts;
+			if (m_nCurrDiscretePtIndxX >= discretePtsX)
+			{
+				m_nCurrDiscretePtIndxX=0;
+				m_nCurrDiscretePtIndxZ+=skipPts;
+			}
+
+			if (m_nCurrDiscretePtIndxZ >= discretePtsZ)
+			{
+				Debug.Break();
+				writeTimings();
+				return;
+			}
+		}
+		Debug.Log("Selected At ("+m_nCurrDiscretePtIndxX+" , "+m_nCurrDiscretePtIndxZ+")");
+		currRunTimeEnemny = Time.time;
+	}
+	List<Vector3> enemyPath = null;
+	//int nextEnemyPath = 1;
+	int nextPlayerPath = 1;
+	void Update () 
+	{
+		if (bDisplayAreas)
+		{
+			return;
+		}
+		/*if (bCallComplete) 
+		{
+			bCallComplete = false;
+			bNearBy = AnalyzeNearestPathPoint ();
+			bCallComplete = true;
+		}
+		else 
+		{
+			return;
+		}*/
+		if(playerObj.transform.position == pathPoints[pathPoints.Count-1])
+		{
+			if(setUpCase==1)
+			{
+				if(!m_enemyNearMissList[0].bCaught)
+				{
+
+					timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = Time.time - currRunTimeEnemny;
+					if(maxTimeEvaded<0.0)
+					{
+						maxTimeEvaded = Time.time - currRunTimeEnemny;
+					}
+					Debug.Log("Took "+timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]+" Always hidden");
+				}
+
+				resetCase();
+				return;
+			}
+			else
+			{
+				Debug.Break();
+			}
+		}
+		if(playerObj.transform.position == pathPoints[nextPlayerPath] && playerObj.transform.position != pathPoints[pathPoints.Count-1])
+		{
+			foreach(Transform child in allLineParent.transform)
+			{
+				GameObject.Destroy(child.gameObject);
+			}
+			foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges)
+			{
+				l.DrawVector(allLineParent);
+			}
+			nextPlayerPath++;
+			//startTimePlayer=Time.time;
+			for(int j=0;j<m_enemyCentroidList.Count;j++)
+			{
+				Vector3 currPosEnemy = m_enemyCentroidList[j].transform.position;
+
+				m_enemyNextPosCentroidList[j] = findNextPosEnemyCentroid(m_enemyCentroidList[j]);
+				m_enemyCentroidList[j].transform.position = Vector3.MoveTowards(currPosEnemy,m_enemyNextPosCentroidList[j], speedEnemy*Time.deltaTime);
+			}
+			for(int j=0;j<m_enemyNearMissList.Count;j++)
+			{
+				NearMissEnemy nearMissObj = m_enemyNearMissList[j];
+				if(nearMissObj.bCaught)
+					continue;
+				Vector3 currPosEnemy = nearMissObj.enemyObj.transform.position;
+
+				if(nearMissAlgo==1)
+					nearMissObj.vNextPos = findNextPosEnemyNearMiss1(nearMissObj.enemyObj);
+				else if(nearMissAlgo==2)
+					nearMissObj.vNextPos = findNextPosEnemyNearMiss2(nearMissObj.enemyObj);
+				if(enemyCaught(nearMissObj.enemyObj.transform.position))
+				{
+					if(setUpCase==1)
+					{
+						timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = Time.time - currRunTimeEnemny;
+						Debug.Log("Caught!!! Took "+timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]+" to catch");
+						resetCase();
+						return;
+					}
+					Renderer rend = nearMissObj.enemyObj.GetComponent<Renderer>();
+					rend.material.shader = Shader.Find("Specular");
+					rend.material.SetColor("_SpecColor", Color.white);
+					nearMissObj.bCaught=true;
+					Debug.Log("Enemy Caught");
+				}
+				//nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,nearMissObj.vNextPos, speedEnemy*Time.deltaTime);
+			}
+			/*
+			List<Vector3> centrePts = (List<Vector3>)hCentroidShadows[pathPoints[nextPlayerPath]];
+			foreach(Vector3 vect in centrePts)
+			{
+				showPosOfPoint(vect);
+			}
+			*/
+		}
+		playerObj.transform.position = Vector3.MoveTowards(playerObj.transform.position, pathPoints[nextPlayerPath], speedPlayer*Time.deltaTime);
+		for(int j=0;j<m_enemyNearMissList.Count;j++)
+		{
+			NearMissEnemy nearMissObj = m_enemyNearMissList[j];
+			nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(nearMissObj.enemyObj.transform.position,nearMissObj.vNextPos, speedEnemy*Time.deltaTime);
+		}
+
+		/*if (Input.GetMouseButtonDown (0)) {
+			GameObject.Destroy (selectedBox);
+			start_box = Input.mousePosition;
+		}
+		
+		if (Input.GetMouseButtonUp (0)) {
+			end_box = Input.mousePosition;
+			start_box = camObj.ScreenToWorldPoint (start_box);
+			start_box.y = 1;
+			end_box = camObj.ScreenToWorldPoint (end_box);
+			end_box.y = 1;
+			Debug.Log (start_box + "," + end_box);
+			makeBox();
+		}*/
+	}
+	private bool enemyCaught(Vector3 currPos)
+	{
+		if (pointInShadow (currPos, nextPlayerPath - 1))
+			return false;
+		return true;
+	}
+	//Nearest safepoint. Least movement.
+	private Vector3 findNextPosEnemyNearMiss1(GameObject enemyObj)
+	{
+		if(!pointInShadow(enemyObj.transform.position,nextPlayerPath))
+		{
+			float timePlayer = Vector3.Distance(pathPoints[nextPlayerPath],pathPoints[nextPlayerPath-1])/speedPlayer;
+			float radiusMovement = speedEnemy*timePlayer;
+			float radiiVar = radiusMovement/12;
+			float radiiStep = radiiVar;
+			while(radiiVar<radiusMovement)
+			{
+				Vector3 vecSel = enemyObj.transform.position;
+				//vecSel.x+=radiiVar;
+				int angleVar=0;
+				while(!pointInShadow(vecSel,nextPlayerPath))
+				{
+
+					vecSel.x = enemyObj.transform.position.x + radiiVar*Mathf.Cos(angleVar* Mathf.Deg2Rad);
+					vecSel.z = enemyObj.transform.position.z + radiiVar*Mathf.Sin(angleVar* Mathf.Deg2Rad);
+					angleVar++;
+					if(angleVar==360)
+						break;
+
+				}
+				if(pointInShadow(vecSel,nextPlayerPath))
+				{
+					return vecSel;
+				}
+				radiiVar+=radiiStep;
+			}
+		}
+		return enemyObj.transform.position;
+
+	}
+	//Reaching safest possible point:based on largest angle made in shadow region from start point.select the middle angle
+	private Vector3 findNextPosEnemyNearMiss2(GameObject enemyObj)
+	{
+		if(!pointInShadow(enemyObj.transform.position,nextPlayerPath))
+		{
+			float timePlayer = Vector3.Distance(pathPoints[nextPlayerPath],pathPoints[nextPlayerPath-1])/speedPlayer;
+			float radiusMovement = speedEnemy*timePlayer;
+			int skipAngle=1;
+			Vector3 vecSel = enemyObj.transform.position;
+			//vecSel.x+=radiusMovement;
+			int angleVar=0;
+			List<int> listAngles = new List<int>();
+			bool insideShadow=false;
+			while(true)
+			{
+				vecSel.x = enemyObj.transform.position.x + radiusMovement*Mathf.Cos(angleVar* Mathf.Deg2Rad);
+				vecSel.z = enemyObj.transform.position.z + radiusMovement*Mathf.Sin(angleVar* Mathf.Deg2Rad);
+				if(pointInShadow(vecSel,nextPlayerPath))
+				{
+					if(!insideShadow)
+						listAngles.Add(angleVar);
+					insideShadow=true;
+				}
+				else 
+				{
+					if(insideShadow)
+						listAngles.Add(angleVar-skipAngle);
+					insideShadow=false;
+				}
+				angleVar+=skipAngle;
+				if(angleVar>=360)
+				{
+					if(insideShadow)
+						listAngles.Add(angleVar-skipAngle);
+					break;
+				}
+				
+			}
+			int allAnglesCount = listAngles.Count;
+
+			//////////////////////////////////////
+			/*string strAngles="( ";
+			foreach(int angleTemp in listAngles)
+			{
+				strAngles+=" , "+angleTemp;
+				
+			}
+			Debug.Log(strAngles+" )");
+			*/
+			//////////////////////////////////////;
+
+			if(allAnglesCount==0)
+				return enemyObj.transform.position;
+			int lastProbableInsideAngle = -1;
+			if(360%skipAngle!=0)
+				lastProbableInsideAngle = 360-(360%skipAngle);
+			else
+				lastProbableInsideAngle = 360-skipAngle;
+			if(listAngles[0]==0 && listAngles[allAnglesCount-1]==lastProbableInsideAngle)
+			{
+				listAngles[allAnglesCount-1]=listAngles[1]+360;
+				listAngles.RemoveAt(0);
+				listAngles.RemoveAt(0);
+				allAnglesCount = listAngles.Count;
+			}
+			int maxDiff=-1;
+			int indxMaxDiff=-1;
+
+			for(int j=0;j<=allAnglesCount-2;j+=2)
+			{
+				if(listAngles[j+1]-listAngles[j]>maxDiff)
+				{
+					indxMaxDiff=j;
+					maxDiff = listAngles[j+1]-listAngles[j];
+				}
+			}
+			//////////////////////////////////////
+			/*strAngles="( ";
+			foreach(int angleTemp in listAngles)
+			{
+				strAngles+=" , "+angleTemp;
+				
+			}
+			Debug.Log(strAngles+" ))) indxMaxDiff = "+indxMaxDiff);
+			*/
+			//////////////////////////////////////;
+			int angleSel = -1;
+			if(indxMaxDiff==-1)
+				angleSel = listAngles[0];
+			else
+			{
+				angleSel = (listAngles[indxMaxDiff+1]+listAngles[indxMaxDiff])/2;
+				//angleSel = getAngleWithMaxPotential(listAngles[indxMaxDiff],listAngles[indxMaxDiff+1],enemyObj.transform.position,radiusMovement);
+			}
+			vecSel.x = enemyObj.transform.position.x + radiusMovement*Mathf.Cos(angleSel* Mathf.Deg2Rad);
+			vecSel.z = enemyObj.transform.position.z + radiusMovement*Mathf.Sin(angleSel* Mathf.Deg2Rad);
+			return vecSel;
+		}
+		return enemyObj.transform.position;
+	}
+	private int getAngleWithMaxPotential(int angle1,int angle2,Vector3 currPos,float radiusMovement)
+	{
+		int skipAngle = 1;
+		int tempAngle = angle1;
+		int maxCounterShadowTemp = -1;
+		int bestAngle = -1;
+		while(tempAngle<=angle2)
+		{
+			Vector3 newCentre = new Vector3();
+			newCentre.x = currPos.x + radiusMovement*Mathf.Cos(tempAngle* Mathf.Deg2Rad);
+			newCentre.y = 1;
+			newCentre.z = currPos.z + radiusMovement*Mathf.Cos(tempAngle* Mathf.Deg2Rad);
+			Vector3 tempPoint = new Vector3();
+			tempPoint.y = 1;
+			int counterShadowTemp = 0;
+			for(int theta=0;theta<360;theta+=skipAngle)
+			{
+				tempPoint.x = newCentre.x + radiusMovement*Mathf.Cos(theta* Mathf.Deg2Rad);
+				tempPoint.z = newCentre.z + radiusMovement*Mathf.Cos(theta* Mathf.Deg2Rad);
+
+				if(pointInShadow(tempPoint,nextPlayerPath) || CheckIfInsidePolygon(tempPoint))
+				{
+					counterShadowTemp++;
+				}
+			}
+			if(maxCounterShadowTemp<counterShadowTemp)
+			{
+				maxCounterShadowTemp = counterShadowTemp;
+				bestAngle = tempAngle;
+			}
+			tempAngle+=skipAngle;
+		}
+		return bestAngle;
+	}
+	/*private Vector3 findNextPosEnemyNearMiss3(GameObject enemyObj)
+	{
+		if(!pointInShadow(enemyObj.transform.position,nextPlayerPath))
+		{
+			float timePlayer = Vector3.Distance(pathPoints[nextPlayerPath],pathPoints[nextPlayerPath-1])/speedPlayer;
+			float radiusMovement = speedEnemy*timePlayer;
+			Vector3 vecSel = enemyObj.transform.position;
+			//vecSel.x+=radiusMovement;
+			int angleVar=0;
+			bool insideShadow=false;
+			//check all lines and find nearest visibility edge
+			Geometry visiblePolyTemp = (Geometry)hVisiblePolyTable [pathPoints [nextPlayerPath]];
+			float minDist = 0f;
+			float distTemp = 0f;
+			Line firstEdge = visiblePolyTemp.edges[0];
+			float y2 = firstEdge.vertex[1].z;
+			float y1 = firstEdge.vertex[0].z;
+			float x2 = firstEdge.vertex[1].x;
+			float x1 = firstEdge.vertex[0].x;
+			minDist = Mathf.Abs((y2-y1)*vecSel.x - (x2-x1)*vecSel.z + x2*y1 - y2*x1);
+			minDist = minDist/Mathf.Sqrt(Mathf.Pow((y2-y1),2) + Mathf.Pow((x2-x1),2));
+			int selEdgeIndx = 0;
+			for(int i=1;i<visiblePolyTemp.edges.Count;i++)
+			{
+				firstEdge = visiblePolyTemp.edges[i];
+				y2 = firstEdge.vertex[1].z;
+				y1 = firstEdge.vertex[0].z;
+				x2 = firstEdge.vertex[1].x;
+				x1 = firstEdge.vertex[0].x;
+				distTemp = Mathf.Abs((y2-y1)*vecSel.x - (x2-x1)*vecSel.z + x2*y1 - y2*x1);
+				distTemp = distTemp/Mathf.Sqrt(Mathf.Pow((y2-y1),2) + Mathf.Pow((x2-x1),2));
+				if(distTemp<minDist)
+				{
+					selEdgeIndx = i;
+					minDist = distTemp;
+				}
+			}
+			vecSel.x = enemyObj.transform.position.x + radiusMovement*Mathf.Cos(angleSel* Mathf.Deg2Rad);
+			vecSel.z = enemyObj.transform.position.z + radiusMovement*Mathf.Sin(angleSel* Mathf.Deg2Rad);
+			return vecSel;
+		}
+		return enemyObj.transform.position;
+
+	}
+	*/
+	private void setUpEnemyInitialPos()
+	{
+		if(m_nEnemyStatic>0)
+		{
+			createDiscreteMap ();
+			sbyte[,] shadowArray = null;
+			shadowArray = findSafestSpots();
+			placeEnemyStatic(shadowArray);
+		}
+		if(m_nEnemyNearMiss>0)
+		{
+			setGlobalVars1();
+			int numNearMiss = m_nEnemyNearMiss;
+			while(numNearMiss>0)
+			{
+				Vector3 sel = selectInitialNearMissRandomPos();
+				placeEnemyNearMissAt(sel);
+				numNearMiss--;
+			}
+		}
+		if(m_nEnemyCentroid>0)
+		{
+			createCentroidPoints();
+			placeEnemyCentroid();
+		}
+	}
+	private void createCentroidPoints ()
+	{
+		m_minX = mapBoundary[0].x;
+		m_minZ = mapBoundary[0].z;
+		m_maxX = mapBoundary[0].x;
+		m_maxZ = mapBoundary[0].z;
+		for(int i=1;i<4;i++)
+		{
+			if(m_minX>mapBoundary[i].x)
+			{
+				m_minX=mapBoundary[i].x;
+			}
+			if(m_minZ>mapBoundary[i].z)
+			{
+				m_minZ=mapBoundary[i].z;
+			}
+			if(m_maxX<mapBoundary[i].x)
+			{
+				m_maxX=mapBoundary[i].x;
+			}
+			if(m_maxZ<mapBoundary[i].z)
+			{
+				m_maxZ=mapBoundary[i].z;
+			}
+		}
+		foreach(Vector3 pathPt in pathPoints)
+		{
+			List<Geometry> shadows = (List<Geometry>)hTable[pathPt];
+			List<Vector3> centroidPtsList = new List<Vector3>();
+			foreach(Geometry geo in shadows)
+			{
+				Vector3 centroidPt = findCentroid1(geo);
+				//Debug.Log(centroidPt);
+				centroidPtsList.Add(centroidPt);
+			}
+			hCentroidShadows.Add(pathPt,centroidPtsList);
+		}
+	}
+	//TODO :Error while placing enemies. Maybe random placement works.
+	private void placeEnemyCentroid()
+	{
+		int numCentroidEnemies = m_nEnemyCentroid;
+		while(numCentroidEnemies>0)
+		{
+			GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
+			Component.Destroy (enemyObj.GetComponent("Enemy"));
+			List<Vector3> centrePts = (List<Vector3>)hCentroidShadows[pathPoints[0]];
+			enemyObj.transform.position = centrePts[Random.Range(0,centrePts.Count-1)];//[m_nEnemyCentroid-numCentroidEnemies];
+			//m_enemyNextPosCentroidList.Add(((List<Vector3>)hCentroidShadows[pathPoints[1]])[m_nEnemyCentroid-numCentroidEnemies]);
+
+			m_enemyCentroidList.Add(enemyObj);
+			m_enemyNextPosCentroidList.Add(findNextPosEnemyCentroid(enemyObj));
+			numCentroidEnemies--;
+		}
+	}
+	private Vector3 findNextPosEnemyCentroid(GameObject enemyObj)
+	{
+		if(!pointInShadow(enemyObj.transform.position,nextPlayerPath-1))
+			return enemyObj.transform.position;
+		List<Vector3> centrePts = (List<Vector3>)hCentroidShadows[pathPoints[nextPlayerPath]];
+		float dist = Vector3.Distance (enemyObj.transform.position, centrePts[0]);
+		Vector3 selPt = centrePts [0];
+		foreach(Vector3 pts in centrePts)
+		{
+			float tempDist = Vector3.Distance (enemyObj.transform.position, pts);
+			if(tempDist<dist)
+			{
+				dist=tempDist;
+				selPt = pts;
+			}
+		}
+		Debug.Log (selPt);
+		return selPt;
+	}
+	private void placeEnemyNearMissAt(Vector3 sel)
+	{
+		GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
+		Component.Destroy (enemyObj.GetComponent("Enemy"));
+		enemyObj.transform.position = sel;
+		NearMissEnemy nearMissObj = new NearMissEnemy();
+		nearMissObj.bCaught = false;
+		nearMissObj.enemyObj = enemyObj;
+		if(nearMissAlgo==1)
+			nearMissObj.vNextPos = findNextPosEnemyNearMiss1(enemyObj);
+		else if(nearMissAlgo==2)
+			nearMissObj.vNextPos = findNextPosEnemyNearMiss2(enemyObj);
+		m_enemyNearMissList.Add(nearMissObj);
+			
+	}
+	private Vector3 selectInitialNearMissRandomPos()
+	{
+		//sbyte[,] shadowArray = (sbyte[,])h_discreteShadows [pathPoints [0]];
+		while(true)
+		{
+			int selX = Random.Range(0,discretePtsX);
+			int selZ = Random.Range(0,discretePtsZ);
+			Vector3 sel = (Vector3)h_mapIndxToPt[new Vector2(selX,selZ)];
+			while(!pointInShadow(sel,0))
+			{
+				selX = Random.Range(0,discretePtsX);
+				selZ = Random.Range(0,discretePtsZ);
+				sel = (Vector3)h_mapIndxToPt[new Vector2(selX,selZ)];
+			}
+
+			bool selAgain = false;
+			foreach(NearMissEnemy nearMissObjTemp in m_enemyNearMissList)
+			{
+				if(Vector3.Distance(nearMissObjTemp.enemyObj.transform.position,sel)<1.0f)
+				{
+					selAgain=true;
+					break;
+				}
+			}
+			if(selAgain)
+			{
+				continue;
+			}
+			return sel;
+		}
+	}
+	private void placeEnemyStatic(sbyte[,] shadowArray)
+	{
+		List<Vector3> listHiddenSpots = new List<Vector3> ();
+		for(int j=0;j<discretePtsX;j++)
+		{
+			for(int k=0;k<discretePtsZ;k++)
+			{
+				if(shadowArray[j,k]==0)
+				{
+					listHiddenSpots.Add((Vector3)h_mapIndxToPt[new Vector2(j,k)]);
+				}
+			}
+		}
+		int numStatic = m_nEnemyStatic;
+		while(numStatic>0 && listHiddenSpots.Count>0)
+		{
+			int sel = Random.Range (0, listHiddenSpots.Count);
+			Vector3 selVec = listHiddenSpots[sel];
+			GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
+			Component.Destroy (enemyObj.GetComponent("Enemy"));
+			enemyObj.transform.position = selVec;
+			listHiddenSpots.RemoveAt(sel);
+			numStatic--;
+		}
+	}
+	private Vector3 findCentroid1(Geometry geo)
+	{
+
+		float radius_hiddenSphere = ((SphereCollider)hiddenSphere.collider).radius*((SphereCollider)hiddenSphere.collider).transform.lossyScale.x;
+		int numPts = 0;
+		float meanX = 0f;
+		float meanZ = 0f;
+		for(float j=m_minX;j<m_maxX;j+=m_step)
+		{
+			for(float k=m_minZ;k<m_maxZ;k+=m_step)
+			{
+				Vector3 pt = new Vector3(j,1,k);
+
+				if(geo.PointInside(pt) && !Physics.CheckSphere(pt,radius_hiddenSphere))
+				{
+					numPts++;
+					meanX+=j;
+					meanZ+=k;
+				}
+
+			}
+		}
+		meanX = meanX / numPts;
+		meanZ = meanZ / numPts;
+		return new Vector3 (meanX, 1, meanZ);
+	}
+	Hashtable hCentroidShadows = new Hashtable();
+	float m_minX = 0f;
+	float m_minZ = 0f;
+	float m_maxX = 0f;
+	float m_maxZ = 0f;
+	float m_step = 0.1f;
+	private void setGlobalVars1()
+	{
+		m_minX = mapBoundary[0].x;
+		m_minZ = mapBoundary[0].z;
+		m_maxX = mapBoundary[0].x;
+		m_maxZ = mapBoundary[0].z;
+		for(int i=1;i<4;i++)
+		{
+			if(m_minX>mapBoundary[i].x)
+			{
+				m_minX=mapBoundary[i].x;
+			}
+			if(m_minZ>mapBoundary[i].z)
+			{
+				m_minZ=mapBoundary[i].z;
+			}
+			if(m_maxX<mapBoundary[i].x)
+			{
+				m_maxX=mapBoundary[i].x;
+			}
+			if(m_maxZ<mapBoundary[i].z)
+			{
+				m_maxZ=mapBoundary[i].z;
+			}
+		}
+		int Indx = 0;
+
+		
+		discretePtsX = (int)(((m_maxX - m_minX) / m_step)+0.5);
+		discretePtsZ = (int)(((m_maxZ - m_minZ) / m_step)+0.5);
+		Debug.Log("discretePtsX = "+discretePtsX);
+		Debug.Log("discretePtsZ = "+discretePtsZ);
+
+		int j1=0;
+		for(float j=m_minX;j<m_maxX && j1<discretePtsX;j+=m_step)
+		{
+			int k1=0;
+			for(float k=m_minZ;k<m_maxZ && k1<discretePtsZ;k+=m_step)
+			{
+				Vector3 pt = new Vector3(j,1,k);
+				Vector2 keyTemp = new Vector2(j1,k1);
+				if(!h_mapIndxToPt.ContainsKey(keyTemp))
+				{
+					h_mapIndxToPt.Add(keyTemp,pt);
+				}
+				k1++;
+			}
+			j1++;
+		}
+
+	}
+	//private List<Vector3> findEnemyPath2 ()
+	private void findEnemyPath2 ()
+	{
+		setGlobalVars1 ();
+		foreach(Vector3 pathPt in pathPoints)
+		{
+			List<Geometry> shadows = (List<Geometry>)hTable[pathPt];
+			List<Vector3> centroidPtsList = new List<Vector3>();
+ 			foreach(Geometry geo in shadows)
+			{
+				Vector3 centroidPt = findCentroid1(geo);
+				centroidPtsList.Add(centroidPt);
+			}
+			hCentroidShadows.Add(pathPt,centroidPtsList);
+		}
+	}
+	private List<Vector3> findEnemyPath1 ()
+	{
+		enemyPath = new List<Vector3>();
+
+		int centralityIndx = -1;
+		int row = -1;
+		int col = -1;
+		//List<Vector2> centreList = new List<Vector2>();
+		int numSpots = 1;
+		//float minDist = 5;
+		for(int i=0;i<pathPoints.Count;i++)
+		{
+			sbyte[,] shadowArray = (sbyte[,])h_discreteShadows [pathPoints [i]];
+			for(int j=0;j<discretePtsX;j++)
+			{
+				for(int k=0;k<discretePtsZ;k++)
+				{
+					if(shadowArray[j,k]==0)
+					{
+						int centralityIndxTemp = centralityCalc(shadowArray,j,k);
+						if(centralityIndx<=centralityIndxTemp)
+						{
+							centralityIndx = centralityIndxTemp;
+							row = j;
+							col = k;
+							/*centreList.Insert(0,new Vector2(row,col));
+							if(centreList.Count>numSpots)
+							{
+								centreList.RemoveAt(numSpots);
+							}*/
+						}
+					}
+				}
+			}
+			enemyPath.Add((Vector3)h_mapIndxToPt[new Vector2(row,col)]);
+			//centreList.RemoveAt(0);
+		}
+		return enemyPath;
+	}
+	/*private void createEnemies()
+	{
+		int numSafest = m_enemySafestNumbers;
+		sbyte[,] shadowArray = null;
+		if (numSafest > 0)
+			shadowArray = findSafestSpots ();
+		//return;
+		while(numSafest>0)
+		{
+			GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
+			Component.Destroy (enemyObj.GetComponent("Enemy"));
+			placeEnemy(shadowArray,enemyObj);
+			m_enemySafest.Add(enemyObj);
+			numSafest--;
+		}
+	}*/
+	private int centralityCalc2(sbyte[,] shadowArray,int j,int k)
+	{
+		return 1;
+	}
+	private int centralityCalc(sbyte[,] shadowArray,int j,int k)
+	{
+		int rowJ = j;
+		int colK = k;
+		int centralityIndx = 0;
+		int antiCentralityIndx = 0;
+		while(true)
+		{
+			rowJ--;
+			colK--;
+			int rowLen = (j - rowJ)*2 +1;
+			if(rowJ<0 || colK<0 || rowJ+rowLen>discretePtsX || colK+rowLen>discretePtsZ)
+				break;
+			int centralityIndxTemp = 0;
+			int antiCentralityIndxTemp = 0;
+			for(int i1=rowJ;i1<rowLen;i1++)
+			{
+				if(shadowArray[i1,colK]==0)
+				{
+					centralityIndxTemp++;
+				}
+				else
+				{
+					antiCentralityIndxTemp++;
+				}
+				if(shadowArray[i1,colK+rowLen-1]==0)
+				{
+					centralityIndxTemp++;
+				}
+				else
+				{
+					antiCentralityIndxTemp++;
+				}
+			}
+			for(int i2=colK+1;i2<rowLen-1;i2++)
+			{
+				if(shadowArray[rowJ,i2]==0)
+				{
+					centralityIndxTemp++;
+				}
+				else
+				{
+					antiCentralityIndxTemp++;
+				}
+				if(shadowArray[rowJ+rowLen-1,i2]==0)
+				{
+					centralityIndxTemp++;
+				}
+				else
+				{
+					antiCentralityIndxTemp++;
+				}
+			}
+			if(antiCentralityIndxTemp>centralityIndxTemp/4)
+			//if(antiCentralityIndx>centralityIndx/10)
+				break;
+			centralityIndx+=centralityIndxTemp;
+			antiCentralityIndx+=antiCentralityIndxTemp;
+		}
+		return centralityIndx- antiCentralityIndx;
+	}
+	private void placeEnemy(sbyte[,] shadowArray,GameObject enemyObj)
+	{
+		//Algo: find centre and place there
+		int centralityIndx = -1;
+		int row = -1;
+		int col = -1;
+		List<Vector2> centreList = new List<Vector2>();
+		int numSpots = 1;
+		//float minDist = 5;
+		for(int j=0;j<discretePtsX;j++)
+		{
+			for(int k=0;k<discretePtsZ;k++)
+			{
+				if(shadowArray[j,k]==0)
+				{
+					int centralityIndxTemp = centralityCalc(shadowArray,j,k);
+					if(centralityIndx<=centralityIndxTemp)
+					{
+						centralityIndx = centralityIndxTemp;
+						row = j;
+						col = k;
+						centreList.Insert(0,new Vector2(row,col));
+						if(centreList.Count>numSpots)
+						{
+							centreList.RemoveAt(numSpots);
+						}
+					}
+				}
+			}
+		}
+		enemyObj.transform.position = (Vector3)h_mapIndxToPt[new Vector2(row,col)];
+		centreList.RemoveAt (0);
+		foreach(Vector2 vect in centreList)
+		{
+			GameObject enemyObj1 = Instantiate(enemyPrefab) as GameObject;
+			Component.Destroy (enemyObj1.GetComponent("Enemy"));
+			enemyObj1.transform.position = (Vector3)h_mapIndxToPt[vect];
+		}
+	}
+	private sbyte[,] findSafestSpots()
+	{
+		Debug.Log("h_mapIndxToPt.Count = "+h_mapIndxToPt.Keys.Count);
+		Debug.Log ("h_discreteShadows.Count = "+h_discreteShadows.Keys.Count);
+		sbyte[,] shadowArrayFirst = (sbyte[,])h_discreteShadows [pathPoints [0]];
+		sbyte[,] shadowArray = new sbyte[discretePtsX,discretePtsZ];
+		sbyte[,] shadowArrayTemp = new sbyte[discretePtsX,discretePtsZ];
+		int pathPointsCount = pathPoints.Count;
+		//float from_factor = 0.0f;
+		//float to_factor = 1.0f;
+		while(true)
+		{
+			System.Array.Copy(shadowArrayFirst,shadowArray,discretePtsX*discretePtsZ);
+			for(int i=1;i<pathPointsCount;i++)
+			{
+				System.Array.Copy(shadowArray,shadowArrayTemp,discretePtsX*discretePtsZ);
+				shadowArray = findCommonInArray2D(shadowArray,(sbyte[,])h_discreteShadows [pathPoints [i]]);
+				if(checkForNullShadow(shadowArray))
+				{
+					return shadowArrayTemp;
+				}
+			}
+			break;
+			/*if(checkForNullShadow(shadowArray))
+			{
+				shadowArray = new sbyte[discretePtsX,discretePtsZ];
+				to_factor = factor;
+				//from_factor/=2;
+				pathPointsCount=pathPointsCount*factor;
+			}
+			else
+			{
+				float old_factorTemp = old_factor;
+				old_factor = factor;
+				factor = (old_factorTemp+factor)/2;
+				pathPointsCount=pathPointsCount*factor;
+				break;
+			}
+			*/
+		}
+		//visualizeSafeSpots (shadowArray);
+		return shadowArray;
+	}
+	private bool checkForNullShadow(sbyte[,] array1)
+	{
+		int shadowPointCounter = 0;
+		for(int j=0;j<discretePtsX;j++)
+		{
+			for(int k=0;k<discretePtsZ;k++)
+			{
+				if(array1[j,k]==0)
+				{
+					shadowPointCounter++;
+				}
+			}
+		}
+		if (shadowPointCounter > 0)
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	}
+	private sbyte[,] findCommonInArray2D(sbyte[,] array1,sbyte[,] array2)
+	{
+		sbyte[,] shadowArray = new sbyte[discretePtsX,discretePtsZ];
+		for(int j=0;j<discretePtsX;j++)
+		{
+			for(int k=0;k<discretePtsZ;k++)
+			{
+				shadowArray[j,k] = (array1[j,k] > array2[j,k])?array1[j,k]:array2[j,k];
+			}
+		}
+		return shadowArray;
+	}
+	private void visualizeSafeSpots(sbyte[,] visibleArray2D)
+	{
+		for(int j=0;j<discretePtsX;j++)
+		{
+			for(int k=0;k<discretePtsZ;k++)
+			{
+				if(visibleArray2D[j,k]==0)
+				{
+					GameObject clone1 = (GameObject)Instantiate(hiddenSphere);
+					Debug.Log("visualizeSafeSpots for pt = "+j+" , "+k);
+					clone1.transform.position = (Vector3)h_mapIndxToPt[new Vector2(j,k)];
+					//Debug.Log("clone1.transform.position = "+clone1.transform.position);
+					//hiddenSphereList.Add(clone1);
+				}
+			}
+		}
+	}
 	//Vector3 first_point;
 	List<Geometry> globalTempShadowPoly = new List<Geometry>();
 	Geometry globalTempStarPoly;
@@ -76,7 +1087,8 @@ public class Visibility1 : MonoBehaviour {
 	Vector3 start_box,end_box;
 	Rect boundbox;
 	bool b_ShowBoundbox=false;
-	private void makeBox() {
+	private void makeBox() 
+	{
 		Debug.Log("In makeBox");
 		//Ensures the bottom left and top right values are correct
 		//regardless of how the user boxes units
@@ -656,10 +1668,14 @@ public class Visibility1 : MonoBehaviour {
 
 		return sdList;
 	}
-	void showPosOfPoint(Vector3 pos)
+	void showPosOfPoint(Vector3 pos,Color c)
 	{
+		if (float.IsNaN (pos.x) || float.IsNaN (pos.z))
+			return;
 		GameObject sp = (GameObject)GameObject.Find ("StartPoint");
 		GameObject tempObj = (GameObject)GameObject.Instantiate (sp);
+		Renderer rend = tempObj.GetComponent<Renderer>();
+		rend.material.color = c;
 		tempObj.transform.position=pos;
 	}
 	List<int> applyEarClipping(/*Geometry shadowGeo,*/ List<Vector3> points)
@@ -766,25 +1782,6 @@ public class Visibility1 : MonoBehaviour {
 			Debug.Log("applyEarClipping returning");
 		return newTriangles;
 	}
-	//Predefined Tuple class
-	public class Tuple<T1, T2>
-	{
-		public T1 First { get; private set; }
-		public T2 Second { get; private set; }
-		internal Tuple(T1 first, T2 second)
-		{
-			First = first;
-			Second = second;
-		}
-	}
-	public static class Tuple
-	{
-		public static Tuple<T1, T2> New<T1, T2>(T1 first, T2 second)
-		{
-			var tuple = new Tuple<T1, T2>(first, second);
-			return tuple;
-		}
-	}
 	private GameObject allLineParent;
 	private bool pointInShadow(Vector3 pt,int Indx)
 	{
@@ -796,11 +1793,13 @@ public class Visibility1 : MonoBehaviour {
 		}
 		return false;
 	}
-	//Key = path point (Vector3), Value = 2D array of 1's represent visible, 0's shadows, 2's boundary of obstacle ...
+	//Key = path point (Vector3), Value = 2D array of 1's represent visible, 0's shadows, 2's for inside obstacle ...
 	Hashtable h_discreteShadows = new Hashtable();
 	//Key = (i,j) , Value = Vector3. i,j are indices corresponding to 2D arrays in h_discreteShadows
 	Hashtable h_mapIndxToPt = new Hashtable();
 	//Func: fills h_discreteShadows and h_mapIndxToPt according to step and pathPoints
+	int discretePtsX = -1;
+	int discretePtsZ = -1;
 	private void createDiscreteMap()
 	{
 		float minX = mapBoundary[0].x;
@@ -828,34 +1827,38 @@ public class Visibility1 : MonoBehaviour {
 		}
 		int Indx = 0;
 		float step = 0.1f;
-		Debug.Log((maxX - minX) / step);
-		return;
-		int discretePts = (int)((maxX - minX) / step);
+
+		discretePtsX = (int)(((maxX - minX) / step)+0.5);
+		discretePtsZ = (int)(((maxZ - minZ) / step)+0.5);
+		Debug.Log(""+(maxX - minX) / step+" discretePtsX = "+discretePtsX+" discretePtsZ = "+discretePtsZ);
 		while(Indx<pathPoints.Count)
 		{
 			List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [Indx]];
-
-			sbyte[,] shadowArray = new sbyte[discretePts,discretePts];
-
+			sbyte[,] shadowArray = new sbyte[discretePtsX,discretePtsZ];
 
 			float radius_hiddenSphere = ((SphereCollider)hiddenSphere.collider).radius*((SphereCollider)hiddenSphere.collider).transform.lossyScale.x;
 			int j1=0;	
-			for(float j=minX;j<maxX;j+=step)
+			for(float j=minX;j<maxX && j1<discretePtsX;j+=step)
 			{
 				int k1=0;
-				for(float k=minZ;k<maxZ;k+=step)
+				for(float k=minZ;k<maxZ && k1<discretePtsZ;k+=step)
 				{
 					Vector3 pt = new Vector3(j,1,k);
-
-					/*Tuple a1(j1,k1);
-					if(!h_mapIndxToPt.ContainsKey(a1))
+					Vector2 keyTemp = new Vector2(j1,k1);
+					if(!h_mapIndxToPt.ContainsKey(keyTemp))
 					{
-						h_mapIndxToPt.Add(new Tuple(j1,k1),pt);
+						//Debug.Log("Adding key value pair to h_mapIndxToPt"+j1+" , "+k1);
+						h_mapIndxToPt.Add(keyTemp,pt);
 					}
-					*/
+					//Debug.Log(j1+" , "+k1);
+					//Debug.Log(j+" < "+maxX+" , "+k+" < "+maxZ);
 					if(pointInShadow(pt,Indx) && !Physics.CheckSphere(pt,radius_hiddenSphere))
 					{
 						shadowArray[j1,k1]=0;
+					}
+					else if(CheckIfInsidePolygon(pt))
+					{
+						shadowArray[j1,k1]=2;
 					}
 					else
 					{
@@ -865,9 +1868,10 @@ public class Visibility1 : MonoBehaviour {
 				}
 				j1++;
 			}
-			Indx++;
 			h_discreteShadows.Add(pathPoints[Indx],shadowArray);
-
+			Indx++;
+			//Debug.Log("h_mapIndxToPt.Count = "+h_mapIndxToPt.Keys.Count);
+			//Debug.Log("h_discreteShadows.Count = "+h_discreteShadows.Keys.Count);
 		}
 	}
 	private void displayStrategicPoints (int Indx)
@@ -944,7 +1948,177 @@ public class Visibility1 : MonoBehaviour {
 			}
 		}
 	}
+	class VisibleTriangulation
+	{
+		List<Vector3> points;
+		List<int> newTriangles;
+		public void setPoints(List<Vector3> pts)
+		{
+			points = pts;
+		}
+		public void setTriangles(List<int> newT)
+		{
+			newTriangles = newT;
+		}
+		public List<Vector3> getPoints()
+		{
+			return points;
+		}
+		public List<int> getTriangles()
+		{
+			return newTriangles;
+		}
+	}
+	private List<int> reverseTriangels(List<int> newTriangles)
+	{
+		List<int> newTrianglesReversed = new List<int> ();
+		for(int i=0;i<newTriangles.Count-3;i+=3)
+		{
+			newTrianglesReversed.Add(newTriangles[i+2]);
+			newTrianglesReversed.Add(newTriangles[i+1]);
+			newTrianglesReversed.Add(newTriangles[i]);
+		}
+		return newTrianglesReversed;
+	}
+	List<int> triangulateVisible(List<Vector3> points)
+	{
+		List<int> newTriangles = new List<int>();
+		int i = 1;
+		for(i=1;i<points.Count-1;i++)
+		{
+			newTriangles.Add(0);
+			newTriangles.Add(i);
+			newTriangles.Add(i+1);
+		}
+		newTriangles.Add(0);
+		newTriangles.Add(points.Count-1);
+		newTriangles.Add(1);
+
+		/*newTriangles.Add(0);
+		newTriangles.Add(points.Count);
+		newTriangles.Add(1);*/
+
+		return newTriangles;
+	}
+	Hashtable h_visible_Star_Triangles = new Hashtable ();
+	private void createVisibleTriangulation()
+	{
+		int Indx=0;
+		while(Indx<pathPoints.Count)
+		{
+			Geometry visiblePolyTemp = (Geometry)hVisiblePolyTable [pathPoints [Indx]];
+
+			//List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [Indx]];
+			List<int> newTriangles;
+			List<StandardPolygon> sdList = arrangeCounterClockwise(visiblePolyTemp);
+			List<VisibleTriangulation> llist = new List<VisibleTriangulation>();
+			//for(int i=0;i<shadowPolyTemp.Count;i++)
+			{
+				//List<StandardPolygon> sdList = arrangeCounterClockwise(shadowPolyTemp[i]);
+				
+				foreach(StandardPolygon sd in sdList)
+				{
+					List<Vector3> points = sd.getVertices();
+					//newTriangles = applyEarClipping(points);
+
+					List<Vector3> pointsTemp = new List<Vector3>();
+					pointsTemp.Add(pathPoints[Indx]);
+					pointsTemp.AddRange(points);
+					points = pointsTemp;
+
+					newTriangles = triangulateVisible(points);
+					List<int> newTrianglesReversed = reverseTriangels(newTriangles);
+					//newTriangles.AddRange(newTrianglesReversed);
+					//newTriangles = newTrianglesReversed;
+
+					VisibleTriangulation tempVT = new VisibleTriangulation();
+					tempVT.setPoints(points);
+					tempVT.setTriangles(newTriangles);
+					llist.Add(tempVT);
+				}
+			}
+			h_visible_Star_Triangles.Add(Indx,llist);
+			Indx++;
+		}
+	}
 	private void displayShadowMeshes(int Indx)
+	{
+		/*Geometry visiblePolyTemp = (Geometry)hVisiblePolyTable [pathPoints [Indx]];
+
+		List<StandardPolygon> sdList = arrangeCounterClockwise(visiblePolyTemp);
+		Debug.Log("sdList.Count = "+sdList.Count);*/
+		/*Geometry visiblePolyTemp = (Geometry)hVisiblePolyTable [pathPoints [Indx]];
+		foreach(Line l in visiblePolyTemp.edges)
+		{
+			l.DrawVector(allLineParent);
+		}*/
+
+
+		List<int> newTriangles;
+		foreach(GameObject tempObj in shadowMeshes)
+		{
+			GameObject.Destroy(tempObj);
+		}
+		shadowMeshes.Clear ();
+		List<VisibleTriangulation> llist = (List<VisibleTriangulation>)h_visible_Star_Triangles[Indx];
+
+		foreach(VisibleTriangulation VT in llist)
+		{
+			//Debug.Log("displayShadowMeshes Index = "+Indx);
+			/*Debug.Log("sd.Count = "+sd.getVertices().Count);
+			List<Vector3> points = sd.getVertices();
+			newTriangles = applyEarClipping(points);*/
+			List<Vector3> points = VT.getPoints();
+			Debug.Log("VT.getPoints() = "+VT.getPoints().Count);
+			Debug.Log("VT.getTriangles() = "+VT.getTriangles().Count);
+			newTriangles = VT.getTriangles();
+			shadowMeshes.Add(new GameObject("ShadowMesh"));
+			MeshFilter filter = shadowMeshes[shadowMeshes.Count-1].AddComponent<MeshFilter>();
+
+			MeshRenderer meshRenderer = shadowMeshes[shadowMeshes.Count-1].AddComponent<MeshRenderer>();
+			Material material = mat;
+			if(material==null)
+			{
+				Debug.Log("material not found");
+			}
+			meshRenderer.material = material;
+			
+			Mesh mesh = filter.sharedMesh;
+			if(mesh==null)
+			{
+				mesh = new Mesh();
+				filter.sharedMesh = mesh;
+			}
+			Vector2[] uvs = new Vector2[points.Count];
+			
+			//shadowMeshes[shadowMeshes.Count-1].transform.position = new Vector3(0,1,0);
+			
+			int i2 = 0;
+			while (i2 < uvs.Length) 
+			{
+				uvs[i2] = new Vector2(points[i2].x, points[i2].z);
+				i2++;
+			}
+			
+			Vector3[] normals = new Vector3[points.Count];
+			for (i2 = 0; i2 < normals.Length; i2++) 
+			{
+				normals[i2] = Vector3.up;
+			}
+			
+			
+			mesh.vertices = points.ToArray();
+			mesh.uv = uvs;
+			mesh.triangles = newTriangles.ToArray();
+			mesh.normals=normals;
+			
+			filter.mesh = mesh;
+			mesh.RecalculateNormals();
+			mesh.RecalculateBounds();
+			//newTriangles.Clear();
+		}
+	}
+	private void displayShadowMeshes_Old(int Indx)
 	{
 		//get the shadow polygons
 		if(bShowLogs)
@@ -965,7 +2139,6 @@ public class Visibility1 : MonoBehaviour {
 
 			List<StandardPolygon> sdList = arrangeCounterClockwise(geo);
 			Debug.Log("sdList.Count = "+sdList.Count);
-
 			foreach(StandardPolygon sd in sdList)
 			{
 				Debug.Log("sd.Count = "+sd.getVertices().Count);
@@ -1244,8 +2417,22 @@ public class Visibility1 : MonoBehaviour {
 		Debug.Break();
 
 	}
+	//float lastTimeUpdateCalled=Time.time;
+	//int lastUpdateCalled=100;
+	//System.DateTime lastTimeUpdateCalled = System.DateTime.Now;
 	bool AnalyzeNearestPathPoint()
 	{
+		/*lastUpdateCalled--;
+		if(lastUpdateCalled==0)
+		{
+			lastUpdateCalled=100;
+		}
+		else 
+			return false;*/
+		/*if(Time.time-lastTimeUpdateCalled>1.0f)
+			lastTimeUpdateCalled = Time.time;
+		else
+			return false;*/
 		float dist=1000;
 		int index = -1;
 		Vector3 mousePos = camObj.ScreenToWorldPoint(Input.mousePosition);
@@ -1264,88 +2451,13 @@ public class Visibility1 : MonoBehaviour {
 			return false;
 		Debug.Log ("Found index " + index);
 
-			
-		displayShadowMeshes(index);
 
+		displayShadowMeshes(index);
 		return true;
 	}
 	bool bNearBy = false;
 	bool bCallComplete=true;
-	void Update () 
-	{
-				if (bCallComplete) {
-						bCallComplete = false;
-						//bNearBy = AnalyzeNearestPathPoint ();
-						bCallComplete = true;
-				} else {
-						return;
-				}
-				if (Input.GetMouseButtonDown (0)) {
-						GameObject.Destroy (selectedBox);
-						start_box = Input.mousePosition;
-				}
-		
-				if (Input.GetMouseButtonUp (0)) {
-						end_box = Input.mousePosition;
-						start_box = camObj.ScreenToWorldPoint (start_box);
-						start_box.y = 1;
-						end_box = camObj.ScreenToWorldPoint (end_box);
-						end_box.y = 1;
-						Debug.Log (start_box + "," + end_box);
-						makeBox ();
-						//TODO:Uncomment
-						//IdentifyGoodHidingSpots();
 
-						/*if(startIndex!=-1 && startIndex==endIndex)
-			{
-				Debug.Log("Calling displayShadowMeshes "+ startIndex);
-				Debug.Break();
-				displayShadowMeshes(startIndex);
-				//showShadowMesh();
-			}*/
-
-				}
-		if(false)
-		{
-				List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [pathIndexToShowShadow]];
-				foreach (Geometry geo in shadowPolyTemp) {
-						List<Line> hiddenLines = new List<Line> ();
-						//ForEach first path point:
-						//Identify lines behind which to hide
-						//List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [startIndex]];
-						//foreach(Geometry geo in shadowPolyTemp)
-						{
-								foreach (Line l in geo.edges) {
-										List<Vector3> pair = l.PointsOnEitherSide (0.02f);
-					
-										int ct_insideObstacle = 0;
-										foreach (Vector3 pt in pair) {
-												foreach (Geometry g in globalPolygon) {
-														if (g.PointInside (pt)) {
-																ct_insideObstacle++;
-														}
-												}
-										}
-										if (ct_insideObstacle == 1) {
-												hiddenLines.Add (l);
-										}
-								}
-						}
-						hiddenLines.RemoveAll (item => item == null);
-
-
-						/*foreach (Line l in hiddenLines) {
-								l.DrawLine ();
-						}*/
-						foreach (Line l in geo.edges) {
-								l.DrawLine ();
-						}
-
-				}
-				Debug.Break ();
-		}
-		
-	}
 	int startIndex = -1;
 	int endIndex = -1;
 	void IdentifyGoodHidingSpots ()

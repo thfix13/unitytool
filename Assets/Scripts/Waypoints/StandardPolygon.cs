@@ -31,7 +31,7 @@ public class StandardPolygon
 			}
 		}
 		points.Add(pt);
-		showPosOfPoint(pt,"point "+points.Count);
+		//showPosOfPoint(pt,"point "+points.Count);
 		return true;
 	}
 	public void removePoint(int index)
