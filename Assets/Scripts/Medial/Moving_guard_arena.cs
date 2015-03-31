@@ -17,7 +17,7 @@ namespace Medial{
 		float layer_division=1f;
 		string multi_triangle_input_file, dir=@"/Users/dhsingh/Documents/Thesis/SM03Skeleton/";
 		float t=0;
-		MedialMesh graphObj;
+		MedialMesh medialMeshObj;
 		bool generate2Dcheck=false;
 		GameObject player2Dprojection;
 
@@ -29,7 +29,7 @@ namespace Medial{
 		// Update is called once per frame
 		void Update () {
 				
-			Vector3 playerpos= generate2Dcheck? graphObj.movePlayer(t):Vector3.zero;
+			Vector3 playerpos= generate2Dcheck? medialMeshObj.movePlayer(t):Vector3.zero;
 			if(playerpos!= Vector3.zero)
 				player2Dprojection.transform.position= new Vector3(playerpos.x,player2Dprojection.transform.position.y,playerpos.z);
 			if(generate2Dcheck){
@@ -100,27 +100,27 @@ namespace Medial{
 			
 			string medial_output=dir+"output_medial_"+multi_triangle_input_file;
 			var gameobj2 = GameObject.Find ("Medial");
-			graphObj= new MedialMesh(medial_output,gameobj2,true, true);
-			graphObj.createGraph();
+			medialMeshObj= new MedialMesh(medial_output,gameobj2,true, true);
+			medialMeshObj.createGraph();
 		}
 
 		public void RemoveVs(){
-			graphObj.removeVs();
+			medialMeshObj.removeVs();
 		}
 
 
 		public void Addextraedges(){
 
 
-			graphObj.addEdgesThatDontCollideWithArena();
+			medialMeshObj.addEdgesThatDontCollideWithArena();
 //			udl ("AddedEdgesThatDontCollideWithArena");
 
 		}
 		public void projectPath(){
 
-			graphObj.findNearest(start.transform.position,end.transform.position);
-			graphObj.findPath();
-			graphObj.showPath();
+			medialMeshObj.findNearest(start.transform.position,end.transform.position);
+			medialMeshObj.findPath();
+			medialMeshObj.showPath();
 
 			var plane= GameObject.CreatePrimitive(PrimitiveType.Cube);
 			plane.transform.localScale=new Vector3(16,0.1f,16);

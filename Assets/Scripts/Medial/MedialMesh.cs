@@ -186,10 +186,11 @@ namespace Medial{
 		/// unneccessary complications in the medial mesh. They need to be removed.
 		/// </summary>
 		public void removeVs(){
-			List<edgenode> adjacentnodes;
+			HashSet<edgenode> adjacentnodes;
 			HashSet<int>removedVertices= new HashSet<int>();
 
 			bool breakflag=false, f=false;
+
 			for(int i=0; i<this.vertices.Count;i++){
 				var v=vertices[i];
 
@@ -213,15 +214,16 @@ namespace Medial{
 
 						var ay=angleY(vertices[neighbour1.y],vertices[neighbour2.y],v);
 						var ayp=angleYPlane(vertices[neighbour1.y],vertices[neighbour2.y],v);
-
-						if(ay<42 && ayp <10)
+						if(ay==0 && ayp ==0)
+						{	continue;
+						}
+						if(ay<42 && ayp <7)
 						{	
 							breakflag=true;
-							Debug.DrawLine(vertices[neighbour1.y],vertices[neighbour2.y], Color.magenta,100000);
+//							Debug.DrawLine(vertices[neighbour1.y],vertices[neighbour2.y], Color.magenta,100000);
 							removedVertices.Add(i);
 							break;
 						}
-
 					}
 					if(breakflag)
 						break;
@@ -232,9 +234,18 @@ namespace Medial{
 			//remove only triangles containing removedVertices, otherwise indexes will change
 			//and everything will have to be refreshed
 			int l=this.triangles.Count;
+			int x,y,z;
 			for(int i=0;i < l;i+=3){
 				if(removedVertices.Contains(this.triangles[i]) ||removedVertices.Contains(this.triangles[i+1])
 				   ||removedVertices.Contains(this.triangles[i+2])){
+					//Graph can't be updated this way, because you don't know if some other triangle
+					//is creating an edge between these two vertices or not
+					//also update the graph 
+//					graphObj.removeEdge(this.triangles[i],this.triangles[i+1]);
+//					graphObj.removeEdge(this.triangles[i],this.triangles[i+2]);
+//					graphObj.removeEdge(this.triangles[i+2],this.triangles[i+1]);
+
+					join_neighbours(this.triangles[i],this.triangles[i+1],this.triangles[i+2], removedVertices);
 					this.triangles.RemoveAt(i+2);
 					this.triangles.RemoveAt(i+1);
 					this.triangles.RemoveAt(i);
@@ -242,15 +253,52 @@ namespace Medial{
 					i-=3;
 				}
 			}
+
+
+
+//			//TODO:links among neighbours of removed vertices to be made in the graph (drawline done)
+//			foreach(var vertex in removedVertices){
+//				join_neighbours(vertex,removedVertices);
+//			}
+//
+//			//The graph also needs to be updated--- graph needs to be created again
+//			//recreate graph
+//			this.graphObj= new Graph(this.vertices.Count);
+//			createGraph();
+
 			layMesh();
 
-			//TODO:The graph also needs to be updated
-			//TODO:links among neighbours of removed vertices to be made (in the graph as well as to show using drawline)
 
+
+
+		}
+		void join_neighbours(int a,int b, int c,HashSet<int>removedVertices){
+			int v;
+			if(removedVertices.Contains(a)){
+				v= a;}
+			else{ 
+				if(removedVertices.Contains(b)){
+					v=b;}
+				else{
+					v=c;
+				}
+			}
+			HashSet<edgenode> adjacentnodes= graphObj.unDirectedEdges[v];
+			foreach(var n1 in adjacentnodes){
+				foreach(var n2 in adjacentnodes){
+					if(n1.Equals(n2)|| removedVertices.Contains(n1.y)|| removedVertices.Contains(n2.y))
+						continue;
+					//check if there isn't an edge already between n1 and n2
+					if(!graphObj.unDirectedEdges[n1.y].Contains(n2)){
+						Debug.DrawLine(vertices[n1.y],vertices[n2.y], Color.magenta,100000);
+					}
+				}
+			}
+		
 		}
 		//failures can be removes by adding edges across a quadrilateral's diagonal vertices
 		public void removeVs_failures(){
-			List<edgenode> adjacentnodes;
+			HashSet<edgenode> adjacentnodes;
 			
 			bool breakflag=false, f=false;
 			for(int i=0; i<this.vertices.Count;i++){
@@ -286,12 +334,11 @@ namespace Medial{
 						var ay=angleY(vertices[neighbour1.y],vertices[neighbour2.y],v);
 						var ayp=angleYPlane(vertices[neighbour1.y],vertices[neighbour2.y],v);
 						
-						if(ay<42 && ayp <10)
-						{	breakflag=true;
-							break;
+						if(ay==0 && ayp ==0)
+						{	continue;
 						}
-						if(f && (ay<42.0f) && ayp >10.0f){
-							//							breakflag=true;
+						if(ay<42.0f && ayp <7.0f){
+														breakflag=true;
 							Debug.DrawLine(vertices[neighbour1.y],v, Color.magenta,100000);
 							Debug.DrawLine(vertices[neighbour2.y],v,Color.blue,100000);
 							
@@ -318,7 +365,7 @@ namespace Medial{
 							go1.name=Vtostring(vertices[neighbour2.y])+"Yel "+neighbour2.y+" "+"ayp="+ayp+" ay="+ay;
 							go1.transform.parent=go2.transform;
 							
-							//							break;
+														break;
 							
 						}
 					}
@@ -547,27 +594,27 @@ namespace Medial{
 		}
 	}
 	class Graph{
-		public List<edgenode> [] directedEdges;
-		public List<edgenode> [] unDirectedEdges;
-		int [] degree;
+		public HashSet<edgenode> [] directedEdges;
+		public HashSet<edgenode> [] unDirectedEdges;
+//		int [] degree;
 		public int nvertices;
 
 		public Graph(int vertices){
 			nvertices=vertices;
 			//TODO:: need to change it to array of hashmaps, so that .contains works better
-			directedEdges= new List<edgenode>[nvertices];
-			unDirectedEdges= new List<edgenode>[nvertices];
-			UnityEngine.Debug.Log(nvertices);
-			degree= new int[nvertices];
-			for(int i=0;i<nvertices;i++)
-			{
-				degree[i]=0;
-			}
+			directedEdges= new HashSet<edgenode>[vertices];
+			unDirectedEdges= new HashSet<edgenode>[vertices];
+//			UnityEngine.Debug.Log(nvertices);
+//			degree= new int[nvertices];
+//			for(int i=0;i<nvertices;i++)
+//			{
+//				degree[i]=0;
+//			}
 		}
 		
 		public void addDirectededge(int from, int to, float w){
 			if(directedEdges[from]==null)
-				directedEdges[from]=new List<edgenode>();
+				directedEdges[from]=new HashSet<edgenode>();
 			if(directedEdges[from].Contains(new edgenode(to,w))){
 				return;
 			}
@@ -575,9 +622,9 @@ namespace Medial{
 		}
 		public void addUnDirectededge(int from, int to, float w){
 			if(unDirectedEdges[from]==null)
-				unDirectedEdges[from]=new List<edgenode>();
+				unDirectedEdges[from]=new HashSet<edgenode>();
 			if(unDirectedEdges[to]==null)
-				unDirectedEdges[to]=new List<edgenode>();
+				unDirectedEdges[to]=new HashSet<edgenode>();
 			if(!unDirectedEdges[from].Contains(new edgenode(to,w))){
 				unDirectedEdges[from].Add(new edgenode(to,w));
 
@@ -586,6 +633,29 @@ namespace Medial{
 				unDirectedEdges[to].Add(new edgenode(from,w));
 				
 			}
+		}
+
+		/// <summary>
+		/// Warning: Very unsafe, as you don't know other triangles connecting v1-v2 still exist or not
+		/// </summary>
+		/// <param name="v1">V1.</param>
+		/// <param name="v2">V2.</param>
+		public void removeEdge(int v1 , int v2 ){
+			if(unDirectedEdges[v1]!=null && unDirectedEdges[v1].Contains(new edgenode(v2,0))){
+				unDirectedEdges[v1].Remove (new edgenode(v2,0));
+				
+			}
+			if(unDirectedEdges[v2]!=null && unDirectedEdges[v2].Contains(new edgenode(v1,0))){
+				unDirectedEdges[v2].Remove (new edgenode(v1,0));
+			}
+			if(directedEdges[v1]!=null && directedEdges[v1].Contains(new edgenode(v2,0))){
+				directedEdges[v1].Remove (new edgenode(v2,0));
+				
+			}
+			if(directedEdges[v2]!=null && directedEdges[v2].Contains(new edgenode(v1,0))){
+				directedEdges[v2].Remove (new edgenode(v1,0));
+			}
+
 		}
 	}
 	class element: PriorityQueueNode{

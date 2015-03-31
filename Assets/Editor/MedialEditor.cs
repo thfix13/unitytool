@@ -58,7 +58,7 @@ using UnityEditor;
 				obj=g.GetComponent<Moving_guard_arena>();
 			}
 
-			if(GUILayout.Button("Get Medial Skeleton+Create Graph",GUILayout.Width(150)))
+			if(GUILayout.Button("Get Medial Skeleton+Create Graph",GUILayout.Width(200)))
 			{
 				
 				obj.buildMedial();
@@ -68,11 +68,11 @@ using UnityEditor;
 //			{
 //				obj.Addextraedges();
 //			}
-			if(GUILayout.Button("Remove Vs",GUILayout.Width(50)))
+			if(GUILayout.Button("Remove Vs",GUILayout.Width(100)))
 			{
 				obj.RemoveVs();
 			}
-			if(GUILayout.Button("Add edges",GUILayout.Width(50)))
+			if(GUILayout.Button("Add edges",GUILayout.Width(100)))
 			{
 				obj.Addextraedges();
 			}
