@@ -1277,9 +1277,9 @@ public class Triangulation : MonoBehaviour
 	}
 	
 	void cameraNesting(){
-//		new GameObject ("vpA");
-//		new GameObject ("vpB");
-//		new GameObject ("vpMerged");
+		new GameObject ("vpA");
+		new GameObject ("vpB");
+		new GameObject ("vpMerged");
 	
 		int x = cameraVPS.Count;
 		Geometry incrementalCover = new Geometry ();
@@ -1292,15 +1292,15 @@ public class Triangulation : MonoBehaviour
 			//if( i == 4) return;
 			if( incrementalCover.GeometryInsideExt(cameraVPS[i].Value) )
 				cnt++;
-//			if( i == 2 ){
+			if( i == 11 ){
 //				incrementalCover.DrawGeometry(GameObject.Find("vpA"));
 //				cameraVPS[i].Value.DrawGeometry(GameObject.Find("vpB"));
-//			}
+			}
 			incrementalCover = incrementalCover.GeometryMergeCamera(cameraVPS[i].Value, i);
 			//if( i == 1 ) return;
 			//if( i == x - 1 ) return;
 			cameraVPS2.Add( new KeyValuePair<Vector3, Geometry>( cameraVPS[i].Key, incrementalCover ) );
-//						if( i == 2 )
+//						if( i == 11 )
 //							incrementalCover.DrawGeometry(GameObject.Find("vpMerged"));
 		}
 		//incrementalCover.DrawGeometry (GameObject.Find ("temp"));

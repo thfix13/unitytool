@@ -107,10 +107,15 @@ public class Geometry
 			if( myLine.name.Equals("Line7") ){
 				Debug.Log("PIDbg : " + myLine.LineIntersectMuntacDebug(lray));
 			}
-			if( myLine.LineIntersectMuntac(lray) == 1 ){
+			//if( myLine.LineIntersectMuntac(lray) == 1 ){
+			if( myLine.LineIntersectMuntac(lray) > 0 ){
 				count++;
-				myLine.DrawVector(GameObject.Find("vpA"));
+				//myLine.DrawVector(GameObject.Find("vpA"));
+				//Debug.Log("InvisibleLine: " + myLine.vertex[0] + " " + myLine.vertex[1]);
+				//Debug.Log ( myLine.vertex[0].x + " " + myLine.vertex[0].z);
+				//Debug.Log ( myLine.vertex[1].x + " " + myLine.vertex[1].z);
 				drawSphere(pt,Color.green);
+				Debug.Log("Says:"+myLine.LineIntersectMuntac(lray));
 			}
 			//Check if the intersection point is on the polygon edge
 			if( myLine.PointOnLine( pt ) && myLine.PointOnLineB( pt ) )
@@ -478,6 +483,10 @@ public class Geometry
 				int caseType = LA.LineIntersectMuntacDebug(LB);
 				if( caseType == 1 ){//Regular intersections
 					Vector3 pt = LA.GetIntersectionPoint( LB );
+					//TODO:
+//					if( LA.isEndPoint( pt ) || LB.isEndPoint(pt) )
+//						Debug.Log("SAMENESS A");
+					/// 
 					G3.edges.Add( new Line( pt, LA.vertex[0] ) );
 					G3.edges.Add( new Line( pt, LA.vertex[1] ) );
 					G3.edges.Add( new Line( pt, LB.vertex[0] ) );
@@ -510,10 +519,10 @@ public class Geometry
 					List<Line> linesToAdd = new List<Line>();
 					for( int k = 0; k < uniquePts.Count - 1; k++ ){
 						linesToAdd.Add( new Line(uniquePts[k], uniquePts[k+1]) );
-						//if( xid == 3 )
-						//Debug.Log(uniquePts[k]);
+//TODO:
+//						if( uniquePts[k].Equals(uniquePts[k+1]) )
+//							Debug.Log("SAMENESS B");
 					}
-					//if( xid == 3 ) return new Geometry();
 					if( linesToAdd.Count == 2 ){
 						if( (LA.Equals(linesToAdd[0]) || LA.Equals(linesToAdd[1]))
 						   && (LB.Equals(linesToAdd[0]) || LB.Equals(linesToAdd[1])) )
@@ -543,8 +552,19 @@ public class Geometry
 		int namecnt = 0;
 		int doit = 0;
 		foreach(Line l in G3.edges){
-			l.name = namecnt++.ToString();
+//				if( xid == 11 )
+//				l.DrawVector(GameObject.Find("temp"));
+//			if( xid == 11 ){
+//				if( namecnt == 49 ){
+//					Debug.Log(!G1.LineInside(l) +" " + !G2.LineInside(l) +" "+ !toReturn.edges.Contains(l));
+//					l.DrawVector(GameObject.Find("temp"));
+//					G2.DrawGeometry(GameObject.Find("vpA"));
+//					Debug.Log("DBG:"+!G2.LineInsideDebug(l));
+//				}
+//			}
+			if( l.vertex[0].Equals(l.vertex[1]) ) continue;
 		    if(!G1.LineInside(l) && !G2.LineInside(l) && !toReturn.edges.Contains(l)){
+					l.name = namecnt++.ToString();
 					toReturn.edges.Add(l);
 			}
 		}
