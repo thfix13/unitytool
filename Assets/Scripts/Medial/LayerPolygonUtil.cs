@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections;
-//using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
@@ -8,15 +7,41 @@ using System.Diagnostics;
 
 public class LayerPolygonUtil{
 
+	List<int> mappingOriginalIndexToNewIndexOfPolygons;
+	List<List<Vector3>> layers;
+	List<List<int>> polygons;
+	List<int[]>[] covers;
+	public LayerPolygonUtil(List<List<Vector3>> layers1, List<List<int>> polygons1, float layer_division, float numberofAddLayers, List<int[]>[] covers1){
+		this.covers=covers1;
+		this.polygons=polygons1;
+		this.layers=layers1;
+
+		mappingOriginalIndexToNewIndexOfPolygons= new List<int>();
+		subdivide_layer( layer_division);
+		if(numberofAddLayers !=0)
+			addLayers(numberofAddLayers);
+		renewedCovers();
+	}
+
+	public List<List<int>> getPoly(){
+		return this.polygons;
+	}
+	public List<List<Vector3>> getLayer(){
+		return this.layers;
+	}
+	public List<int[]>[] getCovers(){
+		return this.covers;
+	}
+
 	/// <summary>
-	/// Subdivides each layer.
+	/// Subdivides each layer. Change cover vertices accordingly
 	/// </summary>
 	/// <param name="layers">Layers.</param>
 	/// <param name="polygons">Polygons.</param>
-	public static PolyLayerAndMap subdivide_layer(List<List<Vector3>> layers, List<List<int>> polygons, float layer_division){
+	private void subdivide_layer(float layer_division){
 		List<List<int>> new_polygons=new List<List<int>>();
 		List<List<Vector3>> new_layers=new List<List<Vector3>>();
-		List<int> mappingOriginalIndexToNewIndexOfPolygons= new List<int>();
+
 		Hashtable divisions= new Hashtable();
 
 		//for each layer
@@ -66,14 +91,40 @@ public class LayerPolygonUtil{
 			new_layers.Add(newlayervertices);
 		}
 
-		PolyLayerAndMap combb= new PolyLayerAndMap(new_polygons, new_layers, mappingOriginalIndexToNewIndexOfPolygons);
-		return combb;
+		layers= new_layers;
+		polygons=new_polygons;
+	}
+
+	/// <summary>
+	/// Change the vertex id of covers after subdivide_layer and addLayers have been applied. 
+	/// The indices do start from 0 now also... so Vertices_lastlayer has still to be added
+	/// </summary>
+	private void renewedCovers(){
+
+		//starting point of vertex indices in last layer
+//		int nn=layers[0].Count;
+//		int vertices_lastlayer=nn*(layers.Count-1);
+		for(int i=0; i<2;i++){
+			
+			foreach(var coverTrianglesIndex in covers[i]){
+				//series in 0-7 
+				// 9
+				//			10
+				// 8
+				//see paper
+
+				coverTrianglesIndex[0]=mappingOriginalIndexToNewIndexOfPolygons[coverTrianglesIndex[0]];
+				coverTrianglesIndex[1]=mappingOriginalIndexToNewIndexOfPolygons[coverTrianglesIndex[1]];
+				coverTrianglesIndex[2]=mappingOriginalIndexToNewIndexOfPolygons[coverTrianglesIndex[2]];
+			}
+		}
 	}
 	static void udl(object str){
 		UnityEngine.Debug.Log(str);
 	}
 
-	public static List<List<Vector3>> addLayers(List<List<Vector3>> layers, float f){
+	private void addLayers(float f){
+
 		List<List<Vector3>> new_layers= new List<List<Vector3>>();
 		for(int ilayer=0;ilayer<layers.Count-1;ilayer++){
 			var current_layer=layers[ilayer];
@@ -99,27 +150,27 @@ public class LayerPolygonUtil{
 
 		}
 		new_layers.Add(layers.Last());
-		return new_layers;
+		layers= new_layers;
 
 	}
 
 }
 
-public class PolyLayerAndMap{
-	List<List<int>> poly;
-	List<List<Vector3>> lay;
-	List<int> mappingOriginalIndexToNewIndexOfPolygons;
-	public PolyLayerAndMap(List<List<int>> polygons,List<List<Vector3>> layers, List<int> mapping)
-	{
-		this.poly=polygons;this.lay=layers;this.mappingOriginalIndexToNewIndexOfPolygons=mapping;
-	}
-	public List<List<int>> getPoly(){
-		return this.poly;
-	}
-	public List<List<Vector3>> getLayer(){
-		return this.lay;
-	}
-	public List<int> getMappingOriginalIndexToNewIndexOfPolygons(){
-		return this.mappingOriginalIndexToNewIndexOfPolygons;
-	}
-}
+//public class PolygonLayerCover{
+//	List<List<int>> poly;
+//	List<List<Vector3>> lay;
+//	List<int[]>[] cov;
+//	public PolygonLayerCover(List<List<int>> polygons,List<List<Vector3>> layers, List<int[]>[] covers)
+//	{
+//		this.poly=polygons;this.lay=layers;this.cov=covers;
+//	}
+//	public List<List<int>> getPoly(){
+//		return this.poly;
+//	}
+//	public List<List<Vector3>> getLayer(){
+//		return this.lay;
+//	}
+//	public List<int> getCovers(){
+//		return this.cov;
+//	}
+//}

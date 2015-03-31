@@ -8,7 +8,6 @@ using System.Diagnostics;
 namespace Medial{
 	public class Covers 
 	{
-		
 		List <List<Vector3>> layers;
 		List<List<int>> polygons;
 		public Covers (List <List<Vector3>> layers,List<List<int>> polygons)
@@ -73,10 +72,7 @@ namespace Medial{
 							vertexToLine.Add(layer[s],new List<Ligne>{addline});
 					}
 				}
-				
-				
-				
-				
+
 				//find lines that create triangulations
 				for(int linei=0; linei< lines.Count; linei++){
 					var line =lines[linei];
@@ -86,7 +82,6 @@ namespace Medial{
 					foreach(var otherline in lines){
 						if(line==otherline)
 							continue;
-						
 						
 						var v2= otherline.vertex[0];
 						//check if v2 is not adjacent to v1
@@ -118,8 +113,7 @@ namespace Medial{
 				
 				//find new triangulations thus created
 				newtriangulations= new HashSet<Triangle>();
-				
-				
+
 				foreach(var line in newlines){
 					var v1= line.vertexIndex[0]; var v2= line.vertexIndex[1];
 					var v3list= commonVertex(v1,v2,adjacency);
@@ -140,7 +134,6 @@ namespace Medial{
 
 						}
 					}
-					
 				}
 				
 				//make triangulations delauney.
@@ -299,11 +292,7 @@ namespace Medial{
 		/// <summary>
 		/// Checks if there lies no point inside the Triangluation 
 		/// </summary>
-		/// <returns><c>true</c>, if triangulation was valided, <c>false</c> otherwise.</returns>
-		/// <param name="v1">V1.</param>
-		/// <param name="v2">V2.</param>
-		/// <param name="v3">V3.</param>
-		/// <param name="layer">Layer.</param>
+		/// <returns><c>true</c>, if triangulation was valid, <c>false</c> otherwise.</returns>
 		bool validTriangulation(int v1,int v2, int v3, List<Vector3> layer){
 			Vector3 a=layer[v1], b=layer[v2], c=layer[v3];
 			foreach(var s in layer){
@@ -329,24 +318,6 @@ namespace Medial{
 			
 			return true;
 		}
-		
-		//		public static bool PointInTriangle(Vector3 p, Vector3 p0, Vector3 p1, Vector3 p2)
-		//		{
-		//			var s = p0.y * p2.X - p0.X * p2.y + (p2.y - p0.y) * p.X + (p0.X - p2.X) * p.y;
-		//			var t = p0.X * p1.y - p0.y * p1.X + (p0.y - p1.y) * p.X + (p1.X - p0.X) * p.y;
-		//			
-		//			if ((s < 0) != (t < 0))
-		//				return false;
-		//			
-		//			var A = -p1.Y * p2.X + p0.Y * (p2.X - p1.X) + p0.X * (p1.Y - p2.Y) + p1.X * p2.Y;
-		//			if (A < 0.0)
-		//			{
-		//				s = -s;
-		//				t = -t;
-		//				A = -A;
-		//			}
-		//			return s > 0 && t > 0 && (s + t) < A;
-		//		}
 		
 		List<int> commonVertex(int v1, int v2, bool [,] adj){
 			List<int> r=new List<int>();
@@ -388,44 +359,10 @@ namespace Medial{
 			
 		}
 
-
-
 		public static void udl(object s){
 			UnityEngine.Debug.Log(s);
 		}
 	}
-	
-	//		public List<int[]>[] getCovers1(){
-	//			List<int[]> upperlayer;
-	//		switch(option){
-	//			case 0: return new List<int[]>[]{
-	//					new List<int[]>{new int[] {0,1,9}, new int[]{1,2,3},new int[]{1,3,4},new int[]{9,1,10},
-	//						new int[]{10,1,4},new int[]{10,4,5},new int[]{10,5,6},new int[]{10,7,8},
-	//						new int[]{7,0,8},new int[]{8,0,9}, new int[]{10,6,7}},
-	//					new List<int[]>{new int[] {1,0,10}, new int[]{2,1,3},new int[]{3,1,4},new int[]{8,1,10},
-	//						new int[]{8,4,1},new int[]{8,5,4},new int[]{8,6,5},new int[]{8,9,6},new int[]{9,7,6},
-	//						new int[]{7,9,0}, new int[]{0,9,10}}};
-	//				break;
-	//			case 1: return  new List<int[]>[]{new List<int[]>{new int[3]{0,1,3},new int[3]{1,2,3}},
-	//					new List<int[]>{new int[3]{0,1,3},new int[3]{1,2,3}}};
-	//				break;
-	//			case 3: return new List<int[]>[]{
-	//
-	//					new List<int[]>{new int[]{1,0,17},new int[]{2,1,4},new int[]{2,4,3},new int[]{1,17,4},
-	//						new int[]{4,14,11},new int[]{4,11,5},new int[]{11,10,5},new int[]{8,10,9},new int[]{6,8,7},
-	//						new int[]{6,5,8},new int[]{5,10,8},new int[]{14,13,11},new int[]{13,12,11},
-	//						new int[]{17,14,4},new int[]{17,16,14},new int[]{15,14,16},
-	//						new int[]{18,15,16},new int[]{0,15,18},new int[]{0,18,17}
-	//					},
-	//				new List<int[]>{new int[]{0,1,16},new int[]{1,4,18},new int[]{1,2,4},new int[]{2,3,4}
-	//						,new int[]{13,12,11},new int[]{11,5,10},new int[]{5,6,8},new int[]{6,7,8}
-	//						,new int[]{5,8,10},new int[]{8,9,10},new int[]{14,4,11},new int[]{13,14,11}
-	//						,new int[]{17,18,14},new int[]{15,17,14},new int[]{15,16,17}
-	//						,new int[]{15,0,16},new int[]{16,1,18},new int[]{18,4,14}, new int[]{4,5,11}
-	//					}};
-	//			}
-	//			return null;
-	//		}
 }
 
 

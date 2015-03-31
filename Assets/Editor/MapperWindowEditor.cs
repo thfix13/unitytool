@@ -60,7 +60,7 @@ namespace EditorArea {
 			
 			// Wait for the floor to be set and initialize the drawer and the mapper
 			if (floor != null) {
-				if (floor.collider == null) {
+				if (floor.GetComponent<Collider>() == null) {
 					Debug.LogWarning ("Floor has no valid collider, game object ignored.");
 					floor = null;
 				} else {
@@ -172,14 +172,14 @@ namespace EditorArea {
 					}
 				}
 				
-				original = mapper.PrecomputeMaps (SpaceState.Editor, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind, baseMap);
+				original = mapper.PrecomputeMaps (SpaceState.Editor, floor.GetComponent<Collider>().bounds.min, floor.GetComponent<Collider>().bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind, baseMap);
 
 				drawer.fullMap = original;
 				float maxSeenGrid;
 				drawer.seenNeverSeen = Analyzer.ComputeSeenValuesGrid (original, out maxSeenGrid);
 				drawer.seenNeverSeenMax = maxSeenGrid;
 				drawer.tileSize = SpaceState.Editor.tileSize;
-				drawer.zero.Set (floor.collider.bounds.min.x, floor.collider.bounds.min.z);
+				drawer.zero.Set (floor.GetComponent<Collider>().bounds.min.x, floor.GetComponent<Collider>().bounds.min.z);
 				
 				ResetAI ();
 				previous = DateTime.Now;
@@ -213,10 +213,10 @@ namespace EditorArea {
 					end = GameObject.Find ("End");	
 				}
 
-				startX = (int)((start.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
-				startY = (int)((start.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
-				endX = (int)((end.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
-				endY = (int)((end.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
+				startX = (int)((start.transform.position.x - floor.GetComponent<Collider>().bounds.min.x) / SpaceState.Editor.tileSize.x);
+				startY = (int)((start.transform.position.z - floor.GetComponent<Collider>().bounds.min.z) / SpaceState.Editor.tileSize.y);
+				endX = (int)((end.transform.position.x - floor.GetComponent<Collider>().bounds.min.x) / SpaceState.Editor.tileSize.x);
+				endY = (int)((end.transform.position.z - floor.GetComponent<Collider>().bounds.min.z) / SpaceState.Editor.tileSize.y);
 
 				paths.Clear ();
 				deaths.Clear ();
@@ -251,21 +251,21 @@ namespace EditorArea {
 				arrangedByCrazy = arrangedByDanger = arrangedByDanger3 = arrangedByDanger3Norm = arrangedByLength = arrangedByLoS = arrangedByLoS3 = arrangedByLoS3Norm = arrangedByTime = arrangedByVelocity = null;
 
 				// Prepare start and end position
-				startX = (int)((start.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
-				startY = (int)((start.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
-				endX = (int)((end.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
-				endY = (int)((end.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
+				startX = (int)((start.transform.position.x - floor.GetComponent<Collider>().bounds.min.x) / SpaceState.Editor.tileSize.x);
+				startY = (int)((start.transform.position.z - floor.GetComponent<Collider>().bounds.min.z) / SpaceState.Editor.tileSize.y);
+				endX = (int)((end.transform.position.x - floor.GetComponent<Collider>().bounds.min.x) / SpaceState.Editor.tileSize.x);
+				endY = (int)((end.transform.position.z - floor.GetComponent<Collider>().bounds.min.z) / SpaceState.Editor.tileSize.y);
 
 				GameObject[] hps = GameObject.FindGameObjectsWithTag("HealthPack");
 				HealthPack[] packs = new HealthPack[hps.Length];
 				for (int i = 0; i < hps.Length; i++) {
 					packs[i] = hps[i].GetComponent<HealthPack>();
-					packs[i].posX = (int)((packs[i].transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
-					packs[i].posZ = (int)((packs[i].transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
+					packs[i].posX = (int)((packs[i].transform.position.x - floor.GetComponent<Collider>().bounds.min.x) / SpaceState.Editor.tileSize.x);
+					packs[i].posZ = (int)((packs[i].transform.position.z - floor.GetComponent<Collider>().bounds.min.z) / SpaceState.Editor.tileSize.y);
 				}
 
 				// Update the parameters on the RRT class
-				rrt.min = floor.collider.bounds.min;
+				rrt.min = floor.GetComponent<Collider>().bounds.min;
 				rrt.tileSizeX = SpaceState.Editor.tileSize.x;
 				rrt.tileSizeZ = SpaceState.Editor.tileSize.y;
 				rrt.enemies = SpaceState.Editor.enemies;
@@ -475,7 +475,7 @@ namespace EditorArea {
 				//Analyzer.ComputePathsLengthValues (paths);
 				//Analyzer.ComputePathsVelocityValues (paths);
 				//Analyzer.ComputePathsLoSValues (paths, SpaceState.Editor.enemies, floor.collider.bounds.min, SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y, original, drawer.seenNeverSeen, drawer.seenNeverSeenMax);
-				Analyzer.ComputePathsDangerValues (paths, SpaceState.Editor.enemies, floor.collider.bounds.min, SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y, original, drawer.seenNeverSeen, drawer.seenNeverSeenMax);
+				Analyzer.ComputePathsDangerValues (paths, SpaceState.Editor.enemies, floor.GetComponent<Collider>().bounds.min, SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y, original, drawer.seenNeverSeen, drawer.seenNeverSeenMax);
 				//Analyzer.ComputeCrazyness (paths, original, Mathf.FloorToInt (crazySeconds / stepSize));
 				//Analyzer.ComputePathsVelocityValues (paths);
 				
@@ -661,9 +661,9 @@ namespace EditorArea {
 							player.transform.position.Set (p.Key.points [0].x, 0f, p.Key.points [0].y);
 							player.transform.parent = playerNode.transform;
 							players.Add (p.Key, player);
-							Material m = new Material (player.renderer.sharedMaterial);
+							Material m = new Material (player.GetComponent<Renderer>().sharedMaterial);
 							m.color = p.Key.color;
-							player.renderer.material = m;
+							player.GetComponent<Renderer>().material = m;
 							player.hideFlags = HideFlags.HideAndDontSave;
 						} else {
 							players [p.Key].SetActive (true);
@@ -920,12 +920,12 @@ namespace EditorArea {
 						
 					Debug.Log ("Gridsize attemps " + gridsize + " Memory: " + GC.GetTotalMemory (true) + " Date: " + System.DateTime.Now.ToString ());
 								
-					fullMap = mapper.PrecomputeMaps (SpaceState.Editor, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridsize, timesamples, stepSize);
+					fullMap = mapper.PrecomputeMaps (SpaceState.Editor, floor.GetComponent<Collider>().bounds.min, floor.GetComponent<Collider>().bounds.max, gridSize, gridsize, timesamples, stepSize);
 								
-					startX = (int)((start.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
-					startY = (int)((start.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
-					endX = (int)((end.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
-					endY = (int)((end.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
+					startX = (int)((start.transform.position.x - floor.GetComponent<Collider>().bounds.min.x) / SpaceState.Editor.tileSize.x);
+					startY = (int)((start.transform.position.z - floor.GetComponent<Collider>().bounds.min.z) / SpaceState.Editor.tileSize.y);
+					endX = (int)((end.transform.position.x - floor.GetComponent<Collider>().bounds.min.x) / SpaceState.Editor.tileSize.x);
+					endY = (int)((end.transform.position.z - floor.GetComponent<Collider>().bounds.min.z) / SpaceState.Editor.tileSize.y);
 	
 					ResultBatch job = new ResultBatch ();
 					job.gridSize = gridsize;
@@ -989,12 +989,12 @@ namespace EditorArea {
 						
 					Debug.Log ("Timesamples attemps " + timesamples + " Memory: " + GC.GetTotalMemory (true) + " Date: " + System.DateTime.Now.ToString ());
 						
-					fullMap = mapper.PrecomputeMaps (SpaceState.Editor, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timesamples, stepSize);
+					fullMap = mapper.PrecomputeMaps (SpaceState.Editor, floor.GetComponent<Collider>().bounds.min, floor.GetComponent<Collider>().bounds.max, gridSize, gridSize, timesamples, stepSize);
 						
-					startX = (int)((start.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
-					startY = (int)((start.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
-					endX = (int)((end.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
-					endY = (int)((end.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
+					startX = (int)((start.transform.position.x - floor.GetComponent<Collider>().bounds.min.x) / SpaceState.Editor.tileSize.x);
+					startY = (int)((start.transform.position.z - floor.GetComponent<Collider>().bounds.min.z) / SpaceState.Editor.tileSize.y);
+					endX = (int)((end.transform.position.x - floor.GetComponent<Collider>().bounds.min.x) / SpaceState.Editor.tileSize.x);
+					endY = (int)((end.transform.position.z - floor.GetComponent<Collider>().bounds.min.z) / SpaceState.Editor.tileSize.y);
 						
 					ResultBatch job = new ResultBatch ();
 					job.gridSize = gridsize;
@@ -1051,12 +1051,12 @@ namespace EditorArea {
 				gridsize = 60;
 				timesamples = 1200;
 	
-				fullMap = mapper.PrecomputeMaps (SpaceState.Editor, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timesamples, stepSize);
+				fullMap = mapper.PrecomputeMaps (SpaceState.Editor, floor.GetComponent<Collider>().bounds.min, floor.GetComponent<Collider>().bounds.max, gridSize, gridSize, timesamples, stepSize);
 					
-				startX = (int)((start.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
-				startY = (int)((start.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
-				endX = (int)((end.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Editor.tileSize.x);
-				endY = (int)((end.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Editor.tileSize.y);
+				startX = (int)((start.transform.position.x - floor.GetComponent<Collider>().bounds.min.x) / SpaceState.Editor.tileSize.x);
+				startY = (int)((start.transform.position.z - floor.GetComponent<Collider>().bounds.min.z) / SpaceState.Editor.tileSize.y);
+				endX = (int)((end.transform.position.x - floor.GetComponent<Collider>().bounds.min.x) / SpaceState.Editor.tileSize.x);
+				endY = (int)((end.transform.position.z - floor.GetComponent<Collider>().bounds.min.z) / SpaceState.Editor.tileSize.y);
 					
 				for (rrtattemps = 5000; rrtattemps <= 81000; rrtattemps += 3000) {
 						
@@ -1169,8 +1169,8 @@ namespace EditorArea {
 						
 						pos.x *= SpaceState.Editor.tileSize.x;
 						pos.z *= SpaceState.Editor.tileSize.y;
-						pos.x += floor.collider.bounds.min.x;
-						pos.z += floor.collider.bounds.min.z;
+						pos.x += floor.GetComponent<Collider>().bounds.min.x;
+						pos.z += floor.GetComponent<Collider>().bounds.min.z;
 						pos.y = 0f;
 
 						each.Value.transform.position = pos;

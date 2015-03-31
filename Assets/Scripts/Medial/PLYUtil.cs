@@ -39,8 +39,7 @@ namespace Medial{
 		/// </summary>
 		/// <param name="layers">Layers.</param>
 		/// <param name="polygons">Polygons.</param>
-		public static List<VertTria> assignPLY(List<List<Vector3>> layers, List<List<int>> polygons, List<int[]>[]covers,
-       		List<int> mappingOriginalIndexToNewIndexOfPolygons){
+		public static List<VertTria> assignPLY(List<List<Vector3>> layers, List<List<int>> polygons, List<int[]>[]covers){
 	
 			//a List of vertices for each polygon, so that we can draw different meshes for different polygons
 			//the first list however is the whole set of all the vertices in the given object, used to find medial skeleton
@@ -86,7 +85,6 @@ namespace Medial{
 							((i%n)+nn*(1+ilayer)+vertices_yet),
 							(((i+1)%n)+nn*ilayer+vertices_yet),(((i+1)%n)+nn*(1+ilayer)+vertices_yet)
 						});
-						
 					}
 					for(int pi=0; pi<n;pi++)
 					{
@@ -116,25 +114,25 @@ namespace Medial{
 					// 8
 					//see paper
 					if(i==1){
-						ply_triangles[0].AddRange(new List<int>{mappingOriginalIndexToNewIndexOfPolygons[coverTrianglesIndex[0]]+vertices_lastlayer
-							,mappingOriginalIndexToNewIndexOfPolygons[coverTrianglesIndex[1]]+vertices_lastlayer
-							,mappingOriginalIndexToNewIndexOfPolygons[coverTrianglesIndex[2]]+vertices_lastlayer});
+						ply_triangles[0].AddRange(new List<int>{coverTrianglesIndex[0]+vertices_lastlayer
+							,coverTrianglesIndex[1]+vertices_lastlayer
+							,coverTrianglesIndex[2]+vertices_lastlayer});
 						
-						ply_triangles[polygons.Count+1+i].AddRange(new List<int>{mappingOriginalIndexToNewIndexOfPolygons[coverTrianglesIndex[0]]
-							,mappingOriginalIndexToNewIndexOfPolygons[coverTrianglesIndex[1]]
-							,mappingOriginalIndexToNewIndexOfPolygons[coverTrianglesIndex[2]]});
+						ply_triangles[polygons.Count+1+i].AddRange(new List<int>{coverTrianglesIndex[0]
+							,coverTrianglesIndex[1]
+							,coverTrianglesIndex[2]});
 						
 						
 					}
 					if(i==0){
 						
-						ply_triangles[0].AddRange(new List<int>{mappingOriginalIndexToNewIndexOfPolygons[coverTrianglesIndex[0]]
-							,mappingOriginalIndexToNewIndexOfPolygons[coverTrianglesIndex[1]]
-							, mappingOriginalIndexToNewIndexOfPolygons[coverTrianglesIndex[2]]});
+						ply_triangles[0].AddRange(new List<int>{coverTrianglesIndex[0]
+							,coverTrianglesIndex[1]
+							, coverTrianglesIndex[2]});
 						
-						ply_triangles[polygons.Count+1+i].AddRange(new List<int>{mappingOriginalIndexToNewIndexOfPolygons[coverTrianglesIndex[0]]
-							,mappingOriginalIndexToNewIndexOfPolygons[coverTrianglesIndex[1]]
-							,mappingOriginalIndexToNewIndexOfPolygons[coverTrianglesIndex[2]]});
+						ply_triangles[polygons.Count+1+i].AddRange(new List<int>{coverTrianglesIndex[0]
+							,coverTrianglesIndex[1]
+							,coverTrianglesIndex[2]});
 						
 					}
 					

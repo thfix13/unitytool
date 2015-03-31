@@ -2,6 +2,18 @@
 using System.Collections;
 using UnityEditor;
 	namespace Medial{
+//	[CustomEditor(typeof(CreateLayeredMesh))]
+	public class AlphaNumericSort : BaseHierarchySort
+	{
+		public override int Compare(GameObject lhs, GameObject rhs)
+		{
+			if (lhs == rhs) return 0;
+			if (lhs == null) return -1;
+			if (rhs == null) return 1;
+			
+			return EditorUtility.NaturalCompare(lhs.name, rhs.name);
+		}
+	}
 	[CustomEditor(typeof(CreateLayeredMesh))]
 	public class  MedialEditor: Editor {
 		int sg=-1, sgnew;
@@ -46,16 +58,26 @@ using UnityEditor;
 				obj=g.GetComponent<Moving_guard_arena>();
 			}
 
-			if(GUILayout.Button("Get Medial Skeleton",GUILayout.Width(100)))
+			if(GUILayout.Button("Get Medial Skeleton+Create Graph",GUILayout.Width(150)))
 			{
 				
 				obj.buildMedial();
 			}
-			if(GUILayout.Button("show edges",GUILayout.Width(100)))
+			GUILayout.BeginHorizontal("box");
+//			if(GUILayout.Button("Create graph",GUILayout.Width(50)))
+//			{
+//				obj.Addextraedges();
+//			}
+			if(GUILayout.Button("Remove Vs",GUILayout.Width(50)))
 			{
-				
+				obj.RemoveVs();
+			}
+			if(GUILayout.Button("Add edges",GUILayout.Width(50)))
+			{
 				obj.Addextraedges();
 			}
+
+			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal("box");
 			if(GUILayout.Button("Project",GUILayout.Width(50)))

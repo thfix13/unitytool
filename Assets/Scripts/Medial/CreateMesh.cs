@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 public class CreateMesh : MonoBehaviour {
 	char[] delimiterChars = { ' ', '\t' };
-	bool cond=true;
+
 	public string file_prefix="cube";
 	string medial_output;
 	GameObject gameobj2;
@@ -43,7 +43,7 @@ public class CreateMesh : MonoBehaviour {
 
 		GameObject gameobj = GameObject.Find ("Box");
 		buildObject (multi_triangle_input_file,gameobj);
-		SetAlpha(gameobj.renderer.material,0.99f);
+		SetAlpha(gameobj.GetComponent<Renderer>().material,0.99f);
 		
 		gameobj2 = GameObject.Find ("Medial");
 		buildObject (medial_output,gameobj2);
@@ -63,15 +63,12 @@ public class CreateMesh : MonoBehaviour {
 		color.a = value;
 		material.color = color;
 	}
-
-	int n=0;
-	List<Vector3> ply_vertices= new List<Vector3>();
-	List<string> ply_triangles= new List<string>();
+	
 
 	void writePLY(List<Vector3> vertices_orig, List<Vector3>vertices_final, List<List<int>> polygons){
 
 		foreach(var polygon in polygons){
-			int i=0,j=0, n=polygon.Count;
+			int i=0, n=polygon.Count;
 			//ply_triangles.Add("3 "+);
 			String s= "3 "+i+" "+(i+1)%n+" "+(i%n)+n;
 			String t= "3 "+(i%n)+n+" "+(i+1)%n+" "+(i%n)+1+n;
@@ -154,7 +151,6 @@ public class CreateMesh : MonoBehaviour {
 			newTriangles.Add(newTriangles[ntriangles*3/2-i-1]);
 		}
 
-		int k = 0;
 		mesh.vertices = newVertices.ToArray();
 
 		List<Vector3> l = Enumerable.Repeat (Vector3.up, nvertices/2).ToList();
@@ -250,7 +246,7 @@ public class CreateMesh : MonoBehaviour {
 	}
 
 	List<Vector3> subdivide(Vector3 a, Vector3 b, Vector3 c, int level){
-		List <Vector3> l1,l2,l3,l4,r1,r2,r3;
+		List <Vector3> l1,l2,l3,l4;
 		if(level >1){
 			Vector3 d= (a+b)/2;
 			Vector3 e= (b+c)/2;

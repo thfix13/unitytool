@@ -64,7 +64,7 @@ namespace Medial{
 				go.name="Box"+goi;
 				go.transform.parent=map;
 				buildplyObject (go,vt[goi].getVertices(),vt[goi].getTriangles());
-				SetAlpha(go.renderer.material,0.9f);
+				SetAlpha(go.GetComponent<Renderer>().material,0.9f);
 			}
 		}
 		public void BuildMedial()
@@ -76,7 +76,7 @@ namespace Medial{
 			
 			gameobj2 = GameObject.Find ("Medial");
 			buildObject (medial_output,gameobj2);
-			SetAlpha(gameobj2.renderer.material,0.6f);
+			SetAlpha(gameobj2.GetComponent<Renderer>().material,0.6f);
 			
 			
 			//cam = GameObject.FindGameObjectWithTag("Cam").transform;
