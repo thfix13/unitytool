@@ -28,7 +28,8 @@ public class Geometry
 		}
 	}
 
-	//Checks collision with geometry unless the collision point is an vertex of the line or the geometry
+	//A non-exhaustive test to make coding easier elsewhere
+	//Checks collision with geometry unless the collision point is a vertex of the line or the geometry
 	public bool LineCollision(Line Lparam){//Called by getClosestLine
 		if( this.PointInside( Lparam.MidPoint() ) )
 		   return true;
@@ -39,59 +40,26 @@ public class Geometry
 		return false;
 	}
 
-	//Checks collision with geometry unless the collision point is a shared vertex of line and the geometry
-	public bool LineCollisionEndPoint(Line Lparam){//Called from outside
-		if( this.PointInside( Lparam.MidPoint() ) )
-			return true;
-		foreach(Line l1 in edges){
-			if( Lparam.LineIntersectMuntacEndPt(l1) == 1 )
-				return true;
-		}
-		return false; 
-	}
-
-	//TODO: Switch to lineintmuntac
+	//NOTE: ONLY used after lines have been processesd by GeometryMerge i.e. throughly segmented
+	//This means we deal with lines where points can't be both explicity inside and outside of the
+	//geometry.
+	//We only need to check if the midpoint is strictly inside
 	public bool LineInside(Line l){//Called by GeometryMerge, GeomtryMergeInner and BoundGeometry
-		//Test if one of my line
-		//This is not the best version should check is colinear instead!
-		foreach(Line myLine in edges){
-			if( myLine.Equals( l ) )
-				return false;
-			if( myLine.POL ( l.vertex[0] ) && myLine.POL( l.vertex[1] ) )
-				return false;
-		}
-		//Now we check count the intersection
-		Vector3 mid = l.MidPoint(); 
 		return PointInside (l.MidPoint ());
 	}
 
     public bool LineInsideDebug(Line l){//Called by GeometryMerge, GeomtryMergeInner and BoundGeometry
-		//Test if one of my line
-		//This is not the best version should check is colinear instead!
-		foreach(Line myLine in edges){
-			if( myLine.Equals( l ) )
-				return false;
-			if( myLine.POL ( l.vertex[0] ) && myLine.POL( l.vertex[1] ) )
-				return false;
-		}
-		Debug.Log ("passed eq");
-		//Now we check count the intersection
-		Vector3 mid = l.MidPoint(); 
 		return PointInsideDebug (l.MidPoint ());
 	}
 
-	//TODO: Fix for lines colinear
-	//Finds out if a point lies inside a polygon.
-	//BUG: Returns false even if it's on the edge.
-	//SOLN: Change LineIntersectMuntacEndPt to return -1 when there's an intersection at shared endpoints
-	//instead of 0. And change condition here to only accept 0
-	//Note don't know if this should be treated as a bug as a lot of other logic now
-	//depends on assuming PointInside will return false when a point is on the edge
+	//Finds out if a point lies strictly inside a polygon.
+	//The colinear case is automatically dealt with. See manual.
 	public bool PointInside( Vector3 pt ){//Called by LineInside, GeometryInside and LineCollision
 		Line lray = new Line(pt, new Vector3(-100, 1f, -100)); 
 		int count = 0; 
 		foreach(Line myLine in edges){
-			if( myLine.LineIntersectMuntac(lray) > 0 )
+			//EndPt because ray might pass through corners
+			if( myLine.LineIntersectMuntacEndPt(lray) > 0 )
 				count++;
 			//Check if the intersection point is on the polygon edge
 			if( myLine.PointOnLine( pt ) && myLine.PointOnLineB( pt ) )
@@ -105,9 +73,8 @@ public class Geometry
 		int count = 0; 
 		foreach(Line myLine in edges){
 			if( myLine.name.Equals("Line7") ){
-				Debug.Log("PIDbg : " + myLine.LineIntersectMuntacDebug(lray));
+				Debug.Log("PIDbg : " + myLine.LineIntersectMuntac(lray));
 			}
-			//if( myLine.LineIntersectMuntac(lray) == 1 ){
 			if( myLine.LineIntersectMuntac(lray) > 0 ){
 				count++;
 				//myLine.DrawVector(GameObject.Find("vpA"));
@@ -131,11 +98,46 @@ public class Geometry
 		Line lray = new Line(pt, new Vector3(-100, 1f, -100)); 
 		int count = 0; 
 		foreach(Line myLine in edges){
-			if( myLine.LineIntersectMuntac(lray) > 0 )
+			//EndPt because ray might pass through corners
+			if( myLine.LineIntersectMuntacEndPt(lray) > 0 )
 				count++;
+			//Check if the intersection point is on the polygon edge
 			if( myLine.PointOnLine( pt ) && myLine.PointOnLineB( pt ) )
 				return false;
 		}
+		return count % 2 == 0;
+	}
+
+	public bool PointOutsideDebug( Vector3 pt ){//Called by LineInside, GeometryInside and LineCollision
+		Line lray = new Line(pt, new Vector3(-100, 1f, -100)); 
+		lray.DrawVector (GameObject.Find ("temp"), Color.blue);
+		int count = 0; 
+		foreach(Line myLine in edges){
+			//EndPt because ray might pass through corners
+			if( myLine.LineIntersectMuntacEndPt(lray) > 0 ){
+				count++;
+//				if( myLine.name.Equals("10") ){
+//					myLine.LineIntersectMuntacEndPtDebug(lray);
+				//if( count == 3){
+				//	myLine.DrawVector(GameObject.Find("temp"), Color.magenta);
+					Debug.Log( myLine.LineIntersectMuntacEndPtDebug(lray));
+					Debug.Log( myLine.LineIntersectMuntacGM(lray));
+					Debug.Log( VectorApprox( myLine.GetIntersectionPoint(lray), pt ) );
+					//Debug.Log( pt.z - myLine.GetIntersectionPoint(lray).z);
+//					Debug.Log(myLine.PointOnLine( pt ) + " " + myLine.PointOnLineB( pt ));
+//					Vector3 a = myLine.vertex [0];
+//					Vector3 b = myLine.vertex [1];
+//					Vector3 c = pt;
+//					Debug.Log( ((b.x - a.x)*(pt.z - a.z) - (b.z - a.z)*(c.x - a.x)) );
+//				}
+//					Debug.Log("GM" + myLine.LineIntersectMuntacGM(lray) );
+//				}
+			}
+			//Check if the intersection point is on the polygon edge
+			if( myLine.PointOnLine( pt ) && myLine.PointOnLineB( pt ) )
+				return false;
+		}
+		Debug.Log ("DBG: " + count);
 		return count % 2 == 0;
 	}
 
@@ -430,6 +432,7 @@ public class Geometry
 		}
 	}
 
+	//TODO: Redo with EPS
 	//Figures out the boundary of the geometry
 	public void BoundGeometry(Vector3[] boundary){//Called from outside
 		List<Line> removeLines = new List<Line> ();
@@ -449,27 +452,26 @@ public class Geometry
 
 
 	//TODO: Check near end of function
-	public Geometry GeometryMergeCamera( Geometry G2, int xid ){//Called from outside
-
-		if (GeometryInsideExt (G2))
-			return this;
-		else if (G2.GeometryInsideExt (this))
-			return G2;
+	public Geometry GeometryMerge( Geometry G2, int xid ){//Called from outside
+		//1. Check if geometries are fully inside each other
+		if (GeometryInside (G2, false))	return this;
+		else if (G2.GeometryInside (this, false)) return G2;
 
 		Geometry tempGeometry = new Geometry ();
 		//Two Geometry objects - G1 and G2
 		Geometry G1 = this;
-		//Create new called G3 which starts as an union of G1 and G2
+
+		//2. Create new called G3 which starts as an union of G1 and G2
 		Geometry G3 = new Geometry ();
 		foreach (Line l in G1.edges){
 			G3.edges.Add(l);
 		}
 		foreach (Line l in G2.edges){
-			G3.edges.Add(l);		
+			G3.edges.Add(l);
 		}
 
 		int vnt = 0;
-		//Check for intersection points among lines in G3
+		//3. Check for intersection points among lines in G3
 		bool once = false;
 		int ccnt = 0;
 		for (int i = 0; i < G3.edges.Count; i++) {
@@ -479,9 +481,9 @@ public class Geometry
 				bool dbg = false;
 				Line LA = G3.edges[i];
 				Line LB = G3.edges[j];
-				//int caseType = LA.LineIntersectMuntacGM(LB);
-				int caseType = LA.LineIntersectMuntacDebug(LB);
-				if( caseType == 1 ){//Regular intersections
+				int caseType = LA.LineIntersectMuntacGM(LB);//Endpt but not shared endpt intersection.Sorted lines.
+				//3A. Regular intersections
+				if( caseType == 1 ){
 					Vector3 pt = LA.GetIntersectionPoint( LB );
 					//TODO:
 //					if( LA.isEndPoint( pt ) || LB.isEndPoint(pt) )
@@ -496,9 +498,10 @@ public class Geometry
 					i--;
 					break;
 				}
+				//3B. Colinear and overlapping
 				else if( caseType == 2 ){
-					//Will catch colinear points that are also overlapping only at endpoints
-					//Get all unique points, sort, form line between adjacent points
+					//Will additionally catch colinear points that are also overlapping only at endpoints
+					//Get all unique points, sort, form line between adjacent points i.e. segment everything
 					//If lines are same as LA and LB ignore, otherwise add them then remove LA, LB
 					List<Vector3> uniquePts = new List<Vector3>();
 					foreach( Vector3 v in LA.vertex ) uniquePts.Add(v);
@@ -519,7 +522,7 @@ public class Geometry
 					List<Line> linesToAdd = new List<Line>();
 					for( int k = 0; k < uniquePts.Count - 1; k++ ){
 						linesToAdd.Add( new Line(uniquePts[k], uniquePts[k+1]) );
-//TODO:
+						//TODO:
 //						if( uniquePts[k].Equals(uniquePts[k+1]) )
 //							Debug.Log("SAMENESS B");
 					}
@@ -589,6 +592,7 @@ public class Geometry
 		return toReturn;
 	}
 
+	//TODO: Make more sophisticated. Check against GMInnerCam
 	//Used only for merging polygons with the map boundary
 	public Geometry GeometryMergeInner( Geometry G2 ){//Called from outside
 		Geometry tempGeometry = new Geometry ();
@@ -639,20 +643,16 @@ public class Geometry
 	}
 
 	//Check if two geometries intersect
-	//TODO:Update to a more sophisticated function
 	public bool GeometryIntersect( Geometry G2 ){//Called from outside
-		if (GeometryInsideExt (G2))
-			return true;
-		else if (G2.GeometryInsideExt (this))
-			return true;
-
 		foreach( Line La in this.edges ){
 			foreach( Line Lb in G2.edges ){
 				if( La.LineIntersectMuntac( Lb ) > 0 )
 					return true;
 			}
 		}
-		return false;
+		if (GeometryInside (G2, true)) return true;
+		else if (G2.GeometryInside (this, true)) return true;
+		else return false;
 	}
 	
 //	public bool GeometryInside( Geometry G2 ){//Called from outside
@@ -665,47 +665,20 @@ public class Geometry
 //		return true;
 //	}
 
-	public bool GeometryInsideExt( Geometry G2 ){
+	public bool GeometryInside( Geometry G2, bool LineIntersectionsChecked ){
 		List<Vector3> allvert = GetVertex ();
 		List<Vector3> interpts = GetVertex ();
-		foreach (Line L in edges) {
-			foreach(Line L2 in G2.edges){
-				if( L.LineIntersectMuntac( L2 ) == 1 )
-					return false;
-				if( L.LineIntersectMuntacEndPt( L2 ) == 1 ){
-					//more checks here to avoid instance
-					//where intersection point is corner of
-					//potentially enclosing polygon
+		if( !LineIntersectionsChecked ){
+			foreach (Line L in edges) {
+				foreach(Line L2 in G2.edges){
+					if( L.LineIntersectMuntac( L2 ) == 1 )
+						return false;
 				}
 			}
 		}
-		foreach (Line L in G2.edges) {
-			if( !( PointInside(L.vertex[0]) || allvert.Contains(L.vertex[0]) ) ){
-				//TODO: more sophisticated check here
-				bool found = false;
-				foreach( Line LB in edges ){
-					if( floatCompare( new Line( LB.vertex[0], L.vertex[0] ).Magnitude() + new Line(LB.vertex[1], L.vertex[0]).Magnitude(),
-					                 LB.Magnitude() ) ){
-						found = true;
-						break;
-					}
-				}
-				if( !found )
-					return false;
-			}
-			if( !( PointInside(L.vertex[1]) || allvert.Contains(L.vertex[1]) ) ){
-				bool found = false;
-				foreach( Line LB in edges ){
-					if( floatCompare( new Line( LB.vertex[0], L.vertex[1] ).Magnitude() + new Line(LB.vertex[1], L.vertex[1]).Magnitude(),
-					                 LB.Magnitude() ) ){
-						found = true;
-						break;
-					}
-				}
-				if( !found )
-					return false;
-			}
-		}
+		List<Vector3> G2AllVert = G2.GetVertex ();
+		foreach (Vector3 v in G2AllVert)
+			if( this.PointOutside( v ) ) return false;
 		return true;
 	}
 
