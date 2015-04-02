@@ -859,7 +859,8 @@ public class Geometry
 				angle = (float)Math.PI + (float)Math.PI - angle;
 			if( floatCompare( AC.Magnitude() + BC.Magnitude(), AB.Magnitude() ) )
 			    angle = 2 * (float)Math.PI;
-			angList.Add(new angclass(v, (float)Math.Round( angle, 4 ), AC.Magnitude()));
+			//angList.Add(new angclass(v, (float)Math.Round( angle, 4 ), AC.Magnitude()));
+			angList.Add(new angclass(v, (float)Math.Round( angle, 3 ), AC.Magnitude()));
 			//angList.Add(new angclass(v, angle, AC.Magnitude()));
 		}
 
