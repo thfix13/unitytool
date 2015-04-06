@@ -38,6 +38,13 @@ namespace Medial{
 				generate_unidirectional_mov_gaurd();
 //				generate_movrot_gaurd();
 				break;
+
+				case 4: polygons= new List<List<int>>{new List<int>{0,1,2,3},new List<int>{4,5,6,7}
+				,new List<int>{8,9,10,11},new List<int>{12,13,14,15}, new List<int>{16,17,18,19}, new List<int>{20,21,22},
+				new List<int>{23,24,25}};
+				nlayers=80;
+				generate_arena_mgs();
+				break;
 			}
 		}
 		public List <List<Vector3>> getLayers(){
@@ -161,7 +168,44 @@ namespace Medial{
 			}
 			
 		}
-		
+
+		public void generate_arena_mgs(){
+			Vector3 v00= new Vector3(-40f,0,-40f),
+			v01= new Vector3(40f,0f,-40f),
+			v02=new Vector3(40f,0f,40f), 
+			v03= new Vector3(-40f,0f,40f),
+			v04= new Vector3(-34f,0f,-34f),
+			v05=new Vector3(-34f,0f,-3f), 
+			v06=new Vector3(-3f,0f,-3f),
+			v07=new Vector3(-3f,0f,-34f), 
+			v08=new Vector3(3f,0f,-34f),
+			v09=new Vector3(3f,0f,-3f),
+			v10=new Vector3(34f,0f,-3f),
+			v11=new Vector3(34f,0f,-34f),
+			v12=new Vector3(-34f,0f,3f),
+			v13=new Vector3(-34f,0f,34f),
+			v14=new Vector3(-3f,0f,34f),
+			v15=new Vector3(-3f,0f,3f),
+			v16=new Vector3(3f,0f,3f),
+			v17=new Vector3(3f,0f,34f),
+			v18=new Vector3(34f,0f,34f),
+			v19=new Vector3(34f,0f,3f);
+//			v20=new Vector3(37f,0f,-34f),
+//			v21=new Vector3(36f,0f,-32f),
+//			v22=new Vector3(38f,0f,-32f),
+//			v23=new Vector3(34f,0,0f),
+//			v24=new Vector3(32f,0,-1f),
+//			v25=new Vector3(32f,0,1f); 
+
+			for(int ilayer=0;ilayer<nlayers;ilayer++){
+				v01.y=v02.y=v03.y=v04.y=v05.y=v06.y=v07.y=v08.y=v09.y=v10.y=v11.y=v12.y=v13.y=v14.y=v15.y=v16.y
+					=v17.y=v18.y=v19.y=1f*ilayer/2;
+				layers.Add(new List<Vector3>{v01,v02,v03,v04,v05,v06,v07,v08,v09,v10,v11,v12,v13,v14,v15,v16
+				,v17,v18,v19});
+			}
+
+		}
+
 		public void generate_arena(){
 			Vector3 one= new Vector3(-4f,0f,-4f),
 			two=new Vector3(4f,0f,-4f), 
@@ -251,6 +295,14 @@ namespace Medial{
 				f.y=s.y=sv.y= 1f*ilayer/2f;
 				layers[ilayer].Add(f);layers[ilayer].Add(s);layers[ilayer].Add(sv);
 			}
+		}
+		//internal approval process at ETS. things aree going fine.
+		//i would apprecia ur time to jump on a quick call regarding the start date
+		//
+		public void generate_L_gaurd_MGS(){
+			Vector3 _1i=new Vector3(-3f,0,4.5f), _2i=new Vector3(-3f,0,0.5f), _3i= new Vector3(-5.5f,0,1.5f);
+			Vector3 _1f=new Vector3(5.5f,0,4.5f), _2f=new Vector3(5.5f,0,0.5f), _3f= new Vector3(3f,0,1.5f);
+
 		}
 		public void generate_rotating_gaurd(){
 			Vector3 f=new Vector3(-2f,0,-1f), s=new Vector3(-2f,0,3f), sv= new Vector3(2f,0,1f);
@@ -351,9 +403,5 @@ namespace Medial{
 
 		}*/
 
-	}
-	class Triangle{
-		int a,b,c;
-		Vector3 av,bv,cv;
 	}
 }

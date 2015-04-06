@@ -65,7 +65,7 @@ namespace Medial{
 			}
 			layMesh();
 		}
-
+		
 		//Duplicate vertices, and triangles in the other orientation, to overcome the 
 		//problem of disappearing of some triangles
 		void layMesh(){
@@ -111,6 +111,10 @@ namespace Medial{
 			mesh.normals = l.ToArray();
 		}
 
+
+		/// <summary>
+		/// Removes the top bottom. lowest and highest y range to be changed
+		/// </summary>
 		void removeTopBottom(){
 			List <Vector3> newVertices = new List<Vector3>(this.vertices.Count);
 			List <int> newTriangles= new List<int>(this.triangles.Count);
@@ -154,38 +158,239 @@ namespace Medial{
 				bc=Vector3.Distance(bv,cv);
 				ac=Vector3.Distance(av,cv);
 				if(bv.y- av.y >0){
-					graphObj.addDirectededge(a,b,ab);
-					graphObj.addUnDirectededge(a,b,ab);
+					graphObj.addEdge(a,b,ab);
 				}
 				else
 				{
-					graphObj.addDirectededge(b,a,ab);
-					graphObj.addUnDirectededge(b,a,ab);
+					graphObj.addEdge(b,a,ab);
 				}
 				if(bv.y- cv.y >0){
-					graphObj.addDirectededge(c,b,bc);
-					graphObj.addUnDirectededge(c,b,bc);
+					graphObj.addEdge(c,b,bc);
 				}
 				else
-				{	graphObj.addDirectededge(b,c,bc);
-					graphObj.addUnDirectededge(b,c,bc);
+				{	graphObj.addEdge(b,c,bc);
 				}
 				if(cv.y- av.y >0)
-				{	graphObj.addDirectededge(a,c,ac);
-					graphObj.addUnDirectededge(a,c,ac);
+				{	graphObj.addEdge(a,c,ac);
 				}
 				else
-				{	graphObj.addDirectededge(c,a,ac);
-					graphObj.addUnDirectededge(c,a,ac);
+				{	graphObj.addEdge(c,a,ac);
 				}
 			}
 		}
-		
+
+		//it updates the neighbours, and drawlines between them.
+		HashSet<int> updateGraph(HashSet<int> removedVerticesSmallSet, ref HashSet<int> notRemovedVertices_W_is0){
+			if(removedVerticesSmallSet==null ||removedVerticesSmallSet.Count<=0)
+				return new HashSet<int>();
+			HashSet<int> removedVertices_W_is0= new HashSet<int>();
+
+
+			foreach(var node in removedVerticesSmallSet){
+				///removedVertices_W_is0 had to be sent to check for containment 'containment check', as
+				///the nodes with W=0 can't be added to removedVerticesSmallSet (becoz of the loop outside, HasEt can't
+				/// be modified while it was iterated over.
+
+				removedVertices_W_is0.UnionWith(join_neighbours2(node,removedVerticesSmallSet, removedVertices_W_is0, 
+				                                                 ref notRemovedVertices_W_is0));
+			}
+
+			return removedVertices_W_is0;
+		}
+		//bayshore
+		//lincoln field --iris street-500
+		//93-50 min, 182-40min
+		HashSet<int> join_neighbours2(int v,HashSet<int>removedVerticesSmallSet, HashSet<int>removedVertices_W_is0, 
+		                              ref HashSet<int> notRemovedVertices_W_is0){
+
+			HashSet<edgenode> adjacentnodes= graphObj.unDirectedEdges[v];
+
+			foreach(var n1 in adjacentnodes){
+				foreach(var n2 in adjacentnodes){
+					if(vertices[n1.y].y>vertices[n2.y].y)
+						continue;
+
+					//containment check
+					if(n1.Equals(n2)|| removedVerticesSmallSet.Contains(n1.y)|| removedVerticesSmallSet.Contains(n2.y) ||
+					   removedVertices_W_is0.Contains(n1.y) || removedVertices_W_is0.Contains(n2.y))
+						continue;
+					//check if there isn't an edge already between n1 and n2
+					if(!graphObj.unDirectedEdges[n1.y].Contains(n2)){
+						float w=Vector3.Distance(vertices[n1.y],vertices[n2.y]);
+						//if w is 0 then no need to add edge. merge both of them, i.e.
+						//make all the nodes neighbour to n2 as neighbour of n1 
+						//and remove node n2. Also include n2 in removedVerticesSmallSet
+						//and return n2 to be added to removedVertices.
+						if(Mathf.Round(w*100)/100==0)
+						{
+							List<float[]> temp= new List<float[]>();
+							foreach (var n2_ in graphObj.unDirectedEdges[n2.y]) 
+							{
+								if(n2_==n1 || removedVerticesSmallSet.Contains(n2_.y)||removedVertices_W_is0.Contains(n2_.y)) 
+									continue;
+								bluelines.Add(n1.y+"+"+n2_.y);
+								temp.Add(new float[]{n1.y,n2_.y,n2_.weight});
+							}
+							foreach(var t in temp){
+								graphObj.addEdge((int)t[0],(int)t[1],t[2]);
+							}
+
+							//will leaD to problems in the loop outside as it will remove the node from the list of undirectedEdges
+							//graphObj.removeNode(n2.y);
+							removedVertices_W_is0.Add(n2.y);
+							notRemovedVertices_W_is0.Add(n1.y);
+							udl(Vtostring(vertices[n1.y])+" merged with \n"+Vtostring(vertices[n2.y]));
+
+						}
+						else{
+							redlines.Add(n1.y+"+"+n2.y);
+							graphObj.addEdge(n1.y,n2.y,w);
+						}
+					}
+				}
+			}
+			foreach(var n2_ in removedVertices_W_is0)
+				graphObj.removeNode(n2_,ref bluelines, ref redlines);
+			graphObj.removeNode(v,ref bluelines, ref redlines);
+			return removedVertices_W_is0;
+		}
+
 		/// <summary>
 		/// Removes corners from medial mesh.. corners that are V shaped or dual layered meshes, creating 
 		/// unneccessary complications in the medial mesh. They need to be removed.
 		/// </summary>
-		public void removeVs(){
+		public void removeVs_Random(){
+			redlines= new HashSet<string>();
+			bluelines= new HashSet<string>();
+			HashSet<edgenode> adjacentnodes;
+			HashSet<int>removedVertices= new HashSet<int>(), removedVerticesSmallSet= new HashSet<int>();
+			HashSet<int>vertexConsidered=new HashSet<int>();
+			List<int> verticesTobeConsidered= new List<int>();
+			bool breakflag=false, f=false;
+			int j;
+			for(int i=0; i<this.vertices.Count/3;i++){
+				if(verticesTobeConsidered.Count>0){
+					j=verticesTobeConsidered[0];
+					verticesTobeConsidered.RemoveAt(0);
+					i--;
+					if(vertexConsidered.Contains(j))
+						continue;
+				}
+				else
+				{
+					///keep this hashset to consider those nodes as postential V nodes cases, who were remnents of merging process
+					/// due to W=0
+					HashSet<int> notRemovedVertices_W_is0= new HashSet<int>();
+
+					if(removedVerticesSmallSet.Count>0){
+						//update the graph now, as no more neighbours can be detected as vertex to be removed
+						removedVertices.UnionWith(updateGraph(removedVerticesSmallSet, ref notRemovedVertices_W_is0));
+						removedVerticesSmallSet= new HashSet<int>();
+						verticesTobeConsidered.AddRange(notRemovedVertices_W_is0);
+						i--; continue;
+					}
+					else{
+						j= UnityEngine.Random.Range(0,this.vertices.Count-1);
+						if(vertexConsidered.Contains(j))
+							{i--;continue;}
+					}
+				}
+				
+				
+
+				vertexConsidered.Add(j);
+
+				var v=vertices[j];
+				
+				adjacentnodes= graphObj.unDirectedEdges[j];
+				
+				//check angles between two adjacent nodes. 
+				//if they are in same angle in y direction, but different in y plane...leave them.. they not forming a corner
+				
+				//if they are in same angle in y direction, and in ~ same angle in y plane... cut this node off.
+				
+				//break the loop from searching for other neighbours
+				breakflag=false;
+				
+				foreach(var neighbour1 in adjacentnodes){
+					foreach(var neighbour2 in adjacentnodes){
+						if(neighbour1.y>= neighbour2.y)
+							continue;
+						
+						if(graphObj.unDirectedEdges[neighbour1.y].Contains(neighbour2))
+							continue;
+						
+						var ay=angleY(vertices[neighbour1.y],vertices[neighbour2.y],v);
+						var ayp=angleYPlane(vertices[neighbour1.y],vertices[neighbour2.y],v);
+						if(ay==0 && ayp ==0)
+						{	continue;
+						}
+						if(ay<42 && ayp <7)
+						{	
+							breakflag=true;
+							//add neighbours to the verticesTobeConsidered
+							foreach(var temp in adjacentnodes)
+								verticesTobeConsidered.Add(temp.y);
+							
+							//Debug.DrawLine(vertices[neighbour1.y],vertices[neighbour2.y], Color.magenta,100000);
+							removedVertices.Add(j);
+							removedVerticesSmallSet.Add(j);
+							break;
+						}
+					}
+					if(breakflag)
+						break;
+				}
+			}
+			udl ("detected nodes");
+			
+			//remove only triangles containing removedVertices, otherwise indexes will change
+			//and everything will have to be refreshed
+			int l=this.triangles.Count;
+			int x,y,z;
+			for(int i=0;i < l;i+=3){
+				if(removedVertices.Contains(this.triangles[i]) ||removedVertices.Contains(this.triangles[i+1])
+				   ||removedVertices.Contains(this.triangles[i+2])){
+					this.triangles.RemoveAt(i+2);
+					this.triangles.RemoveAt(i+1);
+					this.triangles.RemoveAt(i);
+					l=this.triangles.Count;
+					i-=3;
+				}
+			}
+			
+			layMesh();
+
+			///Final touch 1
+			foreach(var rnode in removedVertices){
+				graphObj.removeNode(rnode,ref bluelines, ref redlines);
+
+			}
+			///Final touch 2: while drawing lines
+			foreach (var line in bluelines) 
+			{
+				var ns= line.Split('+');
+				if(removedVertices.Contains(int.Parse(ns[0])) ||removedVertices.Contains(int.Parse(ns[1]))){
+			    	graphObj.removeEdge(int.Parse(ns[0]),int.Parse(ns[1]));
+				}
+				else
+					Debug.DrawLine(vertices[int.Parse(ns[0]) ],vertices[int.Parse(ns[1])], Color.blue,100000);
+			}
+			foreach (var line in redlines) 
+			{
+				var ns= line.Split('+');
+				if(removedVertices.Contains(int.Parse(ns[0])) ||removedVertices.Contains(int.Parse(ns[1]))){
+					graphObj.removeEdge(int.Parse(ns[0]),int.Parse(ns[1]));
+				}
+				else
+					Debug.DrawLine(vertices[int.Parse(ns[0])],vertices[int.Parse(ns[1])], Color.red,100000);
+			}
+			
+			
+		}
+		private HashSet<string> bluelines;
+		private HashSet<string> redlines;
+		public void removeVs_Linear(){
 			HashSet<edgenode> adjacentnodes;
 			HashSet<int>removedVertices= new HashSet<int>();
 
@@ -256,7 +461,10 @@ namespace Medial{
 
 
 
-//			//TODO:links among neighbours of removed vertices to be made in the graph (drawline done)
+			///TODO:links among neighbours of removed vertices to be made in the graph (drawline done)
+			/// UPDATE: use removeVs_Random
+
+
 //			foreach(var vertex in removedVertices){
 //				join_neighbours(vertex,removedVertices);
 //			}
@@ -593,71 +801,7 @@ namespace Medial{
 			return e!=null && this.y==e.y;
 		}
 	}
-	class Graph{
-		public HashSet<edgenode> [] directedEdges;
-		public HashSet<edgenode> [] unDirectedEdges;
-//		int [] degree;
-		public int nvertices;
 
-		public Graph(int vertices){
-			nvertices=vertices;
-			//TODO:: need to change it to array of hashmaps, so that .contains works better
-			directedEdges= new HashSet<edgenode>[vertices];
-			unDirectedEdges= new HashSet<edgenode>[vertices];
-//			UnityEngine.Debug.Log(nvertices);
-//			degree= new int[nvertices];
-//			for(int i=0;i<nvertices;i++)
-//			{
-//				degree[i]=0;
-//			}
-		}
-		
-		public void addDirectededge(int from, int to, float w){
-			if(directedEdges[from]==null)
-				directedEdges[from]=new HashSet<edgenode>();
-			if(directedEdges[from].Contains(new edgenode(to,w))){
-				return;
-			}
-			directedEdges[from].Add(new edgenode(to,w));
-		}
-		public void addUnDirectededge(int from, int to, float w){
-			if(unDirectedEdges[from]==null)
-				unDirectedEdges[from]=new HashSet<edgenode>();
-			if(unDirectedEdges[to]==null)
-				unDirectedEdges[to]=new HashSet<edgenode>();
-			if(!unDirectedEdges[from].Contains(new edgenode(to,w))){
-				unDirectedEdges[from].Add(new edgenode(to,w));
-
-			}
-			if(!unDirectedEdges[to].Contains(new edgenode(from,w))){
-				unDirectedEdges[to].Add(new edgenode(from,w));
-				
-			}
-		}
-
-		/// <summary>
-		/// Warning: Very unsafe, as you don't know other triangles connecting v1-v2 still exist or not
-		/// </summary>
-		/// <param name="v1">V1.</param>
-		/// <param name="v2">V2.</param>
-		public void removeEdge(int v1 , int v2 ){
-			if(unDirectedEdges[v1]!=null && unDirectedEdges[v1].Contains(new edgenode(v2,0))){
-				unDirectedEdges[v1].Remove (new edgenode(v2,0));
-				
-			}
-			if(unDirectedEdges[v2]!=null && unDirectedEdges[v2].Contains(new edgenode(v1,0))){
-				unDirectedEdges[v2].Remove (new edgenode(v1,0));
-			}
-			if(directedEdges[v1]!=null && directedEdges[v1].Contains(new edgenode(v2,0))){
-				directedEdges[v1].Remove (new edgenode(v2,0));
-				
-			}
-			if(directedEdges[v2]!=null && directedEdges[v2].Contains(new edgenode(v1,0))){
-				directedEdges[v2].Remove (new edgenode(v1,0));
-			}
-
-		}
-	}
 	class element: PriorityQueueNode{
 		public int nodeId{get; private set;}
 		public element(int nodeId){

@@ -105,7 +105,7 @@ namespace Medial{
 		}
 
 		public void RemoveVs(){
-			medialMeshObj.removeVs();
+			medialMeshObj.removeVs_Random();
 		}
 
 
