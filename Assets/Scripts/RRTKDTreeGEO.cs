@@ -39,7 +39,7 @@ namespace Exploration {
 
 
 
-		public List<NodeGeo> ComputeGeo (float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, List<Geometry> obstacles, int attemps, float speed,  bool smooth = false) {
+		public List<NodeGeo> ComputeGeo (float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, float speed, Vector2 distractPos,  bool smooth = false) {
 			//Debug.Log ("COMPUTEGEO");
 
 			// Initialization
@@ -63,6 +63,8 @@ namespace Exploration {
 			
 			float tan = speed / 1.0f;
 			angle = 90 - Mathf.Atan (tan) * Mathf.Rad2Deg;
+
+
 			
 			// WHAT IS THIS??
 			/*
@@ -83,9 +85,29 @@ namespace Exploration {
 				
 				//Pick a random time
 				int rt = Random.Range (1,maxT);
+
 				//Then pick random x and y values
-				float rx = Random.Range (minX, maxX);
-				float ry = Random.Range (minY, maxY);
+				float rx;
+				float ry;
+
+				bool distractPick = false;
+
+				if(Random.Range (0, 100) > 50) {
+					rx = distractPos.x;
+					ry = distractPos.y;
+					distractPick = true;
+				}
+				else{
+					rx = Random.Range (minX, maxX);
+					ry = Random.Range (minY, maxY);
+				}
+
+
+
+
+
+
+
 				//int rx = p.x, ry = p.y;
 				nodeVisiting = GetNodeGeo (rt, rx, ry);
 				//if this node has already been visited continue
@@ -103,6 +125,8 @@ namespace Exploration {
 				if (nodeTheClosestTo.t > nodeVisiting.t){
 					continue;
 				}
+
+
 				
 				// Only add if we are going in ANGLE degrees or higher.As there is a fixed max speed
 				Vector3 p1 = nodeVisiting.GetVector3 ();
@@ -111,18 +135,28 @@ namespace Exploration {
 				if (Vector3.Angle (pd, new Vector3 (pd.x, 0f, pd.z)) < angle) {
 					continue;
 				}				
-				
+
+				if(nodeTheClosestTo.distractTime > 0){
+					nodeVisiting.distractTime = nodeTheClosestTo.distractTime;
+				}
+				else if(distractPick){
+					nodeVisiting.distractTime = nodeVisiting.t;
+				}
+
+
 				//Check for collision with obstacles
-				if(checkCollObs(p2.x, p2.z, p1.x, p1.z, obstacles)){
+				if(checkCollObs(p2.x, p2.z, p1.x, p1.z)){
 
 					continue;
 				}
 				
 				//Check for collision with guard line of sight
-				if(checkCollEs(p2.x, p2.z, (int)p2.y, p1.x, p1.z, (int)p1.y, enemies, obstacles, 1, depth)){
+				if(checkCollEs(p2.x, p2.z, (int)p2.y, p1.x, p1.z, (int)p1.y, enemies, 1, depth, nodeVisiting.distractTime)){
 					continue;
 				}
-				
+
+
+
 				
 				try {
 					tree.insert (nodeVisiting.GetArray (), nodeVisiting);
@@ -131,7 +165,10 @@ namespace Exploration {
 				
 				nodeVisiting.parent = nodeTheClosestTo;
 				nodeVisiting.visited = true;
-				
+
+
+
+
 				// Attempt to connect to the end node
 				if (Random.Range (0, 1000) > 0) {
 					p1 = nodeVisiting.GetVector3 ();
@@ -147,7 +184,7 @@ namespace Exploration {
 					NodeGeo endNode = GetNodeGeo ((int)pd.y, pd.x, pd.z);
 
 
-					if (!checkCollObs(p1.x, p1.z, p2.x, p2.z, obstacles) && !checkCollEs(p1.x, p1.z, (int)p1.y, pd.x, pd.z, (int)pd.y, enemies, obstacles, 1, depth)) {
+					if (!checkCollObs(p1.x, p1.z, p2.x, p2.z) && !checkCollEs(p1.x, p1.z, (int)p1.y, pd.x, pd.z, (int)pd.y, enemies, 1, depth, nodeVisiting.distractTime)) {
 						//Debug.Log ("Done3");
 						endNode.parent = nodeVisiting;
 						return ReturnPathGeo (endNode, smooth);
@@ -161,14 +198,18 @@ namespace Exploration {
 					
 				}
 			}
-			
+
+			//End RRT algo
+
 			return new List<NodeGeo> ();
 		}
 
 
 
+	
+
 		//Check for collision of a path with the obstacles, x, t, y
-		public bool checkCollObs(float startX, float startY, float endX, float endY, List<Geometry> obs){
+		public bool checkCollObs(float startX, float startY, float endX, float endY){
 			//Debug.Log ("checkCollObs");
 			Vector3 start = new Vector3(startX, 0, startY);
 			Vector3 end = new Vector3(endX, 0, endY);
@@ -190,19 +231,22 @@ namespace Exploration {
 		}
 
 		//Check for collision of a path with the enemies
-		public bool checkCollEs(float startX, float startY,int startT, float endX, float endY,  int endT, List<EnemyGeo> enems, List<Geometry> obs, int d, int depth){
+		public bool checkCollEs(float startX, float startY,int startT, float endX, float endY,  int endT, List<EnemyGeo> enems, int d, int depth, int distractTime){
 			//Debug.Log ("CheckCollEs");
 			if(enems == null){
-				Debug.Log ("no enems");
+				//Debug.Log ("no enems");
 				return false;
 			}
 
+
+
+
 			if(d == 1){
 				foreach(EnemyGeo e in enems){
-					if(checkCollE(e, startX, startT, startY, obs)){
+					if(checkCollE(e, startX, startT, startY, distractTime)){
 							return true;
 					}
-					if(checkCollE(e, endX, endT, endY, obs)){
+					if(checkCollE(e, endX, endT, endY, distractTime)){
 							return true;
 					}
 				}
@@ -216,25 +260,25 @@ namespace Exploration {
 						return false;
 					}
 					else{
-						if(checkCollEs(newX, newY, newT, endX, endY, endT, enems, obs, d+1, depth)){
+						if(checkCollEs(newX, newY, newT, endX, endY, endT, enems, d+1, depth, distractTime)){
 							return true;
 						}
 					}
 				}
 				else if( endT - newT <=interval){
-					if(checkCollEs(startX, startY, startT, newX, newY, newT, enems, obs, d+1, depth)){
+					if(checkCollEs(startX, startY, startT, newX, newY, newT, enems, d+1, depth, distractTime)){
 						return true;
 					}
 				}
 				else{
 					foreach(EnemyGeo e in enems){
-						if(checkCollE(e, newX, newT, newY, obs)){
+						if(checkCollE(e, newX, newT, newY, distractTime)){
 							return true;
 						}
-						if(checkCollEs(startX, startY, startT, newX, newY, newT, enems, obs, d+1, depth)){
+						if(checkCollEs(startX, startY, startT, newX, newY, newT, enems, d+1, depth, distractTime)){
 							return true;
 						}
-						if(checkCollEs(newX, newY, newT, endX, endY, endT, enems, obs, d+1, depth)){
+						if(checkCollEs(newX, newY, newT, endX, endY, endT, enems, d+1, depth, distractTime)){
 							return true;
 						}
 					}
@@ -268,30 +312,39 @@ namespace Exploration {
 		}
 		
 
-		public bool checkCollE(EnemyGeo e, float x, int t, float y, List<Geometry> obs){
-			Debug.Log ("CheckCollE");
-			Vector3 posE3 = e.getPosition (t);
+		public bool checkCollE(EnemyGeo e, float x, int t, float y, int distractTime){
+			//Debug.Log ("CheckCollE");
+			Vector3 posE3;
+			Vector3 forw;
+			if(distractTime > 0){
+				//Debug.Log ("distracted movement");
+				posE3 = e.getPositionDist(t, distractTime);
+				forw = e.getForwardDist(t, distractTime);
+			}
+			else{
+				posE3 = e.getPosition (t);
+				forw = e.getForward(t);
+			}
 			Vector2 posE = new Vector2(posE3.x, posE3.z);
 			Vector2 posP = new Vector2(x,y);
 			if(Vector2.Distance(posE, posP) > e.fovDistance){
-				Debug.Log ("Too Far Away: " + Vector2.Distance(posE, posP) + " t: " + t );
+				//Debug.Log ("Too Far Away: " + Vector2.Distance(posE, posP) + " t: " + t );
 				return false;
 			}
 			Vector2 toPlay = posP-posE;
-			Vector3 forw = e.getForward(t);
 			Vector2 look = new Vector2(forw.x, forw.z);
 
 			if(Vector2.Angle(toPlay, look) > e.fovAngle*0.5){
-				Debug.Log ("Angle Too Big: " + Vector2.Angle((posP-posE), e.getForward(t))+ " t: " + t);
+				//Debug.Log ("Angle Too Big: " + Vector2.Angle((posP-posE), e.getForward(t))+ " t: " + t);
 				//Debug.Log ("poP " + posP + " posE " + posE + " vec " + (posP-posE) + " forw " + e.getForward (t) + " angle "  + Vector2.Angle ((posP-posE), e.getForward (t)));
 				return false;
 			}
-			bool toReturn = checkCollObs(x, y, posE.x, posE.y, obs);
+			bool toReturn = checkCollObs(x, y, posE.x, posE.y);
 			if(toReturn){
-				Debug.Log ("Obstacle to enemy detected");
+				//Debug.Log ("Obstacle to enemy detected");
 			}
 			else{
-				Debug.Log ("Collision with enemy");
+				//Debug.Log ("Collision with enemy");
 			}
 			return !toReturn;
 		}

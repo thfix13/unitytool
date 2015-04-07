@@ -12,6 +12,7 @@ namespace Common {
 		public float x, y;
 		public int t;
 		public float playerhp;
+		public int distractTime = -1;
 		[XmlIgnore]
 		public Dictionary<Enemy, float> enemyhp;
 		[XmlIgnore]
@@ -53,16 +54,17 @@ namespace Common {
 			return new double[] {x, t, y};
 		}
 
+		//TODO: Add distract time to this
 		public Boolean equalTo (NodeGeo b) {
 			if (Mathf.Approximately(this.x,b.x) & Mathf.Approximately(this.y,b.y) & this.t == b.t)
 				return true;
 			return false; 
 		}
-
+		//TODO: Add distract time to this
 		public override string ToString () {
-			return t + "-" + x + "-" + y;
+			return t + "-" + x + "-" + y + "-" + distractTime;
 		}
-
+		//TODO: Add distract time to this
 		public float Axis (int axis) {
 			switch (axis) {
 			case 0:

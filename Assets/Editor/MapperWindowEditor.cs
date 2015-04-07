@@ -37,7 +37,7 @@ namespace EditorArea {
 		private static List<Path> arrangedByTime, arrangedByLength, arrangedByDanger, arrangedByLoS, arrangedByDanger3, arrangedByLoS3, arrangedByDanger3Norm, arrangedByLoS3Norm, arrangedByCrazy, arrangedByVelocity;
 
 		//GEONEW
-		public static Triangulation triangles;
+		//public static Triangulation triangles;
 		public static List<PathGeo> pathsgeo = new List<PathGeo> ();
 		public static bool drawPathGeo = true;
 		private static Dictionary<PathGeo, bool> toggleStatusGeo = new Dictionary<PathGeo, bool> ();
@@ -448,6 +448,9 @@ namespace EditorArea {
 				
 				List<NodeGeo> nodes = null;
 
+				Vector3 distractPos = GameObject.Find ("DistractPoint").transform.position;
+				Vector2 distractPos2 = new Vector2(distractPos.x, distractPos.z);
+
 				for (int it = 0; it < iterations; it++) {
 
 					/* Screw the Map
@@ -484,7 +487,7 @@ namespace EditorArea {
 					// We have this try/catch block here to account for the issue that we don't solve when we find a path when t is near the limit
 					try {
 
-						nodes= rrtgeo.ComputeGeo (startX, startY, endX, endY, -10, 10, -10, 10, 1000, null, attemps, playerSpeed);
+						nodes= rrtgeo.ComputeGeo (startX, startY, endX, endY, -10, 10, -10, 10, 1000, attemps, playerSpeed, distractPos2);
 
 						//nodes = rrt.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
 
@@ -1040,7 +1043,7 @@ namespace EditorArea {
 			NodeGeo current = path.First();
 			for(int i = 0; i < path.Count; i++){
 				current = path[i];
-				Debug.Log (current.GetVector3());
+				Debug.Log (current.ToString());
 			}
 		}
 
