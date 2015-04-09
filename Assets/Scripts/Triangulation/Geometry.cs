@@ -17,6 +17,12 @@ public class Geometry
 	public List<Line> voisinsLine = new List<Line>();
 	public bool visited = false; 	
 
+	public  bool Equals(Geometry G2){
+		//TODO:Make an efficient function
+
+		return false;
+	}
+
 	public void DrawGeometry(GameObject parent)//Called from outside
 	{
 		Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
@@ -73,7 +79,7 @@ public class Geometry
 		int count = 0; 
 		foreach(Line myLine in edges){
 			if( myLine.name.Equals("Line7") ){
-				Debug.Log("PIDbg : " + myLine.LineIntersectMuntac(lray));
+				//Debug.Log("PIDbg : " + myLine.LineIntersectMuntac(lray));
 			}
 			if( myLine.LineIntersectMuntac(lray) > 0 ){
 				count++;
@@ -81,8 +87,14 @@ public class Geometry
 				//Debug.Log("InvisibleLine: " + myLine.vertex[0] + " " + myLine.vertex[1]);
 				//Debug.Log ( myLine.vertex[0].x + " " + myLine.vertex[0].z);
 				//Debug.Log ( myLine.vertex[1].x + " " + myLine.vertex[1].z);
-				drawSphere(pt,Color.green);
+				drawSphere(myLine.GetIntersectionPoint(lray),Color.green);
 				Debug.Log("Says:"+myLine.LineIntersectMuntac(lray));
+				if( myLine.LineIntersectMuntac(lray) == 2 ){
+					Debug.Log("Bump " + myLine.vertex[0] + " " + myLine.vertex[1]);
+					Debug.Log( VectorApprox( myLine.vertex[0], myLine.vertex[1] ) );
+					myLine.name = "ZZZ";
+					myLine.DrawVector(GameObject.Find("temp"));
+				}
 			}
 			//Check if the intersection point is on the polygon edge
 			if( myLine.PointOnLine( pt ) && myLine.PointOnLineB( pt ) )
@@ -454,6 +466,7 @@ public class Geometry
 	//TODO: Check near end of function
 	public Geometry GeometryMerge( Geometry G2, int xid ){//Called from outside
 		//1. Check if geometries are fully inside each other
+
 		if (GeometryInside (G2, false))	return this;
 		else if (G2.GeometryInside (this, false)) return G2;
 
@@ -485,14 +498,14 @@ public class Geometry
 				//3A. Regular intersections
 				if( caseType == 1 ){
 					Vector3 pt = LA.GetIntersectionPoint( LB );
-					//TODO:
-//					if( LA.isEndPoint( pt ) || LB.isEndPoint(pt) )
-//						Debug.Log("SAMENESS A");
-					/// 
-					G3.edges.Add( new Line( pt, LA.vertex[0] ) );
-					G3.edges.Add( new Line( pt, LA.vertex[1] ) );
-					G3.edges.Add( new Line( pt, LB.vertex[0] ) );
-					G3.edges.Add( new Line( pt, LB.vertex[1] ));
+					if( !VectorApprox(pt, LA.vertex[0] ) )
+						G3.edges.Add( new Line( pt, LA.vertex[0] ) );
+					if( !VectorApprox(pt, LA.vertex[1] ) )
+						G3.edges.Add( new Line( pt, LA.vertex[1] ) );
+					if( !VectorApprox(pt, LB.vertex[0] ) )
+						G3.edges.Add( new Line( pt, LB.vertex[0] ) );
+					if( !VectorApprox(pt, LB.vertex[1] ) )
+						G3.edges.Add( new Line( pt, LB.vertex[1] ));
 					G3.edges.RemoveAt(j);
 					G3.edges.RemoveAt(i);
 					i--;
@@ -522,17 +535,18 @@ public class Geometry
 					List<Line> linesToAdd = new List<Line>();
 					for( int k = 0; k < uniquePts.Count - 1; k++ ){
 						linesToAdd.Add( new Line(uniquePts[k], uniquePts[k+1]) );
-						//TODO:
-//						if( uniquePts[k].Equals(uniquePts[k+1]) )
-//							Debug.Log("SAMENESS B");
 					}
+					//If there are only two lines formed
+					//And they are LA and LB then skip
 					if( linesToAdd.Count == 2 ){
 						if( (LA.Equals(linesToAdd[0]) || LA.Equals(linesToAdd[1]))
 						   && (LB.Equals(linesToAdd[0]) || LB.Equals(linesToAdd[1])) )
 							continue;
 					}
-					foreach( Line l in linesToAdd )
-						G3.edges.Add(l);
+					foreach( Line l in linesToAdd ){
+						if( !VectorApprox(l.vertex[0], l.vertex[1] ) )
+							G3.edges.Add(l);
+					}
 					G3.edges.RemoveAt(j);
 					G3.edges.RemoveAt(i);
 					i--;
@@ -555,6 +569,20 @@ public class Geometry
 		int namecnt = 0;
 		int doit = 0;
 		foreach(Line l in G3.edges){
+			l.name = namecnt++.ToString();
+			if( xid == 3 ){
+				//l.DrawVector(GameObject.Find("temp"));
+				if( l.name.Equals("59") ){
+					//l.DrawVector(GameObject.Find("temp"));
+					//Debug.Log( G2.LineInsideDebug(l) );
+					foreach( Line ld in G2.edges ){
+//						if( VectorApprox(ld.vertex[0],ld.vertex[1] ) )
+//						   Debug.Log("Equality");
+					}
+					//G2.DrawGeometry(GameObject.Find("temp"));
+				}
+					
+			}
 //				if( xid == 11 )
 //				l.DrawVector(GameObject.Find("temp"));
 //			if( xid == 11 ){
@@ -567,8 +595,10 @@ public class Geometry
 //			}
 			if( l.vertex[0].Equals(l.vertex[1]) ) continue;
 		    if(!G1.LineInside(l) && !G2.LineInside(l) && !toReturn.edges.Contains(l)){
-					l.name = namecnt++.ToString();
-					toReturn.edges.Add(l);
+					//l.name = namecnt++.ToString();
+				if( VectorApprox( l.vertex[0], l.vertex[1] ) )
+					Debug.Log("Equality in GM final");
+				toReturn.edges.Add(l);
 			}
 		}
 		//TODO:Fix for last case stated
@@ -613,10 +643,14 @@ public class Geometry
 				int caseType = LA.LineIntersectMuntac( LB );
 				if( caseType == 1 ){//Regular intersections
 					Vector3 pt = LA.GetIntersectionPoint( LB );
-					G3.edges.Add( new Line( pt, LA.vertex[0] ) );
-					G3.edges.Add( new Line( pt, LA.vertex[1] ) );
-					G3.edges.Add( new Line( pt, LB.vertex[0] ) );
-					G3.edges.Add( new Line( pt, LB.vertex[1] ));
+					if( !VectorApprox( pt, LA.vertex[0] ) )
+						G3.edges.Add( new Line( pt, LA.vertex[0] ) );
+					if( !VectorApprox( pt, LA.vertex[1] ) )
+						G3.edges.Add( new Line( pt, LA.vertex[1] ) );
+					if( !VectorApprox( pt, LB.vertex[0] ) )
+						G3.edges.Add( new Line( pt, LB.vertex[0] ) );
+					if( !VectorApprox( pt, LB.vertex[1] ) )
+						G3.edges.Add( new Line( pt, LB.vertex[1] ));
 					G3.edges.RemoveAt(j);
 					G3.edges.RemoveAt(i);
 					i--;
@@ -644,6 +678,8 @@ public class Geometry
 
 	//Check if two geometries intersect
 	public bool GeometryIntersect( Geometry G2 ){//Called from outside
+		if( this.Equals( G2 ) )
+			return true;
 		foreach( Line La in this.edges ){
 			foreach( Line Lb in G2.edges ){
 				if( La.LineIntersectMuntac( Lb ) > 0 )
@@ -679,6 +715,8 @@ public class Geometry
 		List<Vector3> G2AllVert = G2.GetVertex ();
 		foreach (Vector3 v in G2AllVert)
 			if( this.PointOutside( v ) ) return false;
+		foreach( Line l in G2.edges )
+			if( this.PointOutside( l.MidPoint() ) ) return false;
 		return true;
 	}
 
