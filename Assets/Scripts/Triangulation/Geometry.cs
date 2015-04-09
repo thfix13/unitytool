@@ -489,23 +489,49 @@ public class Geometry
 		int ccnt = 0;
 		for (int i = 0; i < G3.edges.Count; i++) {
 			ccnt++;
+//			if( xid == 9 && ccnt > 10000 ){
+//				Debug.Log("Over 10000");
+//				break;
+//			}
 			for( int j = i + 1; j < G3.edges.Count; j++ ) {
 
 				bool dbg = false;
 				Line LA = G3.edges[i];
 				Line LB = G3.edges[j];
+				if( LA.Equals(LB) ){
+					G3.edges.RemoveAt(j);
+					j--;
+					continue;
+				}
 				int caseType = LA.LineIntersectMuntacGM(LB);//Endpt but not shared endpt intersection.Sorted lines.
 				//3A. Regular intersections
 				if( caseType == 1 ){
 					Vector3 pt = LA.GetIntersectionPoint( LB );
+					List<Line> linesToAdd = new List<Line>();
 					if( !VectorApprox(pt, LA.vertex[0] ) )
-						G3.edges.Add( new Line( pt, LA.vertex[0] ) );
+						linesToAdd.Add( new Line( pt, LA.vertex[0] ) );
 					if( !VectorApprox(pt, LA.vertex[1] ) )
-						G3.edges.Add( new Line( pt, LA.vertex[1] ) );
+						linesToAdd.Add( new Line( pt, LA.vertex[1] ) );
 					if( !VectorApprox(pt, LB.vertex[0] ) )
-						G3.edges.Add( new Line( pt, LB.vertex[0] ) );
+						linesToAdd.Add( new Line( pt, LB.vertex[0] ) );
 					if( !VectorApprox(pt, LB.vertex[1] ) )
-						G3.edges.Add( new Line( pt, LB.vertex[1] ));
+						linesToAdd.Add( new Line( pt, LB.vertex[1] ));
+//					if( linesToAdd.Contains( LA ) && linesToAdd.Contains( LB ) )
+//						continue;
+					bool LARepeat = false;
+					bool LBRepeat = false;
+					foreach( Line lad in linesToAdd ){
+						if( lad.Equals( LA ) )
+							LARepeat = true;
+						if( lad.Equals( LB ) )
+							LBRepeat = true;
+					}
+					if( LARepeat && LBRepeat ){
+						Debug.Log("Anomalous Repetition");
+						continue;
+					}
+					foreach( Line lad in linesToAdd )
+						G3.edges.Add( lad );
 					G3.edges.RemoveAt(j);
 					G3.edges.RemoveAt(i);
 					i--;
@@ -538,11 +564,24 @@ public class Geometry
 					}
 					//If there are only two lines formed
 					//And they are LA and LB then skip
-					if( linesToAdd.Count == 2 ){
-						if( (LA.Equals(linesToAdd[0]) || LA.Equals(linesToAdd[1]))
-						   && (LB.Equals(linesToAdd[0]) || LB.Equals(linesToAdd[1])) )
-							continue;
+//					if( linesToAdd.Count == 2 ){
+//						if( (LA.Equals(linesToAdd[0]) || LA.Equals(linesToAdd[1]))
+//						   && (LB.Equals(linesToAdd[0]) || LB.Equals(linesToAdd[1])) )
+//							continue;
+//					}
+//					else{
+//
+//					}
+					bool LARepeat = false;
+					bool LBRepeat = false;
+					foreach( Line lad in linesToAdd ){
+						if( lad.Equals( LA ) )
+							LARepeat = true;
+						if( lad.Equals( LB ) )
+							LBRepeat = true;
 					}
+					if( LARepeat && LBRepeat )
+						continue;
 					foreach( Line l in linesToAdd ){
 						if( !VectorApprox(l.vertex[0], l.vertex[1] ) )
 							G3.edges.Add(l);
@@ -562,7 +601,8 @@ public class Geometry
 				}
 			}
 		}
-
+//		if (xid == 9)
+//			return new Geometry ();
 		//Check: Points inside Polygon
 		//Check all midpoint of each line in G3 to see if it lies in G1 or G2. If inside remove.
 		Geometry toReturn = new Geometry();

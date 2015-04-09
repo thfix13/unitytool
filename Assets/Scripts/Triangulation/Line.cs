@@ -84,9 +84,9 @@ public class Line
 
 	public void DrawVector(GameObject parent,Color c)
 	{
-		//VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
+		VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
 		//VectorLine line = new VectorLine("Line",vertex,c,null,0.1f);
-		VectorLine line = new VectorLine("Line",vertex,c,null,0.03f);
+		//VectorLine line = new VectorLine("Line",vertex,c,null,0.03f);
 		line.vectorObject.transform.parent = parent.transform;
 		line.vectorObject.name = name;
 		line.Draw3D();
@@ -216,8 +216,7 @@ public class Line
 		return 0;
 	}
 
-	//Ignores endpoint collision
-	//Ignores endpoint overlap in colinear lines (BUT not sure about this condition)
+	//Ignores shared endpoint collision
 	public int LineIntersectMuntacGM (Line param){
 		Vector3 a = getMinVert (this.vertex [0], this.vertex [1]);
 		Vector3 b = this.vertex[1];
