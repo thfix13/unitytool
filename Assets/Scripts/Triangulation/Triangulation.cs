@@ -216,11 +216,11 @@ public class Triangulation : MonoBehaviour
 		VPValidation ();
 		/*STEP 11 - CHECK CAMERA VISIBILITY NESTING*/
 		mergeVPS ();
-		return;
 		//return;
 		/***PHASE E: MORE METRICS***/
 		/*STEP 12 - CHECK INCREMENTAL CAMERA AREA COVERAGE*/
 		areaCoverage ();
+		return;
 		/*STEP 13 - CHECK SUBTRACTIVE COVERAGE*/
 		//subtractiveCoverage ();
 	}
@@ -1115,28 +1115,41 @@ public class Triangulation : MonoBehaviour
 				bool LF = connectable( templistA[indA], templistB[0] );
 				bool FL = connectable( templistA[0], templistB[indB] );
 				bool FF = connectable( templistA[0], templistB[0] );
-				if( xid == 13 && cnt == 14 ){
+				if( xid == 12 && cnt == 7 ){
 //					Debug.Log( LL + " " + LF + " " + FL + " " + FF );
 //					drawSphere( templistA[indA] );
 //					drawSphere( templistB[indB] );
 //					comprehensiveCollision( new Line( templistA[indA], templistB[indB] ), 100 );
 				}
+				//Case 1: LP to LP
 				if( LL && LF && FL && FF  ){
-					//Case 1: LP to LP
 					nextstartingpoint = "last";
 				}
+				//Case 2: Farthest connectable points
 				else if( FF ){
-					//Case 2: Farthest connectable points
 					int connectorA = -1;
 					int connectorB = -1;
-
+					//Case 2A:
+					//This is the most common case
+					//We use this because visibility polygons are simple star polygons
+					//and therefore will "zig-zag". Ordering of points (first-to-last,last-to-first)
+					//in a ray will alternate each time. We only need to make sure anomalous single line extensions
+					//are ignored.
 					if( nextstartingpoint != "none" ){
-						if( nextstartingpoint == "first" ) connectorA = indA;
+						if( nextstartingpoint == "first" ){
+							//Find farthest possible point that can connect to the beginning of B
+							for( int j = indA; j >= 0; j-- ){
+								if( connectable( templistA[j], templistB[0] ) ){
+									connectorA = j;
+									break;
+								}
+							}
+						}
 						else{
 							connectorA = 0;
-							//templistA.Reverse();
 						}
 					}
+					//Case 2B: Only happens on the first iteration
 					else{
 						//If A[last] can reach B[first] then all A can reach B[first]
 						if( LF ) connectorA = indA;
@@ -1149,15 +1162,7 @@ public class Triangulation : MonoBehaviour
 							}
 						}
 					}
-					if( xid == 13 && cnt == 14 ){
-//						drawSphere(templistA[2], Color.blue );
-//						drawSphere(templistB[0], Color.red );
-//						Line lkj = new Line( templistA[2], templistB[0] );
-//						lkj.DrawVector(GameObject.Find("temp"));
-//						Debug.Log("Conn " + connectorA);
-//						Debug.Log(LF);
-						//Debug.Log(connectable(templistA[
-					}
+					//Find connector for ray B
 					//If A[last] can reach B[j] then all above A[last] can reach B[j] and all above B[j]
 					for( int j = indB; j >= 0; j-- ){
 						if( connectable( templistA[connectorA], templistB[j] ) ){
@@ -1177,6 +1182,7 @@ public class Triangulation : MonoBehaviour
 					if( connectorB == 0 ) nextstartingpoint = "first";
 					else nextstartingpoint = "last";
 				}
+				//Case 3: Two rays joined by kernel
 				else{
 					//if unconnectable, connect to kernel
 					templistA.Reverse();
@@ -1184,18 +1190,20 @@ public class Triangulation : MonoBehaviour
 					nextstartingpoint = "first";
 				}
 			}
+			//Add the points of list A
 			foreach( Vector3 v in templistA )
 				vispol.Add( v );
+			//If case 3 then add the kernel before moving on to next ray
 			if( addkernel )
 				vispol.Add( kernel );
 		}
 		
 		//If kernel hasn't been added yet
-		if (!vispol.Contains (kernel)) {
+		if (!vispol.Contains (kernel))
 			vispol.Add (kernel);
-			//drawSphere( kernel, Color.red, -1 );
-		}
-		//Special case where first ray has anomalous extensions
+		
+		//Special case where first ray of iteration has anomalous extensions
+		//TODO: Fix for case where anomalous extension may extend to more than one point
 		for (int i = 0; i < vispol.Count - 1; i++) {
 			if( connectable( vispol[vispol.Count - 1], vispol[i] ) ){
 				if( i != 0 ){
@@ -1483,6 +1491,7 @@ public class Triangulation : MonoBehaviour
 			//File.WriteAllText(path, createText);
 		}
 		File.WriteAllText(path, createText);
+		Debug.Log ("Area Calculated");
 	}
 	
 	public void subtractiveCoverage(){
