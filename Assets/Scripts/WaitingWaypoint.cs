@@ -1,6 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
-using UnityEditor;
+//using UnityEditor;
 
 namespace Objects {
 	public class WaitingWaypoint : Waypoint {

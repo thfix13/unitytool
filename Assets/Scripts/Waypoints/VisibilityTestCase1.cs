@@ -2,9 +2,8 @@ using UnityEngine;
 using System.Collections;
 using System.IO;
 using System.Collections.Generic;
-using UnityEditor;
 //using System;
-public class Visibility1 : MonoBehaviour {
+public class VisibilityTestCase1 : MonoBehaviour {
 	List<Geometry> obsGeos = new List<Geometry> (); 
 	//Contains Map
 	Geometry mapBG = new Geometry ();
@@ -31,9 +30,6 @@ public class Visibility1 : MonoBehaviour {
 	//public int m_enemyNearestNumbers = 0;
 	public int m_nEnemyStatic = 1;
 	public int m_nEnemyNearMiss = 0;
-	public int nearMissAlgo = 1;
-	public int setUpCase = -1;
-	public bool bDisplayAreas = false;
 	//List<GameObject> m_enemyNearMissList = new List<GameObject>();
 	//List<bool> m_enemyNearMissCaughtList = new List<bool>();
 	//List<Vector3> m_enemyNextPosNearMissList = new List<Vector3>();
@@ -44,37 +40,21 @@ public class Visibility1 : MonoBehaviour {
 		public bool bCaught;
 		public Vector3 vNextPos;
 	}
-
+	public int nearMissAlgo = 1;
 	public int m_nEnemyCentroid = 0;
 	List<GameObject> m_enemyCentroidList = new List<GameObject>();
 	List<Vector3> m_enemyNextPosCentroidList = new List<Vector3>();
-	public bool m_ExecuteTrueCase = false;
-	public int m_ShowTrueCase = -1;//1 for shortest path;2 for longest
-	private string currSceneName;
+	public int m_nEnemyPredictor = 0;
+	public int setUpCase = -1;
+	public bool bDisplayAreas = false;
 	void Start () 
 	{
 		spTemp = (GameObject)GameObject.Find ("StartPoint");
 		allLineParent = GameObject.Find ("allLineParent") as GameObject;
 		globalPolygon = getObstacleEdges ();
-		string[] sceneName = EditorApplication.currentScene.Split(char.Parse("/"));
-		currSceneName = sceneName[sceneName.Length -1];	
-		if(currSceneName=="scene1.unity")
-		{
-			pathPoints = CommonScene1.definePath ();
-		}
-		else if(currSceneName=="testCase1.unity")
-		{
-			pathPoints = CommonTestCase1.definePath ();
-		}
-		if(m_ShowTrueCase>0)
-		{
-			displayPredictedPaths();
-		}
-		else if(m_ExecuteTrueCase)
-		{
-			executeTrueCase();
-			return;
-		}
+
+		pathPoints = definePath ();
+		//Debug.Log ("pathPoints = " + pathPoints.Count);
 		foreach(Vector3 vect in pathPoints)
 		{
 			GameObject pathObj;
@@ -88,10 +68,12 @@ public class Visibility1 : MonoBehaviour {
 			displayTimingAreas();
 			return;
 		}
-		CalculateVisibilityForPath ();
-		shadowMeshes = new List<GameObject>();
 		playerObj = Instantiate(playerPrefab) as GameObject;
 		playerObj.transform.position = pathPoints [0];
+		Debug.Log (playerObj.transform.position);
+		CalculateVisibilityForPath ();
+		shadowMeshes = new List<GameObject>();
+
 		foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[0]]).edges)
 		{
 			l.DrawVector(allLineParent);
@@ -101,45 +83,7 @@ public class Visibility1 : MonoBehaviour {
 			initializeForNearMissCase();
 			return;
 		}
-
 		setUpEnemyInitialPos ();
-	}
-	private void displayPredictedPaths()
-	{
-	}
-	private void executeTrueCase()
-	{
-		setGlobalVars1();
-		string dirName = createSaveDataDir(Application.dataPath);
-		int j1=0;
-		for(float j=m_minX;j<m_maxX && j1<discretePtsX;j+=m_step)
-		{
-			int k1=0;
-			for(float k=m_minZ;k<m_maxZ && k1<discretePtsZ;k+=m_step)
-			{
-				Vector3 pt = new Vector3(j,1,k);
-				Vector2 keyTemp = new Vector2(j1,k1);
-				executeTrueCaseFor(keyTemp,dirName);
-				k1++;
-			}
-			j1++;
-		}
-	}
-	private void executeTrueCaseFor(Vector2 indexOfPt,string saveDataDirName)
-	{
-		Vector3 pt = (Vector3)h_mapIndxToPt[indexOfPt];
-	}
-	private string createSaveDataDir (string dataPath)
-	{
-		string dirName = Path.Combine(dataPath ,System.DateTime.Now.Day
-		                              +"th_Of_"+System.DateTime.Now.Month
-		                              +"_Year_"+System.DateTime.Now.Year
-		                              +"_Time_"+System.DateTime.Now.Hour
-		                              +"_"+System.DateTime.Now.Minute
-		                              +"_"+System.DateTime.Now.Second
-		                              +"_PredictedPathData");
-		System.IO.Directory.CreateDirectory(dirName);
-		return dirName;
 	}
 	private void displayTimingAreas()
 	{
@@ -167,7 +111,7 @@ public class Visibility1 : MonoBehaviour {
 	float[,] timingArray = null;
 	float maxTimeEvaded = -1.0f;
 	float currRunTimeEnemny = 0f;
-	string fileTimings = "C:\\Users\\Dhaliwal\\Desktop\\timingScene1.txt";
+	string fileTimings = "C:\\Users\\Dhaliwal\\Desktop\\timingTestCaseScene1.txt";
 	private void readTimings()
 	{
 		setGlobalVars1 ();
@@ -277,7 +221,7 @@ public class Visibility1 : MonoBehaviour {
 	int nextPlayerPath = 1;
 	void Update () 
 	{
-		if (bDisplayAreas || m_ExecuteTrueCase)
+		if (bDisplayAreas)
 		{
 			return;
 		}
@@ -625,7 +569,8 @@ public class Visibility1 : MonoBehaviour {
 			int numNearMiss = m_nEnemyNearMiss;
 			while(numNearMiss>0)
 			{
-				Vector3 sel = selectInitialNearMissRandomPos();
+				//Vector3 sel = selectInitialNearMissRandomPos();
+				Vector3 sel = new Vector3(1.0f,1f,-2.0f);
 				placeEnemyNearMissAt(sel);
 				numNearMiss--;
 			}
@@ -1898,6 +1843,11 @@ public class Visibility1 : MonoBehaviour {
 		Debug.Log(""+(maxX - minX) / step+" discretePtsX = "+discretePtsX+" discretePtsZ = "+discretePtsZ);
 		while(Indx<pathPoints.Count)
 		{
+			if(h_discreteShadows.ContainsKey(pathPoints[Indx]))
+			{
+				Indx++;
+				continue;
+			}
 			List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [Indx]];
 			sbyte[,] shadowArray = new sbyte[discretePtsX,discretePtsZ];
 
@@ -1933,6 +1883,7 @@ public class Visibility1 : MonoBehaviour {
 				}
 				j1++;
 			}
+
 			h_discreteShadows.Add(pathPoints[Indx],shadowArray);
 			Indx++;
 			//Debug.Log("h_mapIndxToPt.Count = "+h_mapIndxToPt.Keys.Count);
@@ -3294,6 +3245,42 @@ public class Visibility1 : MonoBehaviour {
 		
 		//return signed_angle;
 		return angle360;
+	}
+
+	List<Vector3> definePath()
+	{
+		List<Vector3> pathPts = new List<Vector3> ();
+		GameObject sp = (GameObject)GameObject.Find ("StartPoint");
+		//GameObject ep = (GameObject)GameObject.Find ("StartPoint");
+		pathPts.Add(sp.transform.position);
+		//first_point = pathPts [0];
+		//pathPts.Add(ep.transform.position);
+		findPath (pathPts);//straight Line points
+		return pathPts;
+	}
+	private void findPath (List<Vector3> pathPts)
+	{
+		float xMinPath = pathPts [0].x;
+		float xMaxPath = -pathPts [0].x;
+		float zMinPath = -pathPts [0].z;
+		float zMaxPath = pathPts [0].z;
+		float stepPathPoint = 0.2f;
+		for (float i=xMinPath; i<=xMaxPath; i+=stepPathPoint)
+		{
+			pathPts.Add(new Vector3(i,1,zMaxPath));
+		}
+		for (float i=zMaxPath-stepPathPoint; i>=zMinPath; i-=stepPathPoint)
+		{
+			pathPts.Add(new Vector3(xMaxPath,1,i));
+		}
+		for (float i=xMaxPath-stepPathPoint; i>=xMinPath; i-=stepPathPoint)
+		{
+			pathPts.Add(new Vector3(i,1,zMinPath));
+		}
+		for (float i=zMinPath+stepPathPoint; i<=zMaxPath-stepPathPoint; i+=stepPathPoint)
+		{
+			pathPts.Add(new Vector3(xMinPath,1,i));
+		}
 	}
 	Vector3 [] mapBoundary;
 	public List<Geometry> getObstacleEdges()
