@@ -75,8 +75,8 @@ public class Line
 //		                           UnityEngine.Random.Range(0.0f,1.0f)) ;
 //
 		Color c = Color.green;
-		VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
-		//VectorLine line = new VectorLine("Line",vertex,c,null,0.1f);
+		//VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
+		VectorLine line = new VectorLine("Line",vertex,c,null,0.1f);
 		line.vectorObject.transform.parent = parent.transform;
 		line.vectorObject.name = name;
 		line.Draw3D();

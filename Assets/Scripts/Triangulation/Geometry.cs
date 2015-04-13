@@ -122,7 +122,7 @@ public class Geometry
 
 	public bool PointOutsideDebug( Vector3 pt ){//Called by LineInside, GeometryInside and LineCollision
 		Line lray = new Line(pt, new Vector3(-100, 1f, -100)); 
-		lray.DrawVector (GameObject.Find ("temp"), Color.blue);
+		//lray.DrawVector (GameObject.Find ("temp"), Color.blue);
 		int count = 0; 
 		foreach(Line myLine in edges){
 			//EndPt because ray might pass through corners
@@ -332,6 +332,7 @@ public class Geometry
 	//Returns the area of the polygon
 	//whether or not it has holes
 	public double getPolygonArea( int xid ){
+		//if (xid == 8) return 0f;
 		List<Line> tempEdge = new List<Line> ();
 		Geometry tempGeo = new Geometry ();
 		foreach (Line l in this.edges)
@@ -339,7 +340,12 @@ public class Geometry
 		//float[] areas = new float[500];
 		List<double> areas = new List<double> ();
 		double maxArea = 0;
+		int rounds = 0;
 		while (tempGeo.edges.Count > 0) {
+			if( rounds > 50 ){
+				Debug.Log( "Rounds Exceeded at:" + xid );
+				break;
+			}
 			tempEdge = tempGeo.getSortedEdges();
 //			if( polygonClockwise(tempEdge) )
 //				tempEdge.Reverse();
@@ -360,6 +366,7 @@ public class Geometry
 				maxArea = tempArea;
 //			Debug.Log(tempGeo.edges.Count);
 //			return tempArea;
+			rounds++;
 		}
 		areas.Remove (maxArea);
 		double areaOfHoles = 0;
@@ -680,6 +687,11 @@ public class Geometry
 			for( int j = i + 1; j < G3.edges.Count; j++ ) {
 				Line LA = G3.edges[i];
 				Line LB = G3.edges[j];
+				if( LA.Equals(LB) ){
+					G3.edges.RemoveAt(j);
+					j--;
+					continue;
+				}
 				int caseType = LA.LineIntersectMuntac( LB );
 				if( caseType == 1 ){//Regular intersections
 					Vector3 pt = LA.GetIntersectionPoint( LB );
