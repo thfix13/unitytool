@@ -12,6 +12,7 @@ using Vectrosity;
 public class Line 
 {
 	public float eps = 1e-5f;//the margin of accuracy for all floating point equivalence checks
+	public float specialeps = 1e-6f;
 	public Vector3[] vertex = new Vector3[2];
 	public Color[] colours = new Color[2]; 
 	public string name = "Vector Line";
@@ -185,26 +186,28 @@ public class Line
 		double numerator1 = CrossProduct ((q0 - p0), v);
 		double numerator2 = CrossProduct ((q0 - p0), u);
 		double denom = CrossProduct (u, v);
-		
+
 		//Case 1 - Colinear
 		//if ( denom == 0 && numerator2 == 0 ) {
-		if ( floatCompare((float)denom, 0) && floatCompare((float)numerator2,0) ) {
+		if ( floatCompareLIN((float)denom, 0) && floatCompareLIN((float)numerator2,0) ) {
 			//Case 2 - Colinear and Overlapping
 			//if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
-			if( floatCompare( Vector2.Dot( (q0 - p0), u ), 0, ">=" )
-			   && floatCompare( Vector2.Dot( (q0 - p0), u ), Vector2.Dot( u, u ), "<=" ) )
+			if( floatCompareLIN( Vector2.Dot( (q0 - p0), u ), 0, ">=" )
+			   && floatCompareLIN( Vector2.Dot( (q0 - p0), u ), Vector2.Dot( u, u ), "<=" ) )
 				return 2;
 			//if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
-			if( floatCompare( Vector2.Dot( (p0 - q0), v ), 0, ">=" )
-			   && floatCompare( Vector2.Dot( (p0 - q0), v ), Vector2.Dot( v, v ), "<=" ) )
+			if( floatCompareLIN( Vector2.Dot( (p0 - q0), v ), 0, ">=" )
+			   && floatCompareLIN( Vector2.Dot( (p0 - q0), v ), Vector2.Dot( v, v ), "<=" ) )
 				return 2;
 			return 0;
 		}
 		//Case 3 - Parallel
 		//if (denom == 0 && numerator2 != 0)
-		if ( floatCompare((float)denom, 0) && !floatCompare((float)numerator2,0) )
+		if ( floatCompareLIN((float)denom, 0) && !floatCompareLIN((float)numerator2,0) )
 			return 0;
-		
+
+		if( POL( param.vertex[0] ) || POL( param.vertex[1] ) || param.POL(vertex[0]) || param.POL(vertex[1]) )
+			return 0;
 		//Case 4 - Intersects
 		double s = numerator1 / denom;
 		double t = numerator2 / denom;
@@ -215,6 +218,60 @@ public class Line
 		
 		return 0;
 	}
+
+//	public int LineIntersectMuntacDebug (Line param){
+//		Vector3 a = this.vertex [0];
+//		Vector3 b = this.vertex[1];
+//		Vector3 c = param.vertex [0];
+//		Vector3 d = param.vertex [1];
+//		//		//Sorting the order of points
+//		//		Vector3 a = getMinVert (this.vertex [0], this.vertex [1]);
+//		//		Vector3 b = this.vertex[1];
+//		//		if( a.Equals( this.vertex[1] ) )
+//		//			b = this.vertex[0];
+//		//		Vector3 c = getMinVert (param.vertex [0], param.vertex [1]);
+//		//		Vector3 d = param.vertex[1];
+//		//		if( c.Equals( param.vertex[1] ) )
+//		//			d = param.vertex[0];
+//		
+//		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
+//		Vector2 p0 = new Vector2 (a.x, a.z);
+//		
+//		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
+//		Vector2 q0 = new Vector2 (c.x, c.z);
+//		
+//		double numerator1 = CrossProduct ((q0 - p0), v);
+//		double numerator2 = CrossProduct ((q0 - p0), u);
+//		double denom = CrossProduct (u, v);
+//		
+//		//Case 1 - Colinear
+//		//if ( denom == 0 && numerator2 == 0 ) {
+//		if ( floatCompareLIN((float)denom, 0) && floatCompareLIN((float)numerator2,0) ) {
+//			//Case 2 - Colinear and Overlapping
+//			//if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
+//			if( floatCompareLIN( Vector2.Dot( (q0 - p0), u ), 0, ">=" )
+//			   && floatCompareLIN( Vector2.Dot( (q0 - p0), u ), Vector2.Dot( u, u ), "<=" ) )
+//				return 2;
+//			//if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
+//			if( floatCompareLIN( Vector2.Dot( (p0 - q0), v ), 0, ">=" )
+//			   && floatCompareLIN( Vector2.Dot( (p0 - q0), v ), Vector2.Dot( v, v ), "<=" ) )
+//				return 2;
+//			return 0;
+//		}
+//		//Case 3 - Parallel
+//		//if (denom == 0 && numerator2 != 0)
+//		if ( floatCompareLIN((float)denom, 0) && !floatCompareLIN((float)numerator2,0) )
+//			return 0;
+//		
+//		//Case 4 - Intersects
+//		double s = numerator1 / denom;
+//		double t = numerator2 / denom;
+//		//if ((s > 0 && s < 1) && (t > 0 && t < 1))
+//		if ((s > 0 + eps && s < 1 - eps) && (t > 0 + eps && t < 1 - eps))
+//			return 1;
+//		
+//		return 0;
+//	}
 
 	//Ignores shared endpoint collision
 	public int LineIntersectMuntacGM (Line param){
@@ -239,21 +296,27 @@ public class Line
 		//Debug.Log ("Denom " + denom + " num2 " + numerator2);
 		//Case 1 - Colinear
 		//if ( denom == 0 && numerator2 == 0 ) {
-		if ( floatCompare((float)denom, 0) && floatCompare((float)numerator2,0) ) {
+		if ( ShareVertex (param) ){
+			Vector3 shared = getSharedVertex( param );
+			Line joint = new Line ( GetOther( shared ), param.GetOther( shared ) );
+			if( joint.POL( shared ) )
+				return 0;
+		}
+		if ( floatCompareLIN((float)denom, 0) && floatCompareLIN((float)numerator2,0) ) {
 			//Case 2 - Colinear and Overlapping
 			//if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
-			if( floatCompare( Vector2.Dot( (q0 - p0), u ), 0, ">=" )
-			   && floatCompare( Vector2.Dot( (q0 - p0), u ), Vector2.Dot( u, u ), "<=" ) )
+			if( floatCompareLIN( Vector2.Dot( (q0 - p0), u ), 0, ">=" )
+			   && floatCompareLIN( Vector2.Dot( (q0 - p0), u ), Vector2.Dot( u, u ), "<=" ) )
 				return 2;
 			//if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
-			if( floatCompare( Vector2.Dot( (p0 - q0), v ), 0, ">=" )
-			   && floatCompare( Vector2.Dot( (p0 - q0), v ), Vector2.Dot( v, v ), "<=" ) )
+			if( floatCompareLIN( Vector2.Dot( (p0 - q0), v ), 0, ">=" )
+			   && floatCompareLIN( Vector2.Dot( (p0 - q0), v ), Vector2.Dot( v, v ), "<=" ) )
 				return 2;
 			return 0;
 		}
 		//Case 3 - Parallel
 		//if (denom == 0 && numerator2 != 0)
-		if ( floatCompare((float)denom, 0) && !floatCompare((float)numerator2,0) )
+		if ( floatCompareLIN((float)denom, 0) && !floatCompareLIN((float)numerator2,0) )
 			return 0;
 		
 		//Case 4 - Intersects
@@ -261,12 +324,19 @@ public class Line
 		double t = numerator2 / denom;
 		//Debug.Log ("s " + s + " t" + t);
 		//if ((s > 0 && s < 1) && (t > 0 && t < 1))
-		if ( (floatCompare( (float)s, 0f, ">=")  && floatCompare((float)s, 1f, "<="))
-		    && (floatCompare( (float)t, 0f, ">=")  && floatCompare((float)t, 1f, "<=")) ){
+		if ( (floatCompareLIN( (float)s, 0f, ">=")  && floatCompareLIN((float)s, 1f, "<="))
+		    && (floatCompareLIN( (float)t, 0f, ">=")  && floatCompareLIN((float)t, 1f, "<=")) ){
 			if( ShareVertex(param) )
 				return 0;
 			else
 				return 1;
+			//TODO:Add this
+//			else if( POL(param.vertex[0]) || POL(param.vertex[1]) 
+//			        || param.POL(vertex[0]) || param.POL (vertex[1])
+//			        || CounterClockCheck(param) )
+//				return 1;
+//			else
+//				return 0;
 		}
 		
 		return 0;
@@ -291,6 +361,7 @@ public class Line
 	//An endpoint of one line could intersect the middle of another line (i.e. such an intersection would count as
 	//intersectsion) and be detected
 	public int LineIntersectMuntacEndPt (Line param){
+
 		Vector3 a = this.vertex [0];
 		Vector3 b = this.vertex[1];
 		Vector3 c = param.vertex [0];
@@ -305,39 +376,50 @@ public class Line
 		double numerator1 = CrossProduct ((q0 - p0), v);
 		double numerator2 = CrossProduct ((q0 - p0), u);
 		double denom = CrossProduct (u, v);
-		
+
 		//Case 1 - Colinear
 		//if ( denom == 0 && numerator2 == 0 ) {
-		if ( floatCompare((float)denom, 0) && floatCompare((float)numerator2,0) ) {
+		if ( floatCompareLIN((float)denom, 0) && floatCompareLIN((float)numerator2,0) ) {
+			if ( ShareVertex (param) ){
+				Vector3 shared = getSharedVertex( param );
+				Line joint = new Line ( GetOther( shared ), param.GetOther( shared ) );
+				if( joint.POL( shared ) )
+					return 0;
+			}
 			//Case 2 - Colinear and Overlapping
 			//if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
-			if( floatCompare( Vector2.Dot( (q0 - p0), u ), 0f, ">=" ) && floatCompare( Vector2.Dot( (q0 - p0), u ), Vector2.Dot( u, u ), "<=" ) )
+			if( floatCompareLIN( Vector2.Dot( (q0 - p0), u ), 0f, ">=" ) && floatCompareLIN( Vector2.Dot( (q0 - p0), u ), Vector2.Dot( u, u ), "<=" ) )
 				return 2;
 			//if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
-			if( floatCompare( Vector2.Dot( (p0 - q0), v ), 0f, ">=" ) && floatCompare( Vector2.Dot( (p0 - q0), v ), Vector2.Dot( v, v ), "<=" ) )
+			if( floatCompareLIN( Vector2.Dot( (p0 - q0), v ), 0f, ">=" ) && floatCompareLIN( Vector2.Dot( (p0 - q0), v ), Vector2.Dot( v, v ), "<=" ) )
 				return 2;
 			return 0;
 		}
 		//Case 3 - Parallel
 		//if (denom == 0 && numerator2 != 0)
-		if ( floatCompare((float)denom, 0) && !floatCompare((float)numerator2,0) )
+		if ( floatCompareLIN((float)denom, 0) && !floatCompareLIN((float)numerator2,0) )
 			return 0;
 		
 		//Case 4 - Intersects
 		double s = numerator1 / denom;
 		double t = numerator2 / denom;
 		
-		if ( (floatCompare( (float)s, 0f, ">=")  && floatCompare((float)s, 1f, "<="))
-		    && (floatCompare( (float)t, 0f, ">=")  && floatCompare((float)t, 1f, "<=")) ){
+		if ( (floatCompareLIN( (float)s, 0f, ">=")  && floatCompareLIN((float)s, 1f, "<="))
+		    && (floatCompareLIN( (float)t, 0f, ">=")  && floatCompareLIN((float)t, 1f, "<=")) ){
 			if( ShareVertex(param) )
 				return 0;
-			else
+			else if( POL(param.vertex[0]) || POL(param.vertex[1]) 
+			         || param.POL(vertex[0]) || param.POL (vertex[1])
+			         || CounterClockCheck(param) )
 				return 1;
+			else
+				return 0;
 		}
 		return 0; 
 	}
 
 	public int LineIntersectMuntacEndPtDebug (Line param){
+		
 		Vector3 a = this.vertex [0];
 		Vector3 b = this.vertex[1];
 		Vector3 c = param.vertex [0];
@@ -352,30 +434,38 @@ public class Line
 		double numerator1 = CrossProduct ((q0 - p0), v);
 		double numerator2 = CrossProduct ((q0 - p0), u);
 		double denom = CrossProduct (u, v);
-
+		
 		//Case 1 - Colinear
 		//if ( denom == 0 && numerator2 == 0 ) {
-		if ( floatCompare((float)denom, 0) && floatCompare((float)numerator2,0) ) {
+		if ( floatCompareLIN((float)denom, 0) && floatCompareLIN((float)numerator2,0) ) {
+			if ( ShareVertex (param) ){
+				Vector3 shared = getSharedVertex( param );
+				Line joint = new Line ( GetOther( shared ), param.GetOther( shared ) );
+				if( joint.POL( shared ) )
+					return 0;
+			}
 			//Case 2 - Colinear and Overlapping
 			//if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
-			if( floatCompare( Vector2.Dot( (q0 - p0), u ), 0f, ">=" ) && floatCompare( Vector2.Dot( (q0 - p0), u ), Vector2.Dot( u, u ), "<=" ) )
+			if( floatCompareLIN( Vector2.Dot( (q0 - p0), u ), 0f, ">=" ) && floatCompareLIN( Vector2.Dot( (q0 - p0), u ), Vector2.Dot( u, u ), "<=" ) )
 				return 2;
 			//if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
-			if( floatCompare( Vector2.Dot( (p0 - q0), v ), 0f, ">=" ) && floatCompare( Vector2.Dot( (p0 - q0), v ), Vector2.Dot( v, v ), "<=" ) )
+			if( floatCompareLIN( Vector2.Dot( (p0 - q0), v ), 0f, ">=" ) && floatCompareLIN( Vector2.Dot( (p0 - q0), v ), Vector2.Dot( v, v ), "<=" ) )
 				return 2;
 			return 0;
 		}
 		//Case 3 - Parallel
 		//if (denom == 0 && numerator2 != 0)
-		if ( floatCompare((float)denom, 0) && !floatCompare((float)numerator2,0) )
+		if ( floatCompareLIN((float)denom, 0) && !floatCompareLIN((float)numerator2,0) )
 			return 0;
 		
 		//Case 4 - Intersects
 		double s = numerator1 / denom;
 		double t = numerator2 / denom;
 		Debug.Log (s + "," + t);
-		if ( (floatCompare( (float)s, 0f, ">=")  && floatCompare((float)s, 1f, "<="))
-		    && (floatCompare( (float)t, 0f, ">=")  && floatCompare((float)t, 1f, "<=")) ){
+		Debug.Log (s - specialeps);
+		Debug.Log (t - specialeps);
+		if ( (floatCompareLIN( (float)s, 0f, ">=")  && floatCompareLIN((float)s, 1f, "<="))
+		    && (floatCompareLIN( (float)t, 0f, ">=")  && floatCompareLIN((float)t, 1f, "<=")) ){
 			if( ShareVertex(param) )
 				return 0;
 			else
@@ -401,13 +491,14 @@ public class Line
 		double denom = CrossProduct (u, v);
 		
 		//Case 1 - Colinear
-		if ( denom == 0 && numerator2 == 0 ) {
+		//if ( denom == 0 && numerator2 == 0 ) {
+		if ( floatCompareLIN((float)denom, 0) && floatCompareLIN((float)numerator2,0) ) {
 			//Case 2 - Colinear and Overlapping
 			//if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
-			if( floatCompare( Vector2.Dot( (q0 - p0), u ), 0f, ">=" ) && floatCompare( Vector2.Dot( (q0 - p0), u ), Vector2.Dot( u, u ), "<=" ) )
+			if( floatCompareLIN( Vector2.Dot( (q0 - p0), u ), 0f, ">=" ) && floatCompareLIN( Vector2.Dot( (q0 - p0), u ), Vector2.Dot( u, u ), "<=" ) )
 				return 2;
 			//if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
-			if( floatCompare( Vector2.Dot( (p0 - q0), v ), 0f, ">=" ) && floatCompare( Vector2.Dot( (p0 - q0), v ), Vector2.Dot( v, v ), "<=" ) )
+			if( floatCompareLIN( Vector2.Dot( (p0 - q0), v ), 0f, ">=" ) && floatCompareLIN( Vector2.Dot( (p0 - q0), v ), Vector2.Dot( v, v ), "<=" ) )
 				return 2;
 			return 0;
 		}
@@ -419,8 +510,8 @@ public class Line
 		double s = numerator1 / denom;
 		double t = numerator2 / denom;
 		
-		if ( (floatCompare( (float)s, 0f, ">=")  && floatCompare((float)s, 1f, "<="))
-		    && (floatCompare( (float)t, 0f, ">=")  && floatCompare((float)t, 1f, "<=")) ){
+		if ( (floatCompareLIN( (float)s, 0f, ">=")  && floatCompareLIN((float)s, 1f, "<="))
+		    && (floatCompareLIN( (float)t, 0f, ">=")  && floatCompareLIN((float)t, 1f, "<=")) ){
 				return 1;
 		}
 		return 0; 
@@ -473,6 +564,20 @@ public class Line
 		return floatCompare( ((b.x - a.x)*(pt.z - a.z) - (b.z - a.z)*(c.x - a.x)), 0 );
 	}
 
+	//Checks if lines cross each other in any kind of x shape
+	public bool CounterClockCheck( Line param ){
+		int val1 = PointIsLeftInt (param.vertex [0]);
+		int val2 = PointIsLeftInt (param.vertex [1]);
+		bool flagA = false;
+		bool flagB = false;
+		if( (val1 == -1 && val2 == 1) || (val1 == 1 && val2 == -1) )
+			flagA = true;
+		val1 = param.PointIsLeftInt (vertex [0] );
+		val2 = param.PointIsLeftInt (vertex [1]);
+		if( (val1 == -1 && val2 == 1) || (val1 == 1 && val2 == -1) )
+			flagB = true;
+		return (flagA && flagB);
+	}
 //	public bool PointOnLine( Vector3 pt ){
 //		Vector3 diff = vertex[1] - vertex[0];
 //		float grad = 0, cx, cz;
@@ -527,6 +632,19 @@ public class Line
 			return PointIsLeft (param.vertex [0]);
 	}
 
+	public int PointIsLeftInt( Vector3 pt ){
+		Vector3 a = this.vertex [0];
+		Vector3 b = this.vertex [1];
+		Vector3 c = pt;
+		float val = ((b.x - a.x) * (pt.z - a.z) - (b.z - a.z) * (c.x - a.x));
+		if (val < 0)
+			return -1;
+		else if( val > 0 )
+			return 1;
+		else
+			return 0;
+	}
+
 	public bool VectorApprox ( List<Vector3> obs_pts, Vector3 interPt ){
 		foreach (Vector3 v in obs_pts) {
 			if( Math.Abs (v.x - interPt.x) < eps && Math.Abs (v.z - interPt.z) < eps )
@@ -563,7 +681,28 @@ public class Line
 		return false;
 	}
 
-
+	public bool floatCompareLIN ( float a, float b ){
+		return Math.Abs (a - b) < specialeps;
+	}
+	
+	public bool floatCompareLIN ( float a, float b, string condition ){
+		switch (condition) {
+		case(">="):
+			if (a > b || Math.Abs (a - b) < specialeps)
+				return true;
+			break;
+		case("=="):
+			if (Math.Abs (a - b) < specialeps)
+				return true;
+			break;
+		case("<="):
+			if (a < b || Math.Abs (a - b) < specialeps)
+				return true;
+			break;
+		}
+		return false;
+	}
+	
 }
 
 class LineEqualityComparer : IEqualityComparer<Line>

@@ -132,9 +132,9 @@ public class Geometry
 //					myLine.LineIntersectMuntacEndPtDebug(lray);
 				//if( count == 3){
 				//	myLine.DrawVector(GameObject.Find("temp"), Color.magenta);
-					Debug.Log( myLine.LineIntersectMuntacEndPtDebug(lray));
-					Debug.Log( myLine.LineIntersectMuntacGM(lray));
-					Debug.Log( VectorApprox( myLine.GetIntersectionPoint(lray), pt ) );
+					//Debug.Log( myLine.LineIntersectMuntacEndPtDebug(lray));
+					//Debug.Log( myLine.LineIntersectMuntacGM(lray));
+					//Debug.Log( VectorApprox( myLine.GetIntersectionPoint(lray), pt ) );
 					//Debug.Log( pt.z - myLine.GetIntersectionPoint(lray).z);
 //					Debug.Log(myLine.PointOnLine( pt ) + " " + myLine.PointOnLineB( pt ));
 //					Vector3 a = myLine.vertex [0];
@@ -226,40 +226,6 @@ public class Geometry
 		List<Line> visited = new List<Line> ();
 		List<Line> sortedEdges = new List<Line> ();
 		sortedEdges = getSortedEdges ();
-		//Sort edges//
-//		while ( true ){
-//			nextL = null;//take each edge
-//			foreach( Line l in this.edges ){//find an adjacent edge
-//				if( l.Equals( currL ) ) continue;
-//				if( l.ShareVertex( currL ) && !visited.Contains(l) ){
-//					Vector3 ptA, ptB;
-//					Vector3 commonPoint = l.getSharedVertex( currL );
-//					nextL = l;
-//					if( !visited.Contains(currL) ){//if this is the first edge we're working with
-//						ptA = currL.vertex[0];
-//						ptB = currL.vertex[1];
-//						if( !VectorApprox(ptB, commonPoint) ){
-//							ptA = ptB;
-//							ptB = commonPoint;
-//						}
-//						sortedEdges.Add( new Line( ptA, ptB ) );
-//						visited.Add (currL);
-//					}
-//					ptA = l.vertex[0];
-//					ptB = l.vertex[1];
-//					if( !VectorApprox(ptA, commonPoint) ){
-//						ptB = ptA;
-//						ptA = commonPoint;
-//					}
-//					sortedEdges.Add( new Line( ptA, ptB ) );
-//					visited.Add( l );
-//					currL = nextL;
-//					break;
-//				}
-//			}
-//			if( nextL == null )
-//				break;
-//		}
 		float sum = 0;
 		//Check if order in sorted edges is clockwise
 		//Followed theorem outlined in following link:
@@ -341,12 +307,19 @@ public class Geometry
 		List<double> areas = new List<double> ();
 		double maxArea = 0;
 		int rounds = 0;
+		int ceil = this.edges.Count;
+//		if( xid == 9 )
+//			Debug.Log("Ceil :" + ceil);
 		while (tempGeo.edges.Count > 0) {
-			if( rounds > 50 ){
+			if( rounds > ceil ){
+//				if( xid == 9 )
+//					tempGeo.edges[0].DrawVector(GameObject.Find("temp"));
 				Debug.Log( "Rounds Exceeded at:" + xid );
 				break;
 			}
 			tempEdge = tempGeo.getSortedEdges();
+//			if( xid == 9 )
+//				Debug.Log("TempEdge: " + tempEdge.Count);
 //			if( polygonClockwise(tempEdge) )
 //				tempEdge.Reverse();
 
@@ -569,16 +542,6 @@ public class Geometry
 					for( int k = 0; k < uniquePts.Count - 1; k++ ){
 						linesToAdd.Add( new Line(uniquePts[k], uniquePts[k+1]) );
 					}
-					//If there are only two lines formed
-					//And they are LA and LB then skip
-//					if( linesToAdd.Count == 2 ){
-//						if( (LA.Equals(linesToAdd[0]) || LA.Equals(linesToAdd[1]))
-//						   && (LB.Equals(linesToAdd[0]) || LB.Equals(linesToAdd[1])) )
-//							continue;
-//					}
-//					else{
-//
-//					}
 					bool LARepeat = false;
 					bool LBRepeat = false;
 					foreach( Line lad in linesToAdd ){
@@ -655,13 +618,20 @@ public class Geometry
 		//that are shared by the polygon and appear explicitly within neither
 		//but is in the middle of the merged polygon
 		for (int i = 0; i < toReturn.edges.Count; i++) {
-			int partner = 0;
+			int partnerA = 0;
+			int partnerB = 0;
 			for (int j = 0; j < toReturn.edges.Count; j++) {
 				if( i == j ) continue;
-				if( toReturn.edges[i].ShareVertex( toReturn.edges[j] ) )
-					partner++;
+				if( toReturn.edges[i].ShareVertex( toReturn.edges[j] ) ){
+					Vector3 shv = toReturn.edges[i].getSharedVertex( toReturn.edges[j] );
+//					if( shv.Equals( toReturn.edges[i].vertex[0] ) )
+//						partnerA++;
+//					else
+//						partnerB++;
+					partnerA++;
+				}
 			}
-			if( partner == 0 ){
+			if( partnerA == 0 ){//|| partnerB == 0 ){
 				toReturn.edges.RemoveAt(i);
 				i--;
 			}
