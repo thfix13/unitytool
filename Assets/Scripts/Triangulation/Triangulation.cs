@@ -1118,11 +1118,11 @@ public class Triangulation : MonoBehaviour
 				bool FL = connectable( templistA[0], templistB[indB] );
 				bool FF = connectable( templistA[0], templistB[0] );
 				if( xid == 40 && cnt == 17 ){
-					Debug.Log( LL + " " + LF + " " + FL + " " + FF );
-					foreach( Vector3 vyv in templistA )
-						drawSphere( vyv, Color.grey, 1 );
-					foreach( Vector3 vyv in templistB )
-						drawSphere( vyv, Color.grey, 2 );
+//					Debug.Log( LL + " " + LF + " " + FL + " " + FF );
+//					foreach( Vector3 vyv in templistA )
+//						drawSphere( vyv, Color.grey, 1 );
+//					foreach( Vector3 vyv in templistB )
+//						drawSphere( vyv, Color.grey, 2 );
 //					Debug.Log(nextstartingpoint);
 //					Debug.Log( !comprehensiveCollision( new Line( templistA[indA], templistB[indB] ), -100 ) );
 //					drawSphere( templistA[indA] );
@@ -1179,10 +1179,10 @@ public class Triangulation : MonoBehaviour
 							}
 						}
 					}
-					if( xid == 4 && cnt == 7 ){
-						Debug.Log(connectorA);
-						Debug.Log(indA);
-					}
+//					if( xid == 4 && cnt == 7 ){
+//						Debug.Log(connectorA);
+//						Debug.Log(indA);
+//					}
 					//Find connector for ray B
 					//If A[last] can reach B[j] then all above A[last] can reach B[j] and all above B[j]
 					for( int j = indB; j >= 0; j-- ){
@@ -1207,9 +1207,9 @@ public class Triangulation : MonoBehaviour
 					//Set marker for next one
 					if( connectorB == 0 ) nextstartingpoint = "first";
 					else nextstartingpoint = "last";
-					if( xid == 40 && cnt == 17 ){
-						Debug.Log("connB " +  connectorB + "," + nextstartingpoint );
-					}
+//					if( xid == 40 && cnt == 17 ){
+//						Debug.Log("connB " +  connectorB + "," + nextstartingpoint );
+//					}
 				}
 				//Case 3: Two rays joined by kernel
 				else{
@@ -1267,7 +1267,7 @@ public class Triangulation : MonoBehaviour
 		}
 		foreach (Line l in VPret.edges) {
 			if( VectorApprox( l.vertex[0], l.vertex[1] ) )
-				Debug.Log("GETTING THE SAME");
+				Debug.Log("GETTING equivalent points on VP edge");
 		}
 		return VPret;
 	}

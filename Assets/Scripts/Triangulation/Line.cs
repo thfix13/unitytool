@@ -213,9 +213,12 @@ public class Line
 		double t = numerator2 / denom;
 		
 		//if ((s > 0 && s < 1) && (t > 0 && t < 1))
-		if ((s > 0 + eps && s < 1 - eps) && (t > 0 + eps && t < 1 - eps))
-			return 1;
-		
+		if ((s > 0 + eps && s < 1 - eps) && (t > 0 + eps && t < 1 - eps)){
+			if( CounterClockCheck( param ) )
+				return 1;
+			else
+				return 0;
+		}		
 		return 0;
 	}
 
@@ -328,17 +331,13 @@ public class Line
 		    && (floatCompareLIN( (float)t, 0f, ">=")  && floatCompareLIN((float)t, 1f, "<=")) ){
 			if( ShareVertex(param) )
 				return 0;
-			else
+			else if( POL(param.vertex[0]) || POL(param.vertex[1]) 
+			        || param.POL(vertex[0]) || param.POL (vertex[1])
+			        || CounterClockCheck(param) )
 				return 1;
-			//TODO:Add this
-//			else if( POL(param.vertex[0]) || POL(param.vertex[1]) 
-//			        || param.POL(vertex[0]) || param.POL (vertex[1])
-//			        || CounterClockCheck(param) )
-//				return 1;
-//			else
-//				return 0;
-		}
-		
+			else
+				return 0;
+		}		
 		return 0;
 	}
 
