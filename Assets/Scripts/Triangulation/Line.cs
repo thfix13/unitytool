@@ -9,7 +9,7 @@ using Vectrosity;
 //Used my implementation of line intersection function called: LineIntersectionMuntac (will change name later)
 //Another function called GetIntersectionPoint
 [Serializable]
-public class Line 
+public class Line : IEquatable<Line>
 {
 	public float eps = 1e-5f;//the margin of accuracy for all floating point equivalence checks
 	public float specialeps = 1e-6f;
@@ -25,7 +25,7 @@ public class Line
 		colours[1] = Color.cyan; 
 	}
 
-	public  bool Equals(Line l)
+	public bool Equals(Line l)
 	{
 		if (VectorApprox (l.vertex [0], vertex [0]) && VectorApprox (l.vertex [1], vertex [1]))
 			return true;
@@ -299,14 +299,15 @@ public class Line
 		//Debug.Log ("Denom " + denom + " num2 " + numerator2);
 		//Case 1 - Colinear
 		//if ( denom == 0 && numerator2 == 0 ) {
-		if ( ShareVertex (param) ){
-			Vector3 shared = getSharedVertex( param );
-			Line joint = new Line ( GetOther( shared ), param.GetOther( shared ) );
-			if( joint.POL( shared ) )
-				return 0;
-		}
+
 		if ( floatCompareLIN((float)denom, 0) && floatCompareLIN((float)numerator2,0) ) {
 			//Case 2 - Colinear and Overlapping
+			if ( ShareVertex (param) ){
+				Vector3 shared = getSharedVertex( param );
+				Line joint = new Line ( GetOther( shared ), param.GetOther( shared ) );
+				if( joint.POL( shared ) )
+					return 0;
+			}
 			//if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
 			if( floatCompareLIN( Vector2.Dot( (q0 - p0), u ), 0, ">=" )
 			   && floatCompareLIN( Vector2.Dot( (q0 - p0), u ), Vector2.Dot( u, u ), "<=" ) )

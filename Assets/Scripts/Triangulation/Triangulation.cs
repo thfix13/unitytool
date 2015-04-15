@@ -1472,6 +1472,8 @@ public class Triangulation : MonoBehaviour
 						Debug.Log("B Invalid VP Union at: " + cnt);
 						kvp.Value.edges[i].DrawVector(GameObject.Find("temp"));
 						kvp.Value.edges[j].DrawVector(GameObject.Find("temp"));
+						if( kvp.Value.edges[i].Equals(kvp.Value.edges[j]) )
+							Debug.Log("Equality");
 						Debug.Log(casetype);
 						return 1;
 						invflag = true;
@@ -1574,7 +1576,12 @@ public class Triangulation : MonoBehaviour
 			//File.WriteAllText(path, createText);
 		}
 		File.WriteAllText(path, createText);
-		Debug.Log ("Area Calculated");
+		double mapArea = mapBG.getPolygonArea (0);
+		foreach( Geometry g in finalPoly )
+			mapArea -= g.getPolygonArea(0);
+		double finalCoverage = coverageAreas [coverageAreas.Count - 1];
+		double percentCovered = (finalCoverage / mapArea) * 100;
+		Debug.Log ("Area Calculated. " + Math.Round( percentCovered, 5 ) + "% of map explored.");
 	}
 	
 	public void subtractiveCoverage(){
