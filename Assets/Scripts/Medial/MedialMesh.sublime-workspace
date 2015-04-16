@@ -1,0 +1,458 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"removed",
+				"removedVertices"
+			],
+			[
+				"str",
+				"strcmp"
+			],
+			[
+				"inc",
+				"include"
+			],
+			[
+				"ptr",
+				"ptrcopy"
+			],
+			[
+				"pr",
+				"println"
+			],
+			[
+				"text",
+				"text2"
+			],
+			[
+				"re",
+				"result"
+			],
+			[
+				"bu",
+				"bubble_sort_results"
+			],
+			[
+				"sor",
+				"sorted_sum"
+			],
+			[
+				"train",
+				"train_example"
+			],
+			[
+				"test",
+				"test_example"
+			],
+			[
+				"j",
+				"jvtrue"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 0.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/Users/dhsingh/Documents/Thesis/unitytool/Assets/Scripts/Medial/MedialMesh.cs",
+		"/Users/dhsingh/Documents/Thesis/unitytool/Assets/Scripts/Medial/backupMedialmesh",
+		"/Users/dhsingh/Pictures/Camera Roll/They are just like...",
+		"/Users/dhsingh/Pictures/Camera Roll/These rules are da bomb!",
+		"/Users/dhsingh/Downloads/assignment2games/comments.txt",
+		"/Users/dhsingh/Downloads/assign3_250/Calculator.java",
+		"/Users/dhsingh/Downloads/assign3_250/Calculator-1.java",
+		"/Users/dhsingh/Documents/Thesis/unitytool/Assets/Scripts/Medial/GraphUtil.cs",
+		"/Users/dhsingh/Downloads/assign3_250/CalculatorTest.java",
+		"/Users/dhsingh/Downloads/assign3_250/Calculator-10.java",
+		"/Users/dhsingh/Downloads/assign3_250/Calculator-9.java",
+		"/Users/dhsingh/Downloads/assign3_250/Calculator-11.java",
+		"/Users/dhsingh/Downloads/assign3_250/comments_sorted.txt",
+		"/Users/dhsingh/Downloads/assign3_250/comments.txt",
+		"/Users/dhsingh/Downloads/assign3_250/Calculator-8.java",
+		"/Users/dhsingh/Downloads/assign3_250/Calculator-7.java",
+		"/Users/dhsingh/Downloads/assign3_250/Calculator-5.java",
+		"/Users/dhsingh/Downloads/assign3_250/Calculator-6.java",
+		"/Users/dhsingh/Documents/workspace/COMP250/src/a3/Calculator.java",
+		"/Users/dhsingh/Downloads/assign3_250/Calculator-4.java",
+		"/Users/dhsingh/Downloads/assign3_250/Calculator-2.java",
+		"/Users/dhsingh/Downloads/assign3_250/Calculator-3.java",
+		"/Users/dhsingh/Downloads/assign3_250/Calculator-13.java",
+		"/Users/dhsingh/Downloads/assign3_250/Calculator-12.java",
+		"/Users/dhsingh/Downloads/assign3_250/Assignment3/src/a3/Calculator.java",
+		"/Users/dhsingh/Downloads/assign3_250/Assignment3-1.java",
+		"/Users/dhsingh/Downloads/assign3_250/Assignment3.java",
+		"/Users/dhsingh/Downloads/assignment2games/XoeyZhangA2/ReadMe.txt",
+		"/Users/dhsingh/Downloads/assignment2games/JoshuaRomoffA2 (1)/ReadMe.txt",
+		"/Users/dhsingh/Downloads/assignment2games/Assig2/README",
+		"/Users/dhsingh/Downloads/assignment2games/JoshuaRomoffA2/ReadMe.txt",
+		"/Users/dhsingh/Downloads/assignment2games/521A2/Readme.txt",
+		"/Users/dhsingh/Downloads/assignment2games/Assignment2/README.txt",
+		"/Users/dhsingh/OneDrive/new  2.txt",
+		"/Users/dhsingh/Downloads/Calculator.java",
+		"/Users/dhsingh/Downloads/github",
+		"/Users/dhsingh/Documents/dealbase/dealbase/README.md",
+		"/Users/dhsingh/PlotWindow.java",
+		"/Users/dhsingh/first-names.txt",
+		"/Users/dhsingh/OneDrive/cisco offer",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170140-34182 - Group 93 - Solvie Lee - Feb 28, 2015 751 PM - EMR.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170124-34182 - Group 77 - Pouvanen Veerasami - Mar 1, 2015 1225 AM - EMR.java",
+		"/Users/dhsingh/Downloads/BingRewards-master/config.xml",
+		"/Users/dhsingh/Downloads/BingRewards-master/license",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170127-34182 - Group 80 - Omar Akkila - Feb 28, 2015 1042 PM - EMR.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170146-34182 - Group 99 - YiHong Luo - Feb 28, 2015 935 PM - EMR.java",
+		"/Users/dhsingh/Desktop/tri.cs",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170133-34182 - Group 86 - Madeleine Mees - Feb 27, 2015 832 AM - EMR.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170133-34182 - Group 86 - Madeleine Mees - Feb 26, 2015 525 PM - EMR.java",
+		"/Users/dhsingh/Downloads/EMRTest.java",
+		"/Users/dhsingh/Desktop/ass2.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170129-34182 - Group 82 - Isaac Fiore - Feb 28, 2015 1051 PM - EMR.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170128-34182 - Group 81 - Daniel Banh - Feb 28, 2015 1054 PM - EMR.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170128-34182 - Group 81 - Daniel Banh - Feb 28, 2015 1041 PM - EMR.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170055-34182 - Group 8 - Gabriela Stefanini - Feb 28, 2015 1032 PM - EMR(1).java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170123-34182 - Group 76 - Florence Robert-Regol - Feb 28, 2015 834 PM - EMR.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170122-34182 - Group 75 - Nicholas Jasinski - Mar 1, 2015 140 AM - EMR.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170145-34182 - Group 98 - Clément Fournier - Feb 28, 2015 655 AM - EMR.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170144-34182 - Group 97 - William Nguyen - Feb 28, 2015 416 PM - EMR.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170143-34182 - Group 96 - Chang Shu - Feb 28, 2015 923 PM - EMR.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170142-34182 - Group 95 - Oliver Tse Sak Kwun - Feb 28, 2015 827 PM - EMR.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170141-34182 - Group 94 - Maksim Bober - Feb 28, 2015 1051 PM - EMR.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170137-34182 - Group 90 - Anmoljeet Gill - Feb 28, 2015 819 PM - EMR.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170140-34182 - Group 93 - Solvie Lee - Feb 28, 2015 1058 PM - EMR.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170056-34182 - Group 9 - Hongji Chen - Feb 28, 2015 555 PM - EMR.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170135-34182 - Group 88 - Wayne yiel Leung - Feb 28, 2015 1052 PM - EMR.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170134-34182 - Group 87 - Niklas Benseler - Feb 28, 2015 1059 PM - EMR.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170132-34182 - Group 85 - Michaël Medeiros Charbonneau - Feb 28, 2015 335 PM - EMR.java",
+		"/Users/dhsingh/Downloads/asn2_250/Assignment 2 Download Mar 12, 2015 331 AM (Group Assignment)/170131-34182 - Group 84 - Toviah Botwinik - Feb 28, 2015 1004 PM - EMR.java",
+		"/Users/dhsingh/Downloads/script_GI",
+		"/Users/dhsingh/Desktop/a.c",
+		"/Users/dhsingh/Documents/workspace/HelloGoogle/src/shrey.c",
+		"/Users/dhsingh/OneDrive/Interviews/cover letter sample.txt",
+		"/Users/dhsingh/Google Drive/McGill/DistributedSystems OnGit/DistributedReservationSystem/1.MiddlewareInAction/README.md",
+		"/Users/dhsingh/Google Drive/McGill/DistributedSystems OnGit/1.MiddlewareInAction/README.md",
+		"/Users/dhsingh/Documents/Thesis/SM03Skeleton/Skeleton.cxx",
+		"/Users/dhsingh/Documents/Thesis/SM03Skeleton/PointTool.cxx",
+		"/Users/dhsingh/Documents/Thesis/SM03Skeleton/README.txt",
+		"/Users/dhsingh/Documents/Thesis/SM03Skeleton/Polyhedron.h",
+		"/Users/dhsingh/Documents/Thesis/SM03Skeleton/Point3d.h",
+		"/Users/dhsingh/Documents/Thesis/SM03Skeleton/PointTool.h",
+		"/Users/dhsingh/Documents/Thesis/SM03Skeleton/IDSet.cxx",
+		"/Users/dhsingh/Downloads/Assignment2/EMRTest.java",
+		"/Users/dhsingh/Downloads/asn2_250/COMP250-A2-Code/EMR/src/assignment2/EMR.java",
+		"/usr/include/term.h",
+		"/Users/dhsingh/Documents/Thesis/SM03Skeleton/run.sh",
+		"/Users/dhsingh/Documents/dealbase/dealbase/.gitignore",
+		"/Users/dhsingh/Documents/dealbase/dealbase/controllers/DbController.py",
+		"/Users/dhsingh/Downloads/asn2_250/COMP250-A2-Code/Data/Doctors.csv",
+		"/Users/dhsingh/Desktop/b.c",
+		"/Users/dhsingh/Desktop/a.sh",
+		"/Users/dhsingh/Google Drive/McGill/SecondTerm/Analysis of Social Networks Project3/runparallel.sh",
+		"/Users/dhsingh/Downloads/Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170146-33235 - Group 99 - YiHong Luo - Feb 2, 2015 1057 PM - Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170145-33235 - Group 98 - Clément Fournier - Jan 28, 2015 643 PM - Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170143-33235 - Group 96 - Chang Shu - Feb 2, 2015 719 PM - Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170144-33235 - Group 97 - William Nguyen - Feb 1, 2015 903 PM - Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170142-33235 - Group 95 - Oliver Tse Sak Kwun - Feb 2, 2015 1058 PM - Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170141-33235 - Group 94 - Maksim Bober - Jan 31, 2015 443 PM - Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170140-33235 - Group 93 - Solvie Lee - Feb 2, 2015 1013 PM - Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170137-33235 - Group 90 - Anmoljeet Gill - Jan 31, 2015 151 PM - Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170135-33235 - Group 88 - Wayne yiel Leung - Feb 2, 2015 836 PM - Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170134-33235 - Group 87 - Niklas Benseler - Feb 2, 2015 322 PM - Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170132-33235 - Group 85 - Michaël Medeiros Charbonneau - Feb 2, 2015 755 PM - Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170133-33235 - Group 86 - Madeleine Mees - Jan 31, 2015 630 PM - Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170132-33235 - Group 85 - Michaël Medeiros Charbonneau - Feb 1, 2015 847 AM - Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170131-33235 - Group 84 - Toviah Botwinik - Jan 27, 2015 406 PM - Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170129-33235 - Group 82 - Ariane Schang - Feb 2, 2015 626 PM - Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170128-33235 - Group 81 - Daniel Banh - Feb 2, 2015 1037 PM - Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170127-33235 - Group 80 - Omar Akkila - Feb 2, 2015 702 PM - Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment1/src/assignment1/Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170124-33235 - Group 77 - Pouvanen Veerasami - Feb 2, 2015 818 PM - Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170123-33235 - Group 76 - Florence Robert-Regol - Feb 1, 2015 1033 PM - Assignment1.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170123-33235 - Group 76 - Florence Robert-Regol - Feb 1, 2015 954 PM - Assignment1.java",
+		"/Users/dhsingh/Downloads/Assignment1Test.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment 1 Download Feb 15, 2015 319 AM (Group Assignment)/170122-33235 - Group 75 - Nicholas Jasinski - Feb 2, 2015 902 PM - Assignment1.java",
+		"/Users/dhsingh/Documents/Thesis/SM03Skeleton/arena2.ply2",
+		"/Users/dhsingh/Documents/Thesis/SM03Skeleton/moving_gaurd.ply2",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment1Test.java",
+		"/Users/dhsingh/Downloads/asn1_250/Assignment1.java",
+		"/Users/dhsingh/Documents/ipmsg_log.txt",
+		"/Users/dhsingh/Downloads/God of War - Collection by GhoSt/!!!ЧИТАТЬ.txt",
+		"/Users/dhsingh/Documents/okcupid.txt",
+		"/Users/dhsingh/Documents/NEwProj/Assets/Scripts/PlayerBehaviour1.cs",
+		"/Users/dhsingh/Documents/okc_profile",
+		"/Users/dhsingh/Documents/Thesis/SM03Skeleton/output_medial_moving_gaurd.ply2",
+		"/Users/dhsingh/Documents/Thesis/SM03Skeleton/output_medial_convex.ply2",
+		"/Users/dhsingh/Downloads/Playboy’s Playmate Calendar 2015/mininova.in.txt"
+	],
+	"find":
+	{
+		"height": 35.0
+	},
+	"find_in_files":
+	{
+		"height": 93.0,
+		"where_history":
+		[
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"createGra",
+			"home/BingRewards/bin/BingRewards/",
+			"displayd",
+			"addd",
+			"List",
+			"insurance",
+			"insure",
+			"sortd",
+			"sorter",
+			"xmin",
+			"inside",
+			"poly",
+			"test",
+			"(java.lang.AssertionError: )|(org.junit.ComparisonFailure: )",
+			"group 9",
+			"(java.lang.AssertionError: )|(org.junit.ComparisonFailure: )",
+			"org.junit.ComparisonFailure",
+			"java.lang.AssertionError: ",
+			"binary",
+			"a1tes",
+			"outer",
+			"manager",
+			"%d",
+			"connectin",
+			"serverAddress",
+			"port",
+			"server",
+			"io.",
+			" io",
+			"io",
+			"connect(",
+			"serverAddress",
+			"heart",
+			"serverAddress",
+			"lo",
+			"5Q",
+			"jonathan",
+			"Dhirendra.singh",
+			"Dhirendra",
+			"spence",
+			"Stuart",
+			"6017",
+			"setConnective",
+			"setConnectivity",
+			"connected",
+			"verify",
+			"/media/zdrive/home/mcgill/comp202/hw4",
+			"f",
+			"\\n\\n",
+			"\\n",
+			"[@(]",
+			"[)]+[,;]?",
+			"[)]+[,;]",
+			"([a-z]+\\d?=)",
+			"([^-?\\d.?\\d+f,-?\\d.?\\d+f,-?\\d.?\\d+f]+[3])",
+			"([^-?\\d.?\\d+f,])",
+			"([\\d+])f",
+			"+",
+			"syste",
+			"system",
+			"'",
+			"csv_file_path",
+			"re.su",
+			"business_path",
+			"get_business",
+			"request",
+			"is_c",
+			"u'",
+			".path",
+			"get_business",
+			"print",
+			"\\n",
+			"category",
+			"image",
+			"LinearSea",
+			"Compare",
+			"Compar",
+			"Compare",
+			"string",
+			"screen",
+			"temp",
+			"temp.",
+			"linear",
+			"showsuccess=",
+			"sorting",
+			"plot",
+			"q1 ",
+			"benjam",
+			"sean",
+			"adish",
+			"chang",
+			"'",
+			"stop_w",
+			"Deltal,",
+			"Deltal",
+			"abel",
+			"programming",
+			"2",
+			"1"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": true,
+		"replace_history":
+		[
+			"",
+			"java.lang.AssertionError: ",
+			"dhirendra.singh",
+			"singh",
+			"Dhirendra",
+			"setConnectivity",
+			"/Users/dhsingh/Downloads/comp202-ta-tools-hw4",
+			"/media/zdrive/home/mcgill/comp202/hw4",
+			"",
+			"\\n",
+			"",
+			"\\n",
+			"\\1",
+			"\"",
+			"String",
+			"",
+			"2.000002",
+			"1.000001"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 26.0
+	},
+	"input":
+	{
+		"height": 34.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "MedialMesh.sublime-project",
+	"replace":
+	{
+		"height": 48.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 222.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

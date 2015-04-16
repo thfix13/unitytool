@@ -1,10 +1,13 @@
+/// <summary>
+/// deprecated.... very initial version in the project
+/// </summary>
 using UnityEngine;
 using System.Collections;
 using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
-public class CreateMesh : MonoBehaviour {
+public class _CreateMesh : MonoBehaviour {
 	char[] delimiterChars = { ' ', '\t' };
 
 	public string file_prefix="cube";

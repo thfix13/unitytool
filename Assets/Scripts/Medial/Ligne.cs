@@ -87,11 +87,13 @@ namespace Medial{
 			return false; 
 		}
 		
-		
-		public bool LineIntersection(Ligne l)
+		/// <summary>
+		/// Does L intersects 'this' object?
+		/// </summary>
+		public bool LineIntersection(Ligne L)
 		{
-			Vector3 a = l.vertex[0]; 
-			Vector3 b = l.vertex[1];
+			Vector3 a = L.vertex[0]; 
+			Vector3 b = L.vertex[1];
 			Vector3 c = vertex[0];
 			Vector3 d = vertex[1];
 			
@@ -103,7 +105,7 @@ namespace Medial{
 			//When they are parallel and collinear, they intersect
 			//they might share some point here, if they are parallel
 			Vector3 cross= Vector3.Cross(a-b,c-d);
-			if(cross==Vector3.zero && Vector3.Cross(a-c,a-b)== Vector3.zero && this.LinesOverlap(l))
+			if(cross==Vector3.zero && Vector3.Cross(a-c,a-b)== Vector3.zero && this.LinesOverlap(L))
 				return true;
 
 			//When share a point, say that they don't intersect

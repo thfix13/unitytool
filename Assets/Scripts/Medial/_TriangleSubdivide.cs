@@ -1,10 +1,13 @@
+/// <summary>
+/// deprecated now.. all functionalities included in current project files
+/// </summary>
 using UnityEngine;
 using System.Collections;
 using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
-public class TriangleSubdivide : MonoBehaviour {
+public class _TriangleSubdivide : MonoBehaviour {
 	char[] delimiterChars = { ' ', '\t' };
 
 	void Start () {

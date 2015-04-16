@@ -11,6 +11,9 @@ namespace Medial{
 		List<List<int>> polygons;
 		int option;
 		int nlayers;
+
+		float maxx,minx, maxz,minz;
+
 		public ArenasGenerator(int selGridInt){
 			option=selGridInt;
 			layers =new List<List<Vector3>>();
@@ -40,10 +43,16 @@ namespace Medial{
 				break;
 
 				case 4: polygons= new List<List<int>>{new List<int>{0,1,2,3},new List<int>{4,5,6,7}
-				,new List<int>{8,9,10,11},new List<int>{12,13,14,15}, new List<int>{16,17,18,19}, new List<int>{20,21,22},
-				new List<int>{23,24,25}};
-				nlayers=80;
-				generate_arena_mgs();
+				,new List<int>{8,9,10,11},new List<int>{12,13,14,15}, new List<int>{16,17,18,19}, new List<int>{20,21,22}
+			,new List<int>{23,24,25}
+			};
+				nlayers=20;
+				generate_arena_MGS();
+
+				setMax();
+
+				generate_L_gaurd_MGS();
+				generate_X_gaurd_MGS();
 				break;
 			}
 		}
@@ -54,15 +63,17 @@ namespace Medial{
 			return polygons;
 		}
 
+		public List<int[]>[] getCovers(){
+			Covers c= new Covers(layers,polygons);
+			return c.triangulateCovers(this);
+		}
 		//to be called on update
 		private int layers_i=0;
 
 
 		public void generate2D_movinggaurdarena(float t){
-	//		udl ("layerscount "+layers.Count);
 			while(layers_i<layers.Count-1 && t>=layers[layers_i][0].y)
 			{
-	//			udl ("layer number "+layers_i +" layer.y ="+layers[layers_i][0].y + " t="+t);
 				layers_i++;
 			}
 			if(layers_i>=layers.Count-1)
@@ -106,12 +117,28 @@ namespace Medial{
 
 		}
 
-		public List<int[]>[] getCovers(){
-			Covers c= new Covers(layers,polygons);
-			return c.getCovers();
+		/// <summary>
+		/// find min max x and z of arena for drawing ray for finding intersection with polygon
+		/// </summary>
+		void setMax(){
+
+			maxx=float.MinValue;
+			minx=float.MaxValue; 
+			maxz=float.MinValue;
+			minz= float.MaxValue;
+			foreach(var v in layers[0]){
+				maxx= v.x>maxx?v.x:maxx;
+				minx= v.x<minx?v.x:minx;
+				maxz= v.z>maxz?v.z:maxz;
+				minz= v.z<minz?v.z:minz;
+			}
 		}
 
-
+		public float getMaxX(){return maxx;}
+		public float getMaxZ(){return maxz;}
+		public float getMinX(){return minx;}
+		public float getMinZ(){return minz;}
+		
 		public static void udl(object s){
 			UnityEngine.Debug.Log(s);
 		}
@@ -169,41 +196,144 @@ namespace Medial{
 			
 		}
 
-		public void generate_arena_mgs(){
+		public void generate_arena_MGS(){
 			Vector3 v00= new Vector3(-40f,0,-40f),
 			v01= new Vector3(40f,0f,-40f),
 			v02=new Vector3(40f,0f,40f), 
 			v03= new Vector3(-40f,0f,40f),
-			v04= new Vector3(-34f,0f,-34f),
-			v05=new Vector3(-34f,0f,-3f), 
-			v06=new Vector3(-3f,0f,-3f),
-			v07=new Vector3(-3f,0f,-34f), 
-			v08=new Vector3(3f,0f,-34f),
-			v09=new Vector3(3f,0f,-3f),
-			v10=new Vector3(34f,0f,-3f),
-			v11=new Vector3(34f,0f,-34f),
-			v12=new Vector3(-34f,0f,3f),
-			v13=new Vector3(-34f,0f,34f),
-			v14=new Vector3(-3f,0f,34f),
-			v15=new Vector3(-3f,0f,3f),
-			v16=new Vector3(3f,0f,3f),
-			v17=new Vector3(3f,0f,34f),
-			v18=new Vector3(34f,0f,34f),
-			v19=new Vector3(34f,0f,3f);
-//			v20=new Vector3(37f,0f,-34f),
-//			v21=new Vector3(36f,0f,-32f),
-//			v22=new Vector3(38f,0f,-32f),
-//			v23=new Vector3(34f,0,0f),
-//			v24=new Vector3(32f,0,-1f),
-//			v25=new Vector3(32f,0,1f); 
+			v04= new Vector3(-24f,0f,-24f),
+			v05=new Vector3(-24f,0f,-13f), 
+			v06=new Vector3(-13f,0f,-13f),
+			v07=new Vector3(-13f,0f,-24f), 
+			v08=new Vector3(13f,0f,-24f),
+			v09=new Vector3(13f,0f,-13f),
+			v10=new Vector3(24f,0f,-13f),
+			v11=new Vector3(24f,0f,-24f),
+			v12=new Vector3(-24f,0f,13f),
+			v13=new Vector3(-24f,0f,24f),
+			v14=new Vector3(-13f,0f,24f),
+			v15=new Vector3(-13f,0f,13f),
+			v16=new Vector3(13f,0f,13f),
+			v17=new Vector3(13f,0f,24f),
+			v18=new Vector3(24f,0f,24f),
+			v19=new Vector3(24f,0f,13f);
+ 
 
 			for(int ilayer=0;ilayer<nlayers;ilayer++){
-				v01.y=v02.y=v03.y=v04.y=v05.y=v06.y=v07.y=v08.y=v09.y=v10.y=v11.y=v12.y=v13.y=v14.y=v15.y=v16.y
-					=v17.y=v18.y=v19.y=1f*ilayer/2;
-				layers.Add(new List<Vector3>{v01,v02,v03,v04,v05,v06,v07,v08,v09,v10,v11,v12,v13,v14,v15,v16
+				v00.y=v01.y=v02.y=v03.y=v04.y=v05.y=v06.y=v07.y=v08.y=v09.y=v10.y=v11.y=v12.y=v13.y=v14.y=v15.y=v16.y
+					=v17.y=v18.y=v19.y=1f*ilayer;
+				layers.Add(new List<Vector3>{v00,v01,v02,v03,v04,v05,v06,v07,v08,v09,v10,v11,v12,v13,v14,v15,v16
 				,v17,v18,v19});
 			}
 
+		}
+
+		public void generate_L_gaurd_MGS(){
+			Vector3 _1i=new Vector3(32f,0,-24f), _2i=new Vector3(27f,0,-14f), _3i= new Vector3(37f,0,-14f);
+			Vector3 _1f=new Vector3(32f,0,24f), _2f=new Vector3(27f,0,34f), _3f= new Vector3(37f,0,34f);
+			int ilayer=0;
+			float sections=4f;
+			Vector3 _1=new Vector3(),_2=new Vector3(),_3=new Vector3();
+			float n= nlayers/sections;
+			for(float i=0f;ilayer<n;ilayer++){
+				_1=(_1f*ilayer+_1i*(n -ilayer))/(n);
+				_2=(_2f*ilayer+_2i*(n -ilayer))/(n);
+				_3=(_3f*ilayer+_3i*(n -ilayer))/(n);
+				_1.y=_2.y=_3.y= 1f*ilayer;
+				layers[ilayer].Add(_1);layers[ilayer].Add(_2);layers[ilayer].Add(_3);
+			}
+			var pivot= new Vector3(24,0,24);
+			var theta = Mathf.Abs(Vector3.Angle(_1f-pivot,new Vector3(24,0,37)-pivot))/(n); //rotate guard in chunks of (nlayers/sections) 
+			for(;ilayer<2f*n;ilayer++){
+				_1=RotatePointAroundPivot(_1,pivot,new Vector3(0, -theta, 0));
+				_2=RotatePointAroundPivot(_2,new Vector3(24,0,24),new Vector3(0, -theta, 0));
+				_3=RotatePointAroundPivot(_3,new Vector3(24,0,24),new Vector3(0, -theta, 0));
+				_1.y=_2.y=_3.y=1f*ilayer;
+				
+				layers[ilayer].Add(_1);layers[ilayer].Add(_2);layers[ilayer].Add(_3);
+			}
+			_1i=_1f=_1;
+			_2i=_2f=_2;
+			_3i=_3f=_3;
+			_1f.x=0f; _2f.x=-10f; _3f.x=-10f;
+			
+			n= nlayers/sections;
+			for(float i=0f;ilayer< 3f*n; ilayer++, i+=1/n){
+				_1=(_1f*i+_1i*(1-i));
+				_2=_2f*i+_2i*(1-i);
+				_3=_3f*i+_3i*(1-i);
+				_1.y=_2.y=_3.y= 1f*ilayer;
+				layers[ilayer].Add(_1);layers[ilayer].Add(_2);layers[ilayer].Add(_3);
+			}
+			
+			theta = 180f/(n); //rotate guard in chunks of (nlayers/sections) 
+			for(;ilayer< 4f*n;ilayer++){
+				//				_1=RotatePointAroundPivot(_1,_1f,new Vector3(0, -theta, 0));
+				_2=RotatePointAroundPivot(_2,_1f,new Vector3(0, -theta, 0));
+				_3=RotatePointAroundPivot(_3,_1f,new Vector3(0, -theta, 0));
+				_1.y=_2.y=_3.y=1f*ilayer;
+				
+				layers[ilayer].Add(_1);layers[ilayer].Add(_2);layers[ilayer].Add(_3);
+			}
+			_1i=_1f=_1;
+			_2i=_2f=_2;
+			_3i=_3f=_3;
+			_1f.x=0f; _2f.x=-2f; _3f.x=-2f;
+			
+		}
+
+		public void generate_X_gaurd_MGS(){
+			Vector3 _1i=new Vector3(24f,0,0), _2i=new Vector3(14f,0,-5f), _3i= new Vector3(14f,0,5f);
+			Vector3 _1f=new Vector3(13f,0,0f), _2f=new Vector3(3f,0,-5f), _3f= new Vector3(3f,0,5f);
+			int ilayer=0;
+			float sections=4f;
+			Vector3 _1=new Vector3(),_2=new Vector3(),_3=new Vector3();
+			float n= nlayers/sections;
+			for(float i=0f;ilayer<n;ilayer++){
+				_1=(_1f*ilayer+_1i*(n -ilayer))/(n);
+				_2=(_2f*ilayer+_2i*(n -ilayer))/(n);
+				_3=(_3f*ilayer+_3i*(n -ilayer))/(n);
+				_1.y=_2.y=_3.y= 1f*ilayer;
+				layers[ilayer].Add(_1);layers[ilayer].Add(_2);layers[ilayer].Add(_3);
+			}
+			var pivot= new Vector3(13,0,-13);
+			var theta = Mathf.Abs(Vector3.Angle(_1f-pivot,new Vector3(0,0,-13)-pivot))/(n); //rotate guard in chunks of (nlayers/sections) 
+			for(;ilayer<2f*n;ilayer++){
+				_1=RotatePointAroundPivot(_1,pivot,new Vector3(0, -theta, 0));
+				_2=RotatePointAroundPivot(_2,pivot,new Vector3(0, -theta, 0));
+				_3=RotatePointAroundPivot(_3,pivot,new Vector3(0, -theta, 0));
+				_1.y=_2.y=_3.y=1f*ilayer;
+				
+				layers[ilayer].Add(_1);layers[ilayer].Add(_2);layers[ilayer].Add(_3);
+			}
+			_1i=_1f=_1;
+			_2i=_2f=_2;
+			_3i=_3f=_3;
+			_1f.z=-24f; _2f.z=_3f.z=-34f;
+			
+			n= nlayers/sections;
+			for(float i=0f;ilayer< 3f*n; ilayer++, i+=1/n){
+				_1=(_1f*i+_1i*(1-i));
+				_2=_2f*i+_2i*(1-i);
+				_3=_3f*i+_3i*(1-i);
+				_1.y=_2.y=_3.y= 1f*ilayer;
+				layers[ilayer].Add(_1);layers[ilayer].Add(_2);layers[ilayer].Add(_3);
+			}
+			
+			theta = 180f/(n); //rotate guard in chunks of (nlayers/sections) 
+			for(;ilayer< 4f*n;ilayer++){
+				//				_1=RotatePointAroundPivot(_1,_1f,new Vector3(0, -theta, 0));
+				_2=RotatePointAroundPivot(_2,_1f,new Vector3(0, -theta, 0));
+				_3=RotatePointAroundPivot(_3,_1f,new Vector3(0, -theta, 0));
+				_1.y=_2.y=_3.y=1f*ilayer;
+				
+				layers[ilayer].Add(_1);layers[ilayer].Add(_2);layers[ilayer].Add(_3);
+			}
+			_1i=_1f=_1;
+			_2i=_2f=_2;
+			_3i=_3f=_3;
+			_1f.z=-13f; _2f.z= _3f.z=-3f;
+			
 		}
 
 		public void generate_arena(){
@@ -246,7 +376,6 @@ namespace Medial{
 		}
 		
 		public void generate_movrot_gaurd(){
-	//		udl ("number of nodes= "+layers.Count);
 			Vector3 fo=new Vector3(-3f,0,4.5f), so=new Vector3(-3f,0,0.5f), svo= new Vector3(-5.5f,0,1.5f);
 			Vector3 ff=new Vector3(5.5f,0,4.5f), sf=new Vector3(5.5f,0,0.5f), svf= new Vector3(3f,0,1.5f);
 			int ilayer;
@@ -279,9 +408,9 @@ namespace Medial{
 				
 				layers[ilayer].Add(f);layers[ilayer].Add(s);layers[ilayer].Add(sv);
 			}
-	//		udl ("number of nodes final= "+layers.Count);
-	//		return layers;
 		}
+
+
 		public void generate_unidirectional_mov_gaurd(){
 			//		udl ("number of nodes= "+layers.Count);
 			Vector3 fo=new Vector3(-3f,0,4f), so=new Vector3(-3f,0,1f), svo= new Vector3(-5.5f,0,2.5f);
@@ -296,14 +425,8 @@ namespace Medial{
 				layers[ilayer].Add(f);layers[ilayer].Add(s);layers[ilayer].Add(sv);
 			}
 		}
-		//internal approval process at ETS. things aree going fine.
-		//i would apprecia ur time to jump on a quick call regarding the start date
-		//
-		public void generate_L_gaurd_MGS(){
-			Vector3 _1i=new Vector3(-3f,0,4.5f), _2i=new Vector3(-3f,0,0.5f), _3i= new Vector3(-5.5f,0,1.5f);
-			Vector3 _1f=new Vector3(5.5f,0,4.5f), _2f=new Vector3(5.5f,0,0.5f), _3f= new Vector3(3f,0,1.5f);
 
-		}
+
 		public void generate_rotating_gaurd(){
 			Vector3 f=new Vector3(-2f,0,-1f), s=new Vector3(-2f,0,3f), sv= new Vector3(2f,0,1f);
 			for(int ilayer=0;ilayer<nlayers;ilayer++){

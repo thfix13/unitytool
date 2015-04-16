@@ -1,3 +1,6 @@
+/// <summary>
+/// Deprecated now... Switched over to Moving_guard_arena.cs. This got Modified a lot for Convex example arena
+/// </summary>
 using UnityEngine;
 using System.Collections;
 using System;
@@ -6,10 +9,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 namespace Medial{
-/// <summary>
-/// Modified a lot for Convex example arena. Switching over to Moving_guard_arena.cs
-/// </summary>
-	public class CreateLayeredMesh : MonoBehaviour {
+
+	public class _CreateLayeredMesh_ConvexExample : MonoBehaviour {
 		char[] delimiterChars = { ' ', '\t' };
 		string file_prefix;//="convex";//"moving_gaurd";
 		GameObject gameobj2;

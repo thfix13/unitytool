@@ -16,20 +16,33 @@ namespace Medial{
 			this.polygons=polygons;
 		}
 
-		//return {bottomlayer,upperlayer}
-		public List<int[]>[] getCovers(){
+
+		/// <summary>
+		/// Finds the cover triangles.
+		/// </summary>
+		/// <returns>{bottomlayer,upperlayer}.</returns>
+		public List<int[]>[] triangulateCovers(ArenasGenerator agen){
 			
 			List<int[]>[] ret= new List<int[]>[]{new List<int[]>{}, new List<int[]>{}};
-			List<Ligne> lines , newlines;
+
+			///the lines that form the polygons of the arena
+			List<Ligne> lines ;
+
+			//the lines that will be added to form triangulations
+			List<Ligne> newlines;
+
 			//hashtable of vertex to line. will also contain mappings to newlines generated
 			Hashtable vertexToLine;
+
 			//adjacency matrix. will also contain adjacencies born due to new lines generated
 			bool [,]adjacency;
+
 			Ligne addline, newline;
 			HashSet<Triangle> newtriangulations;
-			//for finding delauney triangulations
-			//find the two triangles related to a new line.
+
+			///for finding delauney triangulations, find the two triangles related to a new line.
 			Hashtable newlinesToTriangle=  new Hashtable();
+
 			List<Ligne> temp2lines;
 			
 			for(int layeri=0;layeri<2; layeri++){
@@ -37,23 +50,24 @@ namespace Medial{
 				newlines= new List<Ligne>();
 				var layer= layers[layeri*(layers.Count-1)];
 				
-				//find min max x and z of arena for drawing ray for finding intersection with polygon
-				float maxx=float.MinValue,minx=float.MaxValue, maxz=float.MinValue,minz= float.MaxValue, maxRadii;
-				foreach(var v in layer){
-					maxx= v.x>maxx?v.x:maxx;//5144199696
-					minx= v.x<minx?v.x:minx;
-					maxz= v.z>maxz?v.z:maxz;
-					minz= v.z<minz?v.z:minz;
-				}
-				maxRadii= Math.Max (maxx-minx,maxz-minz);
-				
+
+				float  maxRadii;
+
+				///find the maximum raddi in which the arena can be contained
+				/// used to find all possible intersections from the midpoint of a line to a point at radii distance
+				/// and check if all intersection are even=> point if outside arena, or odd => point is inside arena
+				/// so, to check if the newly created line is inside or outside
+				maxRadii= Mathf.Max (agen.getMaxX()-agen.getMinX(),agen.getMaxZ()-agen.getMinZ()) * 2;
+
 				int r, s;
 				vertexToLine= new Hashtable();
 				adjacency= new bool[layer.Count,layer.Count];
+
 				for(int i=0; i<layer.Count;i++)
 					for(int j=0; j<layer.Count;j++)
 						adjacency[i,j]=false;
-				
+
+				///creating adjacency matrix and vertexToLine hashtable on currently present lines of the polygons
 				foreach(var polygon in polygons){
 					for(int i=0; i<polygon.Count;i++){
 						r= polygon[i]; s= polygon[(i+1)%polygon.Count];
@@ -73,7 +87,7 @@ namespace Medial{
 					}
 				}
 
-				//find lines that create triangulations
+				///form lines that create triangulations
 				for(int linei=0; linei< lines.Count; linei++){
 					var line =lines[linei];
 					
@@ -85,28 +99,36 @@ namespace Medial{
 						
 						var v2= otherline.vertex[0];
 						//check if v2 is not adjacent to v1
-						newline= new Ligne(v1,v2,line.vertexIndex[0],otherline.vertexIndex[0]);
-						bool flag=true;
-						foreach(var adjline in AdjLines)
-						{
-							if(newline.Equals(adjline))
-							{	flag=false;
-								break;
-							}
-						}
-						if(!flag)
+						if(adjacency[line.vertexIndex[0],otherline.vertexIndex[0]])
 							continue;
+						newline= new Ligne(v1,v2,line.vertexIndex[0],otherline.vertexIndex[0]);
+//						bool flag=true;
+//						foreach(var adjline in AdjLines)
+//						{
+//							if(newline.Equals(adjline))
+//							{	flag=false;
+//								break;
+//							}
+//						}
+//						if(!flag)
+//							continue;
 						
 						if(intersecting(newline,lines, newlines))
 							continue;
 						if(outside(newline,lines,maxRadii))
 							continue;
+
+						/// all test passed, welcome the newline
 						newlines.Add(newline);
+
+						///make changes to adjacency matrix too, and to vertexToLine
 						adjacency[line.vertexIndex[0],otherline.vertexIndex[0]]=true;
 						adjacency[otherline.vertexIndex[0],line.vertexIndex[0]]=true;
-						//						newline.DrawLine(Color.red);
 						((List<Ligne>)vertexToLine[v1]).Add(newline);
 						((List<Ligne>)vertexToLine[v2]).Add(newline);
+
+						///this hashtable will be created later while finding new triangles below
+						/// and will be used to ensure delauney triangulations
 						newlinesToTriangle.Add(newline,new HashSet<Triangle>());
 					}
 				}
@@ -124,7 +146,7 @@ namespace Medial{
 							continue;
 						
 						Triangle t= new Triangle(new List<int>{v1,v2,v3});
-						//find the two lines associated with v3 and two vertices of line
+						///find the two lines associated with v3 and two vertices of line
 						temp2lines=getLinesfromCommonVertex(line,layer[v3],vertexToLine);
 						t.setLines(line,temp2lines[0],temp2lines[1]);
 						((HashSet<Triangle>)newlinesToTriangle[line]).Add(t);
@@ -150,12 +172,12 @@ namespace Medial{
 //										go.transform.position=(layer[a[0]]+layer[a[1]]+layer[a[2]])/3;
 					
 					if(Ligne.CounterClockWise(layer[a[0]],layer[a[1]],layer[a[2]]))
-					{ret[layeri].Add(a.ToArray());
-						//						udl(a[0]+" "+a[1]+" "+a[2]);
+					{
+						ret[layeri].Add(a.ToArray());
 					}
 					else
-					{ret[layeri].Add(new int[]{a[0],a[2],a[1]});
-						//						udl(a[0]+" "+a[2]+" "+a[1]);
+					{
+						ret[layeri].Add(new int[]{a[0],a[2],a[1]});
 					}
 				}
 			}
@@ -165,17 +187,21 @@ namespace Medial{
 		class Triangle: IEquatable<Triangle>{
 			int a,b,c;
 			List<Ligne> l;
+
 			public Triangle(List<int> list){
 				int []arr= list.ToArray();
 				Array.Sort(arr);
 				a=arr[0];b=arr[1];c=arr[2];
 			}
+
 			public void setLines(Ligne l1,Ligne l2, Ligne l3){
 				this.l= new List<Ligne>{l1,l2,l3};
 			}
+
 			public List<Ligne> getLines(){
 				return l;
 			}
+
 			public Ligne getSidedLine(Ligne line,int v){
 				if(l[0]==line)
 					return l[1].ContainsVertex(v)?l[1]:l[2];
@@ -184,25 +210,31 @@ namespace Medial{
 				return l[0].ContainsVertex(v)?l[0]:l[1];
 
 			}
+
 			public override int GetHashCode ()
 			{
 				int []arr = new int[]{a,b,c};
 				Array.Sort(arr);
 				return arr[0]*100+arr[1]*10+arr[2]*1;
 			}
+
 			public override bool Equals(System.Object e){
 				return e!=null && this.a==((Triangle)e).a && this.b==((Triangle)e).b && this.c==((Triangle)e).c ;
 			}
+
 			public bool Equals(Triangle e){
 				return e!=null && this.a==e.a && this.b==e.b && this.c==e.c ;
 			}
+
 			public List<int> GetVertices(){
 				return new List<int>{a,b,c};
 			}
+
 			public int GetThirdVertex(Ligne line){
 				var v1= line.vertexIndex[0]; var v2= line.vertexIndex[1];
 				return a!=v1 &&a!=v2? a: (b!=v1 && b!= v2? b:c);
 			}
+
 			public float GetOppositeAngle( Ligne line, List<Vector3> layer){
 				int third;
 				int one=line.vertexIndex[0], sec= line.vertexIndex[1]; 
@@ -218,23 +250,28 @@ namespace Medial{
 
 		void makeDelauney(List<Ligne> newlines, List<Vector3> layer, Hashtable newlinesToTriangle, 
 		                  HashSet<Triangle> newtriangulations){
-			//get the two triangles associated with each newline, then check the angles across the adjacent sides
-			//if angle >180, remove this line, and add another line from opposite vertices.
+
+			///get the two triangles associated with each newline, then check the angles across the adjacent sides
+			///if angle >180, remove this line, and add another line from opposite vertices.
 			for(int i=0; i<newlines.Count; i++){
 				var line= newlines[i];
 				//										udl (line+ "   ----  "+ ((HashSet<Triangle>)newlinesToTriangle[line]).Count);
 				Triangle t1= ((HashSet<Triangle>)newlinesToTriangle[line]).First();
 				Triangle t2= ((HashSet<Triangle>)newlinesToTriangle[line]).Last();
+
 				//assume a-c is the line
 				int a=line.vertexIndex[0], c= line.vertexIndex[1];
 				int b= t1.GetThirdVertex(line), d= t2.GetThirdVertex(line);
+
 				float t1angle= t1.GetOppositeAngle(line,layer)
 					, t2angle= t2.GetOppositeAngle(line,layer);
+
 				if(t1angle+t2angle >180)
 				{
 					//the new triangles
 					Triangle ta= new Triangle(new List<int>{a,b,d}),
 					tc= new Triangle(new List<int>{c,b,d});
+
 					//the new line
 					Ligne bd= new Ligne(layer[b],layer[d],b,d);
 					
@@ -242,10 +279,11 @@ namespace Medial{
 					t2a=t2.getSidedLine(line,a), t2c= t2.getSidedLine(line,c);
 					ta.setLines(t1a,bd,t2a);
 					tc.setLines(t1c,bd,t2c);
+
 					//make changes to newlinestoTriangle
 					newlinesToTriangle.Remove(line);
+
 					//if t1a was a newline... and so were others?
-					
 					if(newlinesToTriangle.Contains(t1a)){
 						((HashSet<Triangle>)newlinesToTriangle[t1a]).Remove(t1);
 						((HashSet<Triangle>)newlinesToTriangle[t1a]).Add(ta);
@@ -266,15 +304,15 @@ namespace Medial{
 					((HashSet<Triangle>)newlinesToTriangle[bd]).Add(ta);
 					((HashSet<Triangle>)newlinesToTriangle[bd]).Add(tc);
 					
-					//make changes to new triangulations
+					//make changes to newtriangulations
 					newtriangulations.Remove(t1);
 					newtriangulations.Remove(t2);
 					newtriangulations.Add(ta);
 					newtriangulations.Add(tc);
+
 					//remove line from newlines and add bd to new lines;
 					newlines[i]=bd;
 				}
-				//					udl ( a +"-"+c+ "    "+t1angle+" & "+t2angle);
 			}
 		}
 		
@@ -289,10 +327,10 @@ namespace Medial{
 			}
 			return new List<Ligne>{l1,l2};
 		}
+
 		/// <summary>
 		/// Checks if there lies no point inside the Triangluation 
 		/// </summary>
-		/// <returns><c>true</c>, if triangulation was valid, <c>false</c> otherwise.</returns>
 		bool validTriangulation(int v1,int v2, int v3, List<Vector3> layer){
 			Vector3 a=layer[v1], b=layer[v2], c=layer[v3];
 			foreach(var s in layer){
@@ -341,6 +379,10 @@ namespace Medial{
 			}
 			return false;
 		}
+
+		/// <summary>
+		/// Check for if line L is outside of the polygon or not.
+		/// </summary>
 		bool outside(Ligne l, List<Ligne>lines, float radii){
 			var v1= l.MidPoint();
 			var v2= l.getPointAtDAndAngleA(radii,35);
@@ -364,5 +406,3 @@ namespace Medial{
 		}
 	}
 }
-
-

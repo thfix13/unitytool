@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using UnityEditor;
 	namespace Medial{
@@ -14,18 +14,18 @@ using UnityEditor;
 			return EditorUtility.NaturalCompare(lhs.name, rhs.name);
 		}
 	}
-	[CustomEditor(typeof(CreateLayeredMesh))]
+	[CustomEditor(typeof(_CreateLayeredMesh_ConvexExample))]
 	public class  MedialEditor: Editor {
 		int sg=-1, sgnew;
 		GameObject g=null;
-		CreateLayeredMesh obj;
+		_CreateLayeredMesh_ConvexExample obj;
 		public override void OnInspectorGUI()
 		{
 			DrawDefaultInspector();
 			if(g==null)
 			{
 				g = GameObject.Find("Medial");
-				obj=g.GetComponent<CreateLayeredMesh>();
+				obj=g.GetComponent<_CreateLayeredMesh_ConvexExample>();
 			}
 			var text = new string[] {"Moving_gaurd", "Convex", "Arena"};
 			sgnew=GUILayout.SelectionGrid(sg, text, 1, EditorStyles.radioButton);
@@ -80,10 +80,15 @@ using UnityEditor;
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal("box");
-			if(GUILayout.Button("Project",GUILayout.Width(50)))
+			if(GUILayout.Button("Show Path",GUILayout.Width(50)))
 			{
 				
-				obj.projectPath();
+				obj.showPath();
+			}
+			if(GUILayout.Button("Project Path",GUILayout.Width(50)))
+			{
+				
+				obj.projectPathOn2D();
 			}
 			if(GUILayout.Button("Pause/Play",GUILayout.Width(75)))
 			{

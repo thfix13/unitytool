@@ -39,7 +39,10 @@ namespace Medial{
 		/// </summary>
 		/// <param name="layers">Layers.</param>
 		/// <param name="polygons">Polygons.</param>
-		public static List<VertTria> assignPLY(List<List<Vector3>> layers, List<List<int>> polygons, List<int[]>[]covers){
+		public static List<VertTria> assignPLY(LayerPolygonUtil LPU){
+			List<List<Vector3>> layers=LPU.getLayer(); 
+			List<List<int>> polygons= LPU.getPoly();
+			List<int[]>[]covers= LPU.getCovers();
 	
 			//a List of vertices for each polygon, so that we can draw different meshes for different polygons
 			//the first list however is the whole set of all the vertices in the given object, used to find medial skeleton
@@ -188,7 +191,7 @@ namespace Medial{
 
 			//assign colors to vertices
 			Color[] colors = new Color[newVertices.Count];
-			Color triColor = Color.blue;
+			Color triColor = new Color(UnityEngine.Random.Range(0f,1f),UnityEngine.Random.Range(0f,1f),UnityEngine.Random.Range(0f,1f));
 			for (int i = 0; i < newTriangles.Count; i++)
 			{
 				int vertIndex = newTriangles[i];
