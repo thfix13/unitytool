@@ -189,6 +189,7 @@ public class Triangulation : MonoBehaviour
 		/***PHASE B: COLORING***/
 		/*STEP 4 - MAKE MST OF POLYGONS*/
 		MST ();
+		return;
 		/*STEP 5 - TRIANGULATE*/
 		triangulate ();
 
@@ -442,13 +443,22 @@ public class Triangulation : MonoBehaviour
 			totalGeo.edges.Add(l);
 		totalGeoVerts = totalGeo.GetVertex ();
 		int vlcnt = 0;
+		int vertcnt = 0;
 		lines.Clear ();
 		//Constructing "lines" for triangulation
 		//First add lines that are in MST
+		foreach (Line l in totalGeo.edges)
+			lines.Add (l);
 		foreach (Line l in linesMinSpanTree)
 			lines.Add (l);
 		foreach (Vector3 Va in allVertex){
+			vertcnt++;
+			//drawSphere( Va, Color.blue, vertcnt );
+			int vcnt2 = 0;
 			foreach(Vector3 Vb in allVertex){
+				vcnt2++;
+//				if( vertcnt == 45 && vcnt2 == 146 )
+//					new Line( Va, Vb ).DrawVector(GameObject.Find("temp"));
 				if( Va != Vb ){
 					bool collides = false, essential = false;
 					Line tempLine = new Line(Va, Vb);
@@ -461,11 +471,19 @@ public class Triangulation : MonoBehaviour
 						}
 					}
 					
-					if( collides ) continue;
-					
+					if( collides ) continue;					
 					//B-Collision with obstacles and maps
+					//Note: comprehensiveCollision uses Geometry.LineCollision
+					//which only uses LineIntersectMuntac and not one with EndPt detection
+					//Same for checks against MapBG.
+					//But since we've added all the totalGeo edges beforehand those collision will be
+					//checked in above loop.
 					collides = comprehensiveCollision( tempLine, 0 );
-					
+//					if( vertcnt == 45 && vcnt2 == 146 ){
+//						Debug.Log(collides);
+//						Debug.Log( tempLine.LineIntersectMuntacEndPt( new Line( allVertex[141], allVertex[142] ) ) );
+//						comprehensiveCollision( tempLine, -100 );
+//					}
 					//Add Line
 					if( !collides ){
 						lines.Add( tempLine );
@@ -483,6 +501,8 @@ public class Triangulation : MonoBehaviour
 			}
 		}
 		vlcnt = 0;
+//		foreach (Line ls in lines)
+//			ls.DrawVector (GameObject.Find ("temp"));
 		//Find the centers 
 		triangles = new List<Triangle> ();
 		//Well why be efficient when you can be not efficient
@@ -563,7 +583,7 @@ public class Triangulation : MonoBehaviour
 		triangles [0].SetColour ();
 		
 		//Count Where to put guards 
-		List<Vector3> points = new List<Vector3> (); 
+		//List<Vector3> points = new List<Vector3> (); 
 		List<Color> coloursPoints = new List<Color> (); 
 		
 		int[] count = new int[3];
@@ -572,6 +592,7 @@ public class Triangulation : MonoBehaviour
 		foreach (Triangle tt in triangles) 
 		{
 			//foreach(Vector3 v in tt.vertex)
+
 			for (int j = 0; j<tt.vertex.Length; j++) 
 			{
 				bool vectorToAdd = true;
@@ -583,7 +604,7 @@ public class Triangulation : MonoBehaviour
 				}
 				
 				if (vectorToAdd) {
-					points.Add (tt.vertex [j]); 
+					points.Add (tt.vertex [j]);
 					coloursPoints.Add (tt.colourVertex [j]); 
 				}
 				
@@ -599,7 +620,8 @@ public class Triangulation : MonoBehaviour
 				count [2]++; 
 			
 		}
-		
+
+		//Debug.Log (count [0] + "," + count [1] + "," + count [2]);
 		triangulation.points = points; 
 		triangulation.colours = coloursPoints; 
 		
@@ -625,9 +647,10 @@ public class Triangulation : MonoBehaviour
 			if( colours[i] == cGuard ){
 				Vector3 v = points[i];
 				cameras.Add( points[i] );
-				//drawSphere(v, Color.green);
 			}
+			//drawSphere( points[i], colours[i] );
 		}
+		//Debug.Log (cameras.Count);
 	}
 	
 	private void makeSPRoadMap() {
@@ -950,8 +973,8 @@ public class Triangulation : MonoBehaviour
 		GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 		inter.transform.renderer.material.color = x;
 		inter.transform.position = v;
-		//inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f);
-		inter.transform.localScale = new Vector3(0.01f,0.01f,0.01f);
+		inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f);
+		//inter.transform.localScale = new Vector3(0.01f,0.01f,0.01f);
 		inter.transform.parent = temp.transform;
 		//inter.gameObject.name = vlcnt.ToString();
 	}
@@ -1301,7 +1324,7 @@ public class Triangulation : MonoBehaviour
 			drawSphere (vA, Color.red, 0);
 			drawSphere (vB, Color.magenta, 1);
 			drawSphere (vB_new, Color.green, 2);
-			Debug.Log( mapBG.PointOutsideDebug(vB_new) );
+			//Debug.Log( mapBG.PointOutsideDebug(vB_new) );
 			Debug.Log("Mag Orig: " + tmpline.Magnitude());
 			tmpline = new Line (vB, vB_new);
 			Debug.Log("Mag: " + tmpline.Magnitude());
@@ -1319,7 +1342,7 @@ public class Triangulation : MonoBehaviour
 		//3. Check if new endpoint is inside the map	
 		if (!collides){
 			if( xid == -99 ){
-				mapBG.PointOutsideDebug(vB_new);
+				//mapBG.PointOutsideDebug(vB_new);
 				collides = true;
 			}
 			else if( mapBG.PointOutside(vB_new) || mapBG.PointOutside(tmpline.MidPoint()) )

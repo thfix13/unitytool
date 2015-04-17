@@ -111,7 +111,7 @@ public class Triangle
 		//Get the colour to put
 		int indexSum = 0;
 		int sum = 0;  
-
+		//Coloring algorithm
 		for(int i = 0; i<ttt.vertex.Length; i++)
 	    {
 

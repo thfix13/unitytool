@@ -54,9 +54,9 @@ public class Geometry
 		return PointInside (l.MidPoint ());
 	}
 
-    public bool LineInsideDebug(Line l){//Called by GeometryMerge, GeomtryMergeInner and BoundGeometry
-		return PointInsideDebug (l.MidPoint ());
-	}
+//    public bool LineInsideDebug(Line l){//Called by GeometryMerge, GeomtryMergeInner and BoundGeometry
+//		return PointInsideDebug (l.MidPoint ());
+//	}
 
 	//Finds out if a point lies strictly inside a polygon.
 	//The colinear case is automatically dealt with. See manual.
@@ -74,36 +74,36 @@ public class Geometry
 		return count % 2 == 1;
 	}
 
-	public bool PointInsideDebug( Vector3 pt ){//Called by LineInside, GeometryInside and LineCollision
-		Line lray = new Line(pt, new Vector3(-100, 1f, -100)); 
-		int count = 0; 
-		foreach(Line myLine in edges){
-			if( myLine.name.Equals("Line7") ){
-				//Debug.Log("PIDbg : " + myLine.LineIntersectMuntac(lray));
-			}
-			if( myLine.LineIntersectMuntac(lray) > 0 ){
-				count++;
-				//myLine.DrawVector(GameObject.Find("vpA"));
-				//Debug.Log("InvisibleLine: " + myLine.vertex[0] + " " + myLine.vertex[1]);
-				//Debug.Log ( myLine.vertex[0].x + " " + myLine.vertex[0].z);
-				//Debug.Log ( myLine.vertex[1].x + " " + myLine.vertex[1].z);
-				drawSphere(myLine.GetIntersectionPoint(lray),Color.green);
-				Debug.Log("Says:"+myLine.LineIntersectMuntac(lray));
-				if( myLine.LineIntersectMuntac(lray) == 2 ){
-					Debug.Log("Bump " + myLine.vertex[0] + " " + myLine.vertex[1]);
-					Debug.Log( VectorApprox( myLine.vertex[0], myLine.vertex[1] ) );
-					myLine.name = "ZZZ";
-					myLine.DrawVector(GameObject.Find("temp"));
-				}
-			}
-			//Check if the intersection point is on the polygon edge
-			if( myLine.PointOnLine( pt ) && myLine.PointOnLineB( pt ) )
-				return false;
-		}
-		Debug.Log ("Count: " + count);
-		lray.DrawVector (GameObject.Find ("temp"));
-		return count % 2 == 1;
-	}
+//	public bool PointInsideDebug( Vector3 pt ){//Called by LineInside, GeometryInside and LineCollision
+//		Line lray = new Line(pt, new Vector3(-100, 1f, -100)); 
+//		int count = 0; 
+//		foreach(Line myLine in edges){
+//			if( myLine.name.Equals("Line7") ){
+//				//Debug.Log("PIDbg : " + myLine.LineIntersectMuntac(lray));
+//			}
+//			if( myLine.LineIntersectMuntac(lray) > 0 ){
+//				count++;
+//				//myLine.DrawVector(GameObject.Find("vpA"));
+//				//Debug.Log("InvisibleLine: " + myLine.vertex[0] + " " + myLine.vertex[1]);
+//				//Debug.Log ( myLine.vertex[0].x + " " + myLine.vertex[0].z);
+//				//Debug.Log ( myLine.vertex[1].x + " " + myLine.vertex[1].z);
+//				drawSphere(myLine.GetIntersectionPoint(lray),Color.green);
+//				Debug.Log("Says:"+myLine.LineIntersectMuntac(lray));
+//				if( myLine.LineIntersectMuntac(lray) == 2 ){
+//					Debug.Log("Bump " + myLine.vertex[0] + " " + myLine.vertex[1]);
+//					Debug.Log( VectorApprox( myLine.vertex[0], myLine.vertex[1] ) );
+//					myLine.name = "ZZZ";
+//					myLine.DrawVector(GameObject.Find("temp"));
+//				}
+//			}
+//			//Check if the intersection point is on the polygon edge
+//			if( myLine.PointOnLine( pt ) && myLine.PointOnLineB( pt ) )
+//				return false;
+//		}
+//		Debug.Log ("Count: " + count);
+//		lray.DrawVector (GameObject.Find ("temp"));
+//		return count % 2 == 1;
+//	}
 
 	//Checks if point is explicitly outside the polygon
 	public bool PointOutside( Vector3 pt ){//Called by LineInside, GeometryInside and LineCollision
@@ -120,38 +120,22 @@ public class Geometry
 		return count % 2 == 0;
 	}
 
-	public bool PointOutsideDebug( Vector3 pt ){//Called by LineInside, GeometryInside and LineCollision
-		Line lray = new Line(pt, new Vector3(-100, 1f, -100)); 
-		//lray.DrawVector (GameObject.Find ("temp"), Color.blue);
-		int count = 0; 
-		foreach(Line myLine in edges){
-			//EndPt because ray might pass through corners
-			if( myLine.LineIntersectMuntacEndPt(lray) > 0 ){
-				count++;
-//				if( myLine.name.Equals("10") ){
-//					myLine.LineIntersectMuntacEndPtDebug(lray);
-				//if( count == 3){
-				//	myLine.DrawVector(GameObject.Find("temp"), Color.magenta);
-					//Debug.Log( myLine.LineIntersectMuntacEndPtDebug(lray));
-					//Debug.Log( myLine.LineIntersectMuntacGM(lray));
-					//Debug.Log( VectorApprox( myLine.GetIntersectionPoint(lray), pt ) );
-					//Debug.Log( pt.z - myLine.GetIntersectionPoint(lray).z);
-//					Debug.Log(myLine.PointOnLine( pt ) + " " + myLine.PointOnLineB( pt ));
-//					Vector3 a = myLine.vertex [0];
-//					Vector3 b = myLine.vertex [1];
-//					Vector3 c = pt;
-//					Debug.Log( ((b.x - a.x)*(pt.z - a.z) - (b.z - a.z)*(c.x - a.x)) );
-//				}
-//					Debug.Log("GM" + myLine.LineIntersectMuntacGM(lray) );
-//				}
-			}
-			//Check if the intersection point is on the polygon edge
-			if( myLine.PointOnLine( pt ) && myLine.PointOnLineB( pt ) )
-				return false;
-		}
-		Debug.Log ("DBG: " + count);
-		return count % 2 == 0;
-	}
+//	public bool PointOutsideDebug( Vector3 pt ){//Called by LineInside, GeometryInside and LineCollision
+//		Line lray = new Line(pt, new Vector3(-100, 1f, -100)); 
+//		//lray.DrawVector (GameObject.Find ("temp"), Color.blue);
+//		int count = 0; 
+//		foreach(Line myLine in edges){
+//			//EndPt because ray might pass through corners
+//			if( myLine.LineIntersectMuntacEndPt(lray) > 0 ){
+//				count++;
+//			}
+//			//Check if the intersection point is on the polygon edge
+//			if( myLine.PointOnLine( pt ) && myLine.PointOnLineB( pt ) )
+//				return false;
+//		}
+//		Debug.Log ("DBG: " + count);
+//		return count % 2 == 0;
+//	}
 
 	public List<Vector3> GetVertex()//Called by GetReflexVertex, GetClosestLine
 	{
