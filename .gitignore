@@ -22,3 +22,10 @@ SvgToPdf.py
 Output.pdf
 
 Assets/Levels/Human Study.meta
+*.sublime-workspace
+
+*.meta
+
+.DS_Store
+
+.DS_Store

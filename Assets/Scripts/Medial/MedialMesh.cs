@@ -8,18 +8,24 @@ namespace Medial{
 	public class MedialMesh {
 		// takes points and traingles from buildobject (reading of file).. remember that the reverse directioned 
 		//triangles have also been created... 
+
 		List <Vector3> vertices;
 		List <int> triangles;
 		Graph graphObj;
-		List<int> path= null;
-		int startNearestNode, endNearestNode;
+		List<List<int>> paths= null;
+		int startNearestNode; 
+		List<int> endNearestNodes;
 		GameObject meshGameObject;
+		IntervalKDTree<int> tree;
+		ArenasGenerator arena;
 
 		///assigned in removeVs; never instantiated by itself
 		HashSet<int>removedVertices_global;
 
-		public MedialMesh(string InputFile, GameObject go, bool createGraphflag, bool filterNodesFlag, float y_min, float y_max){
-
+		public MedialMesh(string InputFile, GameObject go, bool createGraphflag, bool filterNodesFlag, 
+		                  ArenasGenerator arena){
+			//.getMinX(),arena.getMaxX(), y2_min, y2_max, arena.getMinZ(), arena.getMaxZ()
+			//float x_min, float x_max,float y_min, float y_max,float z_min, float z_max
 			char[] delimiterChars = { ' ', '\t' };
 			this.meshGameObject=go;
 			string []objectFile;
@@ -28,7 +34,7 @@ namespace Medial{
 			int ntriangles = Convert.ToInt32(objectFile [1]) *2;
 			this.vertices = new List<Vector3>(nvertices_totalTri);
 			this.triangles =  new List<int>(ntriangles);
-			
+			this.arena=arena;
 			
 			string []parsed;
 			float a,b, c;
@@ -54,7 +60,7 @@ namespace Medial{
 			if(filterNodesFlag)
 			{
 
-				removeTopBottom(y_min, y_max);
+				removeTopBottom(arena.getMinY2(), arena.getMaxY2());
 				//update totalvertices count after removing vertices and triangles of top and bottom
 				
 				nvertices_totalTri=this.vertices.Count*2;
@@ -66,7 +72,14 @@ namespace Medial{
 			}
 			layMesh();
 			this.meshGameObject.AddComponent<MeshCollider>();
+			udl ("Medial Skeleton created");
 			createGraph();
+			
+			udl ("Graph created");
+			double maxrange=Mathf.Max(arena.getMaxX()-arena.getMinX(),arena.getMaxZ()-arena.getMinZ());
+			udl (maxrange);
+			tree = new IntervalKDTree<int>(maxrange/2, 10);
+			createKDTreeDictionary();
 		}
 
 		private void createGraph(){
@@ -471,8 +484,8 @@ namespace Medial{
 
 
 
-			///TODO:links among neighbours of removed vertices to be made in the graph (drawline done)
-			/// UPDATE: use removeVs_Random
+
+			// UPDATE: use removeVs_Random
 
 
 //			foreach(var vertex in removedVertices){
@@ -515,26 +528,38 @@ namespace Medial{
 		
 		}
 
-		public void connect_Vs(){
+		public void connect_Vs(float r){
 			float dist;
 			float vy;
-			for(int i=0; i<this.vertices.Count;i++){
 
-				for(int j=0; j<this.vertices.Count;j++){
-					if(graphObj.unDirectedEdges[i]!=null && graphObj.unDirectedEdges[i].Contains(new edgenode(j,0)))
-						continue;
-					if(Mathf.Abs(vertices[j].y-vertices[i].y)>1f)
-						continue;
-					dist=Vector3.Distance(vertices[i],vertices[j]);
-					if(dist>1.7f)
-						continue;
-					if(vertices[i].y>vertices[j].y)
-						graphObj.addEdge(j,i,dist);
-					else
-						graphObj.addEdge(i,j,dist);
-					Debug.DrawLine(vertices[i],vertices[j], Color.magenta,100000);
+			///scan all the vertices within a 2rx2rx2r box and connect them if their dist is less than r
+			/// move this box by r in each direction
+			HashSet<int> foundNodes;
+			float x,y,z;
+			for(x= arena.getMinX()-1;x< arena.getMaxX()-r; x+=r){
+				for( y= arena.getMinY2()-1;y< arena.getMaxY2()-r;y+=r){
+					for( z= arena.getMinZ()-1; z< arena.getMaxZ()-r;z+=r){
+						foundNodes= tree.GetValues(x,y,z,x+2*r,y+2*r,z+2*r,new HashSet<int>());
+						foreach(var i in foundNodes){
+							foreach(var j in foundNodes){
+								if(graphObj.unDirectedEdges[i]!=null && graphObj.unDirectedEdges[i].Contains(new edgenode(j,0)))
+									continue;
+//								if(Mathf.Abs(vertices[j].y-vertices[i].y)>1f)
+//									continue;
+								dist=Vector3.Distance(vertices[i],vertices[j]);
+								if(dist>r)
+									continue;
+								if(vertices[i].y>vertices[j].y)
+									graphObj.addEdge(j,i,dist);
+								else
+									graphObj.addEdge(i,j,dist);
+								Debug.DrawLine(vertices[i],vertices[j], Color.magenta,100000);
+							}
+						}
+					}
 				}
 			}
+
 		}
 
 		//failures can be removes by adding edges across a quadrilateral's diagonal vertices
@@ -780,12 +805,39 @@ namespace Medial{
 		}
 		#endregion
 
+		private HashSet<int> treeSearchOnebyOnebyOne(Vector3 v, HashSet<int> foundNodes){
+			float r= 1f;
+			while(foundNodes.Count==0){
+				foundNodes= tree.GetValues(v.x-r,v.y-r,v.z-r,v.x+r,v.y+r,v.z+r,new HashSet<int>());
+				r++;
+			}
+//			udl (r);
+			return foundNodes;
+		}
+
 		#region Path Finding
-		public void findNearest(Vector3 start,Vector3 end){
+
+		private void createKDTreeDictionary(){
+			
+			for(int i=0; i<vertices.Count;i++){
+				tree.Put( Mathf.FloorToInt(vertices[i].x), Mathf.FloorToInt(vertices[i].y), Mathf.FloorToInt(vertices[i].z),
+				         Mathf.CeilToInt(vertices[i].x),Mathf.CeilToInt(vertices[i].y),Mathf.CeilToInt(vertices[i].z),
+				         i);
+			}
+		}
+		public void findNearests(Vector3 start,Vector3 end){
 			float min=-1,diff;
 			int minvertex=-1;
-			//for now very inefficient
-			for(int i=0;i<vertices.Count;i++){
+
+			HashSet<int> foundNodes= new HashSet<int>();
+			var v= start;
+			float r;
+			for(r=1f;foundNodes.Count==0;){
+				foundNodes= tree.GetValues(v.x-r,v.y,v.z-r,v.x+r,v.y+r,v.z+r,new HashSet<int>());
+				r++;
+			}
+			
+			foreach(var i in foundNodes){
 				diff=Vector3.Distance(vertices[i],start);
 				if(min==-1)
 					min=diff;
@@ -794,25 +846,19 @@ namespace Medial{
 					minvertex=i;
 				}
 			}
+
 			startNearestNode=minvertex;
 
-			min=-1;
-			for(int i=0;i<vertices.Count;i++){
-				diff=Vector3.Distance(vertices[i],end);
-				if(min==-1)
-					min=diff;
-				if(diff<min){
-					min=diff;
-					minvertex=i;
-				}
+			for(r=1f ;foundNodes.Count==0;){
+				foundNodes= tree.GetValues(v.x-r,v.y,v.z-r,v.x+r,v.y+r,v.z+r,new HashSet<int>());
+				r++;
 			}
-			endNearestNode=minvertex;
-
-
+			endNearestNodes= foundNodes.ToList();
+			
 		}
 
 
-		public void findPath(){
+		public void findPaths(){
 
 			//holds the visited node
 			HashSet<int> visitedNodes= new HashSet<int>();
@@ -836,16 +882,13 @@ namespace Medial{
 //			go2.transform.position=vertices[endNearestNode];
 //			go2.name= "endnearest";
 
-			while(visitedNodes.Count!=graphObj.nvertices){
+			while(pq.Count>0){
 				currentv= pq.Dequeue();
 //				go2= GameObject.CreatePrimitive(PrimitiveType.Capsule);
 //				go2.transform.localScale= new Vector3(0.3f,0.3f,0.3f);
 //				go2.transform.position=vertices[currentv.nodeId];
 //				go2.name= ""+(ii++);
 
-				if(currentv.nodeId==endNearestNode)
-					break;
-				
 
 				try{
 					currentdist=((hashnode)pqSet[currentv.nodeId]).priority;
@@ -865,10 +908,9 @@ namespace Medial{
 					if(visitedNodes.Contains (adjv.y))
 						continue;
 					new_dist= currentdist + (double)adjv.weight;
-					Debug.DrawLine(vertices[adjv.y],vertices[currentv.nodeId], Color.green,100000);
+//					Debug.DrawLine(vertices[adjv.y],vertices[currentv.nodeId], Color.green,100000);
 					if(pqSet.Contains(adjv.y))
 					{
-	//					udl (adjv.y+" "+adjv.weight+" yo");
 						temp=(hashnode)pqSet[adjv.y];
 						old_dist=temp.priority;
 						if(old_dist> new_dist){
@@ -878,7 +920,6 @@ namespace Medial{
 						}
 					}
 					else{
-	//					udl (adjv.y+" "+adjv.weight+" noo");
 						tempElement= new element(adjv.y);
 						pq.Enqueue(tempElement,new_dist);
 						pqSet.Add(adjv.y,new hashnode(new_dist,tempElement));
@@ -887,22 +928,39 @@ namespace Medial{
 				}
 			}
 
-			//create reverse path
-			path = new List<int>();
-			path.Insert(0,endNearestNode);
-			for(int i=endNearestNode; i!=startNearestNode;i=(int)backtrack[i]){
-				path.Insert(0,(int)backtrack[i]);
+			List<List<int>> paths= new List<List<int>>(endNearestNodes.Count);
+			var path= new List<int>();
+			
+			///do this for every endNearestNode
+			foreach(var endNearestNode in endNearestNodes){
+
+				//create reverse path
+				path = new List<int>();
+				path.Insert(0,endNearestNode);
+				try{
+				for(int i=endNearestNode; i!=startNearestNode;i=(int)backtrack[i]){
+					path.Insert(0,(int)backtrack[i]);
+					}}
+				catch(NullReferenceException e){
+					continue;
+				}
+				//TODO: paths coming out as NULL
+				paths.Add(path);
 			}
 		}
+
 		public void showPath(){
 
-			if(path==null)
+			if(paths==null){
+				udl ("no paths");
 				return;
-
-			for(int i=0;i<path.Count-1; i++)
-				UnityEngine.Debug.DrawLine(vertices[path[i]],vertices[path[i+1]],Color.cyan,200,false);
-			
-			udl ("nodes in path= "+path.Count);
+			}
+			foreach(var path in paths){
+				Color triColor= new Color(UnityEngine.Random.Range(0f,1f),UnityEngine.Random.Range(0f,1f),UnityEngine.Random.Range(0f,1f));
+				for(int i=0;i<path.Count-1; i++)
+					UnityEngine.Debug.DrawLine(vertices[path[i]],vertices[path[i+1]],triColor,2000,false);
+			}
+//			udl ("nodes in path= "+path.Count);
 		}
 
 
@@ -910,16 +968,17 @@ namespace Medial{
 		private int currentpath_i=0;
 
 		public Vector3 movePlayer(float t){
-			if(t<vertices[path[0]].y)
+			if(t<vertices[paths[0][0]].y)
 				return Vector3.zero;
 
-			while(currentpath_i<path.Count && t>vertices[path[currentpath_i]].y)
+			while(currentpath_i<paths[0].Count
+			      && t>vertices[paths[0][currentpath_i]].y)
 				currentpath_i++;
 //			udl (currentpath_i+" " +path.Count + " " +vertices[path[currentpath_i]].y);
-			if(currentpath_i>=path.Count)
+			if(currentpath_i>=paths.Count)
 				return -Vector3.one;
-			float frac1=t- vertices[path[currentpath_i-1]].y, frac2= vertices[path[currentpath_i]].y -t;
-			var playerpos= (vertices[path[currentpath_i-1]]*frac2 + vertices[path[currentpath_i]] *frac1)/(frac1+frac2);
+			float frac1=t- vertices[paths[0][currentpath_i-1]].y, frac2= vertices[paths[0][currentpath_i]].y -t;
+			var playerpos= (vertices[paths[0][currentpath_i-1]]*frac2 + vertices[paths[0][currentpath_i]] *frac1)/(frac1+frac2);
 			return playerpos;
 		}
 

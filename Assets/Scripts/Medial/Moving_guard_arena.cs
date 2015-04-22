@@ -13,7 +13,7 @@ namespace Medial{
 		public Material black;
 		//="convex";//"moving_gaurd";
 		string file_prefix;
-		ArenasGenerator aGen= null;
+		ArenasGenerator arena= null;
 		float layer_division=2f;
 		string multi_triangle_input_file, dir=@"/Users/dhsingh/Documents/Thesis/SM03Skeleton/";
 
@@ -24,14 +24,9 @@ namespace Medial{
 		float t=0;
 
 		/// <summary>
-		/// Keep y_min for resetting t, and y2_min for removing bottom
+		/// Keep y_min for resetting t
 		/// </summary>
-		float y_min, y2_min;
-
-		/// <summary>
-		/// Keep y2_max for removing top 
-		/// </summary>
-		float y2_max;
+		float t_min;
 
 		MedialMesh medialMeshObj;
 		bool generate2DFlag=false;
@@ -57,7 +52,7 @@ namespace Medial{
 			if(playerpos!= Vector3.zero)
 				player2Dprojection.transform.position= new Vector3(playerpos.x,player2Dprojection.transform.position.y,playerpos.z);
 			if(generate2DFlag){
-				aGen.generate2D_movinggaurdarena(t);
+				arena.generate2D_movinggaurdarena(t);
 				t+=0.013f;
 				udl ("t= "+t);
 			}
@@ -71,23 +66,22 @@ namespace Medial{
 			t=Math.Max (0,t-1);
 		}
 		public void Reset(){
-			t=y_min;
+			t=t_min;
 		}
 
 		///t_min to be set equal to layers[0].y
 		///t_max to be set equal to layers[Last-1].y
 		public void initT(float val, float val2, float val3){
-			y_min=t= val;
-			y2_min=val2;
-			y2_max=val3;
+			t_min=t= val;
+			arena.setMinMaxXYZ(val2,val3);
 		}
 
 		public void buildTriangulatedTimeVaryingArena(int selGridInt){
-			aGen= new ArenasGenerator(selGridInt);
+			arena= new ArenasGenerator(selGridInt);
 			file_prefix="moving_gaurd";
 
 			///divide each line in each layer in multiple parts horizontally of length= layer_division
-			LayerPolygonUtil LPU= new LayerPolygonUtil(aGen,layer_division,0f);
+			LayerPolygonUtil LPU= new LayerPolygonUtil(arena,layer_division,0f);
 
 			///and get the redefined layers
 			var layers=LPU.getLayer();
@@ -109,7 +103,7 @@ namespace Medial{
 			}
 			map.transform.position.Set(0f,0f,0f);
 
-			for(int goi=2; goi < vt.Count-2;goi++){
+			for(int goi=1; goi < vt.Count-2;goi++){
 				var go=(GameObject) Instantiate(boxprefab);
 				go.name="Box"+goi;
 				go.transform.parent=map;
@@ -124,12 +118,13 @@ namespace Medial{
 			
 			string medial_output=dir+"output_medial_"+multi_triangle_input_file;
 			var gameobj2 = GameObject.Find ("Medial");
-			medialMeshObj= new MedialMesh(medial_output,gameobj2,true, true, y2_min, y2_max);
+			medialMeshObj= new MedialMesh(medial_output,gameobj2,true, true,
+			                              arena);
 
 		}
 
 		public void RemoveVs(){
-			medialMeshObj.connect_Vs();
+			medialMeshObj.connect_Vs(1.7f);
 		}
 
 
@@ -139,18 +134,19 @@ namespace Medial{
 			medialMeshObj.addEdgesInsideTheArena();
 
 		}
-		public void showPath(){
+		public void findPaths(){
 
-			medialMeshObj.findNearest(start.transform.position,end.transform.position);
-			medialMeshObj.findPath();
+			medialMeshObj.findNearests(start.transform.position,end.transform.position);
+			medialMeshObj.findPaths();
+		}
+		public void showPaths(){
 			medialMeshObj.showPath();
 		}
-
 		public void projectPathOn2D(){
 
 			var plane= GameObject.CreatePrimitive(PrimitiveType.Cube);
-			plane.transform.localScale=new Vector3(aGen.getMaxX()-aGen.getMinX(),0.1f,aGen.getMaxZ()-aGen.getMinZ());
-			plane.transform.position= new Vector3(0,y2_max+0.2f,0);
+			plane.transform.localScale=new Vector3(arena.getMaxX()-arena.getMinX(),0.1f,arena.getMaxZ()-arena.getMinZ());
+			plane.transform.position= new Vector3(0,arena.getMaxY2()+0.2f,0);
 			plane.GetComponent<Renderer>().material=black;
 
 			player2Dprojection= GameObject.CreatePrimitive(PrimitiveType.Sphere);

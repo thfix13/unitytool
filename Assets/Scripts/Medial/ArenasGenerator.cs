@@ -13,6 +13,10 @@ namespace Medial{
 		int nlayers;
 
 		float maxx,minx, maxz,minz;
+		/// <summary>
+		/// Keep min2y and max2y for removing top 
+		/// </summary>
+		float min2y, max2y;
 
 		public ArenasGenerator(int selGridInt){
 			option=selGridInt;
@@ -46,10 +50,9 @@ namespace Medial{
 				,new List<int>{8,9,10,11},new List<int>{12,13,14,15}, new List<int>{16,17,18,19}, new List<int>{20,21,22}
 			,new List<int>{23,24,25}
 			};
-				nlayers=20;
+				nlayers=80;
 				generate_arena_MGS();
 
-				setMax();
 
 				generate_L_gaurd_MGS();
 				generate_X_gaurd_MGS();
@@ -120,7 +123,7 @@ namespace Medial{
 		/// <summary>
 		/// find min max x and z of arena for drawing ray for finding intersection with polygon
 		/// </summary>
-		void setMax(){
+		private void setMinMaxXZ(){
 
 			maxx=float.MinValue;
 			minx=float.MaxValue; 
@@ -133,11 +136,24 @@ namespace Medial{
 				minz= v.z<minz?v.z:minz;
 			}
 		}
+		public void setMinMaxXYZ(float y_min2, float y_max2){
+			this.min2y=y_min2;
+			this.max2y=y_max2;
+			setMinMaxXZ();
+		}
 
 		public float getMaxX(){return maxx;}
 		public float getMaxZ(){return maxz;}
 		public float getMinX(){return minx;}
 		public float getMinZ(){return minz;}
+		/// <summary>
+		/// Second max Y
+		/// </summary>
+		public float getMaxY2(){return max2y;}
+		/// <summary>
+		/// Second min Y
+		/// </summary>
+		public float getMinY2(){return min2y;}
 		
 		public static void udl(object s){
 			UnityEngine.Debug.Log(s);

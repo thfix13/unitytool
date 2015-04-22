@@ -63,44 +63,56 @@ using UnityEditor;
 				
 				obj.buildMedial();
 			}
-			GUILayout.BeginHorizontal("box");
+
 //			if(GUILayout.Button("Create graph",GUILayout.Width(50)))
 //			{
 //				obj.Addextraedges();
 //			}
-			if(GUILayout.Button("Remove Vs",GUILayout.Width(100)))
+			if(GUILayout.Button("Connect Vs",GUILayout.Width(100)))
 			{
 				obj.RemoveVs();
 			}
-			if(GUILayout.Button("Add edges",GUILayout.Width(100)))
+			GUILayout.BeginHorizontal("box");
+			if(GUILayout.Button("Add Random external edges",GUILayout.Width(200)))
 			{
 				obj.Addextraedges();
 			}
-
+			if(GUILayout.Button("Add Random internal edges",GUILayout.Width(200)))
+			{
+				obj.Addextraedges();
+			}
 			GUILayout.EndHorizontal();
-
+			
 			GUILayout.BeginHorizontal("box");
-			if(GUILayout.Button("Show Path",GUILayout.Width(50)))
+			if(GUILayout.Button("Find All Paths",GUILayout.Width(150)))
 			{
 				
-				obj.showPath();
+				obj.findPaths();
 			}
-			if(GUILayout.Button("Project Path",GUILayout.Width(50)))
+			if(GUILayout.Button("Show 1 Path",GUILayout.Width(150)))
+			{
+				
+				obj.showPaths();
+			}
+			GUILayout.EndHorizontal();
+			GUILayout.BeginHorizontal("box");
+			
+			if(GUILayout.Button("Project Path",GUILayout.Width(100)))
 			{
 				
 				obj.projectPathOn2D();
 			}
-			if(GUILayout.Button("Pause/Play",GUILayout.Width(75)))
+			if(GUILayout.Button("Pause/Play",GUILayout.Width(100)))
 			{
 				
 				obj.playpause();
 			}
-			if(GUILayout.Button("GoBack",GUILayout.Width(50)))
+			if(GUILayout.Button("GoBack",GUILayout.Width(75)))
 			{
 				
 				obj.goBack();
 			}
-			if(GUILayout.Button("Reset",GUILayout.Width(50)))
+			if(GUILayout.Button("Reset",GUILayout.Width(75)))
 			{
 				
 				obj.Reset();

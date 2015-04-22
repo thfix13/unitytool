@@ -10,24 +10,14 @@ namespace Medial
 	class Graph{
 		public HashSet<edgenode> [] directedEdges;
 		public HashSet<edgenode> [] unDirectedEdges;
-//		public HashSet<int>[]undirectedUnweightedEdges;
 		
 		//		int [] degree;
 		public int nvertices;
 		
 		public Graph(int vertices){
 			nvertices=vertices;
-			//TODO:: need to change it to array of hashmaps, so that .contains works better
 			directedEdges= new HashSet<edgenode>[vertices];
 			unDirectedEdges= new HashSet<edgenode>[vertices];
-//			undirectedUnweightedEdges= new HashSet<int>[vertices];
-			
-			//			UnityEngine.Debug.Log(nvertices);
-			//			degree= new int[nvertices];
-			//			for(int i=0;i<nvertices;i++)
-			//			{
-			//				degree[i]=0;
-			//			}
 		}
 		
 		/// <summary>
