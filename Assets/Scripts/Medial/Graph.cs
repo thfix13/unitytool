@@ -10,35 +10,54 @@ namespace Medial
 	class Graph{
 		public HashSet<edgenode> [] directedEdges;
 		public HashSet<edgenode> [] unDirectedEdges;
-		
-		//		int [] degree;
+		private List <Vector3> vertices;
+		private float addEdgeAngleConstraint;
+
 		public int nvertices;
 		
-		public Graph(int vertices){
-			nvertices=vertices;
-			directedEdges= new HashSet<edgenode>[vertices];
-			unDirectedEdges= new HashSet<edgenode>[vertices];
+		public Graph(List<Vector3> vertices, float addEdgeAngle){
+			this.vertices=vertices;
+			this.nvertices=vertices.Count;
+			this.directedEdges= new HashSet<edgenode>[nvertices];
+			this.unDirectedEdges= new HashSet<edgenode>[nvertices];
+			this.addEdgeAngleConstraint= addEdgeAngle;
 		}
 		
 		/// <summary>
 		/// make sure that the rule for 'from' and 'to' is properly followed
 		/// </summary>
-		/// <param name="from">From.</param>
-		/// <param name="to">To.</param>
-		/// <param name="w">w.</param>
-		public void addEdge(int from , int to, float w){
-			addDirectededge(from, to , w);
-			addUnDirectededge(from,to,w);
-			
+		public bool addEdge(int v1 , int v2){
+			float w=Vector3.Distance(vertices[v1],vertices[v2]);
+			return this.addEdge(v1,v2,w);
 		}
-		
-		public void addDirectededge(int from, int to, float w){
+
+		public bool addEdge(int v1 , int v2, float w){
+			float angle= Vector3.Angle(vertices[v1]-vertices[v2], Vector3.ProjectOnPlane(vertices[v1]-vertices[v2],Vector3.up));
+			if(angle <=addEdgeAngleConstraint){
+//				Debug.DrawLine(vertices[v1],vertices[v2], Color.red,10000);
+				return false;
+			}
+			if(vertices[v1].y >vertices[v2].y){
+				addUnDirectededge(v1,v2,w);
+				return addDirectededge(v2, v1 , w);
+			}
+			else{
+				if(vertices[v1].y <vertices[v2].y){
+					addUnDirectededge(v1, v2 , w);
+					return addDirectededge(v1,v2,w);
+				}
+			}
+			return false;
+		}
+
+		public bool addDirectededge(int from, int to, float w){
 			if(directedEdges[from]==null)
 				directedEdges[from]=new HashSet<edgenode>();
 			if(directedEdges[from].Contains(new edgenode(to,w))){
-				return;
+				return false;
 			}
 			directedEdges[from].Add(new edgenode(to,w));
+			return true;
 		}
 
 		private void addUnDirectededge(int from, int to, float w){

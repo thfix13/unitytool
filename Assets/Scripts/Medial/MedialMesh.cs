@@ -19,6 +19,9 @@ namespace Medial{
 		IntervalKDTree<int> tree;
 		ArenasGenerator arena;
 
+		///for connecting opposite vertices of two common triangles
+		Hashtable linesToTriangle;
+
 		///assigned in removeVs; never instantiated by itself
 		HashSet<int>removedVertices_global;
 
@@ -67,7 +70,7 @@ namespace Medial{
 				ntriangles=this.triangles.Count*2/3;
 			}
 			if(createGraphflag){
-				graphObj= new Graph(this.vertices.Count);
+				graphObj= new Graph(this.vertices,0f);
 				
 			}
 			layMesh();
@@ -84,34 +87,80 @@ namespace Medial{
 
 		private void createGraph(){
 			int a,b,c;
-			Vector3 av,bv,cv;
-			float ab, bc,ac;
-			
+			linesToTriangle=  new Hashtable();
+
 			for(int i=0; i<this.triangles.Count; i=i+3){
 				a=this.triangles[i];b=this.triangles[i+1];c=this.triangles[i+2];
-				av=vertices[a];bv=vertices[b];cv=vertices[c];
-				ab=Vector3.Distance(av,bv);
-				bc=Vector3.Distance(bv,cv);
-				ac=Vector3.Distance(av,cv);
-				if(bv.y- av.y >0){
-					graphObj.addEdge(a,b,ab);
-				}
-				else
-				{
-					graphObj.addEdge(b,a,ab);
-				}
-				if(bv.y- cv.y >0){
-					graphObj.addEdge(c,b,bc);
-				}
-				else
-				{	graphObj.addEdge(b,c,bc);
-				}
-				if(cv.y- av.y >0)
-				{	graphObj.addEdge(a,c,ac);
-				}
-				else
-				{	graphObj.addEdge(c,a,ac);
-				}
+
+				graphObj.addEdge(a,b);
+				joinOppositeVertices(CantorFunction(a,b),i);
+
+				graphObj.addEdge(c,b);
+				joinOppositeVertices(CantorFunction(c,b),i);
+
+				graphObj.addEdge(a,c);
+				joinOppositeVertices(CantorFunction(c,a),i);
+
+			}
+		}
+
+		/// <summary>
+		/// add opposite edges of two adjacent triangles
+		/// </summary>
+		private void joinOppositeVertices(int key, int t){
+			if(!linesToTriangle.ContainsKey(key))
+				linesToTriangle.Add(key,t);
+			else{
+				int t1= (int)linesToTriangle[key];
+				if(t==t1)
+					return;
+				var opp=oppositeVertices(t,t1).ToList();
+				if(opp.Count !=2)
+					udl ("triangle count="+opp.Count);
+				graphObj.addEdge(opp[0],opp[1]);
+//					Debug.DrawLine(vertices[opp[0]],vertices[opp[1]], Color.blue,10000);
+
+			}
+		}
+
+		/// <summary>
+		/// http://en.wikipedia.org/wiki/Pairing_function#Cantor_pairing_function
+		/// </summary>
+		/// <returns>gives same value of cantor for both pairs of value, i.e, CantorFn(a,b) = CantorFn(b,a)</returns>
+		private static int CantorFunction(int k1, int k2){
+
+			return ((k1 + k2)*(k1 + k2 + 1))/2 + (k2>k1?k2:k1);
+		}
+
+		private IEnumerable<int> oppositeVertices(int t1,int t2){
+//			HashSet<int> t1s= new HashSet<int>();
+			HashSet<int> t2s= new HashSet<int>();
+			HashSet<int> Un= new HashSet<int>();
+			HashSet<int> In= new HashSet<int>();
+			
+			Un.Add(triangles[t1]);
+			Un.Add(triangles[t1+1]);
+			Un.Add(triangles[t1+2]);
+			In.Add(triangles[t1]);
+			In.Add(triangles[t1+1]);
+			In.Add(triangles[t1+2]);
+			
+			t2s.Add(triangles[t2]);
+			t2s.Add(triangles[t2+1]);
+			t2s.Add(triangles[t2+2]);
+
+			Un.UnionWith(t2s);
+			In.IntersectWith(t2s);
+			return Un.Except(In);
+		}
+
+
+		private void createKDTreeDictionary(){
+			
+			for(int i=0; i<vertices.Count;i++){
+				tree.Put( Mathf.FloorToInt(vertices[i].x), Mathf.FloorToInt(vertices[i].y), Mathf.FloorToInt(vertices[i].z),
+				         Mathf.CeilToInt(vertices[i].x),Mathf.CeilToInt(vertices[i].y),Mathf.CeilToInt(vertices[i].z),
+				         i);
 			}
 		}
 
@@ -200,6 +249,41 @@ namespace Medial{
 
 
 		#region Remove Vs
+
+		
+		public void connect_Vs(float r){
+			float dist;
+			float vy;
+			
+			///scan all the vertices within a 2rx2rx2r box and connect them if their dist is less than r
+			/// move this box by r in each direction
+			HashSet<int> foundNodes;
+			float x,y,z;
+			for(x= arena.getMinX()-1;x< arena.getMaxX()-r; x+=r){
+				for( y= arena.getMinY2()-1;y< arena.getMaxY2()-r;y+=r){
+					for( z= arena.getMinZ()-1; z< arena.getMaxZ()-r;z+=r){
+						foundNodes= tree.GetValues(x,y,z,x+2*r,y+2*r,z+2*r,new HashSet<int>());
+						foreach(var i in foundNodes){
+							foreach(var j in foundNodes){
+								//TODO: do we have to relax the v1.y== v2.y constraint here ?
+								if(graphObj.unDirectedEdges[i]!=null && graphObj.unDirectedEdges[i].Contains(new edgenode(j,0)))
+									continue;
+								//								if(Mathf.Abs(vertices[j].y-vertices[i].y)>1f)
+								//									continue;
+								dist=Vector3.Distance(vertices[i],vertices[j]);
+								if(dist>r)
+									continue;
+								
+								if(graphObj.addEdge(i,j,dist))
+									Debug.DrawLine(vertices[i],vertices[j], Color.magenta,100000);
+							}
+						}
+					}
+				}
+			}
+			
+		}
+
 		private HashSet<string> bluelines;
 		private HashSet<string> redlines;
 		//it updates the neighbours, and drawlines between them.
@@ -254,7 +338,7 @@ namespace Medial{
 								temp.Add(new float[]{n1.y,n2_.y,n2_.weight});
 							}
 							foreach(var t in temp){
-								graphObj.addEdge((int)t[0],(int)t[1],t[2]);
+								graphObj.addEdge((int)t[0],(int)t[1]);
 							}
 
 							//will leaD to problems in the loop outside as it will remove the node from the list of undirectedEdges
@@ -266,7 +350,7 @@ namespace Medial{
 						}
 						else{
 							redlines.Add(n1.y+"+"+n2.y);
-							graphObj.addEdge(n1.y,n2.y,w);
+							graphObj.addEdge(n1.y,n2.y);
 						}
 					}
 				}
@@ -528,39 +612,6 @@ namespace Medial{
 		
 		}
 
-		public void connect_Vs(float r){
-			float dist;
-			float vy;
-
-			///scan all the vertices within a 2rx2rx2r box and connect them if their dist is less than r
-			/// move this box by r in each direction
-			HashSet<int> foundNodes;
-			float x,y,z;
-			for(x= arena.getMinX()-1;x< arena.getMaxX()-r; x+=r){
-				for( y= arena.getMinY2()-1;y< arena.getMaxY2()-r;y+=r){
-					for( z= arena.getMinZ()-1; z< arena.getMaxZ()-r;z+=r){
-						foundNodes= tree.GetValues(x,y,z,x+2*r,y+2*r,z+2*r,new HashSet<int>());
-						foreach(var i in foundNodes){
-							foreach(var j in foundNodes){
-								if(graphObj.unDirectedEdges[i]!=null && graphObj.unDirectedEdges[i].Contains(new edgenode(j,0)))
-									continue;
-//								if(Mathf.Abs(vertices[j].y-vertices[i].y)>1f)
-//									continue;
-								dist=Vector3.Distance(vertices[i],vertices[j]);
-								if(dist>r)
-									continue;
-								if(vertices[i].y>vertices[j].y)
-									graphObj.addEdge(j,i,dist);
-								else
-									graphObj.addEdge(i,j,dist);
-								Debug.DrawLine(vertices[i],vertices[j], Color.magenta,100000);
-							}
-						}
-					}
-				}
-			}
-
-		}
 
 		//failures can be removes by adding edges across a quadrilateral's diagonal vertices
 		public void removeVs_failures(){
@@ -569,8 +620,7 @@ namespace Medial{
 			bool breakflag=false, f=false;
 			for(int i=0; i<this.vertices.Count;i++){
 				var v=vertices[i];
-				
-				
+
 				adjacentnodes= graphObj.unDirectedEdges[i];
 				
 				//check angles between two adjacent nodes. 
@@ -583,9 +633,9 @@ namespace Medial{
 				f=false;
 				if(Mathf.Round(v.x*100)==4000f && Mathf.Round(v.z*100)==-3900f)
 					f=true;
-//				try{
+
 				foreach(var neighbour1 in adjacentnodes){
-//					if(breakflag
+
 					foreach(var neighbour2 in adjacentnodes){
 
 						if(neighbour1.y>= neighbour2.y){
@@ -610,17 +660,13 @@ namespace Medial{
 								breakflag=true;
 							Debug.DrawLine(vertices[neighbour1.y],v, Color.magenta,100000);
 							Debug.DrawLine(vertices[neighbour2.y],v,Color.blue,100000);
-							
-							
-							//							if(f){
-							//								udl ("n1_id= "+ neighbour1.y+ " n2_id="+neighbour2.y);
+			
 							var go2= GameObject.CreatePrimitive(PrimitiveType.Capsule);
 							go2.transform.localScale= new Vector3(0.3f,0.3f,0.3f);
 							go2.transform.position=v;
 							go2.name= "Grey "+v.x+","+v.y+","+v.z +" i="+i;
 							go2.gameObject.GetComponent<Renderer>().material.color= Color.cyan;
-							
-//							udl (Vtostring(v)+" -- n1= "+Vtostring(vertices[neighbour1.y])+"  --  n2="+Vtostring(vertices[neighbour2.y])+" -- angle="+ay+ " --- ayp= "+ayp);
+
 							var go= GameObject.CreatePrimitive(PrimitiveType.Sphere);
 							go.transform.localScale= new Vector3(0.38f,0.38f,0.38f);
 							go.transform.position=vertices[neighbour1.y];
@@ -644,55 +690,6 @@ namespace Medial{
 					
 					
 				}
-//				}
-//				catch(NullReferenceException e)
-//				{
-//					udl (i+" "+Vtostring(vertices[i])+" "+adjacentnodes);
-//					var go2= GameObject.CreatePrimitive(PrimitiveType.Capsule);
-//					go2.transform.localScale= new Vector3(0.3f,0.3f,0.3f);
-//					go2.transform.position=v;
-//					go2.name= "cyan "+Vtostring(vertices[i]) +" i="+i;
-//					go2.gameObject.GetComponent<Renderer>().material.color= Color.cyan;
-//					
-//					udl (neighbour1.y+" "+ Vtostring(vertices[neighbour1.y]));
-//					foreach(var n in graphObj.unDirectedEdges[neighbour1.y])
-//					{
-//						udl (n.y);
-//					}
-//					var go3= GameObject.CreatePrimitive(PrimitiveType.Sphere);
-//					go3.transform.localScale= new Vector3(0.3f,0.3f,0.3f);
-//					go3.transform.position=vertices[neighbour1.y];
-//					go3.name= "blue "+Vtostring(vertices[neighbour1.y]) +" i="+i;
-//					go3.gameObject.GetComponent<Renderer>().material.color= Color.blue;
-//					
-//					udl (neighbour2.y+" "+ Vtostring(vertices[neighbour2.y]));
-//					foreach(var n in graphObj.unDirectedEdges[neighbour2.y])
-//					{
-//						udl (n.y);
-//					}
-//					var go4= GameObject.CreatePrimitive(PrimitiveType.Cube);
-//					go4.transform.localScale= new Vector3(0.3f,0.3f,0.3f);
-//					go4.transform.position=vertices[neighbour2.y];
-//					go4.name= "red "+Vtostring(vertices[neighbour2.y]) +" i="+i;
-//					go4.gameObject.GetComponent<Renderer>().material.color= Color.red;
-//					throw new Exception("paad");
-//					
-//				}
-				//				if(flag){
-				//					var go2= GameObject.CreatePrimitive(PrimitiveType.Capsule);
-				//					go2.transform.localScale= new Vector3(0.3f,0.3f,0.3f);
-				//					go2.transform.position=v;
-				//					go2.name= "Grey"+v.x+","+v.y+","+v.z;
-				//					go2.gameObject.GetComponent<Renderer>().material.color= Color.cyan;
-				//				}
-				
-				//				if(f){
-				//					var go3= GameObject.CreatePrimitive(PrimitiveType.Sphere);
-				//					go3.transform.localScale= new Vector3(0.3f,0.3f,0.3f);
-				//					go3.transform.position=v;
-				//					go3.name= "Grey"+v.x+","+v.y+","+v.z;
-				//					go3.gameObject.GetComponent<Renderer>().material.color= Color.cyan;
-				//				}
 			}
 		}
 
@@ -701,11 +698,12 @@ namespace Medial{
 
 			return String.Format(v.x+","+v.y+","+v.z);
 		}
+
 		float angleY(Vector3 a, Vector3 b, Vector3 p){
 			return Vector3.Angle(Vector3.ProjectOnPlane(a-p,Vector3.up),Vector3.ProjectOnPlane(b-p,Vector3.up));
 		}
+
 		float angleYPlane(Vector3 a, Vector3 b, Vector3 p){
-//			return Mathf.Asin(Vector3.Dot(a-p,b-p)/(Vector3.Magnitude(a-p)*Vector3.Magnitude(b-p)))*Mathf.Rad2Deg;
 			var prjtOnXZ= new Vector3(a.x,p.y,a.z)-p;
 			Vector3 normalOfPlanePerpendicularToXZContainingA;
 			if(prjtOnXZ!=Vector3.zero)
@@ -755,10 +753,7 @@ namespace Medial{
 				eligibleEdge= !(rcontainss||scontainsr|| hitbox );
 				if(eligibleEdge)
 				{
-					if(vertices[s].y <vertices[r].y)
-						graphObj.addEdge(s,r,Vector3.Distance(vertices[s],vertices[r]));
-					else
-						graphObj.addEdge(r,s,Vector3.Distance(vertices[s],vertices[r]));
+					graphObj.addEdge(r,s);
 					loop--;
 				}
 			}
@@ -795,10 +790,7 @@ namespace Medial{
 				eligibleEdge= !(vertices[r].y==vertices[s].y|| rcontainss||scontainsr|| hitbox );
 				if(eligibleEdge)
 				{
-					if(vertices[s].y <vertices[r].y)
-						graphObj.addEdge(s,r,Vector3.Distance(vertices[s],vertices[r]));
-					else
-						graphObj.addEdge(r,s,Vector3.Distance(vertices[s],vertices[r]));
+					graphObj.addEdge(r,s);
 					loop--;
 				}
 			}
@@ -817,14 +809,6 @@ namespace Medial{
 
 		#region Path Finding
 
-		private void createKDTreeDictionary(){
-			
-			for(int i=0; i<vertices.Count;i++){
-				tree.Put( Mathf.FloorToInt(vertices[i].x), Mathf.FloorToInt(vertices[i].y), Mathf.FloorToInt(vertices[i].z),
-				         Mathf.CeilToInt(vertices[i].x),Mathf.CeilToInt(vertices[i].y),Mathf.CeilToInt(vertices[i].z),
-				         i);
-			}
-		}
 		public void findNearests(Vector3 start,Vector3 end){
 			float min=-1,diff;
 			int minvertex=-1;
@@ -839,24 +823,34 @@ namespace Medial{
 			
 			foreach(var i in foundNodes){
 				diff=Vector3.Distance(vertices[i],start);
-				if(min==-1)
-					min=diff;
-				if(diff<min){
+				if(min==-1 || diff<min){
 					min=diff;
 					minvertex=i;
 				}
 			}
 
 			startNearestNode=minvertex;
+			v=end;
+			endNearestNodes= new List<int>();
+			for(float y=arena.getMinY2(); y< arena.getMaxY2()-1; y++){
+				foundNodes= new HashSet<int>();
+				for(r=1f ;foundNodes.Count==0;){
+					foundNodes= tree.GetValues(v.x-r, y, v.z-r,
+					                           v.x+r, y+1 ,v.z+r,new HashSet<int>());
+					r++;
+				}
+				endNearestNodes.AddRange(foundNodes);
+			}
 
-			for(r=1f ;foundNodes.Count==0;){
-				foundNodes= tree.GetValues(v.x-r,v.y,v.z-r,v.x+r,v.y+r,v.z+r,new HashSet<int>());
-				r++;
+			foreach(var i in endNearestNodes){
+							var go2= GameObject.CreatePrimitive(PrimitiveType.Sphere);
+							go2.transform.localScale= new Vector3(0.3f,0.3f,0.3f);
+							go2.transform.position=vertices[i];
+							go2.name= "endnearest";
 			}
 			endNearestNodes= foundNodes.ToList();
 			
 		}
-
 
 		public void findPaths(){
 
@@ -877,18 +871,10 @@ namespace Medial{
 			double currentdist, old_dist, new_dist;
 			hashnode temp;
 
-//			var go2= GameObject.CreatePrimitive(PrimitiveType.Capsule);
-//			go2.transform.localScale= new Vector3(0.3f,0.3f,0.3f);
-//			go2.transform.position=vertices[endNearestNode];
-//			go2.name= "endnearest";
-
 			while(pq.Count>0){
-				currentv= pq.Dequeue();
-//				go2= GameObject.CreatePrimitive(PrimitiveType.Capsule);
-//				go2.transform.localScale= new Vector3(0.3f,0.3f,0.3f);
-//				go2.transform.position=vertices[currentv.nodeId];
-//				go2.name= ""+(ii++);
 
+				///remove the topmost nodes from the priority queue
+				currentv= pq.Dequeue();
 
 				try{
 					currentdist=((hashnode)pqSet[currentv.nodeId]).priority;
@@ -899,16 +885,17 @@ namespace Medial{
 				pqSet.Remove(currentv.nodeId);
 				visitedNodes.Add(currentv.nodeId);
 
-				///access all adjacent nodes
 				if(graphObj.directedEdges[currentv.nodeId]==null)
 					continue;
 
+				///access all adjacent nodes
 				foreach(var adjv in graphObj.directedEdges[currentv.nodeId]){
 
 					if(visitedNodes.Contains (adjv.y))
 						continue;
 					new_dist= currentdist + (double)adjv.weight;
-//					Debug.DrawLine(vertices[adjv.y],vertices[currentv.nodeId], Color.green,100000);
+
+					//put the adjacent nodes in pq or update their priority
 					if(pqSet.Contains(adjv.y))
 					{
 						temp=(hashnode)pqSet[adjv.y];
@@ -928,7 +915,7 @@ namespace Medial{
 				}
 			}
 
-			List<List<int>> paths= new List<List<int>>(endNearestNodes.Count);
+			paths= new List<List<int>>(endNearestNodes.Count);
 			var path= new List<int>();
 			
 			///do this for every endNearestNode
@@ -938,13 +925,14 @@ namespace Medial{
 				path = new List<int>();
 				path.Insert(0,endNearestNode);
 				try{
-				for(int i=endNearestNode; i!=startNearestNode;i=(int)backtrack[i]){
-					path.Insert(0,(int)backtrack[i]);
-					}}
+					for(int i=endNearestNode; i!=startNearestNode;i=(int)backtrack[i]){
+						path.Insert(0,(int)backtrack[i]);
+						}
+				}
 				catch(NullReferenceException e){
+					udl ("let me know");
 					continue;
 				}
-				//TODO: paths coming out as NULL
 				paths.Add(path);
 			}
 		}
@@ -956,11 +944,11 @@ namespace Medial{
 				return;
 			}
 			foreach(var path in paths){
-				Color triColor= new Color(UnityEngine.Random.Range(0f,1f),UnityEngine.Random.Range(0f,1f),UnityEngine.Random.Range(0f,1f));
+				Color triColor= Color.red;
 				for(int i=0;i<path.Count-1; i++)
 					UnityEngine.Debug.DrawLine(vertices[path[i]],vertices[path[i+1]],triColor,2000,false);
+				udl ("nodes in path= "+path.Count);
 			}
-//			udl ("nodes in path= "+path.Count);
 		}
 
 
