@@ -89,7 +89,7 @@ using UnityEditor;
 				
 				obj.findPaths();
 			}
-			if(GUILayout.Button("Show 1 Path",GUILayout.Width(150)))
+			if(GUILayout.Button("Show All Paths",GUILayout.Width(150)))
 			{
 				
 				obj.showPaths();

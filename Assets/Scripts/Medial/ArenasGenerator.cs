@@ -92,7 +92,7 @@ namespace Medial{
 				for(int i=0;i<poly.Count;i++){
 					u=(lowerlayer[poly[i]]*frac1 + upperlayer[poly[i]]*frac2)/(frac1+frac2);
 					v=(lowerlayer[poly[(i+1)%poly.Count]]*frac1+ upperlayer[poly[(i+1)%poly.Count]]*frac2)/(frac1+frac2);
-					u.y=v.y=20.25f;
+					u.y=v.y=this.getMaxY2()+0.3f;
 					UnityEngine.Debug.DrawLine(u,v,Color.magenta);
 				}
 			}

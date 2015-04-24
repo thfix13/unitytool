@@ -73,14 +73,15 @@ namespace Medial{
 				graphObj= new Graph(this.vertices,0f);
 				
 			}
+
 			layMesh();
 			this.meshGameObject.AddComponent<MeshCollider>();
 			udl ("Medial Skeleton created");
+
 			createGraph();
-			
-			udl ("Graph created");
+
 			double maxrange=Mathf.Max(arena.getMaxX()-arena.getMinX(),arena.getMaxZ()-arena.getMinZ());
-			udl (maxrange);
+
 			tree = new IntervalKDTree<int>(maxrange/2, 10);
 			createKDTreeDictionary();
 		}
@@ -268,14 +269,13 @@ namespace Medial{
 								//TODO: do we have to relax the v1.y== v2.y constraint here ?
 								if(graphObj.unDirectedEdges[i]!=null && graphObj.unDirectedEdges[i].Contains(new edgenode(j,0)))
 									continue;
-								//								if(Mathf.Abs(vertices[j].y-vertices[i].y)>1f)
-								//									continue;
+
 								dist=Vector3.Distance(vertices[i],vertices[j]);
 								if(dist>r)
 									continue;
 								
-								if(graphObj.addEdge(i,j,dist))
-									Debug.DrawLine(vertices[i],vertices[j], Color.magenta,100000);
+								graphObj.addEdge(i,j,dist);
+//									Debug.DrawLine(vertices[i],vertices[j], Color.magenta,100000);
 							}
 						}
 					}
@@ -313,16 +313,16 @@ namespace Medial{
 
 			foreach(var n1 in adjacentnodes){
 				foreach(var n2 in adjacentnodes){
-					if(vertices[n1.y].y>vertices[n2.y].y)
+					if(vertices[n1.nodeId].y>vertices[n2.nodeId].y)
 						continue;
 
 					//containment check
-					if(n1.Equals(n2)|| removedVerticesSmallSet.Contains(n1.y)|| removedVerticesSmallSet.Contains(n2.y) ||
-					   removedVertices_W_is0.Contains(n1.y) || removedVertices_W_is0.Contains(n2.y))
+					if(n1.Equals(n2)|| removedVerticesSmallSet.Contains(n1.nodeId)|| removedVerticesSmallSet.Contains(n2.nodeId) ||
+					   removedVertices_W_is0.Contains(n1.nodeId) || removedVertices_W_is0.Contains(n2.nodeId))
 						continue;
 					//check if there isn't an edge already between n1 and n2
-					if(!graphObj.unDirectedEdges[n1.y].Contains(n2)){
-						float w=Vector3.Distance(vertices[n1.y],vertices[n2.y]);
+					if(!graphObj.unDirectedEdges[n1.nodeId].Contains(n2)){
+						float w=Vector3.Distance(vertices[n1.nodeId],vertices[n2.nodeId]);
 						//if w is 0 then no need to add edge. merge both of them, i.e.
 						//make all the nodes neighbour to n2 as neighbour of n1 
 						//and remove node n2. Also include n2 in removedVerticesSmallSet
@@ -330,12 +330,12 @@ namespace Medial{
 						if(Mathf.Round(w*100)/100==0)
 						{
 							List<float[]> temp= new List<float[]>();
-							foreach (var n2_ in graphObj.unDirectedEdges[n2.y]) 
+							foreach (var n2_ in graphObj.unDirectedEdges[n2.nodeId]) 
 							{
-								if(n2_==n1 || removedVerticesSmallSet.Contains(n2_.y)||removedVertices_W_is0.Contains(n2_.y)) 
+								if(n2_==n1 || removedVerticesSmallSet.Contains(n2_.nodeId)||removedVertices_W_is0.Contains(n2_.nodeId)) 
 									continue;
-								bluelines.Add(n1.y+"+"+n2_.y);
-								temp.Add(new float[]{n1.y,n2_.y,n2_.weight});
+								bluelines.Add(n1.nodeId+"+"+n2_.nodeId);
+								temp.Add(new float[]{n1.nodeId,n2_.nodeId,n2_.weight});
 							}
 							foreach(var t in temp){
 								graphObj.addEdge((int)t[0],(int)t[1]);
@@ -343,14 +343,14 @@ namespace Medial{
 
 							//will leaD to problems in the loop outside as it will remove the node from the list of undirectedEdges
 							//graphObj.removeNode(n2.y);
-							removedVertices_W_is0.Add(n2.y);
-							notRemovedVertices_W_is0.Add(n1.y);
+							removedVertices_W_is0.Add(n2.nodeId);
+							notRemovedVertices_W_is0.Add(n1.nodeId);
 //							udl(Vtostring(vertices[n1.y])+" merged with \n"+Vtostring(vertices[n2.y]));
 
 						}
 						else{
-							redlines.Add(n1.y+"+"+n2.y);
-							graphObj.addEdge(n1.y,n2.y);
+							redlines.Add(n1.nodeId+"+"+n2.nodeId);
+							graphObj.addEdge(n1.nodeId,n2.nodeId);
 						}
 					}
 				}
@@ -421,14 +421,14 @@ namespace Medial{
 				
 				foreach(var neighbour1 in adjacentnodes){
 					foreach(var neighbour2 in adjacentnodes){
-						if(neighbour1.y>= neighbour2.y)
+						if(neighbour1.nodeId>= neighbour2.nodeId)
 							continue;
 						
-						if(graphObj.unDirectedEdges[neighbour1.y].Contains(neighbour2))
+						if(graphObj.unDirectedEdges[neighbour1.nodeId].Contains(neighbour2))
 							continue;
 						
-						var ay=angleY(vertices[neighbour1.y],vertices[neighbour2.y],v);
-						var ayp=angleYPlane(vertices[neighbour1.y],vertices[neighbour2.y],v);
+						var ay=angleY(vertices[neighbour1.nodeId],vertices[neighbour2.nodeId],v);
+						var ayp=angleYPlane(vertices[neighbour1.nodeId],vertices[neighbour2.nodeId],v);
 						if(ay==0 && ayp ==0)
 						{	continue;
 						}
@@ -438,7 +438,7 @@ namespace Medial{
 
 							//add neighbours to the verticesTobeConsidered
 							foreach(var temp in adjacentnodes)
-								verticesTobeConsidered.Add(temp.y);
+								verticesTobeConsidered.Add(temp.nodeId);
 
 
 							removedVertices.Add(j);
@@ -455,7 +455,6 @@ namespace Medial{
 			//remove only triangles containing removedVertices, otherwise indexes will change
 			//and everything will have to be refreshed
 			int l=this.triangles.Count;
-			int x,y,z;
 			for(int i=0;i < l;i+=3){
 				if(removedVertices.Contains(this.triangles[i]) ||removedVertices.Contains(this.triangles[i+1])
 				   ||removedVertices.Contains(this.triangles[i+2])){
@@ -518,14 +517,14 @@ namespace Medial{
 
 				foreach(var neighbour1 in adjacentnodes){
 					foreach(var neighbour2 in adjacentnodes){
-						if(neighbour1.y>= neighbour2.y)
+						if(neighbour1.nodeId>= neighbour2.nodeId)
 							continue;
 
-						if(graphObj.unDirectedEdges[neighbour1.y].Contains(neighbour2))
+						if(graphObj.unDirectedEdges[neighbour1.nodeId].Contains(neighbour2))
 							continue;
 
-						var ay=angleY(vertices[neighbour1.y],vertices[neighbour2.y],v);
-						var ayp=angleYPlane(vertices[neighbour1.y],vertices[neighbour2.y],v);
+						var ay=angleY(vertices[neighbour1.nodeId],vertices[neighbour2.nodeId],v);
+						var ayp=angleYPlane(vertices[neighbour1.nodeId],vertices[neighbour2.nodeId],v);
 						if(ay==0 && ayp ==0)
 						{	continue;
 						}
@@ -601,11 +600,11 @@ namespace Medial{
 			HashSet<edgenode> adjacentnodes= graphObj.unDirectedEdges[v];
 			foreach(var n1 in adjacentnodes){
 				foreach(var n2 in adjacentnodes){
-					if(n1.Equals(n2)|| removedVertices.Contains(n1.y)|| removedVertices.Contains(n2.y))
+					if(n1.Equals(n2)|| removedVertices.Contains(n1.nodeId)|| removedVertices.Contains(n2.nodeId))
 						continue;
 					//check if there isn't an edge already between n1 and n2
-					if(!graphObj.unDirectedEdges[n1.y].Contains(n2)){
-						Debug.DrawLine(vertices[n1.y],vertices[n2.y], Color.magenta,100000);
+					if(!graphObj.unDirectedEdges[n1.nodeId].Contains(n2)){
+						Debug.DrawLine(vertices[n1.nodeId],vertices[n2.nodeId], Color.magenta,100000);
 					}
 				}
 			}
@@ -638,19 +637,19 @@ namespace Medial{
 
 					foreach(var neighbour2 in adjacentnodes){
 
-						if(neighbour1.y>= neighbour2.y){
+						if(neighbour1.nodeId>= neighbour2.nodeId){
 							continue;
 						}
 						//						if(vertices[neighbour1.y]== vertices[ neighbour2.y])
 						//							continue;
-						if(graphObj.unDirectedEdges[neighbour1.y].Contains(neighbour2)
+						if(graphObj.unDirectedEdges[neighbour1.nodeId].Contains(neighbour2)
 						   ){
 							
 							continue;
 							}
 						
-						var ay=angleY(vertices[neighbour1.y],vertices[neighbour2.y],v);
-						var ayp=angleYPlane(vertices[neighbour1.y],vertices[neighbour2.y],v);
+						var ay=angleY(vertices[neighbour1.nodeId],vertices[neighbour2.nodeId],v);
+						var ayp=angleYPlane(vertices[neighbour1.nodeId],vertices[neighbour2.nodeId],v);
 						
 						if((ay==0 && ayp ==0)||(ay==90) ||ayp==90)
 						{	continue;
@@ -658,8 +657,8 @@ namespace Medial{
 						if(f||(ay<42.0f && ay>1.0f && ayp <25.0f)){
 							if(!f)
 								breakflag=true;
-							Debug.DrawLine(vertices[neighbour1.y],v, Color.magenta,100000);
-							Debug.DrawLine(vertices[neighbour2.y],v,Color.blue,100000);
+							Debug.DrawLine(vertices[neighbour1.nodeId],v, Color.magenta,100000);
+							Debug.DrawLine(vertices[neighbour2.nodeId],v,Color.blue,100000);
 			
 							var go2= GameObject.CreatePrimitive(PrimitiveType.Capsule);
 							go2.transform.localScale= new Vector3(0.3f,0.3f,0.3f);
@@ -669,15 +668,15 @@ namespace Medial{
 
 							var go= GameObject.CreatePrimitive(PrimitiveType.Sphere);
 							go.transform.localScale= new Vector3(0.38f,0.38f,0.38f);
-							go.transform.position=vertices[neighbour1.y];
+							go.transform.position=vertices[neighbour1.nodeId];
 							go.gameObject.GetComponent<Renderer>().material.color =Color.magenta;
 							go.transform.parent=go2.transform;
-							go.name=Vtostring(vertices[neighbour1.y])+"Mag "+neighbour1.y+" "+"ayp="+ayp+" ay="+ay;
+							go.name=Vtostring(vertices[neighbour1.nodeId])+"Mag "+neighbour1.nodeId+" "+"ayp="+ayp+" ay="+ay;
 							var go1= GameObject.CreatePrimitive(PrimitiveType.Cube);
 							go1.transform.localScale= new Vector3(0.3f,0.3f,0.3f);
-							go1.transform.position=vertices[neighbour2.y];
+							go1.transform.position=vertices[neighbour2.nodeId];
 							go1.gameObject.GetComponent<Renderer>().material.color =Color.yellow;
-							go1.name=Vtostring(vertices[neighbour2.y])+"Yel "+neighbour2.y+" "+"ayp="+ayp+" ay="+ay;
+							go1.name=Vtostring(vertices[neighbour2.nodeId])+"Yel "+neighbour2.nodeId+" "+"ayp="+ayp+" ay="+ay;
 							go1.transform.parent=go2.transform;
 
 							if(!f)
@@ -841,15 +840,15 @@ namespace Medial{
 				}
 				endNearestNodes.AddRange(foundNodes);
 			}
-
+			var go2= new GameObject();
+			go2.name=  "endnearest";
 			foreach(var i in endNearestNodes){
-							var go2= GameObject.CreatePrimitive(PrimitiveType.Sphere);
-							go2.transform.localScale= new Vector3(0.3f,0.3f,0.3f);
-							go2.transform.position=vertices[i];
-							go2.name= "endnearest";
+				var go= GameObject.CreatePrimitive(PrimitiveType.Sphere);
+				go.transform.localScale= new Vector3(0.3f,0.3f,0.3f);
+				go.transform.position=vertices[i];
+				go.name= "end";
+				go.transform.parent=go.transform;
 			}
-			endNearestNodes= foundNodes.ToList();
-			
 		}
 
 		public void findPaths(){
@@ -862,7 +861,6 @@ namespace Medial{
 
 			for(int i=0;i< graphObj.nvertices;i++)
 				backtrack.Add(i,-1);
-			int ii=0;
 			element currentv, tempElement;
 			tempElement= new element(startNearestNode);
 			pq.Enqueue(tempElement,0);
@@ -891,32 +889,32 @@ namespace Medial{
 				///access all adjacent nodes
 				foreach(var adjv in graphObj.directedEdges[currentv.nodeId]){
 
-					if(visitedNodes.Contains (adjv.y))
+					if(visitedNodes.Contains (adjv.nodeId))
 						continue;
 					new_dist= currentdist + (double)adjv.weight;
 
 					//put the adjacent nodes in pq or update their priority
-					if(pqSet.Contains(adjv.y))
+					if(pqSet.Contains(adjv.nodeId))
 					{
-						temp=(hashnode)pqSet[adjv.y];
+						temp=(hashnode)pqSet[adjv.nodeId];
 						old_dist=temp.priority;
 						if(old_dist> new_dist){
 							pq.UpdatePriority(temp.e,new_dist);
-							pqSet[adjv.y]=new hashnode(new_dist,temp.e);
-							backtrack[adjv.y]=currentv.nodeId;
+							pqSet[adjv.nodeId]=new hashnode(new_dist,temp.e);
+							backtrack[adjv.nodeId]=currentv.nodeId;
 						}
 					}
 					else{
-						tempElement= new element(adjv.y);
+						tempElement= new element(adjv.nodeId);
 						pq.Enqueue(tempElement,new_dist);
-						pqSet.Add(adjv.y,new hashnode(new_dist,tempElement));
-						backtrack[adjv.y]=currentv.nodeId;
+						pqSet.Add(adjv.nodeId,new hashnode(new_dist,tempElement));
+						backtrack[adjv.nodeId]=currentv.nodeId;
 					}
 				}
 			}
 
 			paths= new List<List<int>>(endNearestNodes.Count);
-			var path= new List<int>();
+			List<int> path;
 			
 			///do this for every endNearestNode
 			foreach(var endNearestNode in endNearestNodes){
@@ -929,12 +927,14 @@ namespace Medial{
 						path.Insert(0,(int)backtrack[i]);
 						}
 				}
-				catch(NullReferenceException e){
-					udl ("let me know");
+				catch(NullReferenceException){
+					udl ("Path not found for this endNode: "+vertices[endNearestNode]);
 					continue;
 				}
 				paths.Add(path);
 			}
+			udl ("#of endnodes"+endNearestNodes.Count);
+			udl ("#of paths"+paths.Count);
 		}
 
 		public void showPath(){
@@ -947,7 +947,7 @@ namespace Medial{
 				Color triColor= Color.red;
 				for(int i=0;i<path.Count-1; i++)
 					UnityEngine.Debug.DrawLine(vertices[path[i]],vertices[path[i+1]],triColor,2000,false);
-				udl ("nodes in path= "+path.Count);
+//				udl ("nodes in path= "+path.Count);
 			}
 		}
 
@@ -962,8 +962,8 @@ namespace Medial{
 			while(currentpath_i<paths[0].Count
 			      && t>vertices[paths[0][currentpath_i]].y)
 				currentpath_i++;
-//			udl (currentpath_i+" " +path.Count + " " +vertices[path[currentpath_i]].y);
-			if(currentpath_i>=paths.Count)
+
+			if(currentpath_i>=paths[0].Count)
 				return -Vector3.one;
 			float frac1=t- vertices[paths[0][currentpath_i-1]].y, frac2= vertices[paths[0][currentpath_i]].y -t;
 			var playerpos= (vertices[paths[0][currentpath_i-1]]*frac2 + vertices[paths[0][currentpath_i]] *frac1)/(frac1+frac2);
@@ -980,21 +980,21 @@ namespace Medial{
 
 
 	class edgenode:IEquatable<edgenode> {
-		public int y;
+		public int nodeId;
 		public float weight;
-		public edgenode(int y, float weight){
-			this.y=y;
+		public edgenode(int nodeid, float weight){
+			this.nodeId=nodeid;
 			this.weight=weight;
 		}
 		public override bool Equals(System.Object e){
-			return e!=null && this.y==((edgenode)e).y;
+			return e!=null && this.nodeId==((edgenode)e).nodeId;
 		}
 		public bool Equals(edgenode e){
-			return e!=null && this.y==e.y;
+			return e!=null && this.nodeId==e.nodeId;
 		}
 		public override int GetHashCode ()
 		{
-			return this.y;
+			return this.nodeId;
 		}
 	}
 

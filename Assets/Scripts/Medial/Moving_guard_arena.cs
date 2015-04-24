@@ -54,7 +54,7 @@ namespace Medial{
 			if(generate2DFlag){
 				arena.generate2D_movinggaurdarena(t);
 				t+=0.013f;
-				udl ("t= "+t);
+//				udl ("t= "+t);
 			}
 
 		}
@@ -125,6 +125,7 @@ namespace Medial{
 
 		public void RemoveVs(){
 			medialMeshObj.connect_Vs(1.7f);
+			udl ("Nodes in "+1.7+" proximity connected");
 		}
 
 
@@ -146,12 +147,13 @@ namespace Medial{
 
 			var plane= GameObject.CreatePrimitive(PrimitiveType.Cube);
 			plane.transform.localScale=new Vector3(arena.getMaxX()-arena.getMinX(),0.1f,arena.getMaxZ()-arena.getMinZ());
-			plane.transform.position= new Vector3(0,arena.getMaxY2()+0.2f,0);
-			plane.GetComponent<Renderer>().material=black;
+			plane.transform.position= new Vector3(0,arena.getMaxY2()+0.25f,0);
+			plane.GetComponent<Renderer>().material.color=Color.black;
 
 			player2Dprojection= GameObject.CreatePrimitive(PrimitiveType.Sphere);
-			player2Dprojection.transform.localScale= new Vector3(0.3f,0.3f,0.3f);
-			player2Dprojection.transform.position=new Vector3(0,20.35f,0);
+			player2Dprojection.transform.localScale= new Vector3(2f,2f,2f);
+			player2Dprojection.GetComponent<Renderer>().material.color= Color.cyan;
+			player2Dprojection.transform.position=new Vector3(0,arena.getMaxY2()+0.5f,0);
 
 			generate2DFlag=true;}
 

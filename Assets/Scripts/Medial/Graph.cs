@@ -102,11 +102,11 @@ namespace Medial
 		public void removeNode(int v, ref HashSet<string> bllines,  ref HashSet<string> rlines){
 			foreach (var n in unDirectedEdges[v]) 
 			{
-				removeEdge(v,n.y);
-				bllines.Remove(v+"+"+n.y);
-				bllines.Remove(n.y+"+"+v);
-				rlines.Remove(v+"+"+n.y);
-				rlines.Remove(n.y+"+"+v);
+				removeEdge(v,n.nodeId);
+				bllines.Remove(v+"+"+n.nodeId);
+				bllines.Remove(n.nodeId+"+"+v);
+				rlines.Remove(v+"+"+n.nodeId);
+				rlines.Remove(n.nodeId+"+"+v);
 				
 			}
 			unDirectedEdges[v].Clear();
