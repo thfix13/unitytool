@@ -51,6 +51,8 @@ public class Visibility1 : MonoBehaviour {
 	public bool m_ExecuteTrueCase = false;
 	public int m_ShowTrueCase = -1;//1 for shortest path;2 for longest
 	private string currSceneName;
+	//Distance b/w consecutive path points
+	private float m_stepDistance = -1.0f;
 	void Start () 
 	{
 		spTemp = (GameObject)GameObject.Find ("StartPoint");
@@ -61,10 +63,12 @@ public class Visibility1 : MonoBehaviour {
 		if(currSceneName=="scene1.unity")
 		{
 			pathPoints = CommonScene1.definePath ();
+			m_stepDistance = CommonScene1.getStepDistance();
 		}
 		else if(currSceneName=="testCase1.unity")
 		{
 			pathPoints = CommonTestCase1.definePath ();
+			m_stepDistance = CommonTestCase1.getStepDistance();
 		}
 		if(m_ShowTrueCase>0)
 		{
@@ -111,11 +115,14 @@ public class Visibility1 : MonoBehaviour {
 		NodeShadow headNode = readNodeStructureFor();
 		NodeShadow node = headNode;
 		Debug.Log("Read the txt file");
-		List<NodeShadow> firstPath = findFirstEnemyPathDetected (headNode);
 
+		//List<NodeShadow> firstPath = findFirstEnemyPathDetected (headNode);
+		List<NodeShadow> firstPath = quickShortestPathDetected (headNode);
+		//List<NodeShadow> firstPath = possibleShortestPathDetected (headNode);
 		//List<NodeShadow> firstPath = findShortestEnemyPathDetected (headNode);
+
 		showPosOfPoint (firstPath [0].getPos (),Color.cyan);
-		standardMaxMovement = speedEnemy*(Vector3.Distance(pathPoints[0],pathPoints[1])/speedPlayer);
+		standardMaxMovement = speedEnemy*(m_stepDistance/speedPlayer);
 		for(int i=1;i<firstPath.Count;i++)
 		{
 			float dist = Vector3.Distance(firstPath[i].getPos(),firstPath[i-1].getPos());
@@ -130,7 +137,22 @@ public class Visibility1 : MonoBehaviour {
 		Debug.Log("Finished displayPredictedPaths");
 	}
 
-
+	private List<NodeShadow> quickShortestPathDetected (NodeShadow headNode)
+	{
+	}
+	private List<NodeShadow> possibleShortestPathDetected (NodeShadow headNode)
+	{
+		NodeShadow tempNode = headNode;
+		List<NodeShadow> shortestPathIndices = new List<NodeShadow> ();
+		while(tempNode.getChildren().Count>0)
+		{
+			//Debug.Log("Writing Node = "+tempNode.getPos());
+			shortestPathIndices.Add(tempNode);
+			//tempNode = tempNode.getChildren()[0];
+			tempNode = tempNode.getChildren()[tempNode.getChildren().Count-1];
+		}
+		return shortestPathIndices;
+	}
 
 	private List<NodeShadow> findShortestEnemyPathDetected (NodeShadow headNode)
 	{
@@ -386,18 +408,65 @@ public class Visibility1 : MonoBehaviour {
 			}
 			
 		}
+		Debug.Log ("Number of nodes are  = " + mapPtToNode.Keys.Count);
 		sr.Close ();
 
 		return headNode;
 	}
+	/*private void writeNodeStructureNow(NodeShadow nodeCurr,string saveDataDirName)
+	{
+
+		
+		
+		string sourceFileName = saveDataDirName + "\\"+headNode.getPos().ToString()+".txt";
+		//string tempFile = sourceFileName+"_Temp";
+		StreamWriter sw = new StreamWriter(sourceFileName,true);//append to file
+		//NodeSignature|ParentSignature
+		sw.WriteLine("(Vector3;level)|(Vector3;level)"+"");
+		
+		sw.Write("("+headNode.getPos()+";"+headNode.getSafetyLevel()+")|("+null+";"+null+")");
+		sw.WriteLine("");
+		List<NodeShadow> nodeSafeLevelNow = new List<NodeShadow> ();
+		List<NodeShadow> nodeSafeLevelNext = headNode.getChildren ();
+		NodeShadow parentNode = headNode;
+		while(nodeSafeLevelNext.Count>0)//while(levelOfAccess<pathPoints.Count)
+		{
+			//levelOfAccess++;
+			nodeSafeLevelNow = nodeSafeLevelNext;
+			nodeSafeLevelNext = new List<NodeShadow>();
+			
+			foreach(NodeShadow nodeNow in nodeSafeLevelNow)
+			{
+				foreach(NodeShadow nodeNowParent in nodeNow.getParent())
+				{
+					sw.Write("("+nodeNow.getPos()+";"+nodeNow.getSafetyLevel()+")|("+nodeNowParent.getPos()+";"+nodeNowParent.getSafetyLevel()+")");
+					sw.WriteLine("");
+				}
+				List<NodeShadow> childrenTemp = nodeNow.getChildren();
+				foreach(NodeShadow nxtLevelNode in childrenTemp)
+				{
+					if(!nodeSafeLevelNext.Contains(nxtLevelNode))
+					{
+						nodeSafeLevelNext.Add(nxtLevelNode);
+					}
+				}
+				
+			}
+		}
+		
+		
+		sw.Close ();
+	}
+	*/
 	private void writeNodeStructure(NodeShadow headNode,string saveDataDirName)
 	{
-		NodeShadow tempNode = headNode;
-		while(tempNode.getChildren().Count>0)
+		//NodeShadow tempNode = headNode;
+		/*while(tempNode.getChildren().Count>0)
 		{
 			Debug.Log("Writing Node = "+tempNode.getPos());
 			tempNode = tempNode.getChildren()[0];
 		}
+		*/
 
 
 		string sourceFileName = saveDataDirName + "\\"+headNode.getPos().ToString()+".txt";
@@ -442,7 +511,9 @@ public class Visibility1 : MonoBehaviour {
 	private void executeTrueCase()
 	{
 		setGlobalVars1();
-		standardMaxMovement = speedEnemy*(Vector3.Distance(pathPoints[0],pathPoints[1])/speedPlayer);
+		standardMaxMovement = speedEnemy*(m_stepDistance/speedPlayer);
+		Debug.Log ("Initialize standardMaxMovement = " + standardMaxMovement);
+
 		string dirName = createSaveDataDir(Application.dataPath);
 		int j1=0;
 		for(float j=m_minX;j<m_maxX && j1<discretePtsX;j+=m_step)
@@ -460,6 +531,7 @@ public class Visibility1 : MonoBehaviour {
 				Vector2 keyTemp = new Vector2(j1,k1);
 
 				Debug.Log(j1+" , "+k1);
+				//if(j1==95 && k1==35)//TODO:Remove
 				if(j1==5 && k1==70)//TODO:Remove
 				{
 					showPosOfPoint(pt,Color.cyan);//TODO:Remove
@@ -509,11 +581,12 @@ public class Visibility1 : MonoBehaviour {
 	}
 	private bool addPossibleChild(Vector2 tempVect2,NodeShadow node,int pathPointIndx,Hashtable h_mapPtToNode)
 	{
-		if(h_mapIndxToPt.Contains(tempVect2))
+		//Debug.Log ("Possible Child 1 ="+(Vector3)h_mapIndxToPt [tempVect2]);
+		if(h_mapIndxToPt.ContainsKey(tempVect2))
 		{
 			Vector3 tempVect3 = (Vector3)h_mapIndxToPt[tempVect2];
-			//Debug.Log(tempVect3);
-			//Debug.Log(pathPointIndx);
+			//Debug.Log("standardMaxMovement = "+standardMaxMovement);
+			//Debug.Log("Possible Child 2 = "+tempVect3);
 			if(pointInShadow(tempVect3,pathPointIndx) && Vector3.Distance(node.getPos(),tempVect3)<=standardMaxMovement)
 			{
 				NodeShadow nodeChild;
@@ -550,8 +623,56 @@ public class Visibility1 : MonoBehaviour {
 			rowJ--;
 			colK--;
 			int rowLen = ((int)indexOfPt.x - rowJ)*2 +1;
-
-			for(int i1=rowJ;i1<rowLen;i1++)
+			//////////////////////////////////////////////////////////////////////&&&&&&&&&&&&&&&&&
+			Vector2 testPt2D = new Vector2(rowJ+rowLen/2,colK);
+			Vector3 testPt3D = new Vector3(0,0,0);
+			bool bPtAssigned = false;
+			if(h_mapIndxToPt.ContainsKey(testPt2D))
+			{
+				testPt3D = (Vector3)h_mapIndxToPt[testPt2D];
+				bPtAssigned = true;
+			}
+			else
+			{
+				testPt2D = new Vector2(rowJ+rowLen/2,colK+rowLen-1);
+				if(h_mapIndxToPt.ContainsKey(testPt2D))
+				{
+					testPt3D = (Vector3)h_mapIndxToPt[testPt2D];
+					bPtAssigned = true;
+				}
+				else
+				{
+					testPt2D = new Vector2(rowJ+rowLen-1,colK+rowLen/2);
+					if(h_mapIndxToPt.ContainsKey(testPt2D))
+					{
+						testPt3D = (Vector3)h_mapIndxToPt[testPt2D];
+						bPtAssigned = true;
+					}
+					else
+					{
+						testPt2D = new Vector2(rowJ,colK+rowLen/2);
+						if(h_mapIndxToPt.ContainsKey(testPt2D))
+						{
+							testPt3D = (Vector3)h_mapIndxToPt[testPt2D];
+							bPtAssigned = true;
+						}
+					}
+				}
+			}
+			if(!bPtAssigned)
+			{
+				Debug.LogError("All Possible points exhausted. No outcome. Breaking from loop");
+				break;
+			}
+			////////////////////////////////////////////////////////////////////////&&&&&&&&&&&&&&&&;
+			float testDist = Vector3.Distance(node.getPos(),testPt3D);
+			//Debug.Log("testDist = "+testDist);
+			if(testDist > standardMaxMovement)// || rowJ<0 || colK<0 || rowJ+rowLen>discretePtsX || colK+rowLen>discretePtsZ)
+				break;
+			//Debug.Log("rowJ = "+rowJ);
+			//Debug.Log("colK = "+colK);
+			//Debug.Log("rowLen = "+rowLen);
+			for(int i1=rowJ;i1<rowJ+rowLen;i1++)
 			{
 				Vector2 tempVect2 = new Vector2(i1,colK);
 				bStillReachable = addPossibleChild(tempVect2,node,pathPointIndx,h_mapPtToNode);
@@ -562,7 +683,7 @@ public class Visibility1 : MonoBehaviour {
 				if(bStillReachable)
 					bRunAgain=true;
 			}
-			for(int i2=colK+1;i2<rowLen-1;i2++)
+			for(int i2=colK+1;i2<colK+rowLen-1;i2++)
 			{
 				Vector2 tempVect2 = new Vector2(rowJ,i2);
 				bStillReachable = addPossibleChild(tempVect2,node,pathPointIndx,h_mapPtToNode);
@@ -573,9 +694,17 @@ public class Visibility1 : MonoBehaviour {
 				if(bStillReachable)
 					bRunAgain=true;
 			}
-			if(!bRunAgain && Vector3.Distance(node.getPos(),(Vector3)h_mapIndxToPt[new Vector2(rowJ+rowLen/2,colK)])>standardMaxMovement)// || rowJ<0 || colK<0 || rowJ+rowLen>discretePtsX || colK+rowLen>discretePtsZ)
-				break;
+
+
 		}
+		/*Debug.Log(node.getPos()+" has following children");
+		string childrEn="";
+		foreach(NodeShadow ch in node.getChildren())
+		{
+			childrEn+=ch.getPos()+" , ";
+		}
+		Debug.Log(childrEn);
+		*/
 		return node.getChildren ();
 	}
 	private string createSaveDataDir (string dataPath)

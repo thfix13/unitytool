@@ -13,8 +13,9 @@ using UnityEngine;
 //using System.IO;
 using System.Collections.Generic;
 
-public class CommonScene1
+public static class CommonScene1
 {
+	static float stepPath = -1.0f;
 	public static List<Vector3> definePath()
 	{
 		List<Vector3> pathPts = new List<Vector3> ();
@@ -24,6 +25,7 @@ public class CommonScene1
 		//first_point = pathPts [0];
 		pathPts.Add(ep.transform.position);
 		findPath (pathPts);//straight Line points
+		stepPath = Vector3.Distance (pathPts[0],pathPts[1]);
 		return pathPts;
 	}
 	private static void findPath (List<Vector3> pathPts)
@@ -41,6 +43,13 @@ public class CommonScene1
 				k+=2;
 			}
 		}
+	}
+	//Distance b/w consecutive points
+	public static float getStepDistance()
+	{
+		if (stepPath < 0.0f)
+			Debug.LogError ("Distance b/w consecutive points not set.");
+		return stepPath;
 	}
 }
 
