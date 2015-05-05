@@ -112,10 +112,14 @@ public class Visibility1 : MonoBehaviour {
 	}
 	private void displayPredictedPaths()
 	{
+		float startTime = Time.realtimeSinceStartup;
 		NodeShadow headNode = readNodeStructureFor();
 		NodeShadow node = headNode;
 		Debug.Log("Read the txt file");
-
+		////////////////////////////////////////////////////////////////////////////////////
+		//showAllPathDetected (headNode);
+		//return;
+		///////////////////////////////////////////////////////////////////////////////////;
 		//List<NodeShadow> firstPath = findFirstEnemyPathDetected (headNode);
 		List<NodeShadow> firstPath = quickShortestPathDetected (headNode);
 		//List<NodeShadow> firstPath = possibleShortestPathDetected (headNode);
@@ -127,18 +131,122 @@ public class Visibility1 : MonoBehaviour {
 		{
 			float dist = Vector3.Distance(firstPath[i].getPos(),firstPath[i-1].getPos());
 
-			Debug.Log(firstPath[i].getPos()+" ;;;;;; Distance from previous "+firstPath[i-1].getPos()+" is "+dist);
+			//Debug.Log(firstPath[i].getPos()+" ;;;;;; Distance from previous "+firstPath[i-1].getPos()+" is "+dist);
 			if(dist>standardMaxMovement)
 				Debug.LogError("Dist b/w 2 points should not be greater than standardMaxMovement.");
 			//showPosOfPoint (firstPath [i].getPos (),Color.cyan);
 			Line l = new Line(firstPath[i].getPos(),firstPath[i-1].getPos());
 			l.DrawVector(allLineParent);
 		}
-		Debug.Log("Finished displayPredictedPaths");
+		float totalTime = (Time.realtimeSinceStartup - startTime)/60;
+		Debug.Log("Finished displayPredictedPaths. Time took to calculate and show shortest path = "+totalTime+" minutes");
 	}
+	private void showAllPathDetected (NodeShadow headNode)
+	{
+		List<NodeShadow> stack = new List<NodeShadow> ();
+		List<NodeShadow> tempStack = new List<NodeShadow> ();
+		stack.Add (headNode);
+		float colorCounter = 1.0f;//from green to blue
+		float colorStep = 1.0f / pathPoints.Count;
+		while(true)
+		{
+			Color c = new Color(0.0f,colorCounter,1.0f-colorCounter);
+			colorCounter-=colorStep;
+			foreach(NodeShadow node in stack)
+			{
+				foreach(NodeShadow child in node.getChildren())
+				{
+					//Debug.Log(child.getPos());
 
+					if(!tempStack.Contains(child))
+						tempStack.Add(child);
+					//Line l = new Line(node.getPos(),child.getPos());
+
+					//l.DrawLine(allLineParent,c);
+
+				}
+			}
+			
+			if(tempStack.Count==0)
+			{
+				break;
+			}
+			stack.Clear();
+			stack = tempStack;
+			tempStack = new List<NodeShadow> ();
+		}
+		showPosOfPoint(headNode.getPos(),Color.cyan);
+		foreach(NodeShadow node in stack)
+		{
+			showPosOfPoint(node.getPos(),Color.green);
+		}
+	}
 	private List<NodeShadow> quickShortestPathDetected (NodeShadow headNode)
 	{
+
+		List<NodeShadow> shortestPathIndices = new List<NodeShadow> ();
+		List<NodeShadow> stack = new List<NodeShadow> ();
+		List<NodeShadow> tempStack = new List<NodeShadow> ();
+		headNode.setMinDistFromHead (0.0f,null);
+		stack.Add (headNode);
+		while(true)
+		{
+			foreach(NodeShadow node in stack)
+			{
+				foreach(NodeShadow child in node.getChildren())
+				{
+					//Debug.Log(child.getPos());
+					float dist = Vector3.Distance(node.getPos(),child.getPos());
+					child.setMinDistFromHead (dist,node);
+					if(!tempStack.Contains(child))
+						tempStack.Add(child);
+				}
+			}
+			//Remove duplicates
+			/*for(int i=0;i<tempStack.Count;i++)
+			{
+				for(int j=i+1;j<tempStack.Count;j++)
+				{
+					if(tempStack[i]==tempStack[j])
+					{
+						//Debug.Log("Duplicate found.");
+
+						tempStack.RemoveAt(j);
+						j--;
+					}
+				}
+			}
+			*/
+			if(tempStack.Count==0)
+			{
+				break;
+			}
+			stack.Clear();
+			stack = tempStack;
+			tempStack = new List<NodeShadow> ();
+			//if(stack.Count==0)
+				//break;
+		}
+		tempStack = stack;
+		float minDist = tempStack [0].getMinDistFromHead ();
+		NodeShadow endNodePoint = tempStack [0];
+		for(int i=1;i<tempStack.Count;i++)
+		{
+			if(tempStack [i].getMinDistFromHead ()<minDist)
+			{
+				minDist = tempStack [i].getMinDistFromHead ();
+				endNodePoint = tempStack [0];
+			}
+		}
+
+		while(true)
+		{
+			shortestPathIndices.Insert (0, endNodePoint);
+			endNodePoint = endNodePoint.getParentSelected();
+			if(endNodePoint==null)
+				break;
+		}
+		return shortestPathIndices;
 	}
 	private List<NodeShadow> possibleShortestPathDetected (NodeShadow headNode)
 	{
@@ -532,11 +640,13 @@ public class Visibility1 : MonoBehaviour {
 
 				Debug.Log(j1+" , "+k1);
 				//if(j1==95 && k1==35)//TODO:Remove
-				if(j1==5 && k1==70)//TODO:Remove
+				if(j1==44 && k1==7)//TODO:Remove
 				{
 					showPosOfPoint(pt,Color.cyan);//TODO:Remove
+					float startTime = Time.realtimeSinceStartup;
 					executeTrueCaseFor(keyTemp,dirName);
-					Debug.Log("executeTrueCase Finished");//TODO:Remove
+					float totalTime = (Time.realtimeSinceStartup - startTime)/60;
+					Debug.Log("executeTrueCase Finished. Time taken is = "+totalTime+" mins");//TODO:Remove
 					return;//TODO:Remove
 				}
 				k1++;
@@ -547,6 +657,7 @@ public class Visibility1 : MonoBehaviour {
 	float standardMaxMovement = -1.0f;
 	private void executeTrueCaseFor(Vector2 indexOfPt,string saveDataDirName)
 	{
+		//return;
 		Vector3 pt = (Vector3)h_mapIndxToPt[indexOfPt];
 		NodeShadow headNode = new NodeShadow (pt);
 		headNode.setSafetyLevel (0);
