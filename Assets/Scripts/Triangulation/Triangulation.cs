@@ -26,6 +26,7 @@ public class Triangulation : MonoBehaviour
 	public List<Geometry> finalPoly = new List<Geometry> ();//has proper obstacles
 	public Geometry totalGeo = new Geometry (); //has both map and merged polygons
 	private List<Vector3> totalGeoVerts = new List<Vector3>();
+	List<Geometry> mstNodes = new List<Geometry> ();
 	//Contains Map
 	public Geometry mapBG;
 	private float mapBGPerimeter = 0f;
@@ -35,7 +36,8 @@ public class Triangulation : MonoBehaviour
 	public List<KeyValuePair<Vector3,Geometry>> cameraUnion = new List<KeyValuePair<Vector3, Geometry>>();
 	//Contains all the visibility polygons for cameras
 	public int vpnum = -1;
-	
+
+	public bool inkscape = false;	
 	public bool drawTriangles = false;
 	public bool drawSPRoadMap = false;
 	public bool drawMinSpanTree = false;
@@ -79,6 +81,7 @@ public class Triangulation : MonoBehaviour
 		mapBG = new Geometry ();
 		finalPoly.Clear ();
 		triangles.Clear(); 
+		mstNodes.Clear ();
 		lines.Clear(); 
 		geos.Clear();
 		linesMinSpanTree.Clear();
@@ -89,6 +92,15 @@ public class Triangulation : MonoBehaviour
 		DestroyImmediate(temp);
 		GameObject vptmp = GameObject.Find("vptmp");
 		DestroyImmediate(vptmp);
+		temp = GameObject.Find("Walls");
+		if( temp != null )
+			DestroyImmediate(temp);
+		temp = GameObject.Find("Obstacles");
+		if( temp != null )
+			DestroyImmediate(temp);
+		temp = GameObject.Find("Borders");
+		if( temp != null )
+			DestroyImmediate(temp);
 		geometryDrawn = false;
 		obstacleDrawn = false;
 		sprDrawn = false;
@@ -145,14 +157,14 @@ public class Triangulation : MonoBehaviour
 		}
 		
 		if( drawVP && vpnum != -1 ){
-			Line tmpline = new Line (cameraVPS[vpnum].Key, new Vector3(-100,1,100));
+			Line tmpline = new Line (cameraVPS[vpnum].Key, new Vector3(0,1,50));
 			tmpline.DrawLine(Color.white);
 			foreach( Line l in cameraVPS[vpnum].Value.edges )
 				l.DrawLine( Color.blue );
 		}
 		
 		if( drawVPUnion && vpnum != -1 && cameraUnion.Count > 0 ){
-			Line tmpline = new Line (cameraUnion[vpnum].Key, new Vector3(-100,1,100));
+			Line tmpline = new Line (cameraUnion[vpnum].Key, new Vector3(0,1,50));
 			tmpline.DrawLine(Color.white);
 			foreach( Line l in cameraUnion[vpnum].Value.edges )
 				l.DrawLine( Color.blue );
@@ -176,49 +188,176 @@ public class Triangulation : MonoBehaviour
 		}
 	}
 
+	public void drawingPractice (){
+		new GameObject ("temp");
+		new GameObject ("Walls");
+		new GameObject ("Obstacles");
+		new GameObject ("Borders");
+		float scalingFactor = 20f;
+		float displacementFactorX = -40f;
+		float displacementFactorZ = 40f;
+//		Line a = new Line (new Vector3 (0, 1, 0), new Vector3 (10, 1, 0));
+//		a.DrawVector (GameObject.Find ("temp"));
+		var reader = new StreamReader(File.OpenRead(@"C:\Users\Asus\Desktop\McGill\Thesis\Week 19\map.csv"));
+		List<string> coord = new List<string> ();
+		Geometry walls = new Geometry ();
+		int wallcnt = 0;
+		int mapcnt = 0;
+
+		while ( !reader.EndOfStream )
+		{
+			var line = reader.ReadLine();
+			var values = line.Split(';');
+			//Check the symbol in first column of line
+			if( values[0].Equals("M") ){
+				    //Coordinates in 2nd and 3rd column. Take them in as separate lists of floats.
+					var prev = values[1].Split(',');
+					var current = values[2].Split(',');
+					Vector3 a = new Vector3();
+					Vector3 b = new Vector3();					
+					a.x = float.Parse( prev[0] )/scalingFactor;
+					a.z = (-float.Parse( prev[1] )/scalingFactor) + displacementFactorZ;
+					a.y = b.y = 1;
+					b.x = float.Parse( current[0] )/scalingFactor;
+					b.z = (-float.Parse( current[1] )/scalingFactor) + displacementFactorZ;
+					Line ln = new Line( a, b );
+					
+					ln.name = "Border "+mapcnt++.ToString();
+					//ln.DrawVector(GameObject.Find ("Borders"));
+					mapBG.edges.Add(ln);
+			}
+			else if( values[0].Equals("OBS") ){
+				float x = float.Parse(values[1])/scalingFactor;
+				float z = (-float.Parse(values[2])/scalingFactor) + displacementFactorZ;
+				float width  = float.Parse(values[3])/scalingFactor;
+				float height = -float.Parse(values[4])/scalingFactor;
+				Vector3 a = new Vector3();
+				Vector3 b = new Vector3();
+				Vector3 c = new Vector3();
+				Vector3 d = new Vector3();
+				a.y = b.y = c.y = d.y = 1;
+				a.x = x; a.z = z;
+				b.x = x + width; b.z = z;
+				c.x = x + width; c.z = z + height;
+				d.x = x; d.z = z + height;
+				Geometry g = new Geometry();
+				g.edges.Add( new Line( a, b ) );
+				g.edges.Add( new Line( b, c ) );
+				g.edges.Add( new Line( c, d ) );
+				g.edges.Add( new Line( d, a ) );
+				obsGeos.Add(g);
+				//g.DrawGeometry(GameObject.Find ("Obstacles"));
+			}
+			else{
+				line = reader.ReadLine();
+				values = line.Split(';');
+				Geometry g = new Geometry();
+				while( values[0].Equals("OB") ){
+					var prev = values[1].Split(',');
+					var current = values[2].Split(',');
+					Vector3 a = new Vector3();
+					Vector3 b = new Vector3();					
+					a.x = float.Parse( prev[0] )/scalingFactor;
+					a.z = (-float.Parse( prev[1] )/scalingFactor) + displacementFactorZ;
+					a.y = b.y = 1;
+					b.x = float.Parse( current[0] )/scalingFactor;
+					b.z = (-float.Parse( current[1] )/scalingFactor) + displacementFactorZ;
+					Line ln = new Line( a, b );
+					g.edges.Add( ln );
+					ln.name = wallcnt.ToString();
+					//ln.DrawVector(GameObject.Find("temp"));
+					line = reader.ReadLine();
+					values = line.Split(';');
+				}
+				wallcnt++;
+				obsGeos.Add(g);
+			}
+		}
+	}
+
 	public void TriangulationSpace (){
 		this.Clear ();
+		System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch ();
+		stopwatch.Start ();
+		inkscape = true;
 		/***PHASE A: PREPROCESSING***/
 		/*STEP 1 - GET POLYGON POINTS*/
-		getPolygons ();
+		if( inkscape )
+			drawingPractice ();
+		else
+			getPolygons ();
+
 		/*STEP 2 - MERGE POLYGONS*/
 		mergePolygons ();
+
 		/*STEP 3 - DEFINE MAP BOUNDARY*/
 		defineBoundary ();
-
-		/***PHASE B: COLORING***/
-		/*STEP 4 - MAKE MST OF POLYGONS*/
-		MST ();
-		return;
-		/*STEP 5 - TRIANGULATE*/
-		triangulate ();
-
-		/*STEP 6 - COLOR AND GET CAMERAS*/
-		colorCameras ();
-
-		/***PHASE C: TOUR***/
-		/*STEP 7 - CREATE "SHORTEST-PATH" ROADMAP*/
-		makeSPRoadMap ();
-
-		/*STEP 8 - RUN DIJKSTRA FOR EVERY CAMERA PAIR*/
-		if (!makeTourOnSPR ()){
-			Debug.Log("makeTourOnSPR () failed");
-			return;
-		}
-
-		/*STEP 9 - CREATE TOUR USING NEAREST NEIGHBOUR*/
-		//happens in makeTourOnSPR
-
+		stopwatch.Stop();
+		Debug.Log("PREPROCESSING: " + stopwatch.ElapsedMilliseconds * 0.001);
+//		/***PHASE B: COLORING***/
+//		/*STEP 4 - MAKE MST OF POLYGONS*/
+//		stopwatch.Reset ();
+//		stopwatch.Start ();
+//		MST ();
+//		stopwatch.Stop ();
+//		Debug.Log("MST: " + stopwatch.ElapsedMilliseconds * 0.001);
+//
+//		/*STEP 5 - TRIANGULATE*/
+//		stopwatch.Reset ();
+//		stopwatch.Start ();
+//		triangulate ();
+//		stopwatch.Stop ();
+//		Debug.Log("Triangulation: " + stopwatch.ElapsedMilliseconds * 0.001);
+//
+//		/*STEP 6 - COLOR AND GET CAMERAS*/
+//		stopwatch.Reset ();
+//		stopwatch.Start ();
+//		colorCameras ();
+//		stopwatch.Stop ();
+//		Debug.Log("Cameras and Coloring: " + stopwatch.ElapsedMilliseconds * 0.001);
+//
+//		/***PHASE C: TOUR***/
+//		/*STEP 7 - CREATE "SHORTEST-PATH" ROADMAP*/
+//		stopwatch.Reset ();
+//		stopwatch.Start ();
+//		makeSPRoadMap ();
+//		stopwatch.Stop ();
+//		Debug.Log("Make SP Roadmap: " + stopwatch.ElapsedMilliseconds * 0.001);
+//
+//		/*STEP 8 - RUN DIJKSTRA FOR EVERY CAMERA PAIR*/
+//		stopwatch.Reset ();
+//		stopwatch.Start ();
+//		if (!makeTourOnSPR ()){
+//			Debug.Log("makeTourOnSPR () failed");
+//			return;
+//		}
+//		stopwatch.Stop ();
+//		Debug.Log("Make tour: " + stopwatch.ElapsedMilliseconds * 0.001);
+//		/*STEP 9 - CREATE TOUR USING NEAREST NEIGHBOUR*/
+//		//happens in makeTourOnSPR
+//		printTour ();
+//		return;
+		scanTour ();
 		/***PHASE D: VISIBILITY***/
 		/*STEP 10 - GET VISIBILITY POLYGONS OF CAMERAS*/
-		getCameraVPS ();
+//		getCameraVPS ();
+//		Debug.Log ("Vispol done");
+//		return;
+//		printVPS ();
+		scanVPS ();
+//		if (VPValidation () > 0)
+//			return;
+//		Debug.Log ("ALL VPS valid");
+//		return;
+//		VPValidation ();
+//		Debug.Log ("Vispol done");
 
-		if (VPValidation () > 0)
-			return;
 		/*STEP 11 - CHECK CAMERA VISIBILITY NESTING*/
 		mergeVPS ();
-		if (UnionValidation () > 0)
-			return;
+//		if (UnionValidation () > 0)
+//			return;
+		Debug.Log ("ALL UNIONS valid");
+
 		//return;
 		/***PHASE E: MORE METRICS***/
 		/*STEP 12 - CHECK INCREMENTAL CAMERA AREA COVERAGE*/
@@ -328,15 +467,54 @@ public class Triangulation : MonoBehaviour
 			}
 		}
 	}
-	
+
+//	void customizeBoundary(){
+//		mapBG.edges.Clear ();
+//		GameObject[] obs = GameObject.FindGameObjectsWithTag ("Map");
+//		Vector3 [] vertex = new Vector3[4]; 
+//		Vector3 [] t;
+//		foreach (GameObject o in obs){
+//			MeshFilter mesh = (MeshFilter)(o.GetComponent ("MeshFilter"));
+//			t = mesh.sharedMesh.vertices;
+//			Geometry tempGeometry = new Geometry();
+//			Debug.Log(t.Length);
+////			vertex [0] = mesh.transform.TransformPoint (t [6]);
+////			vertex [1] = mesh.transform.TransformPoint (t [8]);
+////			vertex [3] = mesh.transform.TransformPoint (t [7]);
+////			vertex [2] = mesh.transform.TransformPoint (t [9]);
+////			
+////			vertex [0].y = 1;
+////			vertex [2].y = 1;
+////			vertex [1].y = 1;
+////			vertex [3].y = 1;
+////			for (int i = 0; i< vertex.Length; i+=1) {
+////				if (i < vertex.Length - 1)
+////					tempGeometry.edges.Add (new Line (vertex [i], vertex [i + 1]));
+////				else 	       
+////					tempGeometry.edges.Add (new Line (vertex [0], vertex [i]));
+////			}	
+////			geos.Add (tempGeometry);
+//		}
+//	}
+
 	void defineBoundary(){
 		//Check for obstacles that intersect the map boundary
 		//and change the map boundary to exclude them
 		finalPoly = new List<Geometry> ();//Contains all polygons that are fully insde the map
+		int xid = 0;
+		foreach (Geometry g in obsGeos) {
+			//	g.DrawGeometry(GameObject.Find(	"temp" ), xid++ );		
+		}
+		xid = -1;
 		foreach ( Geometry g in obsGeos ) {
-			if( mapBG.GeometryIntersect( g ) && !mapBG.GeometryInside( g, false ) ){
-				mapBG = mapBG.GeometryMergeInner( g );
-				mapBG.BoundGeometry( mapBoundary );
+			if( mapBG.GeometryIntersect( g ) && !mapBG.GeometryInsideMap( g ) ){
+				Geometry tempBG = new Geometry();
+				tempBG = mapBG.GeometryMergeInner( g, xid );
+				if( inkscape )
+					tempBG.BoundGeometry( mapBG );
+				else
+					tempBG.BoundGeometryCrude( mapBoundary );
+				mapBG = tempBG;
 			}
 			else
 				finalPoly.Add(g);
@@ -345,83 +523,175 @@ public class Triangulation : MonoBehaviour
 		//mapBG.getSortedEdges ();
 		foreach( Line l in mapBG.edges )
 			mapBGPerimeter += l.Magnitude();
-	}
-	
-	void MST(){
-		//-----------START MST CODE------------------//
-		//We will use "mapBG" and "finalPoly"
-		//finalPoly contains the "quadrilaters"
-		//get all lines from quadrilaters/finalPoly and put them in "lines" || We use "obsLines"
-		List<Line> obsLines = new List<Line> ();
-		List<Geometry> toCheck = new List<Geometry> ();
+		int cnt = 0;
 		foreach (Geometry g in finalPoly) {
 			foreach( Line l in g.edges )
-				obsLines.Add( l );
-			toCheck.Add(g);
+				l.name = "Wall " + cnt++.ToString();
 		}
-		//set links with neighbors for each quadrilater (send list of all obstacles as a paramter)
-		foreach (Geometry g in toCheck)
-			g.SetVoisins( toCheck, mapBG );
-		//keep a list of the edges (graph where obstaceles are the nodes) in a list of lines called "linesLinking"
-		List<Vector3> mapVertices = mapBG.GetVertex();
-		
-		//Can be made simpler
-		//Find a geometry to link to any of the map vertices
-		Geometry start = null;
-		for (int i = 0; i < mapVertices.Count; i++) {
-			start = mapBG.findClosestQuad (mapVertices [i], toCheck, mapBG);
-			if( start != null )
-				break;
-		}
-		//Connect border to this geometry
-		List<Line> linesLinking = new List<Line> ();
-		linesLinking.Add (mapBG.GetClosestLine (start, toCheck, mapBG));
-		start.visited = true;
-		
-		List<Geometry> toCheckNode = new List<Geometry> (); 
-		toCheckNode.Add (start); 
-		Line LinetoAdd = start.voisinsLine [0];
-		
-		//Straight Porting//
-		while (LinetoAdd != null) {
-			LinetoAdd = null; 
-			Geometry qToAdd = null; 
-			
-			//Check all 
-			foreach (Geometry q in toCheckNode) {
-				
-				for (int i = 0; i<q.voisins.Count; i++) {
-					if (! q.voisins [i].visited) {
-						if (LinetoAdd != null) {
-							//get the shortest line
-							if ( floatCompare( LinetoAdd.Magnitude (), q.voisinsLine [i].Magnitude (), ">=" ) ){
-								LinetoAdd = q.voisinsLine [i];
-								qToAdd = q.voisins [i]; 
-								
-							}
-						} else {
-							qToAdd = q.voisins [i]; 
-							LinetoAdd = q.voisinsLine [i];
-						}
-					} else {
-						continue; 
-					}
-				}
-			}
-			if (LinetoAdd != null) {
-				linesLinking.Add (LinetoAdd); 
-				qToAdd.visited = true; 
-				toCheckNode.Add (qToAdd); 
-			}
-		}
-		
-		foreach (Line l in linesLinking)
-			triangulation.linesMinSpanTree.Add (l);
-		//END porting
-		
-		//-----------END MST CODE--------------------//
 	}
 	
+//	void MST(){
+//		//-----------START MST CODE------------------//
+//		//We will use "mapBG" and "finalPoly"
+//		//finalPoly contains the "quadrilaters"
+//		//get all lines from quadrilaters/finalPoly and put them in "lines" || We use "obsLines"
+//		List<Line> obsLines = new List<Line> ();
+//		List<Geometry> toCheck = new List<Geometry> ();
+//		foreach (Geometry g in finalPoly) {
+//			foreach( Line l in g.edges )
+//				obsLines.Add( l );
+//			toCheck.Add(g);
+//		}
+//		//set links with neighbors for each quadrilater (send list of all obstacles as a paramter)
+//
+//		foreach (Geometry g in toCheck)
+//			g.SetVoisins( toCheck, mapBG );
+//		Debug.Log ("Hello");
+//
+//
+//		//keep a list of the edges (graph where obstaceles are the nodes) in a list of lines called "linesLinking"
+//		List<Vector3> mapVertices = mapBG.GetVertex();
+//		
+//		//Can be made simpler
+//		//Find a geometry to link to any of the map vertices
+//		Geometry start = null;
+//		for (int i = 0; i < mapVertices.Count; i++) {
+//			start = mapBG.findClosestQuad (mapVertices [i], toCheck, mapBG);
+//			if( start != null )
+//				break;
+//		}
+//		//Connect border to this geometry
+//		List<Line> linesLinking = new List<Line> ();
+//		linesLinking.Add (mapBG.GetClosestLine (start, toCheck, mapBG));
+//		start.visited = true;
+//		
+//		List<Geometry> toCheckNode = new List<Geometry> (); 
+//		toCheckNode.Add (start); 
+//		Line LinetoAdd = start.voisinsLine [0];
+//		
+//		//Straight Porting//
+//		while (LinetoAdd != null) {
+//			LinetoAdd = null; 
+//			Geometry qToAdd = null; 
+//			
+//			//Check all 
+//			foreach (Geometry q in toCheckNode) {
+//				
+//				for (int i = 0; i<q.voisins.Count; i++) {
+//					if (! q.voisins [i].visited) {
+//						if (LinetoAdd != null) {
+//							//get the shortest line
+//							if ( floatCompare( LinetoAdd.Magnitude (), q.voisinsLine [i].Magnitude (), ">=" ) ){
+//								LinetoAdd = q.voisinsLine [i];
+//								qToAdd = q.voisins [i]; 
+//								
+//							}
+//						} else {
+//							qToAdd = q.voisins [i]; 
+//							LinetoAdd = q.voisinsLine [i];
+//						}
+//					} else {
+//						continue; 
+//					}
+//				}
+//			}
+//			if (LinetoAdd != null) {
+//				linesLinking.Add (LinetoAdd); 
+//				qToAdd.visited = true; 
+//				toCheckNode.Add (qToAdd); 
+//			}
+//		}
+//		
+//		foreach (Line l in linesLinking)
+//			triangulation.linesMinSpanTree.Add (l);
+//		//END porting
+//		
+//		//-----------END MST CODE--------------------//
+//	}
+
+	KeyValuePair<bool, List<Line>> makeMST( List<int> visited, List<Line> connectors ){
+		for( int i = 0; i < mstNodes.Count; i++ ){
+			if( visited[i] == 1 ) continue;
+
+			for( int j = 0; j < mstNodes.Count; j++ ){
+				if( visited[j] != 1 ) continue;
+				
+				KeyValuePair<bool, List<Line>> kvp = MSTConnectable( mstNodes[i], mstNodes[j], connectors );
+				if( kvp.Key == true ){
+					visited[i] = 1;
+					kvp = makeMST( visited, kvp.Value );
+					if( kvp.Key == true ) return kvp;
+					visited[i] = 0;
+				}
+			}
+		}
+		bool success = true;
+//		foreach( int i in visited ){
+//			if( visited[i] == 0 ){
+//				success = false;
+//				break;
+//			}
+//		}
+		if( connectors.Count == mstNodes.Count - 1 ) success = true;
+		return new KeyValuePair<bool, List<Line>> (success, connectors);
+	}
+
+	KeyValuePair<bool, List<Line>> MSTConnectable( Geometry a, Geometry b, List<Line> connectors ){
+		float mindist = 1000f;
+		Line minLine = null;
+		foreach (Vector3 v1 in a.GetVertex()){
+			foreach (Vector3 v2 in b.GetVertex()){
+				Line l1 = new Line( v1, v2 );
+				if( comprehensiveCollision(l1, 0) ) continue;
+				bool collides = false;
+				foreach( Line l2 in connectors ){
+					if( l1.LineIntersectMuntac(l2) > 0 ){
+						collides = true;
+						break;
+					}
+				}
+				if( !collides ){
+					if( l1.Magnitude() < mindist ){
+						//connectors.Add( l1 );
+						mindist = l1.Magnitude();
+						minLine = l1;
+					}
+					//return new KeyValuePair<bool, List<Line>>( true, connectors );
+				}								
+			}
+		}
+		if( minLine != null ){
+			connectors.Add( minLine );
+			//minLine.DrawVector(GameObject.Find("temp"));
+			return new KeyValuePair<bool, List<Line>>( true, connectors );
+		}
+		return new KeyValuePair<bool, List<Line>>( false, connectors );
+	}
+
+	void MST(){
+		List<int> visited = new List<int> ();
+		mstNodes.Clear ();
+		mstNodes.Add(mapBG);
+		visited.Add (0);
+		foreach (Geometry g in finalPoly){
+			mstNodes.Add (g);
+			visited.Add (0);
+		}
+
+		for( int i = 0; i < mstNodes.Count; i++ ){
+			visited[i] = 1;
+			//toSend.Remove( g );
+			KeyValuePair<bool, List<Line>> kvp = makeMST( visited, new List<Line>() );
+			if( kvp.Key == true ){
+				foreach( Line l in kvp.Value )
+					linesMinSpanTree.Add( l );
+				break;
+			}
+		}
+		if( linesMinSpanTree.Count == 0 )
+			Debug.Log("MST couldn't be created");
+	}
+
 	void triangulate(){
 		List<Vector3> allVertex = new List<Vector3>();
 		List<Vector3> tempVertex = new List<Vector3>();
@@ -965,6 +1235,7 @@ public class Triangulation : MonoBehaviour
 		inter.transform.renderer.material.color = Color.gray;
 		inter.transform.position = v;
 		inter.transform.localScale = new Vector3(0.1f,0.1f,0.1f); 
+		//inter.transform.localScale = new Vector3(0.01f,0.01f,0.01f); 
 		inter.transform.parent = temp.transform;
 		//inter.gameObject.name = vlcnt.ToString();
 	}
@@ -984,33 +1255,37 @@ public class Triangulation : MonoBehaviour
 		GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 		inter.transform.renderer.material.color = x;
 		inter.transform.position = v;
-		//inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f);
-		inter.transform.localScale = new Vector3(0.1f,0.1f,0.1f);
+		inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f);
+		//inter.transform.localScale = new Vector3(0.1f,0.1f,0.1f);
 		//inter.transform.localScale = new Vector3(0.01f,0.01f,0.01f);
 		inter.transform.parent = temp.transform;
 		inter.gameObject.name = vlcnt.ToString();
 	}
 	
-	void drawSphere( Vector3 v, Color x, float vlcnt ){
+	void drawSphere( Vector3 v, Color x, double vlcnt ){
 		GameObject temp = GameObject.Find ("temp");
 		GameObject inter = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 		inter.transform.renderer.material.color = x;
 		inter.transform.position = v;
-		//inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f);
+		inter.transform.localScale = new Vector3(0.3f,0.3f,0.3f);
 		//inter.transform.localScale = new Vector3(0.1f,0.1f,0.1f);
-		inter.transform.localScale = new Vector3(0.01f,0.01f,0.01f);
+		//inter.transform.localScale = new Vector3(0.01f,0.01f,0.01f);
 		inter.transform.parent = temp.transform;
-		inter.gameObject.name = vlcnt.ToString();
+		inter.gameObject.name = vlcnt.ToString ();
 	}
 	
 	Geometry visibilityPolygon( Vector3 kernel, int xid ){
 		List<Vector3> allpoints = totalGeo.GetVertex ();
 		List<Vector3> vp = new List<Vector3> ();
 		int cnt = 0;
+		int tempcnt = 0;
 		//Step 1 - Find all points that are initially visible
 		foreach (Vector3 v in allpoints){
+			//drawSphere( v, Color.cyan, tempcnt++ );
+			//tempcnt++;
 			Line tmpLine = new Line( kernel, v );
 			if( !comprehensiveCollision( tmpLine, 0 ) ){
+			//if( !comprehensiveCollisionEndPt( tmpLine, 0 ) ){
 				vp.Add ( v );
 //				if( xid == 5 && cnt == 21 )
 //					comprehensiveCollision( tmpLine, -100 );
@@ -1022,7 +1297,7 @@ public class Triangulation : MonoBehaviour
 			return new Geometry ();
 		//Step 2- Sort the points by angle
 		Geometry x = new Geometry ();
-		List<KeyValuePair<Vector3, float>> anglist = x.GetVertexAngleSorted (kernel, vp);
+		List<KeyValuePair<Vector3, double>> anglist = x.GetVertexAngleSorted (kernel, vp);
 		if (xid == 16) {
 //			drawSphere( kernel, Color.blue);
 //			Line kernelline = new Line (kernel, new Vector3 (-100, 1, 100));
@@ -1030,8 +1305,8 @@ public class Triangulation : MonoBehaviour
 //			kernelline.DrawVector (GameObject.Find ("temp"));
 		}
 		cnt = 0;
-		foreach(KeyValuePair<Vector3, float> kvp in anglist) {
-			if( xid == 16 ){
+		foreach(KeyValuePair<Vector3, double> kvp in anglist) {
+			if( xid == 81 ){
 //				drawSphere( kvp.Key, Color.red, kvp.Value );
 //				Line tmpline = new Line( kernel, kvp.Key );
 //				tmpline.name = "Line" + cnt + " " + kvp.Value;
@@ -1040,13 +1315,13 @@ public class Triangulation : MonoBehaviour
 		}
 
 		//Step 3 - Extend where applicable and find rest of the points
-		List<KeyValuePair<Vector3, float>> anglistExt = new List<KeyValuePair<Vector3, float>> ();
+		List<KeyValuePair<Vector3, double>> anglistExt = new List<KeyValuePair<Vector3, double>> ();
 		List<Vector3> uniqueList = new List<Vector3> ();
 		cnt = -1;
 		for( int i = 0; i < anglist.Count; i++ ){
 			cnt++;
 			Vector3 v = anglist[i].Key;
-			float angle = anglist[i].Value;
+			double angle = anglist[i].Value;
 			List<Vector3> tmplist = new List<Vector3>();
 			if( v == kernel )
 				continue;
@@ -1055,27 +1330,27 @@ public class Triangulation : MonoBehaviour
 			
 			KeyValuePair<bool, Vector3> mrpts = new KeyValuePair<bool, Vector3>(true, nv);
 			int depth = 0;
-			while( i != anglist.Count - 1 && floatCompare( anglist[i].Value, anglist[i + 1].Value ) ){
-			//while( i != anglist.Count - 1 && Math.Abs( anglist[i].Value - anglist[i + 1].Value ) < 0.001 ){
+			while( i != anglist.Count - 1 && doubleCompare( anglist[i].Value, anglist[i + 1].Value ) ){
+			//while( i != anglist.Count - 1 && Math.Abs( anglist[i].Value - anglist[i + 1].Value ) < 0.01 ){
 				tmplist.Add( anglist[i].Key );
-				anglistExt.Add( new KeyValuePair<Vector3, float>( anglist[i].Key, anglist[i].Value ));
+				anglistExt.Add( new KeyValuePair<Vector3, double>( anglist[i].Key, anglist[i].Value ));
 				prevv = nv;
 				nv = anglist[i + 1].Key;
 				i++;
 			}
 			while( mrpts.Key ){
 				++depth;
-				anglistExt.Add( new KeyValuePair<Vector3, float>( nv, angle ));
+				anglistExt.Add( new KeyValuePair<Vector3, double>( nv, angle ));
 				tmplist.Add( nv );
 				mrpts = morePointsDebug(prevv, nv, xid, cnt);
 				prevv = nv;
 				nv = mrpts.Value;
 			}
-			if( xid == 28 && cnt == 1 ){
+			if( xid == 9 && cnt == 2 ){
 				int xx = 0;
 				prevv = kernel;
 				foreach( Vector3 vvv in tmplist ){
-					//drawSphere(vvv, Color.green, 0 );
+					//drawSphere(vvv, Color.green, xx++ );
 					//break;
 					//if( xx == 1 )
 					//morePointsDebug(prevv, vvv, -100, 0);
@@ -1087,9 +1362,22 @@ public class Triangulation : MonoBehaviour
 			}
 		}
 		cnt = 0;
-		foreach (KeyValuePair<Vector3, float> kvp in anglistExt) {
-//			if( xid == 16 )
-//				drawSphere( kvp.Key, Color.blue, cnt++ );
+		List<Vector3> penultimateList = new List<Vector3> ();
+		foreach (KeyValuePair<Vector3, double> kvp in anglistExt) {
+//			penultimateList.Add( kvp.Key );
+//			if( xid == 7 )
+//			drawSphere( kvp.Key, Color.blue, kvp.Value );
+//			drawSphere( kvp.Key );
+		}
+
+		if( xid == 9 ){
+//			foreach (Vector3 v in allpoints){
+//				Line tmpLine = new Line( kernel, v );
+//				//if( !comprehensiveCollision( tmpLine, 0 ) ){
+//				if( !penultimateList.Contains( v ) && !comprehensiveCollision( tmpLine, 0 ) ){
+//					drawSphere(v);
+//				}
+//			}
 		}
 		cnt = 0;
 		//Step 4 - Order the points
@@ -1105,8 +1393,8 @@ public class Triangulation : MonoBehaviour
 			List<Vector3> templistA = new List<Vector3>();
 			List<Vector3> templistB = new List<Vector3>();
 			int indA, indB;
-			float angleA = anglistExt[i].Value;
-			for( indA = i; indA < anglistExt.Count && floatCompare(anglistExt[indA].Value, angleA); indA++, i++ ){
+			double angleA = anglistExt[i].Value;
+			for( indA = i; indA < anglistExt.Count && doubleCompare(anglistExt[indA].Value, angleA); indA++, i++ ){
 				templistA.Add( anglistExt[indA].Key );
 			}
 
@@ -1117,9 +1405,9 @@ public class Triangulation : MonoBehaviour
 					vispol.Add( v );
 				break;
 			}
-			float angleB = anglistExt[i].Value;
+			double angleB = anglistExt[i].Value;
 			int anglistExtIndBStart = i;
-			for( indB = i; indB < anglistExt.Count && floatCompare(anglistExt[indB].Value, angleB); indB++ ){
+			for( indB = i; indB < anglistExt.Count && doubleCompare(anglistExt[indB].Value, angleB); indB++ ){
 				templistB.Add( anglistExt[indB].Key );
 			}
 			i = indA - 1;//since it'll be incremented after the end of the loop
@@ -1140,10 +1428,10 @@ public class Triangulation : MonoBehaviour
 				bool LF = connectable( templistA[indA], templistB[0] );
 				bool FL = connectable( templistA[0], templistB[indB] );
 				bool FF = connectable( templistA[0], templistB[0] );
-				if( xid == 40 && cnt == 17 ){
-//					Debug.Log( LL + " " + LF + " " + FL + " " + FF );
+				if( xid == 9 && cnt == 2 ){
+					Debug.Log( LL + " " + LF + " " + FL + " " + FF );
 //					foreach( Vector3 vyv in templistA )
-//						drawSphere( vyv, Color.grey, 1 );
+//						drawSphere( vyv, Color.grey, 1 );									
 //					foreach( Vector3 vyv in templistB )
 //						drawSphere( vyv, Color.grey, 2 );
 //					Debug.Log(nextstartingpoint);
@@ -1172,9 +1460,9 @@ public class Triangulation : MonoBehaviour
 					//and therefore will "zig-zag". Ordering of points (first-to-last,last-to-first)
 					//in a ray will alternate each time. We only need to make sure anomalous single line extensions
 					//are ignored.
-//					if( xid == 4 && cnt == 7 ){
-//						Debug.Log(nextstartingpoint);
-//					}
+					if( xid == 9 && cnt == 1 ){
+						Debug.Log(nextstartingpoint);
+					}
 					if( nextstartingpoint != "none" ){
 						if( nextstartingpoint == "first" ){
 							//Find farthest possible point that can connect to the beginning of B
@@ -1202,10 +1490,7 @@ public class Triangulation : MonoBehaviour
 							}
 						}
 					}
-//					if( xid == 4 && cnt == 7 ){
-//						Debug.Log(connectorA);
-//						Debug.Log(indA);
-//					}
+
 					//Find connector for ray B
 					//If A[last] can reach B[j] then all above A[last] can reach B[j] and all above B[j]
 					for( int j = indB; j >= 0; j-- ){
@@ -1214,7 +1499,11 @@ public class Triangulation : MonoBehaviour
 							break;
 						}
 					}
-
+//					if( xid == 9 && cnt == 1 ){
+//						Debug.Log(connectorA);
+//						Debug.Log(indA);
+//						Debug.Log(connectorB);
+//					}
 					//If connector not the first or last point then delete all after it
 					if( connectorA != 0 && connectorA < indA )
 						templistA.RemoveRange( connectorA + 1, indA - (connectorA + 1) + 1);
@@ -1222,7 +1511,7 @@ public class Triangulation : MonoBehaviour
 					int anglistExtConnectorB = anglistExtIndBStart + connectorB;
 					if( connectorB != 0 && connectorB < indB )
 						anglistExt.RemoveRange( anglistExtConnectorB + 1, anglistExtIndB - (anglistExtConnectorB + 1) + 1);
-					//LOOOOOOOOOOOOOOOOOOOSSSSSSSSSSEEEEEEEEEEEEERRRRRRRRRRRRRRRRRRRRRRRR
+					//Fault point 
 					//templistB.RemoveRange( connectorB + 1, indB - (connectorB + 1) + 1);
 					//If connector not the first point then reverse
 					if( connectorA == 0 )
@@ -1230,9 +1519,9 @@ public class Triangulation : MonoBehaviour
 					//Set marker for next one
 					if( connectorB == 0 ) nextstartingpoint = "first";
 					else nextstartingpoint = "last";
-//					if( xid == 40 && cnt == 17 ){
+//					if( xid == 9 && cnt == 1 )
 //						Debug.Log("connB " +  connectorB + "," + nextstartingpoint );
-//					}
+					
 				}
 				//Case 3: Two rays joined by kernel
 				else{
@@ -1266,7 +1555,7 @@ public class Triangulation : MonoBehaviour
 		}
 		cnt = 0;
 		foreach (Vector3 v in vispol) {
-			if( xid == 28 ){
+			if( xid == 9 ){
 //				drawSphere( v, Color.cyan, cnt++ );
 //				Line tmpline = new Line( kernel, v );			
 //				tmpline.name = "Line" + cnt.ToString();
@@ -1290,7 +1579,7 @@ public class Triangulation : MonoBehaviour
 		}
 		foreach (Line l in VPret.edges) {
 			if( VectorApprox( l.vertex[0], l.vertex[1] ) )
-				Debug.Log("GETTING equivalent points on VP edge");
+				Debug.Log("GETTING equivalent points on VP edge on VP " + xid.ToString());
 		}
 		return VPret;
 	}
@@ -1363,7 +1652,7 @@ public class Triangulation : MonoBehaviour
 		//New line is from vB to vB_new as involving vA would bring back noted intersection points (i.e. vB)
 		float mindist = mapBGPerimeter;
 		if (xid == -100){
-//			drawSphere (vB_new, Color.red, 3);
+			drawSphere (vB_new, Color.red, 3);
 //			ray.DrawVector (GameObject.Find ("temp"));
 //			cnt = 0;
 //			foreach(Line l1 in totalGeo.edges){
@@ -1382,6 +1671,8 @@ public class Triangulation : MonoBehaviour
 //				Debug.Log("WT:" + l1.LineIntersectRegular(ray));
 			}
 			if( l1.LineIntersectMuntacEndPt(ray) == 1 ){
+//				if( xid == -100 )
+//					l1.DrawVector(GameObject.Find("temp"));
 				Vector3 v = l1.GetIntersectionPoint(ray);
 				if( VectorApprox( v, vB ) )	continue;
 				//if( !ray.POL(v) ) continue;
@@ -1424,25 +1715,26 @@ public class Triangulation : MonoBehaviour
 		//Debug.Log ("Camera count is " + cameras.Count);
 		int xid = 0;
 		foreach (Vector3 v in explorationTour) {
-			if( cameras.Contains(v) && !tempcam.Contains(v) ){
-				//if( !tempcam.Contains(v) ){
+			//if( cameras.Contains(v) && !tempcam.Contains(v) ){
+			if( !tempcam.Contains(v) ){
 				tempcam.Add(v);
-				//if( xid == 4 ) break;
+				//if( xid == 81 )
 				cameraVPS.Add ( new KeyValuePair<Vector3, Geometry>( v, visibilityPolygon( v, xid ) ) );
 				xid++;
+				//if( xid > 9 ) return;
 				//return;
 			}
 		}
-		//Debug.Log ("Temp cam count is " + tempcam.Count);
 	}
 
 	int VPValidation(){
 		int cnt = 0;
 		int invalid = 0;
-		foreach (KeyValuePair<Vector3, Geometry> kvp in cameraVPS) {
+		foreach (KeyValuePair<Vector3, Geometry> kvp in cameraVPS){
 			foreach( Line l in kvp.Value.edges ){
 				if( comprehensiveCollision( l , 0 ) ){
-					//if( cnt == 0 ) l.DrawVector(GameObject.Find("temp"));
+//					if( cnt == 92 )
+//						l.DrawVector(GameObject.Find("temp"));
 					Debug.Log("Invalid VP at: " + cnt);
 					invalid++;
 					break;
@@ -1475,8 +1767,7 @@ public class Triangulation : MonoBehaviour
 	int UnionValidation(){
 		int cnt = 0;
 		int invalid = 0;
-		foreach (KeyValuePair<Vector3, Geometry> kvp in cameraUnion) {
-
+		foreach(KeyValuePair<Vector3, Geometry> kvp in cameraUnion) {
 			foreach( Line l in kvp.Value.edges ){
 				if( comprehensiveCollision( l , 0 ) ){
 					//if( cnt == 0 ) l.DrawVector(GameObject.Find("temp"));
@@ -1514,9 +1805,9 @@ public class Triangulation : MonoBehaviour
 	}
 
 	void mergeVPS(){
-//		new GameObject ("vpA");
-//		new GameObject ("vpB");
-//		new GameObject ("vpMerged");
+		new GameObject ("vpA");
+		new GameObject ("vpB");
+		new GameObject ("vpMerged");
 	
 		int x = cameraVPS.Count;
 		Geometry incrementalCover = new Geometry ();
@@ -1529,25 +1820,25 @@ public class Triangulation : MonoBehaviour
 			//if( i == 4) return;
 			if( incrementalCover.GeometryInside(cameraVPS[i].Value, false) )
 				cnt++;
-			if( i == 9 ){
-//				incrementalCover.DrawGeometry(GameObject.Find("vpA"));
-//				cameraVPS[i].Value.DrawGeometry(GameObject.Find("vpB"));
-//				for( int j = 0; j < incrementalCover.edges.Count; j++ ){
-//					for( int k = j + 1; k < incrementalCover.edges.Count; k++ ){
-//						if( incrementalCover.edges[j].Equals(incrementalCover.edges[k]) )
-//							Debug.Log("SAMENESSLINE");
-//					}
-//				}
-//				for( int j = 0; j < cameraVPS[i].Value.edges.Count; j++ ){
-//					for( int k = j + 1; k < cameraVPS[i].Value.edges.Count; k++ ){
-//						if( cameraVPS[i].Value.edges[j].Equals(cameraVPS[i].Value.edges[k]) )
-//							Debug.Log("SAMENESSLINEB");
-//					}
-//				}
-//				foreach( Line ll in cameraVPS[i].Value.edges ){
-//					if( VectorApprox( ll.vertex[0], ll.vertex[1] ) )
-//						Debug.Log("SAMENESSB");
-//				}
+			if( i == 32 ){
+				incrementalCover.DrawGeometry(GameObject.Find("vpA"));
+				cameraVPS[i].Value.DrawGeometry(GameObject.Find("vpB"));
+				for( int j = 0; j < incrementalCover.edges.Count; j++ ){
+					for( int k = j + 1; k < incrementalCover.edges.Count; k++ ){
+						if( incrementalCover.edges[j].Equals(incrementalCover.edges[k]) )
+							Debug.Log("SAMENESSLINE");
+					}
+				}
+				for( int j = 0; j < cameraVPS[i].Value.edges.Count; j++ ){
+					for( int k = j + 1; k < cameraVPS[i].Value.edges.Count; k++ ){
+						if( cameraVPS[i].Value.edges[j].Equals(cameraVPS[i].Value.edges[k]) )
+							Debug.Log("SAMENESSLINEB");
+					}
+				}
+				foreach( Line ll in cameraVPS[i].Value.edges ){
+					if( VectorApprox( ll.vertex[0], ll.vertex[1] ) )
+						Debug.Log("SAMENESSB");
+				}
 			}
 			incrementalCover = incrementalCover.GeometryMerge(cameraVPS[i].Value, i);
 
@@ -1555,6 +1846,7 @@ public class Triangulation : MonoBehaviour
 			//if( i == x - 1 ) return;
 
 			cameraVPS2.Add( new KeyValuePair<Vector3, Geometry>( cameraVPS[i].Key, incrementalCover ) );
+			if( i == 40 ) break;
 //			if( i == 3 )
 //				incrementalCover.DrawGeometry(GameObject.Find("vpMerged"));
 			//if( i == 15 ) break;
@@ -1605,6 +1897,90 @@ public class Triangulation : MonoBehaviour
 		double finalCoverage = coverageAreas [coverageAreas.Count - 1];
 		double percentCovered = (finalCoverage / mapArea) * 100;
 		Debug.Log ("Area Calculated. " + Math.Round( percentCovered, 5 ) + "% of map explored.");
+	}
+
+	void printTour(){
+		string createText = "";
+		string path = @"C:\Users\Asus\Desktop\McGill\Thesis\Week 15\tour.csv";
+		string delimeter = ",";
+		for( int i = 0; i < explorationTour.Count; i++ ){
+			int isCam = 0;
+			if( cameras.Contains( explorationTour[i] ) ) isCam = 1;
+			createText += (explorationTour[i].x).ToString()+","+(explorationTour[i].z).ToString()
+				+ "," + isCam.ToString() + ",\n";
+		}
+		File.WriteAllText(path, createText);
+	}
+
+	void printVPS(){
+		string createText = "";
+		string path = @"C:\Users\Asus\Desktop\McGill\Thesis\Week 15\vps.csv";
+		string delimeter = ",";
+		for( int i = 0; i < cameraVPS.Count; i++ ){
+			createText += "Start,"+ cameraVPS[i].Key.x.ToString() + "," + cameraVPS[i].Key.z.ToString() + ",\n";
+			foreach( Line l in cameraVPS[i].Value.edges ){
+				createText += "L," + l.vertex[0].x.ToString()+","+l.vertex[0].z.ToString()
+					+ "," + l.vertex[1].x.ToString() + "," + l.vertex[1].z.ToString() + ",\n";
+			}
+			createText += "End,\n";
+		}
+		File.WriteAllText(path, createText);
+	}
+
+	void scanTour(){
+		var reader = new StreamReader(File.OpenRead(@"C:\Users\Asus\Desktop\McGill\Thesis\Week 15\tour.csv"));
+		List<string> coord = new List<string> ();
+		Geometry walls = new Geometry ();
+				
+		while ( !reader.EndOfStream )
+		{
+			var line = reader.ReadLine();
+			var values = line.Split(',');
+			//Check the symbol in first column of line
+			Vector3 expPoint = new Vector3();
+			expPoint.x = float.Parse(values[0]);
+			expPoint.y = 1;
+			expPoint.z = float.Parse(values[1]);
+			if( values[2].Equals("1") ){
+				if( !cameras.Contains(expPoint) )
+					cameras.Add(expPoint);
+			}
+			explorationTour.Add(expPoint);
+		}
+		foreach( Geometry g in finalPoly ){
+			foreach( Line l in g.edges )
+				totalGeo.edges.Add(l);
+		}
+		foreach( Line l in mapBG.edges )
+			totalGeo.edges.Add(l);
+		totalGeoVerts = totalGeo.GetVertex ();
+	}
+
+	void scanVPS(){
+		var reader = new StreamReader(File.OpenRead(@"C:\Users\Asus\Desktop\McGill\Thesis\Week 15\vps.csv"));
+		List<string> coord = new List<string> ();
+		Geometry vptemp = new Geometry ();
+		Vector3 kernel = new Vector3 ();
+		while ( !reader.EndOfStream ){
+			var line = reader.ReadLine();
+			var values = line.Split(',');
+			//Check the symbol in first column of line
+			if( values[0].Equals("End") )
+				cameraVPS.Add( new KeyValuePair<Vector3, Geometry>( kernel, vptemp ) );
+			else if( values[0].Equals("Start") ){
+				vptemp = new Geometry();
+				kernel.x = float.Parse(values[1]);
+				kernel.y = 1;
+				kernel.z = float.Parse(values[2]);
+			}
+			else{
+				Vector3 a = new Vector3(); 
+				a.x = float.Parse( values[1] ); a.y = 1f; a.z = float.Parse( values[2] );
+				Vector3 b = new Vector3(); 
+				b.x = float.Parse( values[3] ); b.y = 1f; b.z = float.Parse( values[4] );
+				vptemp.edges.Add( new Line( a, b ) );
+			}
+		}
 	}
 	
 	public void subtractiveCoverage(){
@@ -1697,18 +2073,32 @@ public class Triangulation : MonoBehaviour
 	}
 	
 	bool comprehensiveCollision( Line tmpLine, int xid ){
-		if( xid == -100 )
+		if( xid == -100 ){
+			//return true;
 			Debug.Log("CompColl Debug");
+		}
 		//1.Geometry Check
 		int dummy = 0;
 		foreach( Geometry g in finalPoly ){
 			//1A. Crude collision check (diagonal and line equality)
 			if( g.LineCollision(tmpLine) ){
-				if( xid == -100 )
+				if( xid == -100 ){
+					tmpLine.DrawVector(GameObject.Find("temp"));
 					Debug.Log("Mark 1");
+					Debug.Log(g.PointInside( tmpLine.MidPoint() ));
+					foreach( Line l in g.edges ){
+						if( tmpLine.LineIntersectMuntac(l) == 1 ){
+							//tmpLine.LineIntersectMuntacDebug(l);
+							drawSphere(tmpLine.GetIntersectionPoint(l));
+							//l.DrawVector(GameObject.Find("temp"));
+							break;
+						}
+					}
+				}
 				return true;
 			}
 			else{
+
 				//1B. Endpoint collection
 				//This is for cases where the midpoint is not located inside the geometry
 				//but the line crosses the geometry anyway and intersects only at endpoints
@@ -1720,6 +2110,7 @@ public class Triangulation : MonoBehaviour
 						endptIntersection.Add( interv );
 					}
 				}
+
 				//1C. Collected endpoint check
 				//Now check with the collecetd endpoints
 				foreach( Vector3 vA in endptIntersection ){
@@ -1744,6 +2135,7 @@ public class Triangulation : MonoBehaviour
 				}
 			}
 		}
+
 //		if( xid == 100 )
 //			Debug.Log("Past the geometries");
 		//2: MapBoundary
@@ -1771,6 +2163,7 @@ public class Triangulation : MonoBehaviour
 				endpointinterMap.Add( interv );
 			}
 		}
+
 		//2C. Collected endpoint check
 		//Midpoint case scenario for maps
 		foreach( Vector3 vA in endpointinterMap ){
@@ -1794,6 +2187,116 @@ public class Triangulation : MonoBehaviour
 		if( xid == -100 )
 			Debug.Log("Mark False");
 		return false;
+	}
+
+	bool comprehensiveCollisionEndPt( Line tmpLine, int xid ){
+		if( xid == -100 ){
+			//return true;
+			Debug.Log("CompColl Debug");
+		}
+		//1.Geometry Check
+		int dummy = 0;
+		foreach( Geometry g in finalPoly ){
+			//1A. Crude collision check (diagonal and line equality)
+			if( g.LineCollisionEndPt(tmpLine) ){
+				if( xid == -100 )
+					Debug.Log("Mark 1");
+				return true;
+			}
+			else{
+				
+				//1B. Endpoint collection
+				//This is for cases where the midpoint is not located inside the geometry
+				//but the line crosses the geometry anyway and intersects only at endpoints
+				//of the geometry's edge (midpoint scenario happens only in this case)
+				List<Vector3> endptIntersection = new List<Vector3>();
+				foreach( Line l in g.edges ){
+					if( l.LineIntersectRegular( tmpLine ) == 1 ){
+						Vector3 interv = l.GetIntersectionPoint( tmpLine );
+						endptIntersection.Add( interv );
+					}
+				}
+				
+				//1C. Collected endpoint check
+				//Now check with the collecetd endpoints
+				foreach( Vector3 vA in endptIntersection ){
+					Line TLA = new Line( tmpLine.vertex[0], vA );
+					Line TLB = new Line( tmpLine.vertex[1], vA );
+					if( g.PointInside( TLA.MidPoint() ) || g.PointInside( TLB.MidPoint() ) ){
+						if( xid == -100 )
+							Debug.Log("Mark 2");
+						return true;
+					}
+					foreach( Vector3 vB in endptIntersection ){
+						if( vA.Equals(vB) ) continue;
+						Line testline = new Line( vA, vB );
+						if( g.PointInside( testline.MidPoint() ) ){
+							//							if (xid == 86)
+							//								Debug.Log ("Got 86 testline");
+							if( xid == -100 )
+								Debug.Log("Mark 3");
+							return true;						
+						}
+					}
+				}
+			}
+		}
+		
+		//		if( xid == 100 )
+		//			Debug.Log("Past the geometries");
+		//2: MapBoundary
+		//Note: Was buggy before LineIntersectMuntac's final check started using eps
+		if( xid == -100 )
+			Debug.Log("Mark Boundary");
+		List<Vector3> endpointinterMap = new List<Vector3>();
+		foreach( Line l in mapBG.edges ){
+			//2A. Crude intersection check
+			if( l.LineIntersectMuntacEndPt( tmpLine ) == 1 ){
+				if( xid == -100 ){
+					Debug.Log("Mark 4");
+					tmpLine.DrawVector(GameObject.Find("temp"));
+					l.DrawVector(GameObject.Find("temp"));
+					//l.LineIntersectMuntacDebug( tmpLine );
+					Debug.Log( "POL:" + l.POL( tmpLine.vertex[0] ) + "," + l.POL(tmpLine.vertex[1]) );
+				}
+				return true;
+			}
+			//2B. Endpoint collection
+			else if( l.LineIntersectRegular( tmpLine ) == 1 ){
+				//else if( l.LineIntersectMuntacEndPt( tmpLine ) == 1 ){
+				Vector3 interv = l.GetIntersectionPoint( tmpLine );
+				//if( !endpointinterMap.Contains( interv ) ) 
+				endpointinterMap.Add( interv );
+			}
+		}
+		
+		//2C. Collected endpoint check
+		//Midpoint case scenario for maps
+		foreach( Vector3 vA in endpointinterMap ){
+			Line TLA = new Line( tmpLine.vertex[0], vA );
+			Line TLB = new Line( tmpLine.vertex[1], vA );
+			if( mapBG.PointOutside( TLA.MidPoint() ) || mapBG.PointOutside( TLB.MidPoint() ) ){
+				if( xid == -100 )
+					Debug.Log("Mark 5");
+				return true;
+			}
+			foreach( Vector3 vB in endpointinterMap ){
+				if( vA.Equals(vB) ) continue;
+				Line testline = new Line( vA, vB );
+				if( mapBG.PointOutside( testline.MidPoint() ) ){
+					if( xid == -100 )
+						Debug.Log("Mark 6");
+					return true;
+				}
+			}
+		}
+		if( xid == -100 )
+			Debug.Log("Mark False");
+		return false;
+	}
+
+	public bool doubleCompare ( double a, double b ){
+		return System.Math.Abs (a - b) < (double)eps;
 	}
 	
 	private bool colinear( Line A, Line B ){

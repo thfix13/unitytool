@@ -76,8 +76,8 @@ public class Line : IEquatable<Line>
 //		                           UnityEngine.Random.Range(0.0f,1.0f)) ;
 //
 		Color c = Color.green;
-		//VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
-		VectorLine line = new VectorLine("Line",vertex,c,null,0.1f);
+		VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
+		//VectorLine line = new VectorLine("Line",vertex,c,null,0.8f);
 		line.vectorObject.transform.parent = parent.transform;
 		line.vectorObject.name = name;
 		line.Draw3D();
@@ -129,6 +129,12 @@ public class Line : IEquatable<Line>
 	public float Magnitude()
 	{
 		return (vertex[0]-vertex[1]).magnitude; 
+	}
+
+	public double MagnitudeDouble()
+	{
+		Vector3 resv = vertex [0] - vertex [1];
+		return System.Math.Sqrt ((double)resv.x * (double)resv.x + (double)resv.y * (double)resv.y + (double)resv.z * (double)resv.z);
 	}
 
 	private bool CounterClockWise(Vector3 v1,Vector3 v2,Vector3 v3){
@@ -214,7 +220,7 @@ public class Line : IEquatable<Line>
 		
 		//if ((s > 0 && s < 1) && (t > 0 && t < 1))
 		if ((s > 0 + eps && s < 1 - eps) && (t > 0 + eps && t < 1 - eps)){
-			if( CounterClockCheck( param ) )
+			if( !ShareVertex(param) && CounterClockCheck( param ) )
 				return 1;
 			else
 				return 0;
@@ -222,59 +228,65 @@ public class Line : IEquatable<Line>
 		return 0;
 	}
 
-//	public int LineIntersectMuntacDebug (Line param){
-//		Vector3 a = this.vertex [0];
-//		Vector3 b = this.vertex[1];
-//		Vector3 c = param.vertex [0];
-//		Vector3 d = param.vertex [1];
-//		//		//Sorting the order of points
-//		//		Vector3 a = getMinVert (this.vertex [0], this.vertex [1]);
-//		//		Vector3 b = this.vertex[1];
-//		//		if( a.Equals( this.vertex[1] ) )
-//		//			b = this.vertex[0];
-//		//		Vector3 c = getMinVert (param.vertex [0], param.vertex [1]);
-//		//		Vector3 d = param.vertex[1];
-//		//		if( c.Equals( param.vertex[1] ) )
-//		//			d = param.vertex[0];
-//		
-//		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
-//		Vector2 p0 = new Vector2 (a.x, a.z);
-//		
-//		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
-//		Vector2 q0 = new Vector2 (c.x, c.z);
-//		
-//		double numerator1 = CrossProduct ((q0 - p0), v);
-//		double numerator2 = CrossProduct ((q0 - p0), u);
-//		double denom = CrossProduct (u, v);
-//		
-//		//Case 1 - Colinear
-//		//if ( denom == 0 && numerator2 == 0 ) {
-//		if ( floatCompareLIN((float)denom, 0) && floatCompareLIN((float)numerator2,0) ) {
-//			//Case 2 - Colinear and Overlapping
-//			//if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
-//			if( floatCompareLIN( Vector2.Dot( (q0 - p0), u ), 0, ">=" )
-//			   && floatCompareLIN( Vector2.Dot( (q0 - p0), u ), Vector2.Dot( u, u ), "<=" ) )
-//				return 2;
-//			//if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
-//			if( floatCompareLIN( Vector2.Dot( (p0 - q0), v ), 0, ">=" )
-//			   && floatCompareLIN( Vector2.Dot( (p0 - q0), v ), Vector2.Dot( v, v ), "<=" ) )
-//				return 2;
-//			return 0;
-//		}
-//		//Case 3 - Parallel
-//		//if (denom == 0 && numerator2 != 0)
-//		if ( floatCompareLIN((float)denom, 0) && !floatCompareLIN((float)numerator2,0) )
-//			return 0;
-//		
-//		//Case 4 - Intersects
-//		double s = numerator1 / denom;
-//		double t = numerator2 / denom;
-//		//if ((s > 0 && s < 1) && (t > 0 && t < 1))
-//		if ((s > 0 + eps && s < 1 - eps) && (t > 0 + eps && t < 1 - eps))
-//			return 1;
-//		
-//		return 0;
-//	}
+	public int LineIntersectMuntacDebug (Line param){
+		Vector3 a = this.vertex [0];
+		Vector3 b = this.vertex[1];
+		Vector3 c = param.vertex [0];
+		Vector3 d = param.vertex [1];
+		//		//Sorting the order of points
+		//		Vector3 a = getMinVert (this.vertex [0], this.vertex [1]);
+		//		Vector3 b = this.vertex[1];
+		//		if( a.Equals( this.vertex[1] ) )
+		//			b = this.vertex[0];
+		//		Vector3 c = getMinVert (param.vertex [0], param.vertex [1]);
+		//		Vector3 d = param.vertex[1];
+		//		if( c.Equals( param.vertex[1] ) )
+		//			d = param.vertex[0];
+		
+		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
+		Vector2 p0 = new Vector2 (a.x, a.z);
+		
+		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
+		Vector2 q0 = new Vector2 (c.x, c.z);
+		
+		double numerator1 = CrossProduct ((q0 - p0), v);
+		double numerator2 = CrossProduct ((q0 - p0), u);
+		double denom = CrossProduct (u, v);
+
+		//Case 1 - Colinear
+		//if ( denom == 0 && numerator2 == 0 ) {
+		if ( floatCompareLIN((float)denom, 0) && floatCompareLIN((float)numerator2,0) ) {
+			//Case 2 - Colinear and Overlapping
+			//if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
+			if( floatCompareLIN( Vector2.Dot( (q0 - p0), u ), 0, ">=" )
+			   && floatCompareLIN( Vector2.Dot( (q0 - p0), u ), Vector2.Dot( u, u ), "<=" ) )
+				return 2;
+			//if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
+			if( floatCompareLIN( Vector2.Dot( (p0 - q0), v ), 0, ">=" )
+			   && floatCompareLIN( Vector2.Dot( (p0 - q0), v ), Vector2.Dot( v, v ), "<=" ) )
+				return 2;
+			return 0;
+		}
+		//Case 3 - Parallel
+		//if (denom == 0 && numerator2 != 0)
+		if ( floatCompareLIN((float)denom, 0) && !floatCompareLIN((float)numerator2,0) )
+			return 0;
+		
+		if( POL( param.vertex[0] ) || POL( param.vertex[1] ) || param.POL(vertex[0]) || param.POL(vertex[1]) )
+			return 0;
+		//Case 4 - Intersects
+		double s = numerator1 / denom;
+		double t = numerator2 / denom;
+		Debug.Log (s + "," + t + "," + CounterClockCheck(param) );
+		//if ((s > 0 && s < 1) && (t > 0 && t < 1))
+		if ((s > 0 + eps && s < 1 - eps) && (t > 0 + eps && t < 1 - eps)){
+			if( !ShareVertex(param) && CounterClockCheck( param ) )
+				return 1;
+			else
+				return 0;
+		}		
+		return 0;
+	}
 
 	//Ignores shared endpoint collision
 	public int LineIntersectMuntacGM (Line param){
@@ -302,6 +314,7 @@ public class Line : IEquatable<Line>
 
 		if ( floatCompareLIN((float)denom, 0) && floatCompareLIN((float)numerator2,0) ) {
 			//Case 2 - Colinear and Overlapping
+			//Filter out colinear lines that only overlap at a single endpoint
 			if ( ShareVertex (param) ){
 				Vector3 shared = getSharedVertex( param );
 				Line joint = new Line ( GetOther( shared ), param.GetOther( shared ) );

@@ -13,6 +13,8 @@ public class Geometry
 	public float eps = 1e-5f;//the margin of accuracy for all floating point equivalence checks
 
 	//Added for MST Code
+	public List<Geometry> neighbors = new List<Geometry>();  
+	public List<Line> neighborConnections = new List<Line>();
 	public List<Geometry> voisins = new List<Geometry>();  
 	public List<Line> voisinsLine = new List<Line>();
 	public bool visited = false; 	
@@ -34,6 +36,18 @@ public class Geometry
 		}
 	}
 
+	public void DrawGeometry(GameObject parent, int xid)//Called from outside
+	{
+		Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
+		                    UnityEngine.Random.Range(0.0f,1.0f),
+		                    UnityEngine.Random.Range(0.0f,1.0f)) ;
+		
+		foreach (Line l in edges) {
+			l.name = xid.ToString();
+			l.DrawVector (parent, c);
+		}
+	}
+
 	//A non-exhaustive test to make coding easier elsewhere
 	//Checks collision with geometry unless the collision point is a vertex of the line or the geometry
 	public bool LineCollision(Line Lparam){//Called by getClosestLine
@@ -41,6 +55,16 @@ public class Geometry
 		   return true;
 		foreach(Line l1 in edges){
 			if( Lparam.LineIntersectMuntac(l1) == 1 )
+				return true;
+		}
+		return false;
+	}
+
+	public bool LineCollisionEndPt(Line Lparam){//Called by getClosestLine
+		if( this.PointInside( Lparam.MidPoint() ) )
+			return true;
+		foreach(Line l1 in edges){
+			if( Lparam.LineIntersectMuntacEndPt(l1) == 1 )
 				return true;
 		}
 		return false;
@@ -61,6 +85,9 @@ public class Geometry
 	//Finds out if a point lies strictly inside a polygon.
 	//The colinear case is automatically dealt with. See manual.
 	public bool PointInside( Vector3 pt ){//Called by LineInside, GeometryInside and LineCollision
+		if (edges.Count == 1)
+			return false;
+		//TODO:Use multiple rays and voting
 		Line lray = new Line(pt, new Vector3(-100, 1f, -100)); 
 		int count = 0; 
 		foreach(Line myLine in edges){
@@ -276,6 +303,8 @@ public class Geometry
 //			if( nextL == null )
 //				break;
 		}
+		if(sortedEdges.Count == 0)
+			sortedEdges.Add(this.edges[0]);
 		return sortedEdges;
 	}
 
@@ -336,8 +365,51 @@ public class Geometry
 		return maxArea - areaOfHoles;
 	}
 
+	//Returns the outer edges of a polygon with holes
+	public Geometry getBorder(){
+		//if (xid == 8) return 0f;
+		List<Line> tempEdge = new List<Line> ();
+		Geometry tempGeo = new Geometry ();
+		Geometry outerGeo = new Geometry ();
+		foreach (Line l in this.edges)
+			tempGeo.edges.Add(l);	
+		List<double> areas = new List<double> ();
+		double maxArea = 0;
+		int rounds = 0;
+		int ceil = this.edges.Count;
+		while (tempGeo.edges.Count > 0) {
+			if( rounds > ceil ){
+				Debug.Log( "Rounds Exceeded at getBorder()" );
+				break;
+			}
+			tempEdge = tempGeo.getSortedEdges();
+			foreach( Line lA in tempEdge ){
+				for( int i = 0; i < tempGeo.edges.Count; i++ ){
+					if( lA.Equals( tempGeo.edges[i] ) ){
+						tempGeo.edges.RemoveAt(i);
+						i--;
+					}
+				}
+			}
+			double tempArea = getLocalArea( tempEdge );
+			areas.Add( tempArea );
+			if( maxArea < tempArea ){
+				maxArea = tempArea;
+				outerGeo.edges.Clear();
+				foreach( Line ln in tempEdge )
+					outerGeo.edges.Add(ln);
+			}
+			rounds++;
+		}
+		Debug.Log (maxArea);
+		Debug.Log (outerGeo.edges.Count);
+		return outerGeo;
+	}
+
 	//Returns the area of a simple hole-less polygon
 	private double getLocalArea( List<Line> polyedges ){
+		if (polyedges.Count == 0)
+			return 0;
 		Geometry g = new Geometry ();
 		foreach (Line l in polyedges)
 			g.edges.Add (l);
@@ -410,7 +482,7 @@ public class Geometry
 
 	//TODO: Redo with EPS
 	//Figures out the boundary of the geometry
-	public void BoundGeometry(Vector3[] boundary){//Called from outside
+	public void BoundGeometryCrude(Vector3[] boundary){//Called from outside
 		List<Line> removeLines = new List<Line> ();
 		int i;
 		foreach (Line l in edges) {
@@ -424,6 +496,42 @@ public class Geometry
 		}
 		foreach (Line l in removeLines)
 			edges.Remove (l);
+	}
+
+	public void BoundGeometry(Geometry refMap){//Called from outside
+		//Checks for edges that do not intersect with and those who have at least one vertex outside of refMap
+		//We have to check those who do not intersect as a line could have endpoints inside but some other point outside the polygon
+		for (int i = 0; i < edges.Count; i++) {
+			if( !refMap.LineCollision( edges[i] ) && (refMap.PointOutside(edges[i].vertex[0]) || refMap.PointOutside(edges[i].vertex[1])) ){
+				edges.RemoveAt(i);
+				i--;
+			}
+		}
+		for (int i = 0; i < edges.Count; i++) {
+			int partnerA = 0;
+			int partnerB = 0;
+			for (int j = 0; j < edges.Count; j++) {
+				if( i == j ) continue;
+				if( edges[i].ShareVertex( edges[j] ) ){
+					Vector3 shv = edges[i].getSharedVertex( edges[j] );
+					if( VectorApprox( shv, edges[i].vertex[0] ) )
+						partnerA++;
+					else
+						partnerB++;
+				}
+			}
+			//TODO: fix these bandaid fixes. this is mainly for inkscape.
+			//Shared edges that fall inside merged geometry but not
+			//inside either individual geometry
+			if( partnerA == 0 || partnerB == 0 ){//|| partnerB == 0 ){
+//				edges.RemoveAt(i);
+//				i--;
+			}
+			else if( partnerA == 2 && partnerB == 2 ){
+//				edges.RemoveAt(i);
+//				i--; 
+			}			
+		}
 	}
 
 
@@ -608,37 +716,56 @@ public class Geometry
 				if( i == j ) continue;
 				if( toReturn.edges[i].ShareVertex( toReturn.edges[j] ) ){
 					Vector3 shv = toReturn.edges[i].getSharedVertex( toReturn.edges[j] );
-//					if( shv.Equals( toReturn.edges[i].vertex[0] ) )
-//						partnerA++;
-//					else
-//						partnerB++;
-					partnerA++;
+					if( VectorApprox( shv, toReturn.edges[i].vertex[0] ) )
+						partnerA++;
+					else
+						partnerB++;
 				}
 			}
-			if( partnerA == 0 ){//|| partnerB == 0 ){
+			//TODO: fix these bandaid fixes. this is mainly for inkscape.
+			//Shared edges that fall inside merged geometry but not
+			//inside either individual geometry
+			if( partnerA == 0 || partnerB == 0 ){//|| partnerB == 0 ){
 				toReturn.edges.RemoveAt(i);
 				i--;
 			}
+			else if( partnerA == 2 && partnerB == 2 ){
+				toReturn.edges.RemoveAt(i);
+				i--; 
+			}
+
 		}
 		return toReturn;
 	}
 
-	//TODO: Make more sophisticated. Check against GMInnerCam
-	//Used only for merging polygons with the map boundary
-	public Geometry GeometryMergeInner( Geometry G2 ){//Called from outside
+	//TODO: Check near end of function
+	public Geometry GeometryMergeInner( Geometry G2, int xid ){//Called from outside
+		//1. Check if geometries are fully inside each other
+		
+//		if (GeometryInsideMap (G2))	return this;
+//		else if (G2.GeometryInsideMap (this)) return G2;
+		
 		Geometry tempGeometry = new Geometry ();
 		//Two Geometry objects - G1 and G2
 		Geometry G1 = this;
-		//Create new called G3 which starts as an union of G1 and G2
+		
+		//2. Create new called G3 which starts as an union of G1 and G2
 		Geometry G3 = new Geometry ();
 		foreach (Line l in G1.edges)
-			G3.edges.Add(l);		
+			G3.edges.Add(l);
 		foreach (Line l in G2.edges)
-			G3.edges.Add(l);		
-		
-		//Check for intersection points among lines in G3
+			G3.edges.Add(l);
+				
+		int vnt = 0;
+		//3. Check for intersection points among lines in G3
+		bool once = false;
+		int ccnt = 0;
+//		if( xid == 22 )
+//			G3.DrawGeometry(GameObject.Find("temp"));
 		for (int i = 0; i < G3.edges.Count; i++) {
+			ccnt++;
 			for( int j = i + 1; j < G3.edges.Count; j++ ) {
+				bool dbg = false;
 				Line LA = G3.edges[i];
 				Line LB = G3.edges[j];
 				if( LA.Equals(LB) ){
@@ -646,17 +773,82 @@ public class Geometry
 					j--;
 					continue;
 				}
-				int caseType = LA.LineIntersectMuntac( LB );
-				if( caseType == 1 ){//Regular intersections
+				int caseType = LA.LineIntersectMuntacGM(LB);//Endpt but not shared endpt intersection.Sorted lines.
+				//int caseType = LA.LineIntersectMuntac(LB);//Endpt but not shared endpt intersection.Sorted lines.
+//				if( xid == 22 ){
+//					if( LA.name.Equals("Border 13") )
+//						Debug.Log("Found");
+//				}
+				//3A. Regular intersections
+				if( caseType == 1 ){
 					Vector3 pt = LA.GetIntersectionPoint( LB );
-					if( !VectorApprox( pt, LA.vertex[0] ) )
-						G3.edges.Add( new Line( pt, LA.vertex[0] ) );
-					if( !VectorApprox( pt, LA.vertex[1] ) )
-						G3.edges.Add( new Line( pt, LA.vertex[1] ) );
-					if( !VectorApprox( pt, LB.vertex[0] ) )
-						G3.edges.Add( new Line( pt, LB.vertex[0] ) );
-					if( !VectorApprox( pt, LB.vertex[1] ) )
-						G3.edges.Add( new Line( pt, LB.vertex[1] ));
+					List<Line> linesToAdd = new List<Line>();
+					if( !VectorApprox(pt, LA.vertex[0] ) )
+						linesToAdd.Add( new Line( pt, LA.vertex[0] ) );
+					if( !VectorApprox(pt, LA.vertex[1] ) )
+						linesToAdd.Add( new Line( pt, LA.vertex[1] ) );
+					if( !VectorApprox(pt, LB.vertex[0] ) )
+						linesToAdd.Add( new Line( pt, LB.vertex[0] ) );
+					if( !VectorApprox(pt, LB.vertex[1] ) )
+						linesToAdd.Add( new Line( pt, LB.vertex[1] ));
+					bool LARepeat = false;
+					bool LBRepeat = false;
+					foreach( Line lad in linesToAdd ){
+						if( lad.Equals( LA ) )
+							LARepeat = true;
+						if( lad.Equals( LB ) )
+							LBRepeat = true;
+					}
+					if( LARepeat && LBRepeat ){
+						Debug.Log("Anomalous Repetition");
+						continue;
+					}
+					foreach( Line lad in linesToAdd )
+						G3.edges.Add( lad );
+					G3.edges.RemoveAt(j);
+					G3.edges.RemoveAt(i);
+					i--;
+					break;
+				}
+				//3B. Colinear and overlapping
+				else if( caseType == 2 ){
+					//Will additionally catch colinear points that are also overlapping only at endpoints
+					//Get all unique points, sort, form line between adjacent points i.e. segment everything
+					//If lines are same as LA and LB ignore, otherwise add them then remove LA, LB
+					List<Vector3> uniquePts = new List<Vector3>();
+					foreach( Vector3 v in LA.vertex ) uniquePts.Add(v);
+					foreach( Vector3 v in LB.vertex ) uniquePts.Add(v);
+					for( int k = 0; k < uniquePts.Count; k++ ){
+						for( int m = k + 1; m < uniquePts.Count; m++ ){
+							if( k == m ) continue;
+							if( VectorApprox( uniquePts[k], uniquePts[m] ) ){
+								uniquePts.RemoveAt(m);
+								m--;
+							}
+						}
+					}
+					uniquePts.Sort(delegate (Vector3 a, Vector3 b) {
+						if( floatCompare(a.x,b.x) ) return a.z.CompareTo(b.z);
+						else return a.x.CompareTo(b.x);
+					});
+					List<Line> linesToAdd = new List<Line>();
+					for( int k = 0; k < uniquePts.Count - 1; k++ ){
+						linesToAdd.Add( new Line(uniquePts[k], uniquePts[k+1]) );
+					}
+					bool LARepeat = false;
+					bool LBRepeat = false;
+					foreach( Line lad in linesToAdd ){
+						if( lad.Equals( LA ) )
+							LARepeat = true;
+						if( lad.Equals( LB ) )
+							LBRepeat = true;
+					}
+					if( LARepeat && LBRepeat )
+						continue;
+					foreach( Line l in linesToAdd ){
+						if( !VectorApprox(l.vertex[0], l.vertex[1] ) )
+							G3.edges.Add(l);
+					}
 					G3.edges.RemoveAt(j);
 					G3.edges.RemoveAt(i);
 					i--;
@@ -671,6 +863,11 @@ public class Geometry
 		foreach(Line l in G3.edges){
 			if(!G2.LineInside(l))
 				toReturn.edges.Add(l);
+//			else{
+//				foreach( Line l2 in G2.edges ){
+//					if( 
+//				}
+//			}
 		}
 		//Check pt inside in G2
 		foreach (Line l in toReturn.edges) {
@@ -679,11 +876,72 @@ public class Geometry
 				break;
 			}
 		}
+
 		return toReturn;
 	}
 
+	//TODO: Make more sophisticated. Check against GMInnerCam
+	//Used only for merging polygons with the map boundary
+//	public Geometry GeometryMergeInner( Geometry G2 ){//Called from outside
+//		Geometry tempGeometry = new Geometry ();
+//		//Two Geometry objects - G1 and G2
+//		Geometry G1 = this;
+//		//Create new called G3 which starts as an union of G1 and G2
+//		Geometry G3 = new Geometry ();
+//		foreach (Line l in G1.edges)
+//			G3.edges.Add(l);		
+//		foreach (Line l in G2.edges)
+//			G3.edges.Add(l);		
+//		
+//		//Check for intersection points among lines in G3
+//		for (int i = 0; i < G3.edges.Count; i++) {
+//			for( int j = i + 1; j < G3.edges.Count; j++ ) {
+//				Line LA = G3.edges[i];
+//				Line LB = G3.edges[j];
+//				if( LA.Equals(LB) ){
+//					G3.edges.RemoveAt(j);
+//					j--;
+//					continue;
+//				}
+//				int caseType = LA.LineIntersectMuntac( LB );
+//				if( caseType == 1 ){//Regular intersections
+//					Vector3 pt = LA.GetIntersectionPoint( LB );
+//					if( !VectorApprox( pt, LA.vertex[0] ) )
+//						G3.edges.Add( new Line( pt, LA.vertex[0] ) );
+//					if( !VectorApprox( pt, LA.vertex[1] ) )
+//						G3.edges.Add( new Line( pt, LA.vertex[1] ) );
+//					if( !VectorApprox( pt, LB.vertex[0] ) )
+//						G3.edges.Add( new Line( pt, LB.vertex[0] ) );
+//					if( !VectorApprox( pt, LB.vertex[1] ) )
+//						G3.edges.Add( new Line( pt, LB.vertex[1] ));
+//					G3.edges.RemoveAt(j);
+//					G3.edges.RemoveAt(i);
+//					i--;
+//					break;
+//				}
+//			}
+//		}
+//		//Check: Points inside Polygon
+//		//Check all midpoint of each line in G3 to see if it lies in G1 or G2. If inside remove.
+//		Geometry toReturn = new Geometry();
+//		
+//		foreach(Line l in G3.edges){
+//			if(!G2.LineInside(l))
+//				toReturn.edges.Add(l);
+//		}
+//		//Check pt inside in G2
+//		foreach (Line l in toReturn.edges) {
+//			if( G2.LineInside( l ) ){
+//				toReturn.edges.Remove(l);
+//				break;
+//			}
+//		}
+//		return toReturn;
+//	}
+
 	//Check if two geometries intersect
 	public bool GeometryIntersect( Geometry G2 ){//Called from outside
+		if (this.edges.Count == 1 || G2.edges.Count == 1) return false;
 		if( this.Equals( G2 ) )
 			return true;
 		foreach( Line La in this.edges ){
@@ -708,6 +966,7 @@ public class Geometry
 //	}
 
 	public bool GeometryInside( Geometry G2, bool LineIntersectionsChecked ){
+		if (this.edges.Count == 1 || G2.edges.Count == 1) return false;
 		List<Vector3> allvert = GetVertex ();
 		List<Vector3> interpts = GetVertex ();
 		if( !LineIntersectionsChecked ){
@@ -718,6 +977,25 @@ public class Geometry
 				}
 			}
 		}
+		List<Vector3> G2AllVert = G2.GetVertex ();
+		foreach (Vector3 v in G2AllVert)
+			if( this.PointOutside( v ) ) return false;
+		foreach( Line l in G2.edges )
+			if( this.PointOutside( l.MidPoint() ) ) return false;
+		return true;
+	}
+
+	public bool GeometryInsideMap( Geometry G2 ){
+		if (this.edges.Count == 1 || G2.edges.Count == 1) return false;
+		List<Vector3> allvert = GetVertex ();
+		List<Vector3> interpts = GetVertex ();
+		foreach (Line L in edges) {
+			foreach(Line L2 in G2.edges){
+				if( L.LineIntersectMuntac( L2 ) > 0 )
+					return false;
+			}
+		}
+
 		List<Vector3> G2AllVert = G2.GetVertex ();
 		foreach (Vector3 v in G2AllVert)
 			if( this.PointOutside( v ) ) return false;
@@ -867,21 +1145,21 @@ public class Geometry
 
 	public class angclass{
 		public Vector3 vect;
-		public float angle;
-		public float distance;
-		public angclass( Vector3 v, float a, float d ){
+		public double angle;
+		public double distance;
+		public angclass( Vector3 v, double a, double d ){
 			vect = v;
 			angle = a;
 			distance = d;
 		}
 	}
 
-	public List<KeyValuePair<Vector3, float>> GetVertexAngleSorted( Vector3 vSrc, List<Vector3> verts ){
+	public List<KeyValuePair<Vector3, double>> GetVertexAngleSorted( Vector3 vSrc, List<Vector3> verts ){
 		List< angclass > angList = new List< angclass >();
 		Vector3 outpoint = new Vector3 ();
-		outpoint.x = -100;
+		outpoint.x = 0;
 		outpoint.y = 1;
-		outpoint.z = 100;
+		outpoint.z = 50;
 //		Line tmpline = new Line (vSrc, outpoint);
 //		tmpline.name = "Line Outpoint";
 //		tmpline.DrawVector (GameObject.Find ("temp"));
@@ -891,26 +1169,28 @@ public class Geometry
 				angList.Add(new angclass(v, 0, 0 ));
 				continue;
 			}
-		    float angle;
+		    double angle;
 			Line AB = new Line( vSrc, outpoint );
 			Line AC = new Line( vSrc, v );
 			Line BC = new Line ( v, outpoint );
 
-			angle = (AB.Magnitude() * AB.Magnitude()) + (AC.Magnitude() * AC.Magnitude()) - (BC.Magnitude() * BC.Magnitude());
-			angle /= (2.0f * AB.Magnitude() * AC.Magnitude() );
-			angle = (float)Math.Acos((double)angle);
+			angle = (AB.MagnitudeDouble() * AB.MagnitudeDouble()) + (AC.MagnitudeDouble() * AC.MagnitudeDouble()) - (BC.MagnitudeDouble() * BC.MagnitudeDouble());
+			angle /= ((double)2.0f * AB.MagnitudeDouble() * AC.MagnitudeDouble() );
+			angle = System.Math.Acos((double)angle);
 			if( !isLeft( vSrc, outpoint, v ) )
-				angle = (float)Math.PI + (float)Math.PI - angle;
-			if( floatCompare( AC.Magnitude() + BC.Magnitude(), AB.Magnitude() ) )
-			    angle = 2 * (float)Math.PI;
-			//angList.Add(new angclass(v, (float)Math.Round( angle, 4 ), AC.Magnitude()));
-			angList.Add(new angclass(v, (float)Math.Round( angle, 3 ), AC.Magnitude()));
-			//angList.Add(new angclass(v, angle, AC.Magnitude()));
+				angle = System.Math.PI + System.Math.PI - angle;
+			if( doubleCompare( AC.MagnitudeDouble() + BC.MagnitudeDouble(), AB.MagnitudeDouble() ) )
+			    angle = (double)2 * System.Math.PI;
+			//angList.Add(new angclass(v, (float)angle, (float)AC.MagnitudeDouble()));//5 invlaid vps
+			//angList.Add(new angclass(v, (float)Math.Round( angle, 4 ), (float)AC.MagnitudeDouble()));//3 invalid vps
+			//angList.Add(new angclass(v, (float)Math.Round( angle, 3 ), (float)AC.MagnitudeDouble()));//3 invalid vps
+			//angList.Add(new angclass(v, System.Math.Round(angle, 3), AC.MagnitudeDouble()));
+			angList.Add(new angclass(v, angle, AC.MagnitudeDouble()));
 		}
 
 		angList.Sort( delegate(angclass a, angclass b){
 			int xdiff;
-			if( floatCompare( a.angle, b.angle ) )
+			if( doubleCompare( a.angle, b.angle ) )
 				xdiff = 0;
 			else if( a.angle - b.angle > 0 )
 				xdiff = 1;
@@ -926,11 +1206,49 @@ public class Geometry
 //		}
 
 		int cnt = 0;
-		List<KeyValuePair<Vector3, float>> retlist = new List<KeyValuePair<Vector3, float>>();
+		List<KeyValuePair<Vector3, double>> retlist = new List<KeyValuePair<Vector3, double>>();
 		foreach (angclass ang in angList) {
-			retlist.Add( new KeyValuePair<Vector3,float>( ang.vect, ang.angle ) );
+			retlist.Add( new KeyValuePair<Vector3,double>( ang.vect, ang.angle ) );
 		}
 		return retlist;
+	}
+
+	public bool validate(){
+		List<Vector3> lsv = this.GetVertex ();
+		foreach( Vector3 v in lsv ){
+			int cnt = 0;
+			foreach( Line l in edges ){
+				if( l.isEndPoint( v ) ) cnt++;
+			}
+			if( cnt != 2 ) return false;
+		}
+		for( int i = 0; i < lsv.Count; i++ ){
+			int cnt = 0;
+			for( int j = 0; j < lsv.Count; j++ ){
+				if ( i == j ) continue;
+				if( edges[i].ShareVertex( edges[j] ) ) cnt++;
+			}
+			if( cnt != 2 ) return false;
+		}
+		for( int i = 0; i < edges.Count; i++ ){
+			for( int j = 0; j < edges.Count; j++ ){
+				if( i == j ) continue;
+				if( edges[i].Equals(edges[j]) ) return false;
+			}
+		}
+
+		foreach (Line l1 in edges) {
+			foreach (Line l2 in edges) {
+				if( l1 == l2 ) continue;
+				if( l1.ShareVertex( l2 ) ){
+					Vector3 sv = l1.getSharedVertex(l2);
+					Line broad = new Line( l1.GetOther( sv ), l2.GetOther( sv ) );
+					if( broad.POL( sv ) )
+						return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	void drawSphere( Vector3 v, Color x ){
@@ -979,6 +1297,10 @@ public class Geometry
 	
 	public bool floatCompare ( float a, float b ){
 		return Math.Abs (a - b) < eps;
+	}
+
+	public bool doubleCompare ( double a, double b ){
+		return System.Math.Abs (a - b) < (double)eps;
 	}
 	
 	public bool floatCompare ( float a, float b, string condition ){
