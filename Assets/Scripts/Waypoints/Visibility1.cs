@@ -37,8 +37,8 @@ public class Visibility1 : MonoBehaviour {
 	//List<GameObject> m_enemyNearMissList = new List<GameObject>();
 	//List<bool> m_enemyNearMissCaughtList = new List<bool>();
 	//List<Vector3> m_enemyNextPosNearMissList = new List<Vector3>();
-	List<NearMissEnemy> m_enemyNearMissList = new List<NearMissEnemy>();
-	class NearMissEnemy
+	List<EnemyMovement> m_enemyNearMissList = new List<EnemyMovement>();
+	class EnemyMovement
 	{
 		public GameObject enemyObj;
 		public bool bCaught;
@@ -46,7 +46,7 @@ public class Visibility1 : MonoBehaviour {
 	}
 
 	public int m_nEnemyCentroid = 0;
-	List<GameObject> m_enemyCentroidList = new List<GameObject>();
+	List<EnemyMovement> m_enemyCentroidList = new List<EnemyMovement>();
 	List<Vector3> m_enemyNextPosCentroidList = new List<Vector3>();
 	public bool m_ExecuteTrueCase = false;
 	public int m_ShowTrueCase = -1;//1 for shortest path;2 for longest
@@ -101,7 +101,11 @@ public class Visibility1 : MonoBehaviour {
 			initializeForNearMissCase();
 			return;
 		}
-
+		else if(setUpCase==2)
+		{
+			initializeForCentroidCase();
+			return;
+		}
 		setUpEnemyInitialPos ();
 	}
 	private void displayPredictedPaths()
@@ -160,6 +164,16 @@ public class Visibility1 : MonoBehaviour {
 		Vector3 tempVec = (Vector3)h_mapIndxToPt[new Vector2(m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ)];
 		//Vector3 tempVec = new Vector3 (m_nCurrDiscretePtIndxX, 1, m_nCurrDiscretePtIndxZ);
 		placeEnemyNearMissAt(tempVec);
+		resetCase ();
+	}
+
+	private void initializeForCentroidCase()
+	{
+		setGlobalVars1 ();
+		timingArray = new float[discretePtsX,discretePtsZ];
+		Vector3 tempVec = (Vector3)h_mapIndxToPt[new Vector2(m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ)];
+		//Vector3 tempVec = new Vector3 (m_nCurrDiscretePtIndxX, 1, m_nCurrDiscretePtIndxZ);
+		placeEnemyCentroidAt(tempVec);
 		resetCase ();
 	}
 	int m_nCurrDiscretePtIndxX=0;
@@ -328,14 +342,14 @@ public class Visibility1 : MonoBehaviour {
 			//startTimePlayer=Time.time;
 			for(int j=0;j<m_enemyCentroidList.Count;j++)
 			{
-				Vector3 currPosEnemy = m_enemyCentroidList[j].transform.position;
+				Vector3 currPosEnemy = m_enemyCentroidList[j].enemyObj.transform.position;
 
-				m_enemyNextPosCentroidList[j] = findNextPosEnemyCentroid(m_enemyCentroidList[j]);
-				m_enemyCentroidList[j].transform.position = Vector3.MoveTowards(currPosEnemy,m_enemyNextPosCentroidList[j], speedEnemy*Time.deltaTime);
+				m_enemyCentroidList[j].vNextPos = findNextPosEnemyCentroid(m_enemyCentroidList[j].enemyObj);
+				m_enemyCentroidList[j].enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,m_enemyCentroidList[j].vNextPos, speedEnemy*Time.deltaTime);
 			}
 			for(int j=0;j<m_enemyNearMissList.Count;j++)
 			{
-				NearMissEnemy nearMissObj = m_enemyNearMissList[j];
+				EnemyMovement nearMissObj = m_enemyNearMissList[j];
 				if(nearMissObj.bCaught)
 					continue;
 				Vector3 currPosEnemy = nearMissObj.enemyObj.transform.position;
@@ -372,7 +386,7 @@ public class Visibility1 : MonoBehaviour {
 		playerObj.transform.position = Vector3.MoveTowards(playerObj.transform.position, pathPoints[nextPlayerPath], speedPlayer*Time.deltaTime);
 		for(int j=0;j<m_enemyNearMissList.Count;j++)
 		{
-			NearMissEnemy nearMissObj = m_enemyNearMissList[j];
+			EnemyMovement nearMissObj = m_enemyNearMissList[j];
 			nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(nearMissObj.enemyObj.transform.position,nearMissObj.vNextPos, speedEnemy*Time.deltaTime);
 		}
 
@@ -632,8 +646,17 @@ public class Visibility1 : MonoBehaviour {
 		}
 		if(m_nEnemyCentroid>0)
 		{
-			createCentroidPoints();
-			placeEnemyCentroid();
+			//createCentroidPoints();
+			//placeEnemyCentroid();
+
+			setGlobalVars1();
+			int numCentroid = m_nEnemyCentroid;
+			while(numCentroid>0)
+			{
+				Vector3 sel = selectInitialNearMissRandomPos();
+				placeEnemyCentroidAt(sel);
+				numCentroid--;
+			}
 		}
 	}
 	private void createCentroidPoints ()
@@ -677,7 +700,7 @@ public class Visibility1 : MonoBehaviour {
 	//TODO :Error while placing enemies. Maybe random placement works.
 	private void placeEnemyCentroid()
 	{
-		int numCentroidEnemies = m_nEnemyCentroid;
+		/*int numCentroidEnemies = m_nEnemyCentroid;
 		while(numCentroidEnemies>0)
 		{
 			GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
@@ -689,33 +712,59 @@ public class Visibility1 : MonoBehaviour {
 			m_enemyCentroidList.Add(enemyObj);
 			m_enemyNextPosCentroidList.Add(findNextPosEnemyCentroid(enemyObj));
 			numCentroidEnemies--;
-		}
+		}*/
 	}
 	private Vector3 findNextPosEnemyCentroid(GameObject enemyObj)
 	{
-		if(!pointInShadow(enemyObj.transform.position,nextPlayerPath-1))
-			return enemyObj.transform.position;
-		List<Vector3> centrePts = (List<Vector3>)hCentroidShadows[pathPoints[nextPlayerPath]];
-		float dist = Vector3.Distance (enemyObj.transform.position, centrePts[0]);
-		Vector3 selPt = centrePts [0];
-		foreach(Vector3 pts in centrePts)
+
+		Vector3 vecSel = enemyObj.transform.position;
+		Geometry visiblePolyTemp = (Geometry)hVisiblePolyTable [pathPoints [nextPlayerPath]];
+		float minDist = 0.0f;
+		float distTemp = 0.0f;
+		Line firstEdge = visiblePolyTemp.edges[0];
+		float y2 = firstEdge.vertex[1].z;
+		float y1 = firstEdge.vertex[0].z;
+		float x2 = firstEdge.vertex[1].x;
+		float x1 = firstEdge.vertex[0].x;
+		minDist = Mathf.Abs((y2-y1)*vecSel.x - (x2-x1)*vecSel.z + x2*y1 - y2*x1);
+		minDist = minDist/Mathf.Sqrt(Mathf.Pow((y2-y1),2) + Mathf.Pow((x2-x1),2));
+		int selEdgeIndx = 0;
+		for(int i=1;i<visiblePolyTemp.edges.Count;i++)
 		{
-			float tempDist = Vector3.Distance (enemyObj.transform.position, pts);
-			if(tempDist<dist)
+			firstEdge = visiblePolyTemp.edges[i];
+			y2 = firstEdge.vertex[1].z;
+			y1 = firstEdge.vertex[0].z;
+			x2 = firstEdge.vertex[1].x;
+			x1 = firstEdge.vertex[0].x;
+			distTemp = Mathf.Abs((y2-y1)*vecSel.x - (x2-x1)*vecSel.z + x2*y1 - y2*x1);
+			distTemp = distTemp/Mathf.Sqrt(Mathf.Pow((y2-y1),2) + Mathf.Pow((x2-x1),2));
+			if(distTemp<minDist)
 			{
-				dist=tempDist;
-				selPt = pts;
+				selEdgeIndx = i;
+				minDist = distTemp;
 			}
 		}
-		Debug.Log (selPt);
-		return selPt;
+		
+		return vecSel;
+	}
+	private void placeEnemyCentroidAt(Vector3 sel)
+	{
+		GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
+		Component.Destroy (enemyObj.GetComponent("Enemy"));
+		enemyObj.transform.position = sel;
+		EnemyMovement centroidObj = new EnemyMovement();
+		centroidObj.bCaught = false;
+		centroidObj.enemyObj = enemyObj;
+		centroidObj.vNextPos = findNextPosEnemyCentroid(enemyObj);
+		m_enemyCentroidList.Add(centroidObj);
+		
 	}
 	private void placeEnemyNearMissAt(Vector3 sel)
 	{
 		GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
 		Component.Destroy (enemyObj.GetComponent("Enemy"));
 		enemyObj.transform.position = sel;
-		NearMissEnemy nearMissObj = new NearMissEnemy();
+		EnemyMovement nearMissObj = new EnemyMovement();
 		nearMissObj.bCaught = false;
 		nearMissObj.enemyObj = enemyObj;
 		if(nearMissAlgo==1)
@@ -741,7 +790,7 @@ public class Visibility1 : MonoBehaviour {
 			}
 
 			bool selAgain = false;
-			foreach(NearMissEnemy nearMissObjTemp in m_enemyNearMissList)
+			foreach(EnemyMovement nearMissObjTemp in m_enemyNearMissList)
 			{
 				if(Vector3.Distance(nearMissObjTemp.enemyObj.transform.position,sel)<1.0f)
 				{
@@ -1850,6 +1899,11 @@ public class Visibility1 : MonoBehaviour {
 	private GameObject allLineParent;
 	private bool pointInShadow(Vector3 pt,int Indx)
 	{
+		foreach(Geometry geo in globalPolygon)
+		{
+			if(geo.PointInside(pt))
+				return false;
+		}
 		List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [Indx]];
 		foreach(Geometry geo in shadowPolyTemp)
 		{
