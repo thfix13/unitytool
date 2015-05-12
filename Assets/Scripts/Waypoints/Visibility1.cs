@@ -42,7 +42,12 @@ public class Visibility1 : MonoBehaviour {
 	{
 		public GameObject enemyObj;
 		public bool bCaught;
-		public Vector3 vNextPos;
+		public List<Vector3> vNextPos;
+		public EnemyMovement()
+		{
+			vNextPos = new List<Vector3>();
+			bCaught = false;
+		}
 	}
 
 	public int m_nEnemyCentroid = 0;
@@ -55,6 +60,11 @@ public class Visibility1 : MonoBehaviour {
 	private float m_stepDistance = -1.0f;
 	void Start () 
 	{
+
+		/*float radius_hiddenSphere = (enemyPrefab.collider).radius*((SphereCollider)enemyPrefab.collider).transform.lossyScale.x;
+		Debug.Log (radius_hiddenSphere);
+		Debug.Break ();*/
+
 		spTemp = (GameObject)GameObject.Find ("StartPoint");
 		allLineParent = GameObject.Find ("allLineParent") as GameObject;
 		globalPolygon = getObstacleEdges ();
@@ -939,9 +949,9 @@ public class Visibility1 : MonoBehaviour {
 				{
 					m_enemyNearMissList[0].enemyObj.transform.position = tempVec;
 					if(nearMissAlgo==1)
-						m_enemyNearMissList[0].vNextPos = findNextPosEnemyNearMiss1(m_enemyNearMissList[0].enemyObj);
+						m_enemyNearMissList[0].vNextPos.Add (findNextPosEnemyNearMiss1(m_enemyNearMissList[0].enemyObj));
 					else if(nearMissAlgo==2)
-						m_enemyNearMissList[0].vNextPos = findNextPosEnemyNearMiss2(m_enemyNearMissList[0].enemyObj);
+						m_enemyNearMissList[0].vNextPos.Add(findNextPosEnemyNearMiss2(m_enemyNearMissList[0].enemyObj));
 					//currRunTimeEnemny = Time.time;
 					m_enemyNearMissList[0].bCaught = false;
 					break;
@@ -1031,10 +1041,31 @@ public class Visibility1 : MonoBehaviour {
 			//startTimePlayer=Time.time;
 			for(int j=0;j<m_enemyCentroidList.Count;j++)
 			{
-				Vector3 currPosEnemy = m_enemyCentroidList[j].enemyObj.transform.position;
+				EnemyMovement centroidObj = m_enemyCentroidList[j];
+				if(centroidObj.bCaught)
+					continue;
+				Vector3 currPosEnemy = centroidObj.enemyObj.transform.position;
 
-				m_enemyCentroidList[j].vNextPos = findNextPosEnemyCentroid(m_enemyCentroidList[j].enemyObj);
-				m_enemyCentroidList[j].enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,m_enemyCentroidList[j].vNextPos, speedEnemy*Time.deltaTime);
+				centroidObj.vNextPos.Add(findNextPosEnemyCentroid(m_enemyCentroidList[j].enemyObj));
+				if(currPosEnemy == centroidObj.vNextPos[0])
+					centroidObj.vNextPos.RemoveAt(0);
+				if(enemyCaught(centroidObj.enemyObj.transform.position))
+				{
+					if(setUpCase==2)
+					{
+						timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = Time.time - currRunTimeEnemny;
+						Debug.Log("Caught!!! Took "+timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]+" to catch");
+						resetCase();
+						return;
+					}
+					Renderer rend = centroidObj.enemyObj.GetComponent<Renderer>();
+					rend.material.shader = Shader.Find("Specular");
+					rend.material.SetColor("_SpecColor", Color.white);
+					centroidObj.bCaught=true;
+					Debug.Log("Centroid Enemy Caught");
+					continue;
+				}
+				//m_enemyCentroidList[j].enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,centroidObj.vNextPos[0], speedEnemy*Time.deltaTime);
 			}
 			for(int j=0;j<m_enemyNearMissList.Count;j++)
 			{
@@ -1044,9 +1075,11 @@ public class Visibility1 : MonoBehaviour {
 				Vector3 currPosEnemy = nearMissObj.enemyObj.transform.position;
 
 				if(nearMissAlgo==1)
-					nearMissObj.vNextPos = findNextPosEnemyNearMiss1(nearMissObj.enemyObj);
+					nearMissObj.vNextPos.Add(findNextPosEnemyNearMiss1(nearMissObj.enemyObj));
 				else if(nearMissAlgo==2)
-					nearMissObj.vNextPos = findNextPosEnemyNearMiss2(nearMissObj.enemyObj);
+					nearMissObj.vNextPos.Add (findNextPosEnemyNearMiss2(nearMissObj.enemyObj));
+				if(currPosEnemy == nearMissObj.vNextPos[0])
+					nearMissObj.vNextPos.RemoveAt(0);
 				if(enemyCaught(nearMissObj.enemyObj.transform.position))
 				{
 					if(setUpCase==1)
@@ -1060,9 +1093,9 @@ public class Visibility1 : MonoBehaviour {
 					rend.material.shader = Shader.Find("Specular");
 					rend.material.SetColor("_SpecColor", Color.white);
 					nearMissObj.bCaught=true;
-					Debug.Log("Enemy Caught");
+					Debug.Log("Near Miss Enemy Caught");
 				}
-				//nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,nearMissObj.vNextPos, speedEnemy*Time.deltaTime);
+				//nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,nearMissObj.vNextPos[0], speedEnemy*Time.deltaTime);
 			}
 			/*
 			List<Vector3> centrePts = (List<Vector3>)hCentroidShadows[pathPoints[nextPlayerPath]];
@@ -1076,7 +1109,16 @@ public class Visibility1 : MonoBehaviour {
 		for(int j=0;j<m_enemyNearMissList.Count;j++)
 		{
 			EnemyMovement nearMissObj = m_enemyNearMissList[j];
-			nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(nearMissObj.enemyObj.transform.position,nearMissObj.vNextPos, speedEnemy*Time.deltaTime);
+			if(nearMissObj.bCaught)
+				continue;
+			nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(nearMissObj.enemyObj.transform.position,nearMissObj.vNextPos[0], speedEnemy*Time.deltaTime);
+		}
+		for(int j=0;j<m_enemyCentroidList.Count;j++)
+		{
+			EnemyMovement centroidObj = m_enemyCentroidList[j];
+			if(centroidObj.bCaught)
+				continue;
+			centroidObj.enemyObj.transform.position = Vector3.MoveTowards(centroidObj.enemyObj.transform.position,centroidObj.vNextPos[0], speedEnemy*Time.deltaTime);
 		}
 
 		/*if (Input.GetMouseButtonDown (0)) {
@@ -1407,7 +1449,13 @@ public class Visibility1 : MonoBehaviour {
 	{
 
 		Vector3 vecSel = enemyObj.transform.position;
-		Geometry visiblePolyTemp = (Geometry)hVisiblePolyTable [pathPoints [nextPlayerPath]];
+		List<Geometry> shadowPolygonsTemp = (List<Geometry>)hTable [pathPoints [nextPlayerPath]];
+
+		List<Line> allShadowEdges = new List<Line> ();
+		foreach(Geometry shadowGeo in shadowPolygonsTemp)
+		{
+			allShadowEdges.AddRange(shadowGeo.edges);
+		}
 		float minDist = 0.0f;
 		float distTemp = 0.0f;
 		Line firstEdge = visiblePolyTemp.edges[0];
@@ -1444,7 +1492,7 @@ public class Visibility1 : MonoBehaviour {
 		EnemyMovement centroidObj = new EnemyMovement();
 		centroidObj.bCaught = false;
 		centroidObj.enemyObj = enemyObj;
-		centroidObj.vNextPos = findNextPosEnemyCentroid(enemyObj);
+		centroidObj.vNextPos.Add (findNextPosEnemyCentroid(enemyObj));
 		m_enemyCentroidList.Add(centroidObj);
 		
 	}
@@ -1457,9 +1505,9 @@ public class Visibility1 : MonoBehaviour {
 		nearMissObj.bCaught = false;
 		nearMissObj.enemyObj = enemyObj;
 		if(nearMissAlgo==1)
-			nearMissObj.vNextPos = findNextPosEnemyNearMiss1(enemyObj);
+			nearMissObj.vNextPos.Add (findNextPosEnemyNearMiss1(enemyObj));
 		else if(nearMissAlgo==2)
-			nearMissObj.vNextPos = findNextPosEnemyNearMiss2(enemyObj);
+			nearMissObj.vNextPos.Add (findNextPosEnemyNearMiss2(enemyObj));
 		m_enemyNearMissList.Add(nearMissObj);
 			
 	}
