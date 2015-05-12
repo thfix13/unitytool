@@ -37,7 +37,7 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 		
 		// Then, we setup the enviornment needed to make it work
 		if (mapper != null) {
-			mapper.ComputeTileSize (SpaceState.Running, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize);
+			mapper.ComputeTileSize (SpaceState.Running, floor.GetComponent<Collider>().bounds.min, floor.GetComponent<Collider>().bounds.max, gridSize, gridSize);
 			obstaclesMap = mapper.ComputeObstacles ();
 			
 			GameObject[] en = GameObject.FindGameObjectsWithTag ("Enemy") as GameObject[];
@@ -81,8 +81,8 @@ public class RuntimeController : MonoBehaviour, NodeProvider {
 				end = GameObject.Find ("End");	
 			}
 			
-			endX = (int)((end.transform.position.x - floor.collider.bounds.min.x) / SpaceState.Running.tileSize.x);
-			endY = (int)((end.transform.position.z - floor.collider.bounds.min.z) / SpaceState.Running.tileSize.y);
+			endX = (int)((end.transform.position.x - floor.GetComponent<Collider>().bounds.min.x) / SpaceState.Running.tileSize.x);
+			endY = (int)((end.transform.position.z - floor.GetComponent<Collider>().bounds.min.z) / SpaceState.Running.tileSize.y);
 			
 			obstaclesMap [endX] [endY].goal = true;
 			

@@ -52,7 +52,7 @@ namespace EditorArea {
 			
 			// Update Scene
 			if (!didUpdate) {
-				mapper.ComputeTileSize (SpaceState.Editor, mapper.collider.bounds.min, mapper.collider.bounds.max, MapperWindowEditor.gridSize, MapperWindowEditor.gridSize);
+				mapper.ComputeTileSize (SpaceState.Editor, mapper.GetComponent<Collider>().bounds.min, mapper.GetComponent<Collider>().bounds.max, MapperWindowEditor.gridSize, MapperWindowEditor.gridSize);
 				drawer.tileSize.Set (SpaceState.Editor.tileSize.x, SpaceState.Editor.tileSize.y);
 				drawer.zero.Set (SpaceState.Editor.floorMin.x, SpaceState.Editor.floorMin.z);
 				didUpdate = true;
