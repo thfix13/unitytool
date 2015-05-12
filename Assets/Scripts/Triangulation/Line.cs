@@ -56,10 +56,16 @@ public class Line
 			return vertex[1];
 		return vertex[0];
 	}
-
 	public void DrawLine(Color c)
 	{
-		Debug.DrawLine(this.vertex[0],this.vertex[1],c); 
+		Debug.DrawLine(this.vertex[0],this.vertex[1],c);
+	}
+	public void DrawLine(GameObject parent,Color c)
+	{
+		VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
+		line.vectorObject.transform.parent = parent.transform;
+		line.vectorObject.name = name;
+		line.Draw3D();
 	}
 
 	public void DrawLine()

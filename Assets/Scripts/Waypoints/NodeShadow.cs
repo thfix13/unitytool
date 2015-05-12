@@ -14,15 +14,88 @@ public class NodeShadow
 {
 	public NodeShadow ()
 	{
+		parent = new List<NodeShadow> ();
+		safetyLevel = -1;
 		children = new List<NodeShadow> ();
+		minDistFromHead = -1.0f;
+		parentSelected = null;
 	}
 	public NodeShadow (Vector3 pt)
 	{
+		parent = new List<NodeShadow> ();
+		safetyLevel = -1;
 		currPt = pt;
 		children = new List<NodeShadow> ();
+		minDistFromHead = -1.0f;
+		parentSelected = null;
 	}
+	public void addChild(NodeShadow nodeChild)
+	{
+		if(!children.Contains(nodeChild))
+			children.Add(nodeChild);
+		if(!nodeChild.parent.Contains(this))
+			nodeChild.parent.Add(this);
+	}
+	public List<NodeShadow> getChildren()
+	{
+		return children;
+	}
+	public Vector3 getPos()
+	{
+		return currPt;
+	}
+	public void setParent(NodeShadow parentArg)
+	{
+		if(!parent.Contains(parentArg))
+			parent.Add(parentArg);
+	}
+	public List<NodeShadow> getParent()
+	{
+		return parent;
+	}
+	public void setSafetyLevel(int levelOfAcess)
+	{
+		if(safetyLevel<0)
+			safetyLevel = levelOfAcess;
+	}
+	public int getSafetyLevel()
+	{
+		return safetyLevel;
+	}
+
+	public void setMinDistFromHead(float minDistFromHead1,NodeShadow parentSelected1)
+	{
+		if(parentSelected1==null)
+		{
+			minDistFromHead = minDistFromHead1;
+			parentSelected = parentSelected1;
+			return;
+		}
+		if(minDistFromHead<0.0f || minDistFromHead1 + parentSelected1.getMinDistFromHead() < minDistFromHead)
+		{
+			minDistFromHead = minDistFromHead1 + parentSelected1.getMinDistFromHead();
+			parentSelected = parentSelected1;
+		}
+	}
+	public float getMinDistFromHead()
+	{
+		return minDistFromHead;
+	}
+	public void setParentSelected(NodeShadow parentArg)
+	{
+		parentSelected = parentArg;
+	}
+	public NodeShadow getParentSelected()
+	{
+		return parentSelected;
+	}
+
 	Vector3 currPt;
 	List<NodeShadow> children;
+	List<NodeShadow> parent;
+	int safetyLevel;//The index of path point of player for when this node is safe
+	float minDistFromHead;
+	NodeShadow parentSelected;
 }
 
 

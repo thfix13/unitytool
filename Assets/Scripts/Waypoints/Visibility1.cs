@@ -51,6 +51,8 @@ public class Visibility1 : MonoBehaviour {
 	public bool m_ExecuteTrueCase = false;
 	public int m_ShowTrueCase = -1;//1 for shortest path;2 for longest
 	private string currSceneName;
+	//Distance b/w consecutive path points
+	private float m_stepDistance = -1.0f;
 	void Start () 
 	{
 		spTemp = (GameObject)GameObject.Find ("StartPoint");
@@ -61,17 +63,21 @@ public class Visibility1 : MonoBehaviour {
 		if(currSceneName=="scene1.unity")
 		{
 			pathPoints = CommonScene1.definePath ();
+			m_stepDistance = CommonScene1.getStepDistance();
 		}
 		else if(currSceneName=="testCase1.unity")
 		{
 			pathPoints = CommonTestCase1.definePath ();
+			m_stepDistance = CommonTestCase1.getStepDistance();
 		}
 		if(m_ShowTrueCase>0)
 		{
 			displayPredictedPaths();
+			return;
 		}
 		else if(m_ExecuteTrueCase)
 		{
+			CalculateVisibilityForPath ();
 			executeTrueCase();
 			return;
 		}
@@ -110,10 +116,516 @@ public class Visibility1 : MonoBehaviour {
 	}
 	private void displayPredictedPaths()
 	{
+		float startTime = Time.realtimeSinceStartup;
+		NodeShadow headNode = readNodeStructureFor();
+		NodeShadow node = headNode;
+		Debug.Log("Read the txt file");
+		////////////////////////////////////////////////////////////////////////////////////
+		//showAllPathDetected (headNode);
+		//return;
+		///////////////////////////////////////////////////////////////////////////////////;
+		//List<NodeShadow> firstPath = findFirstEnemyPathDetected (headNode);
+		List<NodeShadow> firstPath = quickShortestPathDetected (headNode);
+		//List<NodeShadow> firstPath = possibleShortestPathDetected (headNode);
+		//List<NodeShadow> firstPath = findShortestEnemyPathDetected (headNode);
+
+		showPosOfPoint (firstPath [0].getPos (),Color.cyan);
+		standardMaxMovement = speedEnemy*(m_stepDistance/speedPlayer);
+		for(int i=1;i<firstPath.Count;i++)
+		{
+			float dist = Vector3.Distance(firstPath[i].getPos(),firstPath[i-1].getPos());
+
+			//Debug.Log(firstPath[i].getPos()+" ;;;;;; Distance from previous "+firstPath[i-1].getPos()+" is "+dist);
+			if(dist>standardMaxMovement)
+				Debug.LogError("Dist b/w 2 points should not be greater than standardMaxMovement.");
+			//showPosOfPoint (firstPath [i].getPos (),Color.cyan);
+			Line l = new Line(firstPath[i].getPos(),firstPath[i-1].getPos());
+			l.DrawVector(allLineParent);
+		}
+		float totalTime = (Time.realtimeSinceStartup - startTime)/60;
+		Debug.Log("Finished displayPredictedPaths. Time took to calculate and show shortest path = "+totalTime+" minutes");
+	}
+	private void showAllPathDetected (NodeShadow headNode)
+	{
+		List<NodeShadow> stack = new List<NodeShadow> ();
+		List<NodeShadow> tempStack = new List<NodeShadow> ();
+		stack.Add (headNode);
+		float colorCounter = 1.0f;//from green to blue
+		float colorStep = 1.0f / pathPoints.Count;
+		while(true)
+		{
+			Color c = new Color(0.0f,colorCounter,1.0f-colorCounter);
+			colorCounter-=colorStep;
+			foreach(NodeShadow node in stack)
+			{
+				foreach(NodeShadow child in node.getChildren())
+				{
+					//Debug.Log(child.getPos());
+
+					if(!tempStack.Contains(child))
+						tempStack.Add(child);
+					//Line l = new Line(node.getPos(),child.getPos());
+
+					//l.DrawLine(allLineParent,c);
+
+				}
+			}
+			
+			if(tempStack.Count==0)
+			{
+				break;
+			}
+			stack.Clear();
+			stack = tempStack;
+			tempStack = new List<NodeShadow> ();
+		}
+		showPosOfPoint(headNode.getPos(),Color.cyan);
+		foreach(NodeShadow node in stack)
+		{
+			showPosOfPoint(node.getPos(),Color.green);
+		}
+	}
+	private List<NodeShadow> quickShortestPathDetected (NodeShadow headNode)
+	{
+
+		List<NodeShadow> shortestPathIndices = new List<NodeShadow> ();
+		List<NodeShadow> stack = new List<NodeShadow> ();
+		List<NodeShadow> tempStack = new List<NodeShadow> ();
+		headNode.setMinDistFromHead (0.0f,null);
+		stack.Add (headNode);
+		while(true)
+		{
+			foreach(NodeShadow node in stack)
+			{
+				foreach(NodeShadow child in node.getChildren())
+				{
+					//Debug.Log(child.getPos());
+					float dist = Vector3.Distance(node.getPos(),child.getPos());
+					child.setMinDistFromHead (dist,node);
+					if(!tempStack.Contains(child))
+						tempStack.Add(child);
+				}
+			}
+			//Remove duplicates
+			/*for(int i=0;i<tempStack.Count;i++)
+			{
+				for(int j=i+1;j<tempStack.Count;j++)
+				{
+					if(tempStack[i]==tempStack[j])
+					{
+						//Debug.Log("Duplicate found.");
+
+						tempStack.RemoveAt(j);
+						j--;
+					}
+				}
+			}
+			*/
+			if(tempStack.Count==0)
+			{
+				break;
+			}
+			stack.Clear();
+			stack = tempStack;
+			tempStack = new List<NodeShadow> ();
+			//if(stack.Count==0)
+				//break;
+		}
+		tempStack = stack;
+		float minDist = tempStack [0].getMinDistFromHead ();
+		NodeShadow endNodePoint = tempStack [0];
+		for(int i=1;i<tempStack.Count;i++)
+		{
+			if(tempStack [i].getMinDistFromHead ()<minDist)
+			{
+				minDist = tempStack [i].getMinDistFromHead ();
+				endNodePoint = tempStack [0];
+			}
+		}
+
+		while(true)
+		{
+			shortestPathIndices.Insert (0, endNodePoint);
+			endNodePoint = endNodePoint.getParentSelected();
+			if(endNodePoint==null)
+				break;
+		}
+		return shortestPathIndices;
+	}
+	private List<NodeShadow> possibleShortestPathDetected (NodeShadow headNode)
+	{
+		NodeShadow tempNode = headNode;
+		List<NodeShadow> shortestPathIndices = new List<NodeShadow> ();
+		while(tempNode.getChildren().Count>0)
+		{
+			//Debug.Log("Writing Node = "+tempNode.getPos());
+			shortestPathIndices.Add(tempNode);
+			//tempNode = tempNode.getChildren()[0];
+			tempNode = tempNode.getChildren()[tempNode.getChildren().Count-1];
+		}
+		return shortestPathIndices;
+	}
+
+	private List<NodeShadow> findShortestEnemyPathDetected (NodeShadow headNode)
+	{
+		int lastIndex = pathPoints.Count - 1;
+		float minDistPath = -1.0f;
+		List<NodeShadow> maxPathIndices = new List<NodeShadow> ();
+		List<NodeShadow> shortestPathIndices = new List<NodeShadow> ();
+		List<NodeShadow> currPathIndices = new List<NodeShadow> ();
+		List<NodeShadow> stack = new List<NodeShadow> ();
+		List<List<NodeShadow>> listOfLists = new List<List<NodeShadow>> ();
+		stack.Add (headNode);
+		int topIndex = -1;
+		while(stack.Count>0)
+		{
+			//pop the top
+			topIndex = stack.Count-1;
+			NodeShadow nodeTop = stack[topIndex];
+			stack.RemoveAt(topIndex);
+			Debug.Log("Node Top = "+nodeTop.getPos());
+			//before adding remove all greater aand equal levels;
+			int currNodeLevel = nodeTop.getSafetyLevel();
+			if(currPathIndices.Count>0)
+			{
+				NodeShadow lastNodeInCurrIndices = currPathIndices[currPathIndices.Count-1];
+				while(true)
+				{
+					if(nodeTop.getParent().Contains(lastNodeInCurrIndices))
+					{
+						break;
+					}
+					else
+					{
+						currPathIndices.RemoveAt (currPathIndices.Count-1);
+						lastNodeInCurrIndices = currPathIndices[currPathIndices.Count-1];
+					}
+				}
+			}
+			currPathIndices.Add(nodeTop);
+			
+			if(nodeTop.getChildren().Count==0)
+			{
+				if(currPathIndices.Count>=maxPathIndices.Count)
+				{
+					maxPathIndices = new List<NodeShadow>();
+					maxPathIndices.AddRange(currPathIndices);
+					listOfLists.Insert(0,maxPathIndices);
+					//TODO:Remove this if
+					/*if(maxPathIndices[maxPathIndices.Count-1].getSafetyLevel()==lastIndex)
+					{
+						listOfLists.RemoveRange(1,listOfLists.Count-1);
+						break;
+					}*/
+
+					int maxCountAllowed = maxPathIndices.Count;
+					while(true)
+					{
+						if(listOfLists[listOfLists.Count-1].Count==maxCountAllowed)
+						{
+							break;
+						}
+						else
+						{
+							listOfLists.RemoveAt(listOfLists.Count-1);
+						}
+					}
+				}
+
+			}
+			else
+			{
+				stack.AddRange(nodeTop.getChildren());
+			}
+			
+		}
+		//return maxPathIndices;
+		Debug.Log("Now Finding shortest path. Lists COunt = "+listOfLists.Count);
+		shortestPathIndices.AddRange (listOfLists [0]);
+		minDistPath=0.0f;
+		for(int j=1;j<shortestPathIndices.Count;j++)
+		{
+			minDistPath+=Vector3.Distance(shortestPathIndices[j].getPos(),shortestPathIndices[j-1].getPos());
+
+		}
+		for(int i=1;i<listOfLists.Count;i++)
+		{
+			List<NodeShadow> tempNodeList = new List<NodeShadow>();
+			tempNodeList.AddRange (listOfLists [i]);
+			float minDistTempPath = 0.0f;
+			for(int j=1;j<tempNodeList.Count;j++)
+			{
+				minDistTempPath+=Vector3.Distance(shortestPathIndices[j].getPos(),shortestPathIndices[j-1].getPos());
+			}
+			if(minDistPath>minDistTempPath)
+			{
+				shortestPathIndices.Clear();
+				shortestPathIndices.AddRange(tempNodeList);
+			}
+		}
+		return shortestPathIndices;
+	}
+	/*class hashNodeShadowClass
+	{
+		public Vector3 pt;
+		public int safetyLevel;
+	}*/
+	private List<NodeShadow> findFirstEnemyPathDetected (NodeShadow headNode)
+	{
+		int lastIndex = pathPoints.Count - 1;
+		int maxIndex = -1;
+		List<NodeShadow> maxPathIndices = new List<NodeShadow> ();
+		List<NodeShadow> currPathIndices = new List<NodeShadow> ();
+		List<NodeShadow> stack = new List<NodeShadow> ();
+		stack.Add (headNode);
+		int topIndex = -1;
+		while(stack.Count>0)
+		{
+			//pop the top
+			topIndex = stack.Count-1;
+			NodeShadow nodeTop = stack[topIndex];
+			stack.RemoveAt(topIndex);
+
+			//before adding remove all greater aand equal levels;
+			int currNodeLevel = nodeTop.getSafetyLevel();
+			if(currPathIndices.Count>0)
+			{
+				NodeShadow lastNodeInCurrIndices = currPathIndices[currPathIndices.Count-1];
+				while(true)
+				{
+					if(nodeTop.getParent().Contains(lastNodeInCurrIndices))
+					{
+						break;
+					}
+					else
+					{
+						currPathIndices.RemoveAt (currPathIndices.Count-1);
+						lastNodeInCurrIndices = currPathIndices[currPathIndices.Count-1];
+					}
+				}
+			}
+			currPathIndices.Add(nodeTop);
+
+			if(nodeTop.getChildren().Count==0)
+			{
+				if(currPathIndices.Count>maxPathIndices.Count)
+				{
+					maxPathIndices.Clear();
+					maxPathIndices.AddRange(currPathIndices);
+					if(maxPathIndices[maxPathIndices.Count-1].getSafetyLevel()==lastIndex)
+					{
+						break;
+					}
+				}
+				//currPathIndices.RemoveAt(currPathIndices.Count-1);
+			}
+			else
+			{
+				stack.AddRange(nodeTop.getChildren());
+			}
+
+		}
+		return maxPathIndices;
+	}
+	private NodeShadow readNodeStructureFor()
+	{
+		setGlobalVars1 ();
+		string sourceFileName = EditorUtility.OpenFilePanel("Please select data node file", Application.dataPath,""); 
+		StreamReader sr = new StreamReader(sourceFileName);
+		List<char> sep = new List<char>();
+		sep.Add(',');
+		sep.Add(' ');
+		sep.Add(';');
+		sep.Add('(');
+		sep.Add(')');
+		sep.Add('|');
+		NodeShadow headNode = new NodeShadow ();
+		Hashtable mapPtToNode = new Hashtable();
+
+		//////////////////////////////////////////////
+		//int jk = 100;
+		/// /////////////////////////////////////////////
+		string str = sr.ReadLine();
+
+		while(!sr.EndOfStream /*&& jk>0*/)
+		{
+			//jk--;
+
+			str = sr.ReadLine();
+
+			string[] line1 = str.Split(sep.ToArray());
+			//Debug.Log(str);
+			List<string> line = new List<string>();
+			for(int i=0;i<line1.Length;i++)
+			{
+				if(line1[i]=="")
+					continue;
+				line.Add(line1[i]);
+				//Debug.Log(line1[i]);
+			}
+			//Debug.Log("Line list length = "+line.Count);
+			//if(mapPtToNode.Keys.Count!=0)
+			//	Debug.Log(line[0]+"(1) "+line[1]+"(2) "+line[2]+"(3) "+line[3]+"(4) "+line[4]+" (5) "+line[5]+"(6) "+line[6]+"(7) "+line[7]);
+
+
+			//hashNodeShadowClass keyObj = new hashNodeShadowClass();
+			Vector4 keyObj = new Vector4(float.Parse(line[0]),float.Parse(line[1]),float.Parse(line[2]),float.Parse(line[3]));
+			//keyObj.pt = new Vector3(float.Parse(line[0]),float.Parse(line[1]),float.Parse(line[2]));
+			//keyObj.safetyLevel = int.Parse(line[3]);
+			//hashNodeShadowClass parentKeyObj = new hashNodeShadowClass();
+			Vector4 parentKeyObj = new Vector4();
+			if(mapPtToNode.Keys.Count!=0)
+			{
+				
+				//parentKeyObj.pt = new Vector3(float.Parse(line[4]),float.Parse(line[5]),float.Parse(line[6]));
+				//parentKeyObj.safetyLevel = int.Parse(line[7]);
+				parentKeyObj = new Vector4(float.Parse(line[4]),float.Parse(line[5]),float.Parse(line[6]),float.Parse(line[7]));
+			}
+			if(mapPtToNode.Keys.Count==0)
+			{
+				headNode = new NodeShadow(new Vector3(keyObj.x,keyObj.y,keyObj.z));
+				headNode.setSafetyLevel((int)keyObj.w);
+				mapPtToNode.Add(keyObj,headNode);
+			}
+			else if(!mapPtToNode.ContainsKey(keyObj))
+			{
+				//NodeShadow node = new NodeShadow(keyObj.pt);
+				NodeShadow node = new NodeShadow(new Vector3(keyObj.x,keyObj.y,keyObj.z));
+				node.setSafetyLevel((int)keyObj.w);
+				//Debug.Log(parentKeyObj.pt+" , "+parentKeyObj.safetyLevel);
+				NodeShadow parentNode= (NodeShadow)mapPtToNode[parentKeyObj];
+				/*foreach(hashNodeShadowClass h in mapPtToNode.Keys)
+				{
+					Debug.Log(h.pt+" , "+h.safetyLevel);
+					Debug.Log("Parent Node = "+((NodeShadow)mapPtToNode[parentKeyObj]).getPos());
+				}*/
+				//Debug.Log("Node = "+node.getPos());
+				//Debug.Log("Parent node = "+parentNode.getPos());
+				parentNode.addChild(node);
+				//parentKeyObj should always be present in the Hashtable mapPtToNode;
+				/*if(!mapPtToNode.ContainsKey(parentKeyObj))
+				{
+				}
+				else
+				{
+				}*/
+				mapPtToNode.Add(keyObj,node);
+			}
+			else
+			{
+				NodeShadow node= (NodeShadow)mapPtToNode[keyObj];
+				NodeShadow parentNode= (NodeShadow)mapPtToNode[parentKeyObj];
+				//node.setParent(parentNode);
+				parentNode.addChild(node);
+			}
+			
+		}
+		Debug.Log ("Number of nodes are  = " + mapPtToNode.Keys.Count);
+		sr.Close ();
+
+		return headNode;
+	}
+	/*private void writeNodeStructureNow(NodeShadow nodeCurr,string saveDataDirName)
+	{
+
+		
+		
+		string sourceFileName = saveDataDirName + "\\"+headNode.getPos().ToString()+".txt";
+		//string tempFile = sourceFileName+"_Temp";
+		StreamWriter sw = new StreamWriter(sourceFileName,true);//append to file
+		//NodeSignature|ParentSignature
+		sw.WriteLine("(Vector3;level)|(Vector3;level)"+"");
+		
+		sw.Write("("+headNode.getPos()+";"+headNode.getSafetyLevel()+")|("+null+";"+null+")");
+		sw.WriteLine("");
+		List<NodeShadow> nodeSafeLevelNow = new List<NodeShadow> ();
+		List<NodeShadow> nodeSafeLevelNext = headNode.getChildren ();
+		NodeShadow parentNode = headNode;
+		while(nodeSafeLevelNext.Count>0)//while(levelOfAccess<pathPoints.Count)
+		{
+			//levelOfAccess++;
+			nodeSafeLevelNow = nodeSafeLevelNext;
+			nodeSafeLevelNext = new List<NodeShadow>();
+			
+			foreach(NodeShadow nodeNow in nodeSafeLevelNow)
+			{
+				foreach(NodeShadow nodeNowParent in nodeNow.getParent())
+				{
+					sw.Write("("+nodeNow.getPos()+";"+nodeNow.getSafetyLevel()+")|("+nodeNowParent.getPos()+";"+nodeNowParent.getSafetyLevel()+")");
+					sw.WriteLine("");
+				}
+				List<NodeShadow> childrenTemp = nodeNow.getChildren();
+				foreach(NodeShadow nxtLevelNode in childrenTemp)
+				{
+					if(!nodeSafeLevelNext.Contains(nxtLevelNode))
+					{
+						nodeSafeLevelNext.Add(nxtLevelNode);
+					}
+				}
+				
+			}
+		}
+		
+		
+		sw.Close ();
+	}
+	*/
+	private void writeNodeStructure(NodeShadow headNode,string saveDataDirName)
+	{
+		//NodeShadow tempNode = headNode;
+		/*while(tempNode.getChildren().Count>0)
+		{
+			Debug.Log("Writing Node = "+tempNode.getPos());
+			tempNode = tempNode.getChildren()[0];
+		}
+		*/
+
+
+		string sourceFileName = saveDataDirName + "\\"+headNode.getPos().ToString()+".txt";
+		//string tempFile = sourceFileName+"_Temp";
+		StreamWriter sw = new StreamWriter(sourceFileName);
+		//NodeSignature|ParentSignature
+		sw.WriteLine("(Vector3;level)|(Vector3;level)"+"");
+
+		sw.Write("("+headNode.getPos()+";"+headNode.getSafetyLevel()+")|("+null+";"+null+")");
+		sw.WriteLine("");
+		List<NodeShadow> nodeSafeLevelNow = new List<NodeShadow> ();
+		List<NodeShadow> nodeSafeLevelNext = headNode.getChildren ();
+		NodeShadow parentNode = headNode;
+		while(nodeSafeLevelNext.Count>0)//while(levelOfAccess<pathPoints.Count)
+		{
+			//levelOfAccess++;
+			nodeSafeLevelNow = nodeSafeLevelNext;
+			nodeSafeLevelNext = new List<NodeShadow>();
+			
+			foreach(NodeShadow nodeNow in nodeSafeLevelNow)
+			{
+				foreach(NodeShadow nodeNowParent in nodeNow.getParent())
+				{
+					sw.Write("("+nodeNow.getPos()+";"+nodeNow.getSafetyLevel()+")|("+nodeNowParent.getPos()+";"+nodeNowParent.getSafetyLevel()+")");
+					sw.WriteLine("");
+				}
+				List<NodeShadow> childrenTemp = nodeNow.getChildren();
+				foreach(NodeShadow nxtLevelNode in childrenTemp)
+				{
+					if(!nodeSafeLevelNext.Contains(nxtLevelNode))
+					{
+						nodeSafeLevelNext.Add(nxtLevelNode);
+					}
+				}
+				
+			}
+		}
+
+
+		sw.Close ();
 	}
 	private void executeTrueCase()
 	{
 		setGlobalVars1();
+		standardMaxMovement = speedEnemy*(m_stepDistance/speedPlayer);
+		Debug.Log ("Initialize standardMaxMovement = " + standardMaxMovement);
+
 		string dirName = createSaveDataDir(Application.dataPath);
 		int j1=0;
 		for(float j=m_minX;j<m_maxX && j1<discretePtsX;j+=m_step)
@@ -121,17 +633,194 @@ public class Visibility1 : MonoBehaviour {
 			int k1=0;
 			for(float k=m_minZ;k<m_maxZ && k1<discretePtsZ;k+=m_step)
 			{
+				//Debug.Log(j1+" , "+k1);
 				Vector3 pt = new Vector3(j,1,k);
+				if(!pointInShadow(pt,0))
+				{
+					k1++;
+					continue;
+				}
 				Vector2 keyTemp = new Vector2(j1,k1);
-				executeTrueCaseFor(keyTemp,dirName);
+
+				Debug.Log(j1+" , "+k1);
+				//if(j1==95 && k1==35)//TODO:Remove
+				if(j1==44 && k1==7)//TODO:Remove
+				{
+					showPosOfPoint(pt,Color.cyan);//TODO:Remove
+					float startTime = Time.realtimeSinceStartup;
+					executeTrueCaseFor(keyTemp,dirName);
+					float totalTime = (Time.realtimeSinceStartup - startTime)/60;
+					Debug.Log("executeTrueCase Finished. Time taken is = "+totalTime+" mins");//TODO:Remove
+					return;//TODO:Remove
+				}
 				k1++;
 			}
 			j1++;
 		}
 	}
+	float standardMaxMovement = -1.0f;
 	private void executeTrueCaseFor(Vector2 indexOfPt,string saveDataDirName)
 	{
+		//return;
 		Vector3 pt = (Vector3)h_mapIndxToPt[indexOfPt];
+		NodeShadow headNode = new NodeShadow (pt);
+		headNode.setSafetyLevel (0);
+		Hashtable h_mapPtToNode = new Hashtable();
+		int levelOfAccess = 1;
+		List<NodeShadow> nodeSafeLevelNow = new List<NodeShadow> ();
+		nodeSafeLevelNow.Add (headNode);
+		List<NodeShadow> nodeSafeLevelNext = reachableChildren (headNode,indexOfPt,levelOfAccess,h_mapPtToNode);
+		h_mapPtToNode.Clear ();
+		while(levelOfAccess<pathPoints.Count)//TODO:think other exit cases
+		{
+			levelOfAccess++;
+			nodeSafeLevelNow = nodeSafeLevelNext;
+			nodeSafeLevelNext = new List<NodeShadow>();
+
+			foreach(NodeShadow child in nodeSafeLevelNow)
+			{
+				Vector2 indexOfPtTemp = (Vector2)h_mapPtToIndx[child.getPos()];
+				List<NodeShadow> childrenTemp = reachableChildren (child,indexOfPtTemp,levelOfAccess,h_mapPtToNode);
+				foreach(NodeShadow nxtLevelNode in childrenTemp)
+				{
+					if(!nodeSafeLevelNext.Contains(nxtLevelNode))
+					{
+						nodeSafeLevelNext.Add(nxtLevelNode);
+					}
+				}
+
+			}
+			h_mapPtToNode.Clear();
+		}
+		writeNodeStructure (headNode,saveDataDirName);
+	}
+	private bool addPossibleChild(Vector2 tempVect2,NodeShadow node,int pathPointIndx,Hashtable h_mapPtToNode)
+	{
+		//Debug.Log ("Possible Child 1 ="+(Vector3)h_mapIndxToPt [tempVect2]);
+		if(h_mapIndxToPt.ContainsKey(tempVect2))
+		{
+			Vector3 tempVect3 = (Vector3)h_mapIndxToPt[tempVect2];
+			//Debug.Log("standardMaxMovement = "+standardMaxMovement);
+			//Debug.Log("Possible Child 2 = "+tempVect3);
+			if(pointInShadow(tempVect3,pathPointIndx) && Vector3.Distance(node.getPos(),tempVect3)<=standardMaxMovement)
+			{
+				NodeShadow nodeChild;
+				if(h_mapPtToNode.ContainsKey(tempVect3))
+				{
+					nodeChild = (NodeShadow)h_mapPtToNode[tempVect3];
+				}
+				else
+				{
+					nodeChild = new NodeShadow(tempVect3);
+					nodeChild.setSafetyLevel(pathPointIndx);
+					h_mapPtToNode.Add(tempVect3,nodeChild);
+				}
+				node.addChild(nodeChild);
+				Debug.Log(tempVect3+" added as child of "+node.getPos()+" Dist b/w them is "+Vector3.Distance(node.getPos(),tempVect3));
+				return true;
+			}
+			else
+			{
+				Debug.Log(tempVect3+" cannot be added as child of "+node.getPos()+" Dist b/w them is "+Vector3.Distance(node.getPos(),tempVect3));
+			}
+		}
+		return false;
+	}
+	private List<NodeShadow> reachableChildren(NodeShadow node,Vector2 indexOfPt,int pathPointIndx,Hashtable h_mapPtToNode)
+	{
+		int rowJ = (int)indexOfPt.x;
+		int colK = (int)indexOfPt.y;
+		addPossibleChild(indexOfPt,node,pathPointIndx,h_mapPtToNode);
+		while(true)
+		{
+			bool bStillReachable=false;
+			bool bRunAgain=false;
+			rowJ--;
+			colK--;
+			int rowLen = ((int)indexOfPt.x - rowJ)*2 +1;
+			//////////////////////////////////////////////////////////////////////&&&&&&&&&&&&&&&&&
+			Vector2 testPt2D = new Vector2(rowJ+rowLen/2,colK);
+			Vector3 testPt3D = new Vector3(0,0,0);
+			bool bPtAssigned = false;
+			if(h_mapIndxToPt.ContainsKey(testPt2D))
+			{
+				testPt3D = (Vector3)h_mapIndxToPt[testPt2D];
+				bPtAssigned = true;
+			}
+			else
+			{
+				testPt2D = new Vector2(rowJ+rowLen/2,colK+rowLen-1);
+				if(h_mapIndxToPt.ContainsKey(testPt2D))
+				{
+					testPt3D = (Vector3)h_mapIndxToPt[testPt2D];
+					bPtAssigned = true;
+				}
+				else
+				{
+					testPt2D = new Vector2(rowJ+rowLen-1,colK+rowLen/2);
+					if(h_mapIndxToPt.ContainsKey(testPt2D))
+					{
+						testPt3D = (Vector3)h_mapIndxToPt[testPt2D];
+						bPtAssigned = true;
+					}
+					else
+					{
+						testPt2D = new Vector2(rowJ,colK+rowLen/2);
+						if(h_mapIndxToPt.ContainsKey(testPt2D))
+						{
+							testPt3D = (Vector3)h_mapIndxToPt[testPt2D];
+							bPtAssigned = true;
+						}
+					}
+				}
+			}
+			if(!bPtAssigned)
+			{
+				Debug.LogError("All Possible points exhausted. No outcome. Breaking from loop");
+				break;
+			}
+			////////////////////////////////////////////////////////////////////////&&&&&&&&&&&&&&&&;
+			float testDist = Vector3.Distance(node.getPos(),testPt3D);
+			//Debug.Log("testDist = "+testDist);
+			if(testDist > standardMaxMovement)// || rowJ<0 || colK<0 || rowJ+rowLen>discretePtsX || colK+rowLen>discretePtsZ)
+				break;
+			//Debug.Log("rowJ = "+rowJ);
+			//Debug.Log("colK = "+colK);
+			//Debug.Log("rowLen = "+rowLen);
+			for(int i1=rowJ;i1<rowJ+rowLen;i1++)
+			{
+				Vector2 tempVect2 = new Vector2(i1,colK);
+				bStillReachable = addPossibleChild(tempVect2,node,pathPointIndx,h_mapPtToNode);
+				if(bStillReachable)
+					bRunAgain=true;
+				tempVect2 = new Vector2(i1,colK+rowLen-1);
+				bStillReachable = addPossibleChild(tempVect2,node,pathPointIndx,h_mapPtToNode);
+				if(bStillReachable)
+					bRunAgain=true;
+			}
+			for(int i2=colK+1;i2<colK+rowLen-1;i2++)
+			{
+				Vector2 tempVect2 = new Vector2(rowJ,i2);
+				bStillReachable = addPossibleChild(tempVect2,node,pathPointIndx,h_mapPtToNode);
+				if(bStillReachable)
+					bRunAgain=true;
+				tempVect2 = new Vector2(rowJ+rowLen-1,i2);
+				bStillReachable = addPossibleChild(tempVect2,node,pathPointIndx,h_mapPtToNode);
+				if(bStillReachable)
+					bRunAgain=true;
+			}
+
+
+		}
+		/*Debug.Log(node.getPos()+" has following children");
+		string childrEn="";
+		foreach(NodeShadow ch in node.getChildren())
+		{
+			childrEn+=ch.getPos()+" , ";
+		}
+		Debug.Log(childrEn);
+		*/
+		return node.getChildren ();
 	}
 	private string createSaveDataDir (string dataPath)
 	{
@@ -291,7 +980,7 @@ public class Visibility1 : MonoBehaviour {
 	int nextPlayerPath = 1;
 	void Update () 
 	{
-		if (bDisplayAreas || m_ExecuteTrueCase)
+		if (bDisplayAreas || m_ExecuteTrueCase || m_ShowTrueCase>0)
 		{
 			return;
 		}
@@ -906,6 +1595,10 @@ public class Visibility1 : MonoBehaviour {
 				if(!h_mapIndxToPt.ContainsKey(keyTemp))
 				{
 					h_mapIndxToPt.Add(keyTemp,pt);
+				}
+				if(!h_mapPtToIndx.ContainsKey(pt))
+				{
+					h_mapPtToIndx.Add(pt,keyTemp);
 				}
 				k1++;
 			}
@@ -1899,11 +2592,17 @@ public class Visibility1 : MonoBehaviour {
 	private GameObject allLineParent;
 	private bool pointInShadow(Vector3 pt,int Indx)
 	{
+		if (Indx >= pathPoints.Count || Indx < 0)
+		{
+			Debug.LogError(Indx);
+			return false;
+		}
 		foreach(Geometry geo in globalPolygon)
 		{
 			if(geo.PointInside(pt))
 				return false;
 		}
+
 		List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [Indx]];
 		foreach(Geometry geo in shadowPolyTemp)
 		{
@@ -1916,6 +2615,7 @@ public class Visibility1 : MonoBehaviour {
 	Hashtable h_discreteShadows = new Hashtable();
 	//Key = (i,j) , Value = Vector3. i,j are indices corresponding to 2D arrays in h_discreteShadows
 	Hashtable h_mapIndxToPt = new Hashtable();
+	Hashtable h_mapPtToIndx = new Hashtable();
 	//Func: fills h_discreteShadows and h_mapIndxToPt according to step and pathPoints
 	int discretePtsX = -1;
 	int discretePtsZ = -1;

@@ -24,8 +24,9 @@ using UnityEngine;
 //using System.IO;
 using System.Collections.Generic;
 
-public class CommonTestCase1
+public static class CommonTestCase1
 {
+	static float stepPath = -1.0f;
 	public static List<Vector3> definePath()
 	{
 		List<Vector3> pathPts = new List<Vector3> ();
@@ -41,6 +42,7 @@ public class CommonTestCase1
 		float zMinPath = -pathPts [0].z;
 		float zMaxPath = pathPts [0].z;
 		float stepPathPoint = 0.2f;
+		stepPath = stepPathPoint;
 		for (float i=xMinPath; i<=xMaxPath; i+=stepPathPoint)
 		{
 			pathPts.Add(new Vector3(i,1,zMaxPath));
@@ -57,6 +59,13 @@ public class CommonTestCase1
 		{
 			pathPts.Add(new Vector3(xMinPath,1,i));
 		}
+	}
+	//Distance b/w consecutive points
+	public static float getStepDistance()
+	{
+		if (stepPath < 0.0f)
+			Debug.LogError ("Distance b/w consecutive points not set.");
+		return stepPath;
 	}
 }
 
