@@ -374,6 +374,15 @@ namespace EditorArea {
 				printLatestPath();
 			}
 
+			if(GUILayout.Button ("Refind Enemies")) {
+				enemygeoobjs  = GameObject.FindGameObjectsWithTag("EnemyGeo");
+				enemygeos = new List<EnemyGeo>();
+				foreach(GameObject g in enemygeoobjs){
+					enemygeos.Add(g.GetComponent<EnemyGeo>());
+					
+				}
+			}
+
 			if (GUILayout.Button ("Compute Path Geo")) {
 				if(enemygeoobjs  == null){
 					enemygeoobjs  = GameObject.FindGameObjectsWithTag("EnemyGeo");
@@ -1097,7 +1106,7 @@ namespace EditorArea {
 			NodeGeo last = path.Last();
 			if(last.t == t){
 				position3.x = last.x;
-				position3.y = last.y;
+				position3.z = last.y;
 				P.transform.position = position3;
 			}
 		}

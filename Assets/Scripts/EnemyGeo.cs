@@ -57,7 +57,6 @@ namespace Objects {
 
 			return posT;
 		}
-
 		public Vector3 getForwardDist(int t, int t2){
 			if(t2 > t){
 				computeAtTime(t);
@@ -68,9 +67,7 @@ namespace Objects {
 			
 			return forT;
 		}
-
-
-
+				
 		private void computeAtTimeDist(int t, int t2){
 			computeAtTime(t2);
 			if(t != curT){
@@ -129,9 +126,7 @@ namespace Objects {
 			}
 
 		}
-
-
-
+				
 		private void tryRotDist(WaypointGeo dist){
 			Vector3 trgtAngle = dist.gameObject.transform.position - posT;
 			trgtAngle.Normalize();
@@ -148,9 +143,7 @@ namespace Objects {
 				forT = trgtAngle;
 			}
 		}
-
-
-
+				
 		public Vector3 getPosition(int t){
 			computeAtTime(t);
 
