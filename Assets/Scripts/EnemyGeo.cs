@@ -325,7 +325,6 @@ namespace Objects {
 		private void tryMove(WaypointGeo trgt){
 			//Debug.Log (posT);
 			//Debug.Log (trgt.transform.position);
-			Debug.Log (trgt);
 			float distance = Vector3.Distance(posT, trgt.transform.position);
 			//Debug.Log(distance);
 			int steps = Mathf.CeilToInt(distance / trgt.movSpeed);

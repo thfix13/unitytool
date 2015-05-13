@@ -507,7 +507,7 @@ namespace EditorArea {
 
 							//Debug.Log (nodes.Count);
 							if(nodes.Count <= 0){
-								Debug.Log ("FAILER PANTS");
+								Debug.Log ("RRT Search Failed");
 							}
 
 							// Did we found a path?
