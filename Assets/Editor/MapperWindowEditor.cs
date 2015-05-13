@@ -48,7 +48,7 @@ namespace EditorArea {
 		private static bool ignoreFrameLimit = true;
 		private static bool useDist = false;
 		private static int distTime = 0;
-
+		public static int attemps2 = 1;
 
 		// Helping stuff
 		private static Vector2 scrollPos = new Vector2 ();
@@ -166,6 +166,7 @@ namespace EditorArea {
 			start = (GameObject)EditorGUILayout.ObjectField ("Start", start, typeof(GameObject), true);
 			end = (GameObject)EditorGUILayout.ObjectField ("End", end, typeof(GameObject), true);
 			attemps = EditorGUILayout.IntSlider ("Attempts", attemps, 1000, 100000);
+			attemps2 = EditorGUILayout.IntSlider ("Attempts2", attemps2, 1, 100);
 			iterations = EditorGUILayout.IntSlider ("Iterations", iterations, 1, 1500);
 			randomSeed = EditorGUILayout.IntSlider("Random Seed", randomSeed, -1, 10000);
 			smoothPath = EditorGUILayout.Toggle ("Smooth path", smoothPath);
@@ -460,6 +461,9 @@ namespace EditorArea {
 				Vector3 distractPos = GameObject.Find ("DistractPoint").transform.position;
 				Vector2 distractPos2 = new Vector2(distractPos.x, distractPos.z);
 
+				Vector3 distract2Pos = GameObject.Find ("DistractPoint2").transform.position;
+				Vector2 distract2Pos2 = new Vector2(distract2Pos.x, distract2Pos.z);
+
 				for (int it = 0; it < iterations; it++) {
 
 					/* Screw the Map
@@ -491,65 +495,75 @@ namespace EditorArea {
 					}
 					*/
 
+					for(int it2 = 0; it2 < attemps2; it2++){
 
 
-					// We have this try/catch block here to account for the issue that we don't solve when we find a path when t is near the limit
-					try {
+						// We have this try/catch block here to account for the issue that we don't solve when we find a path when t is near the limit
+						try {
 
-						nodes= rrtgeo.ComputeGeo (startX, startY, endX, endY, -10, 10, -10, 10, 1000, attemps, playerSpeed, distractPos2);
+							nodes= rrtgeo.ComputeGeo (startX, startY, endX, endY, -10, 10, -10, 10, 1000, attemps, playerSpeed, distractPos2, distract2Pos2);
 
-						//nodes = rrt.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
+							//nodes = rrt.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
 
-						//Debug.Log (nodes.Count);
-						if(nodes.Count <= 0){
-							Debug.Log ("FAILER PANTS");
-						}
-
-						// Did we found a path?
-						if (nodes.Count > 0) {
-							pathsgeo.Add (new PathGeo(nodes));
-							toggleStatusGeo.Add(pathsgeo.Last(), true);
-							//Debug.Log ("Count1 is : " + toggleStatusGeo.Count);
-							pathsgeo.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
-							//paths.Add (new Path (nodes));
-							//toggleStatus.Add (paths.Last (), true);
-							//paths.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
-
-
-
-							//Create path lines using the line objects 
-							List<Line> path = new List<Line>(); 
-							for(int i =0; i<nodes.Count-1;i++)
-							{
-								path.Add(new Line(nodes[i].GetVector3Draw(),nodes[i+1].GetVector3Draw()));
+							//Debug.Log (nodes.Count);
+							if(nodes.Count <= 0){
+								Debug.Log ("FAILER PANTS");
 							}
 
-							GameObject temp = GameObject.Find("temp");
-							Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
-		                           UnityEngine.Random.Range(0.0f,1.0f),
-		                           UnityEngine.Random.Range(0.0f,1.0f)) ;
+							// Did we found a path?
+							if (nodes.Count > 0) {
+								pathsgeo.Add (new PathGeo(nodes));
+								toggleStatusGeo.Add(pathsgeo.Last(), true);
+								//Debug.Log ("Count1 is : " + toggleStatusGeo.Count);
+								pathsgeo.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
+								//paths.Add (new Path (nodes));
+								//toggleStatus.Add (paths.Last (), true);
+								//paths.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
 
-							foreach(Line l in path)
-							{
-								l.DrawVector(temp,c);
+
+
+								//Create path lines using the line objects 
+								List<Line> path = new List<Line>(); 
+								for(int i =0; i<nodes.Count-1;i++)
+								{
+									path.Add(new Line(nodes[i].GetVector3Draw(),nodes[i+1].GetVector3Draw()));
+								}
+
+								GameObject temp = GameObject.Find("temp");
+								Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
+			                           UnityEngine.Random.Range(0.0f,1.0f),
+			                           UnityEngine.Random.Range(0.0f,1.0f)) ;
+
+								foreach(Line l in path)
+								{
+									l.DrawVector(temp,c);
+								}
+
+								if(nodes.Count > 0){
+									Debug.Log ("Succeeded in " + it2 + " attempts");
+									break;
+								}
 							}
+
+
+							/*
+							// Grab the death list
+							foreach (List<Node> deathNodes in rrt.deathPaths) {
+								deaths.Add(new Path(deathNodes));
+							}
+							*/
+
+						} catch (Exception e) {
+							Debug.LogWarning("Skip errored calculated path");
+							Debug.LogException(e);
+							// This can happen in two different cases:
+							// In line 376 by having a duplicate node being picked (coincidence picking the EndNode as visiting but the check is later on)
+							// We also cant just bring the check earlier since there's data to be copied (really really rare cases)
+							// The other case is yet unkown, but it's a conicidence by trying to insert a node in the tree that already exists (really rare cases)
 						}
 
 
-						/*
-						// Grab the death list
-						foreach (List<Node> deathNodes in rrt.deathPaths) {
-							deaths.Add(new Path(deathNodes));
-						}
-						*/
 
-					} catch (Exception e) {
-						Debug.LogWarning("Skip errored calculated path");
-						Debug.LogException(e);
-						// This can happen in two different cases:
-						// In line 376 by having a duplicate node being picked (coincidence picking the EndNode as visiting but the check is later on)
-						// We also cant just bring the check earlier since there's data to be copied (really really rare cases)
-						// The other case is yet unkown, but it's a conicidence by trying to insert a node in the tree that already exists (really rare cases)
 					}
 				}
 				// Set the map to be drawn

@@ -13,6 +13,7 @@ namespace Common {
 		public int t;
 		public float playerhp;
 		public int distractTime = -1;
+		public List<int> distractTimes = new List<int>();
 		[XmlIgnore]
 		public Dictionary<Enemy, float> enemyhp;
 		[XmlIgnore]
@@ -62,6 +63,9 @@ namespace Common {
 		}
 		//TODO: Add distract time to this
 		public override string ToString () {
+			if(distractTimes.Count > 0){
+				return t + "-" + x + "-" + y + "-" + distractTimes[0];
+			}
 			return t + "-" + x + "-" + y + "-" + distractTime;
 		}
 		//TODO: Add distract time to this

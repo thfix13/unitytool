@@ -23,6 +23,9 @@ namespace Exploration {
 		private int depth = 5;
 		//public Vector3 min;
 		//public float tileSizeX, tileSizeZ;
+		private int maxDist = 1;
+
+
 
 		//Geo version of GetNode
 		public NodeGeo GetNodeGeo (int t, float x, float y) {
@@ -39,7 +42,7 @@ namespace Exploration {
 
 
 
-		public List<NodeGeo> ComputeGeo (float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, float speed, Vector2 distractPos,  bool smooth = false) {
+		public List<NodeGeo> ComputeGeo (float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, float speed, Vector2 distractPos, Vector2 distractPos2,  bool smooth = false) {
 			//Debug.Log ("COMPUTEGEO");
 
 			// Initialization
@@ -91,11 +94,19 @@ namespace Exploration {
 				float ry;
 
 				bool distractPick = false;
+			
 
 				if(Random.Range (0, 100) > 50) {
-					rx = distractPos.x;
-					ry = distractPos.y;
-					distractPick = true;
+					if(Random.Range (0, 100) > 50){
+						rx = distractPos.x;
+						ry = distractPos.y;
+						distractPick = true;
+					}
+					else{
+						rx = distractPos2.x;
+						ry = distractPos2.y;
+						distractPick = true;
+					}
 				}
 				else{
 					rx = Random.Range (minX, maxX);
@@ -136,12 +147,27 @@ namespace Exploration {
 					continue;
 				}				
 
-				if(nodeTheClosestTo.distractTime > 0){
-					nodeVisiting.distractTime = nodeTheClosestTo.distractTime;
+				//Experimental New distract
+				if(nodeTheClosestTo.distractTimes.Count == maxDist){
+					nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
 				}
-				else if(distractPick){
-					nodeVisiting.distractTime = nodeVisiting.t;
+				else if(nodeTheClosestTo.distractTimes.Count > 0){
+					if(distractPick){
+						nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
+						nodeVisiting.distractTimes.Add (nodeVisiting.t);
+					}
+					else{
+						nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
+					}
 				}
+
+				//Old Backup Distract
+				//if(nodeTheClosestTo.distractTime > 0){
+				//	nodeVisiting.distractTime = nodeTheClosestTo.distractTime;
+				//}
+				//else if(distractPick){
+				//	nodeVisiting.distractTime = nodeVisiting.t;
+				//}
 
 
 				//Check for collision with obstacles
@@ -150,9 +176,13 @@ namespace Exploration {
 					continue;
 				}
 				
-				//Check for collision with guard line of sight
-				if(checkCollEs(p2.x, p2.z, (int)p2.y, p1.x, p1.z, (int)p1.y, enemies, 1, depth, nodeVisiting.distractTime)){
-					continue;
+				//Check for collision with guard line of sight -- OLD WAY
+				//if(checkCollEs(p2.x, p2.z, (int)p2.y, p1.x, p1.z, (int)p1.y, enemies, 1, depth, nodeVisiting.distractTime)){
+				//		continue;
+				//}
+
+				if(checkCollEs(p2.x, p2.z, (int)p2.y, p1.x, p1.z, (int)p1.y, enemies, 1, depth, nodeVisiting.distractTimes)){
+							continue;
 				}
 
 
@@ -184,7 +214,7 @@ namespace Exploration {
 					NodeGeo endNode = GetNodeGeo ((int)pd.y, pd.x, pd.z);
 
 
-					if (!checkCollObs(p1.x, p1.z, p2.x, p2.z) && !checkCollEs(p1.x, p1.z, (int)p1.y, pd.x, pd.z, (int)pd.y, enemies, 1, depth, nodeVisiting.distractTime)) {
+					if (!checkCollObs(p1.x, p1.z, p2.x, p2.z) && !checkCollEs(p1.x, p1.z, (int)p1.y, pd.x, pd.z, (int)pd.y, enemies, 1, depth, nodeVisiting.distractTimes)) {
 						//Debug.Log ("Done3");
 						endNode.parent = nodeVisiting;
 						return ReturnPathGeo (endNode, smooth);
@@ -231,7 +261,7 @@ namespace Exploration {
 		}
 
 		//Check for collision of a path with the enemies
-		public bool checkCollEs(float startX, float startY,int startT, float endX, float endY,  int endT, List<EnemyGeo> enems, int d, int depth, int distractTime){
+		public bool checkCollEs(float startX, float startY,int startT, float endX, float endY,  int endT, List<EnemyGeo> enems, int d, int depth, List<int> distractTimes){
 			//Debug.Log ("CheckCollEs");
 			if(enems == null){
 				//Debug.Log ("no enems");
@@ -243,10 +273,10 @@ namespace Exploration {
 
 			if(d == 1){
 				foreach(EnemyGeo e in enems){
-					if(checkCollE(e, startX, startT, startY, distractTime)){
+					if(checkCollE(e, startX, startT, startY, distractTimes)){
 							return true;
 					}
-					if(checkCollE(e, endX, endT, endY, distractTime)){
+					if(checkCollE(e, endX, endT, endY, distractTimes)){
 							return true;
 					}
 				}
@@ -260,25 +290,25 @@ namespace Exploration {
 						return false;
 					}
 					else{
-						if(checkCollEs(newX, newY, newT, endX, endY, endT, enems, d+1, depth, distractTime)){
+						if(checkCollEs(newX, newY, newT, endX, endY, endT, enems, d+1, depth, distractTimes)){
 							return true;
 						}
 					}
 				}
 				else if( endT - newT <=interval){
-					if(checkCollEs(startX, startY, startT, newX, newY, newT, enems, d+1, depth, distractTime)){
+					if(checkCollEs(startX, startY, startT, newX, newY, newT, enems, d+1, depth, distractTimes)){
 						return true;
 					}
 				}
 				else{
 					foreach(EnemyGeo e in enems){
-						if(checkCollE(e, newX, newT, newY, distractTime)){
+						if(checkCollE(e, newX, newT, newY, distractTimes)){
 							return true;
 						}
-						if(checkCollEs(startX, startY, startT, newX, newY, newT, enems, d+1, depth, distractTime)){
+						if(checkCollEs(startX, startY, startT, newX, newY, newT, enems, d+1, depth, distractTimes)){
 							return true;
 						}
-						if(checkCollEs(newX, newY, newT, endX, endY, endT, enems, d+1, depth, distractTime)){
+						if(checkCollEs(newX, newY, newT, endX, endY, endT, enems, d+1, depth, distractTimes)){
 							return true;
 						}
 					}
@@ -312,14 +342,14 @@ namespace Exploration {
 		}
 		
 
-		public bool checkCollE(EnemyGeo e, float x, int t, float y, int distractTime){
+		public bool checkCollE(EnemyGeo e, float x, int t, float y, List<int> distractTimes){
 			//Debug.Log ("CheckCollE");
 			Vector3 posE3;
 			Vector3 forw;
-			if(distractTime > 0){
+			if(distractTimes.Count > 0){
 				//Debug.Log ("distracted movement");
-				posE3 = e.getPositionDist(t, distractTime);
-				forw = e.getForwardDist(t, distractTime);
+				posE3 = e.getPositionDists(t, distractTimes);
+				forw = e.getForwardDists(t, distractTimes);
 			}
 			else{
 				posE3 = e.getPosition (t);

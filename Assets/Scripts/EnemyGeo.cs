@@ -67,7 +67,122 @@ namespace Objects {
 			
 			return forT;
 		}
+
+
+		public Vector3 getPositionDists(int t, List<int> ts){
+			int t2 = ts[0];
+			if(t2 > t){
+				computeAtTime(t);
+			}
+			else{
+				computeAtTimesDists(t, ts);
+			}
+			
+			return posT;
+		}
+		public Vector3 getForwardDists(int t, List<int> ts){
+			int t2 = ts[0];
+			if(t2 > t){
+				computeAtTime(t);
+			}
+			else{
+				computeAtTimesDists(t, ts);
+			}
+			
+			return forT;
+		}
+
+		private void computeAtTimesDists(int t, List<int> ts){
+			if(t == curT){
+				return;
+			}
+			int ti = ts[0];
+			computeAtTime(ti);
+			int tj = ts[ts.Count-1];
+			for(int j = 1; j < ts.Count; j++){
+				tj = ts[j];
+				if(tj != curT){
+					curT = tj;
+					timeLeft = tj-ti;
+					WaypointGeo distWay = nextWay.distractPoint;
+					nextWay = distWay.next;
+					tryRotDist(distWay);
+					if(timeLeft <= 0 ){
+						continue;
+					}
+					tryMove(distWay);
+					if(timeLeft <= 0){
+						continue;
+					}
+					while(timeLeft > 0){
+						switch (nextWay.type)
+						{
+						case "wait" :
+							//Debug.Log ("wait");
+							timeLeft = timeLeft - nextWay.waitTime;
+							break;
+						case "move" :
+							//Debug.Log ("move");
+							tryMove(nextWay);
+							break;
+						case "rot" :
+							//Debug.Log ("rot");
+							tryRot(nextWay);
+							break;
+						default:
+							Debug.LogError("UNIDENTIFIED WAYPOINT FOUND, EVERTHING WILL NOW BREAK");
+							break;
+						}
+						
+						nextWay = nextWay.next;
+					}
+				}
+			}
+
+			if(t != curT){
+				curT = t;
+				timeLeft = t-tj;
+				WaypointGeo distWay = nextWay.distractPoint;
+				tryRotDist(distWay);
+				if( timeLeft <= 0){
+					
+					return;
+				}
+				tryMove(distWay);
+				if(timeLeft <= 0){
+					
+					
+					return;
+				}
 				
+				
+				nextWay = distWay.next;
+
+				while(timeLeft > 0){
+					switch (nextWay.type)
+					{
+					case "wait" :
+						//Debug.Log ("wait");
+						timeLeft = timeLeft - nextWay.waitTime;
+						break;
+					case "move" :
+						//Debug.Log ("move");
+						tryMove(nextWay);
+						break;
+					case "rot" :
+						//Debug.Log ("rot");
+						tryRot(nextWay);
+						break;
+					default:
+						Debug.LogError("UNIDENTIFIED WAYPOINT FOUND, EVERTHING WILL NOW BREAK");
+						break;
+					}
+					
+					nextWay = nextWay.next;
+				}
+			}
+		}
+
 		private void computeAtTimeDist(int t, int t2){
 			computeAtTime(t2);
 			if(t != curT){
@@ -210,6 +325,7 @@ namespace Objects {
 		private void tryMove(WaypointGeo trgt){
 			//Debug.Log (posT);
 			//Debug.Log (trgt.transform.position);
+			Debug.Log (trgt);
 			float distance = Vector3.Distance(posT, trgt.transform.position);
 			//Debug.Log(distance);
 			int steps = Mathf.CeilToInt(distance / trgt.movSpeed);
