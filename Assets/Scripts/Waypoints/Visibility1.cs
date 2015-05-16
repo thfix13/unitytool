@@ -4,7 +4,7 @@ using System.IO;
 using System.Collections.Generic;
 using UnityEditor;
 //using System;
-public class Visibility1 : MonoBehaviour {
+public partial class Visibility1 : MonoBehaviour {
 	List<Geometry> obsGeos = new List<Geometry> (); 
 	//Contains Map
 	Geometry mapBG = new Geometry ();
@@ -82,13 +82,14 @@ public class Visibility1 : MonoBehaviour {
 		}
 		if(m_ShowTrueCase>0)
 		{
-			displayPredictedPaths();
+			displayPredictedPaths2();
 			return;
 		}
 		else if(m_ExecuteTrueCase)
 		{
 			CalculateVisibilityForPath ();
-			executeTrueCase();
+			//executeTrueCase();
+			executeTrueCase2();
 			return;
 		}
 		foreach(Vector3 vect in pathPoints)
@@ -1445,9 +1446,9 @@ public class Visibility1 : MonoBehaviour {
 			numCentroidEnemies--;
 		}*/
 	}
+	//TODO:Incomplete
 	private Vector3 findNextPosEnemyCentroid(GameObject enemyObj)
 	{
-
 		Vector3 vecSel = enemyObj.transform.position;
 		List<Geometry> shadowPolygonsTemp = (List<Geometry>)hTable [pathPoints [nextPlayerPath]];
 
@@ -1458,7 +1459,7 @@ public class Visibility1 : MonoBehaviour {
 		}
 		float minDist = 0.0f;
 		float distTemp = 0.0f;
-		Line firstEdge = visiblePolyTemp.edges[0];
+		Line firstEdge = allShadowEdges[0];
 		float y2 = firstEdge.vertex[1].z;
 		float y1 = firstEdge.vertex[0].z;
 		float x2 = firstEdge.vertex[1].x;
@@ -1466,9 +1467,9 @@ public class Visibility1 : MonoBehaviour {
 		minDist = Mathf.Abs((y2-y1)*vecSel.x - (x2-x1)*vecSel.z + x2*y1 - y2*x1);
 		minDist = minDist/Mathf.Sqrt(Mathf.Pow((y2-y1),2) + Mathf.Pow((x2-x1),2));
 		int selEdgeIndx = 0;
-		for(int i=1;i<visiblePolyTemp.edges.Count;i++)
+		for(int i=1;i<allShadowEdges.Count;i++)
 		{
-			firstEdge = visiblePolyTemp.edges[i];
+			firstEdge = allShadowEdges[i];
 			y2 = firstEdge.vertex[1].z;
 			y1 = firstEdge.vertex[0].z;
 			x2 = firstEdge.vertex[1].x;
