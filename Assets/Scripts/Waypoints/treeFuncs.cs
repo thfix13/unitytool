@@ -268,6 +268,7 @@ public partial class Visibility1 : MonoBehaviour
 			{
 				sw.Write("("+node.getPos()+";"+node.getSafetyLevel()+")|("+null+";"+null+")");
 				sw.WriteLine("");
+				continue;
 			}
 			for(int i=0;i<numParents;i++)
 			{
@@ -314,7 +315,7 @@ public partial class Visibility1 : MonoBehaviour
 		float startTime = Time.realtimeSinceStartup;
 		List<NodeShadow> headNodes = readNodeStructureFor2();
 		//foreach(NodeShadow headNode in headNodes)
-		NodeShadow headNode = headNodes [2];
+		NodeShadow headNode = headNodes [0];
 		{
 			//NodeShadow headNode = (NodeShadow)m_hCompleteNodeTable[vect];
 			List<NodeShadow> firstPath = quickShortestPathDetected (headNode);
@@ -364,7 +365,7 @@ public partial class Visibility1 : MonoBehaviour
 			str = sr.ReadLine();
 			
 			string[] line1 = str.Split(sep.ToArray());
-			//Debug.Log(str);
+			Debug.Log(str);
 			List<string> line = new List<string>();
 			for(int i=0;i<line1.Length;i++)
 			{
@@ -380,7 +381,10 @@ public partial class Visibility1 : MonoBehaviour
 			{
 				NodeShadow headNode = new NodeShadow(new Vector3(keyObj.x,keyObj.y,keyObj.z));
 				headNode.setSafetyLevel((int)keyObj.w);
-				m_hCompleteNodeTable.Add(keyObj,headNode);
+				if(!m_hCompleteNodeTable.ContainsKey(keyObj))
+				{
+					m_hCompleteNodeTable.Add(keyObj,headNode);
+				}
 				headNodes.Add(headNode);
 				continue;
 			}
@@ -391,11 +395,21 @@ public partial class Visibility1 : MonoBehaviour
 
 			if(!m_hCompleteNodeTable.ContainsKey(keyObj))
 			{
-				//NodeShadow node = new NodeShadow(keyObj.pt);
+
 				NodeShadow node = new NodeShadow(new Vector3(keyObj.x,keyObj.y,keyObj.z));
 				node.setSafetyLevel((int)keyObj.w);
-				//Debug.Log(parentKeyObj.pt+" , "+parentKeyObj.safetyLevel);
-				NodeShadow parentNode= (NodeShadow)m_hCompleteNodeTable[parentKeyObj];
+				NodeShadow parentNode = null;
+				if(!m_hCompleteNodeTable.ContainsKey(parentKeyObj))
+				{
+					//NodeShadow node = new NodeShadow(keyObj.pt);
+					parentNode = new NodeShadow(new Vector3(parentKeyObj.x,parentKeyObj.y,parentKeyObj.z));
+					parentNode.setSafetyLevel((int)parentKeyObj.w);
+					m_hCompleteNodeTable.Add(parentKeyObj,parentNode);
+				}
+				else
+				{
+					parentNode = (NodeShadow)m_hCompleteNodeTable[parentKeyObj];
+				}
 
 				parentNode.addChild(node);
 
@@ -404,7 +418,19 @@ public partial class Visibility1 : MonoBehaviour
 			else
 			{
 				NodeShadow node= (NodeShadow)m_hCompleteNodeTable[keyObj];
-				NodeShadow parentNode= (NodeShadow)m_hCompleteNodeTable[parentKeyObj];
+				//NodeShadow parentNode= (NodeShadow)m_hCompleteNodeTable[parentKeyObj];
+				NodeShadow parentNode = null;
+				if(!m_hCompleteNodeTable.ContainsKey(parentKeyObj))
+				{
+					//NodeShadow node = new NodeShadow(keyObj.pt);
+					parentNode = new NodeShadow(new Vector3(parentKeyObj.x,parentKeyObj.y,parentKeyObj.z));
+					parentNode.setSafetyLevel((int)parentKeyObj.w);
+					m_hCompleteNodeTable.Add(parentKeyObj,parentNode);
+				}
+				else
+				{
+					parentNode = (NodeShadow)m_hCompleteNodeTable[parentKeyObj];
+				}
 				parentNode.addChild(node);
 			}
 
