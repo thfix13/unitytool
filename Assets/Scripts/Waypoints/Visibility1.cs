@@ -1640,7 +1640,7 @@ public partial class Visibility1 : MonoBehaviour {
 			for(float k=m_minZ;k<m_maxZ && k1<discretePtsZ;k+=m_step)
 			{
 				Vector3 pt = new Vector3(j,1,k);
-				Vector2 keyTemp = new Vector2(j1,k1);
+				Vector2 keyTemp = new Vector2((float)j1,(float)k1);
 				if(!h_mapIndxToPt.ContainsKey(keyTemp))
 				{
 					h_mapIndxToPt.Add(keyTemp,pt);
@@ -1648,6 +1648,7 @@ public partial class Visibility1 : MonoBehaviour {
 				if(!h_mapPtToIndx.ContainsKey(pt))
 				{
 					h_mapPtToIndx.Add(pt,keyTemp);
+
 				}
 				k1++;
 			}

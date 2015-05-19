@@ -1,8 +1,0 @@
-Scene Name = scene1.unity
-Discrete rows & cols = 183 X 83
-Speed of the Player = 1
-Distance covered by the player = 0.2457261
-Max speed of the Enemy = 1
-Max distance covered by the Enemy = 0.2457261
-Time taken to calculate tree structure = 61.25661 mins
-Current Date = Saturday, May 16, 2015. Time = 6:57:21 AM
