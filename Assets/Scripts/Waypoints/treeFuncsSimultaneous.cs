@@ -39,7 +39,7 @@ public partial class Visibility1 : MonoBehaviour
 		}
 		sw.Close ();
 	}
-	public bool m_bContinueExecuteTrueCase = false;
+	/*public*/ bool m_bContinueExecuteTrueCase = false;
 	private void executeTrueCase2()
 	{
 		setGlobalVars1();
@@ -356,21 +356,67 @@ public partial class Visibility1 : MonoBehaviour
 		}
 	}
 
+	private void displayPredictedPaths3()
+	{
+		float startTime = Time.realtimeSinceStartup;
+		int numOfLevels = pathPoints.Count-1;//m_lastPathIndex;
+		
+		string sourceDirName = EditorUtility.OpenFolderPanel("Please select results dir", Application.dataPath,"");
+		string resultFileName = sourceDirName+"\\Result.txt";
+		StreamReader sr = new StreamReader(resultFileName);
+		List<char> sep = new List<char>();
+		sep.Add(',');
+		sep.Add(' ');
+		sep.Add(';');
+		sep.Add('(');
+		sep.Add(')');
+		sep.Add('|');
+		int numLevelsReached = -1;
+		string str;
 
-	private void displayPredictedPaths2()
+		while(!sr.EndOfStream)
+		{
+			str = sr.ReadLine();
+			sr.ReadLine();
+			string[] line1 = str.Split(sep.ToArray());
+			List<string> line = new List<string>();
+			for(int i=0;i<line1.Length;i++)
+			{
+				if(line1[i]=="")
+					continue;
+				line.Add(line1[i]);
+			}
+
+			Vector3 keyObj = new Vector3(float.Parse(line[0]),float.Parse(line[1]),float.Parse(line[2]));
+			numLevelsReached = int.Parse(line[3]);
+			float greenNum = (float)numLevelsReached/(float)numOfLevels;
+			float redNum = 1-greenNum;
+			showPosOfPoint(keyObj,new Color(redNum,greenNum,0.0f));
+		}
+		sr.Close ();
+	}
+	private void calculatePredictedPaths()
 	{
 		float startTime = Time.realtimeSinceStartup;
 		List<NodeShadow> headNodes = readNodeStructureFor2 ();
 		Debug.Log ("Num of headNodes = "+headNodes.Count);
 		//return;
 		int numOfLevels = pathPoints.Count-1;//m_lastPathIndex;
+
+		string sourceDirName = EditorUtility.OpenFolderPanel("Please select results dir", Application.dataPath,"");
+		string resultFileName = sourceDirName+"\\Result.txt";
+		StreamWriter sw = new StreamWriter (resultFileName);
 		foreach(NodeShadow headNode in headNodes)
 		{
 			int numLevelsReached = findFurthestPathPointReached(headNode);
-			float greenNum = numLevelsReached/numOfLevels;
+			sw.WriteLine(headNode.getPos().ToString()+";"+numLevelsReached);
+			sw.WriteLine("");
+			/*float greenNum = numLevelsReached/numOfLevels;
 			float redNum = 1-greenNum;
 			showPosOfPoint(headNode.getPos(),new Color(redNum,greenNum,0));
+			*/
 		}
+		sw.Close ();
 	}
 
 
@@ -483,8 +529,8 @@ public partial class Visibility1 : MonoBehaviour
 	{
 		int lastIndex = pathPoints.Count - 1;//m_lastPathIndex;
 		int maxIndex = 0;
-		List<NodeShadow> maxPathIndices = new List<NodeShadow> ();
-		List<NodeShadow> currPathIndices = new List<NodeShadow> ();
+
+		List<NodeShadow> traversedNodes = new List<NodeShadow> ();
 		List<NodeShadow> stack = new List<NodeShadow> ();
 		stack.Add (headNode);
 		int topIndex = -1;
@@ -494,6 +540,14 @@ public partial class Visibility1 : MonoBehaviour
 			topIndex = stack.Count-1;
 			NodeShadow nodeTop = stack[topIndex];
 			stack.RemoveAt(topIndex);
+			if(traversedNodes.Contains(nodeTop))
+			{
+				continue;
+			}
+			else
+			{
+				traversedNodes.Add(nodeTop);
+			}
 			if(nodeTop.getSafetyLevel()>maxIndex)
 			{
 				maxIndex = nodeTop.getSafetyLevel();

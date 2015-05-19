@@ -54,7 +54,8 @@ public partial class Visibility1 : MonoBehaviour {
 	List<EnemyMovement> m_enemyCentroidList = new List<EnemyMovement>();
 	List<Vector3> m_enemyNextPosCentroidList = new List<Vector3>();
 	public bool m_ExecuteTrueCase = false;
-	public int m_ShowTrueCase = -1;//1 for shortest path;2 for longest
+	public bool m_CalculateTrueCase = false;
+	public bool m_ShowTrueCase = false;
 	private string currSceneName;
 	//Distance b/w consecutive path points
 	private float m_stepDistance = -1.0f;
@@ -80,16 +81,22 @@ public partial class Visibility1 : MonoBehaviour {
 			pathPoints = CommonTestCase1.definePath ();
 			m_stepDistance = CommonTestCase1.getStepDistance();
 		}
-		if(m_ShowTrueCase>0)
-		{
-			displayPredictedPaths2();
-			return;
-		}
-		else if(m_ExecuteTrueCase)
+
+		if(m_ExecuteTrueCase)
 		{
 			CalculateVisibilityForPath ();
 			//executeTrueCase();
 			executeTrueCase2();
+			return;
+		}
+		else if(m_CalculateTrueCase)
+		{
+			calculatePredictedPaths();
+			return;
+		}
+		else if(m_ShowTrueCase)
+		{
+			displayPredictedPaths3();
 			return;
 		}
 		foreach(Vector3 vect in pathPoints)
@@ -991,7 +998,7 @@ public partial class Visibility1 : MonoBehaviour {
 	int nextPlayerPath = 1;
 	void Update () 
 	{
-		if (bDisplayAreas || m_ExecuteTrueCase || m_ShowTrueCase>0)
+		if (bDisplayAreas || m_ExecuteTrueCase || m_ShowTrueCase || m_CalculateTrueCase)
 		{
 			return;
 		}
