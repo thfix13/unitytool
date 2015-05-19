@@ -14,7 +14,6 @@ namespace Medial{
 		//="convex";//"moving_gaurd";
 		string file_prefix;
 		ArenasGenerator arena= null;
-		float layer_division=2f;
 		string multi_triangle_input_file, dir=@"/Users/dhsingh/Documents/Thesis/SM03Skeleton/";
 
 		/// <summary>
@@ -81,7 +80,7 @@ namespace Medial{
 			file_prefix="moving_gaurd";
 
 			///divide each line in each layer in multiple parts horizontally of length= layer_division
-			LayerPolygonUtil LPU= new LayerPolygonUtil(arena,layer_division,0f);
+			LayerPolygonUtil LPU= new LayerPolygonUtil(arena,arena.layer_division,0f);
 
 			///and get the redefined layers
 			var layers=LPU.getLayer();

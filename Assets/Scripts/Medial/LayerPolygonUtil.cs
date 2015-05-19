@@ -20,10 +20,16 @@ namespace Medial{
 			this.layers=aGen.getLayers();;
 
 			mappingOriginalIndexToNewIndexOfPolygons= new List<int>();
-			subdivide_layer( layer_division);
-			if(numberofAddLayers !=0)
-				addLayers(numberofAddLayers);
-			renewedCovers();
+
+			//if layer_division is 0, don't do all that
+			if(layer_division !=0){
+				subdivide_layer( layer_division);
+			}
+				if(numberofAddLayers !=0)
+					addLayers(numberofAddLayers);
+			if(layer_division !=0){
+				renewedCovers();
+			}
 		}
 
 		public List<List<int>> getPoly(){
@@ -40,6 +46,7 @@ namespace Medial{
 		/// Subdivides each layer. Change cover vertices accordingly
 		/// </summary>
 		private void subdivide_layer(float layer_division){
+
 			List<List<int>> new_polygons=new List<List<int>>();
 			List<List<Vector3>> new_layers=new List<List<Vector3>>();
 
@@ -133,7 +140,6 @@ namespace Medial{
 				new_layers.Add(current_layer);
 				var next_layer= layers[ilayer+1];
 				Vector3 v1,v2;
-	//			UnityEngine.Debug.Log(current_layer.Count +" next layer #="+next_layer.Count);
 
 				for (float i=1f/f; i<1f;i=i+1f/f){
 					List<Vector3> newlayervertices= new List<Vector3>();
@@ -157,21 +163,3 @@ namespace Medial{
 
 	}
 }
-//public class PolygonLayerCover{
-//	List<List<int>> poly;
-//	List<List<Vector3>> lay;
-//	List<int[]>[] cov;
-//	public PolygonLayerCover(List<List<int>> polygons,List<List<Vector3>> layers, List<int[]>[] covers)
-//	{
-//		this.poly=polygons;this.lay=layers;this.cov=covers;
-//	}
-//	public List<List<int>> getPoly(){
-//		return this.poly;
-//	}
-//	public List<List<Vector3>> getLayer(){
-//		return this.lay;
-//	}
-//	public List<int> getCovers(){
-//		return this.cov;
-//	}
-//}

@@ -11,7 +11,8 @@ namespace Medial{
 		List<List<int>> polygons;
 		int option;
 		int nlayers;
-
+		public float layer_division =2f;
+		float  multiplier = 1f;
 		float maxx,minx, maxz,minz;
 		/// <summary>
 		/// Keep min2y and max2y for removing top 
@@ -46,16 +47,33 @@ namespace Medial{
 //				generate_movrot_gaurd();
 				break;
 
-				case 4: polygons= new List<List<int>>{new List<int>{0,1,2,3},new List<int>{4,5,6,7}
-				,new List<int>{8,9,10,11},new List<int>{12,13,14,15}, new List<int>{16,17,18,19}, new List<int>{20,21,22}
-			,new List<int>{23,24,25}
-			};
+			case 4: polygons= new List<List<int>>{new List<int>{0,1,2,3},new List<int>{4,5,6,7}
+					,new List<int>{8,9,10,11},new List<int>{12,13,14,15}, new List<int>{16,17,18,19}, new List<int>{20,21,22}
+				,new List<int>{23,24,25}
+				};
 				nlayers=80;
 				generate_arena_MGS();
-
-
 				generate_L_gaurd_MGS();
 				generate_X_gaurd_MGS();
+				layer_division =2f;
+				break;
+
+			case 6: polygons= new List<List<int>>{new List<int>{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}, new List<int>{16,17,18}};
+				nlayers=3;
+				multiplier=30f;
+				generate_arena_with_three_alcove();
+
+				generate_static_mov_gaurd();
+				layer_division= 0f;
+				break;
+
+			case 5: polygons= new List<List<int>>{new List<int>{0,1,2,3,4,5,6,7}, new List<int>{8,9,10}};
+				nlayers=3;
+				multiplier=10f;
+				generate_arena_with_one_alcove();
+				
+				generate_static_mov_gaurd();
+				layer_division= 0f;
 				break;
 			}
 		}
@@ -155,11 +173,11 @@ namespace Medial{
 			four= new Vector3(2f,0f,-2f),
 			five=new Vector3(2f,0f,0f), 
 			six=new Vector3(6f,0f,0f),
-			sev=new Vector3(6f,0f,4f), 
-			ei=new Vector3(-6f,0f,4f); 
+			sev=new Vector3(6f,0f,6f), 
+			ei=new Vector3(-6f,0f,6f); 
 
 			for(int ilayer=0;ilayer<nlayers;ilayer++){
-				one.y= two.y= three.y= four.y=five.y=six.y=sev.y=ei.y=1f*ilayer/2;
+				one.y= two.y= three.y= four.y=five.y=six.y=sev.y=ei.y=multiplier*ilayer/2;
 				layers.Add(new List<Vector3>{one, two,three,four,five,six,sev,ei});
 			}
 
@@ -184,7 +202,7 @@ namespace Medial{
 			v16=new Vector3(-6f,0f,5f); 
 			
 			for(int ilayer=0;ilayer<nlayers;ilayer++){
-				v01.y=v02.y=v03.y=v04.y=v05.y=v06.y=v07.y=v08.y=v09.y=v10.y=v11.y=v12.y=v13.y=v14.y=v15.y=v16.y=1f*ilayer/2;
+				v01.y=v02.y=v03.y=v04.y=v05.y=v06.y=v07.y=v08.y=v09.y=v10.y=v11.y=v12.y=v13.y=v14.y=v15.y=v16.y=multiplier*ilayer/2;
 				layers.Add(new List<Vector3>{v01,v02,v03,v04,v05,v06,v07,v08,v09,v10,v11,v12,v13,v14,v15,v16});
 			}
 			
@@ -215,7 +233,7 @@ namespace Medial{
 
 			for(int ilayer=0;ilayer<nlayers;ilayer++){
 				v00.y=v01.y=v02.y=v03.y=v04.y=v05.y=v06.y=v07.y=v08.y=v09.y=v10.y=v11.y=v12.y=v13.y=v14.y=v15.y=v16.y
-					=v17.y=v18.y=v19.y=1f*ilayer;
+					=v17.y=v18.y=v19.y=multiplier*ilayer;
 				layers.Add(new List<Vector3>{v00,v01,v02,v03,v04,v05,v06,v07,v08,v09,v10,v11,v12,v13,v14,v15,v16
 				,v17,v18,v19});
 			}
@@ -242,7 +260,7 @@ namespace Medial{
 				_1=RotatePointAroundPivot(_1,pivot,new Vector3(0, -theta, 0));
 				_2=RotatePointAroundPivot(_2,pivot,new Vector3(0, -theta, 0));
 				_3=RotatePointAroundPivot(_3,pivot,new Vector3(0, -theta, 0));
-				_1.y=_2.y=_3.y=1f*ilayer;
+				_1.y=_2.y=_3.y=multiplier*ilayer;
 				
 				layers[ilayer].Add(_1);layers[ilayer].Add(_2);layers[ilayer].Add(_3);
 			}
@@ -264,7 +282,7 @@ namespace Medial{
 				//				_1=RotatePointAroundPivot(_1,_1f,new Vector3(0, -theta, 0));
 				_2=RotatePointAroundPivot(_2,_1f,new Vector3(0, -theta, 0));
 				_3=RotatePointAroundPivot(_3,_1f,new Vector3(0, -theta, 0));
-				_1.y=_2.y=_3.y=1f*ilayer;
+				_1.y=_2.y=_3.y=multiplier*ilayer;
 				
 				layers[ilayer].Add(_1);layers[ilayer].Add(_2);layers[ilayer].Add(_3);
 			}
@@ -286,7 +304,7 @@ namespace Medial{
 				_1=RotatePointAroundPivot(_1,pivot,new Vector3(0, theta, 0));
 				_2=RotatePointAroundPivot(_2,pivot,new Vector3(0, theta, 0));
 				_3=RotatePointAroundPivot(_3,pivot,new Vector3(0, theta, 0));
-				_1.y=_2.y=_3.y=1f*ilayer;
+				_1.y=_2.y=_3.y=multiplier*ilayer;
 				
 				layers[ilayer].Add(_1);layers[ilayer].Add(_2);layers[ilayer].Add(_3);
 			}
@@ -308,7 +326,7 @@ namespace Medial{
 				//				_1=RotatePointAroundPivot(_1,_1f,new Vector3(0, -theta, 0));
 				_2=RotatePointAroundPivot(_2,_1f,new Vector3(0, -theta, 0));
 				_3=RotatePointAroundPivot(_3,_1f,new Vector3(0, -theta, 0));
-				_1.y=_2.y=_3.y=1f*ilayer;
+				_1.y=_2.y=_3.y=multiplier*ilayer;
 				
 				layers[ilayer].Add(_1);layers[ilayer].Add(_2);layers[ilayer].Add(_3);
 			}
@@ -335,7 +353,7 @@ namespace Medial{
 				_1=RotatePointAroundPivot(_1,pivot,new Vector3(0, -theta, 0));
 				_2=RotatePointAroundPivot(_2,pivot,new Vector3(0, -theta, 0));
 				_3=RotatePointAroundPivot(_3,pivot,new Vector3(0, -theta, 0));
-				_1.y=_2.y=_3.y=1f*ilayer;
+				_1.y=_2.y=_3.y=multiplier*ilayer;
 				
 				layers[ilayer].Add(_1);layers[ilayer].Add(_2);layers[ilayer].Add(_3);
 			}
@@ -358,7 +376,7 @@ namespace Medial{
 				//				_1=RotatePointAroundPivot(_1,_1f,new Vector3(0, -theta, 0));
 				_2=RotatePointAroundPivot(_2,_1f,new Vector3(0, -theta, 0));
 				_3=RotatePointAroundPivot(_3,_1f,new Vector3(0, -theta, 0));
-				_1.y=_2.y=_3.y=1f*ilayer;
+				_1.y=_2.y=_3.y=multiplier*ilayer;
 				
 				layers[ilayer].Add(_1);layers[ilayer].Add(_2);layers[ilayer].Add(_3);
 			}
@@ -381,7 +399,7 @@ namespace Medial{
 				_1=RotatePointAroundPivot(_1,pivot,new Vector3(0, theta, 0));
 				_2=RotatePointAroundPivot(_2,pivot,new Vector3(0, theta, 0));
 				_3=RotatePointAroundPivot(_3,pivot,new Vector3(0, theta, 0));
-				_1.y=_2.y=_3.y=1f*ilayer;
+				_1.y=_2.y=_3.y=multiplier*ilayer;
 				
 				layers[ilayer].Add(_1);layers[ilayer].Add(_2);layers[ilayer].Add(_3);
 			}
@@ -402,7 +420,7 @@ namespace Medial{
 			for(;ilayer< 8f*n;ilayer++){
 				_2=RotatePointAroundPivot(_2,_1f,new Vector3(0, -theta, 0));
 				_3=RotatePointAroundPivot(_3,_1f,new Vector3(0, -theta, 0));
-				_1.y=_2.y=_3.y=1f*ilayer;
+				_1.y=_2.y=_3.y=multiplier*ilayer;
 				
 				layers[ilayer].Add(_1);layers[ilayer].Add(_2);layers[ilayer].Add(_3);
 			}
@@ -415,7 +433,7 @@ namespace Medial{
 			four= new Vector3(-4f,0f,4f);
 	//		List<List<Vector3>> arena= new List<List<Vector3>>();
 			for(int ilayer=0;ilayer<nlayers;ilayer++){
-				one.y= two.y= three.y= four.y=1f*ilayer;
+				one.y= two.y= three.y= four.y=multiplier*ilayer;
 				layers.Add(new List<Vector3>{one, two,three,four});
 			}
 		}
@@ -464,7 +482,7 @@ namespace Medial{
 			for(;ilayer<3f*nlayers/4f;ilayer++){
 				f=RotatePointAroundPivot(f,sv,new Vector3(0, -theta, 0));
 				s=RotatePointAroundPivot(s,sv,new Vector3(0, -theta, 0));
-				f.y=s.y=sv.y=1f*ilayer/2f;
+				f.y=s.y=sv.y=multiplier*ilayer/2f;
 				
 				layers[ilayer].Add(f);layers[ilayer].Add(s);layers[ilayer].Add(sv);
 			}
@@ -498,6 +516,20 @@ namespace Medial{
 			}
 		}
 
+		public void generate_static_mov_gaurd(){
+			//		udl ("number of nodes= "+layers.Count);
+			Vector3 fo=new Vector3(-3f,0,4f), so=new Vector3(-3f,0,1f), svo= new Vector3(-5.5f,0,2.5f);
+			Vector3 ff=fo, sf=so, svf= svo;
+			int ilayer;
+			Vector3 f= new Vector3(),s=new Vector3(),sv=new Vector3();
+			for(ilayer=0;ilayer<nlayers;ilayer++){
+				f=(ff*ilayer+fo*(nlayers -ilayer))/(nlayers);
+				s=(sf*ilayer+so*(nlayers -ilayer))/(nlayers);
+				sv=(svf*ilayer+svo*(nlayers -ilayer))/(nlayers);
+				f.y=s.y=sv.y= multiplier*ilayer/2f;
+				layers[ilayer].Add(f);layers[ilayer].Add(s);layers[ilayer].Add(sv);
+			}
+		}
 
 		public void generate_rotating_gaurd(){
 			Vector3 f=new Vector3(-2f,0,-1f), s=new Vector3(-2f,0,3f), sv= new Vector3(2f,0,1f);
@@ -505,7 +537,7 @@ namespace Medial{
 				f=RotatePointAroundPivot(f,sv,new Vector3(0, -18f, 0));
 				s=RotatePointAroundPivot(s,sv,new Vector3(0, -18f, 0));
 				//sv=q * sv;
-				f.y=s.y=sv.y=1f*ilayer;
+				f.y=s.y=sv.y=multiplier*ilayer;
 				
 				layers[ilayer].Add(f);layers[ilayer].Add(s);layers[ilayer].Add(sv);
 			}

@@ -191,7 +191,7 @@ namespace Medial{
 
 			//assign colors to vertices
 			Color[] colors = new Color[newVertices.Count];
-			Color triColor = new Color(UnityEngine.Random.Range(0f,1f),UnityEngine.Random.Range(0f,1f),UnityEngine.Random.Range(0f,1f));
+			Color triColor = new Color(UnityEngine.Random.Range(0f,1f),UnityEngine.Random.Range(0f,1f),UnityEngine.Random.Range(0f,1f),0.1f);
 			for (int i = 0; i < newTriangles.Count; i++)
 			{
 				int vertIndex = newTriangles[i];

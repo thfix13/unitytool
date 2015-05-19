@@ -38,7 +38,7 @@ namespace Medial{
 			this.vertices = new List<Vector3>(nvertices_totalTri);
 			this.triangles =  new List<int>(ntriangles);
 			this.arena=arena;
-			
+			this.removedVertices_global= new HashSet<int>();
 			string []parsed;
 			float a,b, c;
 			int vPointer=2;
@@ -81,9 +81,7 @@ namespace Medial{
 			createGraph();
 
 			double maxrange=Mathf.Max(arena.getMaxX()-arena.getMinX(),arena.getMaxZ()-arena.getMinZ());
-
 			tree = new IntervalKDTree<int>(maxrange/2, 10);
-			createKDTreeDictionary();
 		}
 
 		private void createGraph(){
@@ -251,8 +249,10 @@ namespace Medial{
 
 		#region Remove Vs
 
-		
 		public void connect_Vs(float r){
+
+			createKDTreeDictionary();
+
 			float dist;
 			float vy;
 			
@@ -284,6 +284,7 @@ namespace Medial{
 			
 		}
 
+		#region NotUsed
 		private HashSet<string> bluelines;
 		private HashSet<string> redlines;
 		//it updates the neighbours, and drawlines between them.
@@ -714,7 +715,7 @@ namespace Medial{
 		}
 
 		#endregion 
-
+		#endregion 
 
 		#region Add random edges
 
