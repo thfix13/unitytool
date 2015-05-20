@@ -149,16 +149,22 @@ namespace Exploration {
 
 				//Experimental New distract
 				if(nodeTheClosestTo.distractTimes.Count == maxDist){
+					//Debug.Log ("maxDist");
 					nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
 				}
 				else if(nodeTheClosestTo.distractTimes.Count > 0){
 					if(distractPick){
+						//Debug.Log ("distractPick");
 						nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
 						nodeVisiting.distractTimes.Add (nodeVisiting.t);
 					}
 					else{
+						//Debug.Log ("Non-distractPick");
 						nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
 					}
+				}
+				else if(distractPick){
+					nodeVisiting.distractTimes.Add (nodeVisiting.t);
 				}
 
 				//Old Backup Distract
