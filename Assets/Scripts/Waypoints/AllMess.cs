@@ -1,3 +1,4 @@
+#if false
 using UnityEngine;
 using System.Collections;
 using System.IO;
@@ -11,12 +12,9 @@ public partial class Visibility1 : MonoBehaviour {
 	int m_nCurrDiscretePtIndxX=0;
 	int m_nCurrDiscretePtIndxZ=0;
 	float[,] timingArray = null;
-	int[,] pointsArray = null;
 	float maxTimeEvaded = -1.0f;
-	float currRunTimeEnemny = 0.0f;
-	float currRunPointsEnemy = 0.0f;
-	string fileTimings = "C:\\Users\\Navjot\\Desktop\\timingScene1.txt";
-	string filePoints = "C:\\Users\\Navjot\\Desktop\\pointsScene1.txt";
+	float currRunTimeEnemny = 0f;
+	string fileTimings = "C:\\Users\\Dhaliwal\\Desktop\\timingScene1.txt";
 	bool bShowLogs=false;
 	List<Geometry> globalPolygon;
 	List<Vector3> pathPoints;
@@ -35,7 +33,7 @@ public partial class Visibility1 : MonoBehaviour {
 	GameObject playerObj;
 	public GameObject playerPrefab;
 	public GameObject enemyPrefab;
-	public int m_nEnemyStatic = 1;
+	//public int m_nEnemyStatic = 1;
 	public int m_nEnemyNearMiss = 0;
 	//public int nearMissAlgo = 1;
 	public bool m_EnemyStatic = false;
@@ -44,13 +42,11 @@ public partial class Visibility1 : MonoBehaviour {
 	public bool m_ShadowEdgeAssisted = false;
 	//public int setUpCase = -1;
 	public bool m_SetUpCase = false;
-
+	
 	public bool bDisplayAreas = false;
 	List<Vector3> enemyPath = null;
 	int nextPlayerPath = 1;
 	List<EnemyMovement> m_enemyNearMissList = new List<EnemyMovement>();
-	List<EnemyMovement> m_enemyGreedyList = new List<EnemyMovement>();
-	List<EnemyMovement> m_enemyShadowAssistedList = new List<EnemyMovement>();
 	class EnemyMovement
 	{
 		public GameObject enemyObj;
@@ -62,26 +58,7 @@ public partial class Visibility1 : MonoBehaviour {
 			bCaught = false;
 		}
 	}
-
-	List<Geometry> globalTempShadowPoly = new List<Geometry>();
-	Geometry globalTempStarPoly;
-	List<List<Vector3>> globalTempintersectionPointsPerV = new List<List<Vector3>>();
-	List<Line> globalTempAllShadowLines = new List<Line>();
-	public Material mat;
-	public GameObject pathSphere;
-	public GameObject hiddenSphere;
-	public GameObject selectedBoxPrefab;
-	GameObject selectedBox;
-	List<GameObject> hiddenSphereList;
-	//GameObject shadowObject = new GameObject();
 	
-	
-	Hashtable hTable;
-	Hashtable hVisiblePolyTable;
-	Vector3 start_box,end_box;
-	Rect boundbox;
-	bool b_ShowBoundbox=false;
-
 	public int m_nEnemyCentroid = 0;
 	List<EnemyMovement> m_enemyCentroidList = new List<EnemyMovement>();
 	List<Vector3> m_enemyNextPosCentroidList = new List<Vector3>();
@@ -99,11 +76,11 @@ public partial class Visibility1 : MonoBehaviour {
 	float m_step = 0.1f;
 	void Start () 
 	{
-
+		
 		/*float radius_hiddenSphere = (enemyPrefab.collider).radius*((SphereCollider)enemyPrefab.collider).transform.lossyScale.x;
 		Debug.Log (radius_hiddenSphere);
 		Debug.Break ();*/
-
+		
 		spTemp = (GameObject)GameObject.Find ("StartPoint");
 		allLineParent = GameObject.Find ("allLineParent") as GameObject;
 		globalPolygon = getObstacleEdges ();
@@ -141,8 +118,8 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			GameObject pathObj;
 			pathObj = Instantiate(pathSphere, 
-			                    vect, 
-			                    pathSphere.transform.rotation) as GameObject;
+			                      vect, 
+			                      pathSphere.transform.rotation) as GameObject;
 		}
 		if (bDisplayAreas)
 		{
@@ -162,7 +139,7 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			if(m_Greedy)
 			{
-				initializeForGreedyCase();
+				initializeForNearMissCase();
 			}
 			else if(m_NearMiss)
 			{
@@ -177,8 +154,669 @@ public partial class Visibility1 : MonoBehaviour {
 		////////////For Single run//////////////
 		setUpEnemyInitialPos ();
 	}
+	private void displayPredictedPaths()
+	{
+		float startTime = Time.realtimeSinceStartup;
+		NodeShadow headNode = readNodeStructureFor();
+		NodeShadow node = headNode;
+		Debug.Log("Read the txt file");
+		////////////////////////////////////////////////////////////////////////////////////
+		//showAllPathDetected (headNode);
+		//return;
+		///////////////////////////////////////////////////////////////////////////////////;
+		//List<NodeShadow> firstPath = findFirstEnemyPathDetected (headNode);
+		List<NodeShadow> firstPath = quickShortestPathDetected (headNode);
+		//List<NodeShadow> firstPath = possibleShortestPathDetected (headNode);
+		//List<NodeShadow> firstPath = findShortestEnemyPathDetected (headNode);
+		
+		showPosOfPoint (firstPath [0].getPos (),Color.cyan);
+		standardMaxMovement = speedEnemy*(m_stepDistance/speedPlayer);
+		for(int i=1;i<firstPath.Count;i++)
+		{
+			float dist = Vector3.Distance(firstPath[i].getPos(),firstPath[i-1].getPos());
+			
+			//Debug.Log(firstPath[i].getPos()+" ;;;;;; Distance from previous "+firstPath[i-1].getPos()+" is "+dist);
+			if(dist>standardMaxMovement)
+				Debug.LogError("Dist b/w 2 points should not be greater than standardMaxMovement.");
+			//showPosOfPoint (firstPath [i].getPos (),Color.cyan);
+			Line l = new Line(firstPath[i].getPos(),firstPath[i-1].getPos());
+			l.DrawVector(allLineParent);
+		}
+		float totalTime = (Time.realtimeSinceStartup - startTime)/60;
+		Debug.Log("Finished displayPredictedPaths. Time took to calculate and show shortest path = "+totalTime+" minutes");
+	}
+	private void showAllPathDetected (NodeShadow headNode)
+	{
+		List<NodeShadow> stack = new List<NodeShadow> ();
+		List<NodeShadow> tempStack = new List<NodeShadow> ();
+		stack.Add (headNode);
+		float colorCounter = 1.0f;//from green to blue
+		float colorStep = 1.0f / pathPoints.Count;
+		while(true)
+		{
+			Color c = new Color(0.0f,colorCounter,1.0f-colorCounter);
+			colorCounter-=colorStep;
+			foreach(NodeShadow node in stack)
+			{
+				foreach(NodeShadow child in node.getChildren())
+				{
+					//Debug.Log(child.getPos());
+					
+					if(!tempStack.Contains(child))
+						tempStack.Add(child);
+					//Line l = new Line(node.getPos(),child.getPos());
+					
+					//l.DrawLine(allLineParent,c);
+					
+				}
+			}
+			
+			if(tempStack.Count==0)
+			{
+				break;
+			}
+			stack.Clear();
+			stack = tempStack;
+			tempStack = new List<NodeShadow> ();
+		}
+		showPosOfPoint(headNode.getPos(),Color.cyan);
+		foreach(NodeShadow node in stack)
+		{
+			showPosOfPoint(node.getPos(),Color.green);
+		}
+	}
+	private List<NodeShadow> quickShortestPathDetected (NodeShadow headNode)
+	{
+		
+		List<NodeShadow> shortestPathIndices = new List<NodeShadow> ();
+		List<NodeShadow> stack = new List<NodeShadow> ();
+		List<NodeShadow> tempStack = new List<NodeShadow> ();
+		headNode.setMinDistFromHead (0.0f,null);
+		stack.Add (headNode);
+		while(true)
+		{
+			foreach(NodeShadow node in stack)
+			{
+				foreach(NodeShadow child in node.getChildren())
+				{
+					//Debug.Log(child.getPos());
+					float dist = Vector3.Distance(node.getPos(),child.getPos());
+					child.setMinDistFromHead (dist,node);
+					if(!tempStack.Contains(child))
+						tempStack.Add(child);
+				}
+			}
+			//Remove duplicates
+			/*for(int i=0;i<tempStack.Count;i++)
+			{
+				for(int j=i+1;j<tempStack.Count;j++)
+				{
+					if(tempStack[i]==tempStack[j])
+					{
+						//Debug.Log("Duplicate found.");
 
-
+						tempStack.RemoveAt(j);
+						j--;
+					}
+				}
+			}
+			*/
+			if(tempStack.Count==0)
+			{
+				break;
+			}
+			stack.Clear();
+			stack = tempStack;
+			tempStack = new List<NodeShadow> ();
+			//if(stack.Count==0)
+			//break;
+		}
+		tempStack = stack;
+		float minDist = tempStack [0].getMinDistFromHead ();
+		NodeShadow endNodePoint = tempStack [0];
+		for(int i=1;i<tempStack.Count;i++)
+		{
+			if(tempStack [i].getMinDistFromHead ()<minDist)
+			{
+				minDist = tempStack [i].getMinDistFromHead ();
+				endNodePoint = tempStack [0];
+			}
+		}
+		
+		while(true)
+		{
+			shortestPathIndices.Insert (0, endNodePoint);
+			endNodePoint = endNodePoint.getParentSelected();
+			if(endNodePoint==null)
+				break;
+		}
+		return shortestPathIndices;
+	}
+	private List<NodeShadow> possibleShortestPathDetected (NodeShadow headNode)
+	{
+		NodeShadow tempNode = headNode;
+		List<NodeShadow> shortestPathIndices = new List<NodeShadow> ();
+		while(tempNode.getChildren().Count>0)
+		{
+			//Debug.Log("Writing Node = "+tempNode.getPos());
+			shortestPathIndices.Add(tempNode);
+			//tempNode = tempNode.getChildren()[0];
+			tempNode = tempNode.getChildren()[tempNode.getChildren().Count-1];
+		}
+		return shortestPathIndices;
+	}
+	
+	private List<NodeShadow> findShortestEnemyPathDetected (NodeShadow headNode)
+	{
+		int lastIndex = pathPoints.Count - 1;
+		float minDistPath = -1.0f;
+		List<NodeShadow> maxPathIndices = new List<NodeShadow> ();
+		List<NodeShadow> shortestPathIndices = new List<NodeShadow> ();
+		List<NodeShadow> currPathIndices = new List<NodeShadow> ();
+		List<NodeShadow> stack = new List<NodeShadow> ();
+		List<List<NodeShadow>> listOfLists = new List<List<NodeShadow>> ();
+		stack.Add (headNode);
+		int topIndex = -1;
+		while(stack.Count>0)
+		{
+			//pop the top
+			topIndex = stack.Count-1;
+			NodeShadow nodeTop = stack[topIndex];
+			stack.RemoveAt(topIndex);
+			Debug.Log("Node Top = "+nodeTop.getPos());
+			//before adding remove all greater aand equal levels;
+			int currNodeLevel = nodeTop.getSafetyLevel();
+			if(currPathIndices.Count>0)
+			{
+				NodeShadow lastNodeInCurrIndices = currPathIndices[currPathIndices.Count-1];
+				while(true)
+				{
+					if(nodeTop.getParent().Contains(lastNodeInCurrIndices))
+					{
+						break;
+					}
+					else
+					{
+						currPathIndices.RemoveAt (currPathIndices.Count-1);
+						lastNodeInCurrIndices = currPathIndices[currPathIndices.Count-1];
+					}
+				}
+			}
+			currPathIndices.Add(nodeTop);
+			
+			if(nodeTop.getChildren().Count==0)
+			{
+				if(currPathIndices.Count>=maxPathIndices.Count)
+				{
+					maxPathIndices = new List<NodeShadow>();
+					maxPathIndices.AddRange(currPathIndices);
+					listOfLists.Insert(0,maxPathIndices);
+					//TODO:Remove this if
+					/*if(maxPathIndices[maxPathIndices.Count-1].getSafetyLevel()==lastIndex)
+					{
+						listOfLists.RemoveRange(1,listOfLists.Count-1);
+						break;
+					}*/
+					
+					int maxCountAllowed = maxPathIndices.Count;
+					while(true)
+					{
+						if(listOfLists[listOfLists.Count-1].Count==maxCountAllowed)
+						{
+							break;
+						}
+						else
+						{
+							listOfLists.RemoveAt(listOfLists.Count-1);
+						}
+					}
+				}
+				
+			}
+			else
+			{
+				stack.AddRange(nodeTop.getChildren());
+			}
+			
+		}
+		//return maxPathIndices;
+		Debug.Log("Now Finding shortest path. Lists COunt = "+listOfLists.Count);
+		shortestPathIndices.AddRange (listOfLists [0]);
+		minDistPath=0.0f;
+		for(int j=1;j<shortestPathIndices.Count;j++)
+		{
+			minDistPath+=Vector3.Distance(shortestPathIndices[j].getPos(),shortestPathIndices[j-1].getPos());
+			
+		}
+		for(int i=1;i<listOfLists.Count;i++)
+		{
+			List<NodeShadow> tempNodeList = new List<NodeShadow>();
+			tempNodeList.AddRange (listOfLists [i]);
+			float minDistTempPath = 0.0f;
+			for(int j=1;j<tempNodeList.Count;j++)
+			{
+				minDistTempPath+=Vector3.Distance(shortestPathIndices[j].getPos(),shortestPathIndices[j-1].getPos());
+			}
+			if(minDistPath>minDistTempPath)
+			{
+				shortestPathIndices.Clear();
+				shortestPathIndices.AddRange(tempNodeList);
+			}
+		}
+		return shortestPathIndices;
+	}
+	/*class hashNodeShadowClass
+	{
+		public Vector3 pt;
+		public int safetyLevel;
+	}*/
+	private List<NodeShadow> findFirstEnemyPathDetected (NodeShadow headNode)
+	{
+		int lastIndex = pathPoints.Count - 1;
+		int maxIndex = -1;
+		List<NodeShadow> maxPathIndices = new List<NodeShadow> ();
+		List<NodeShadow> currPathIndices = new List<NodeShadow> ();
+		List<NodeShadow> stack = new List<NodeShadow> ();
+		stack.Add (headNode);
+		int topIndex = -1;
+		while(stack.Count>0)
+		{
+			//pop the top
+			topIndex = stack.Count-1;
+			NodeShadow nodeTop = stack[topIndex];
+			stack.RemoveAt(topIndex);
+			
+			//before adding remove all greater aand equal levels;
+			int currNodeLevel = nodeTop.getSafetyLevel();
+			if(currPathIndices.Count>0)
+			{
+				NodeShadow lastNodeInCurrIndices = currPathIndices[currPathIndices.Count-1];
+				while(true)
+				{
+					if(nodeTop.getParent().Contains(lastNodeInCurrIndices))
+					{
+						break;
+					}
+					else
+					{
+						currPathIndices.RemoveAt (currPathIndices.Count-1);
+						lastNodeInCurrIndices = currPathIndices[currPathIndices.Count-1];
+					}
+				}
+			}
+			currPathIndices.Add(nodeTop);
+			
+			if(nodeTop.getChildren().Count==0)
+			{
+				if(currPathIndices.Count>maxPathIndices.Count)
+				{
+					maxPathIndices.Clear();
+					maxPathIndices.AddRange(currPathIndices);
+					if(maxPathIndices[maxPathIndices.Count-1].getSafetyLevel()==lastIndex)
+					{
+						break;
+					}
+				}
+				//currPathIndices.RemoveAt(currPathIndices.Count-1);
+			}
+			else
+			{
+				stack.AddRange(nodeTop.getChildren());
+			}
+			
+		}
+		return maxPathIndices;
+	}
+	private NodeShadow readNodeStructureFor()
+	{
+		setGlobalVars1 ();
+		string sourceFileName = EditorUtility.OpenFilePanel("Please select data node file", Application.dataPath,""); 
+		StreamReader sr = new StreamReader(sourceFileName);
+		List<char> sep = new List<char>();
+		sep.Add(',');
+		sep.Add(' ');
+		sep.Add(';');
+		sep.Add('(');
+		sep.Add(')');
+		sep.Add('|');
+		NodeShadow headNode = new NodeShadow ();
+		Hashtable mapPtToNode = new Hashtable();
+		
+		//////////////////////////////////////////////
+		//int jk = 100;
+		/// /////////////////////////////////////////////
+		string str = sr.ReadLine();
+		
+		while(!sr.EndOfStream /*&& jk>0*/)
+		{
+			//jk--;
+			
+			str = sr.ReadLine();
+			
+			string[] line1 = str.Split(sep.ToArray());
+			//Debug.Log(str);
+			List<string> line = new List<string>();
+			for(int i=0;i<line1.Length;i++)
+			{
+				if(line1[i]=="")
+					continue;
+				line.Add(line1[i]);
+				//Debug.Log(line1[i]);
+			}
+			//Debug.Log("Line list length = "+line.Count);
+			//if(mapPtToNode.Keys.Count!=0)
+			//	Debug.Log(line[0]+"(1) "+line[1]+"(2) "+line[2]+"(3) "+line[3]+"(4) "+line[4]+" (5) "+line[5]+"(6) "+line[6]+"(7) "+line[7]);
+			
+			
+			//hashNodeShadowClass keyObj = new hashNodeShadowClass();
+			Vector4 keyObj = new Vector4(float.Parse(line[0]),float.Parse(line[1]),float.Parse(line[2]),float.Parse(line[3]));
+			//keyObj.pt = new Vector3(float.Parse(line[0]),float.Parse(line[1]),float.Parse(line[2]));
+			//keyObj.safetyLevel = int.Parse(line[3]);
+			//hashNodeShadowClass parentKeyObj = new hashNodeShadowClass();
+			Vector4 parentKeyObj = new Vector4();
+			if(mapPtToNode.Keys.Count!=0)
+			{
+				
+				//parentKeyObj.pt = new Vector3(float.Parse(line[4]),float.Parse(line[5]),float.Parse(line[6]));
+				//parentKeyObj.safetyLevel = int.Parse(line[7]);
+				parentKeyObj = new Vector4(float.Parse(line[4]),float.Parse(line[5]),float.Parse(line[6]),float.Parse(line[7]));
+			}
+			if(mapPtToNode.Keys.Count==0)
+			{
+				headNode = new NodeShadow(new Vector3(keyObj.x,keyObj.y,keyObj.z));
+				headNode.setSafetyLevel((int)keyObj.w);
+				mapPtToNode.Add(keyObj,headNode);
+			}
+			else if(!mapPtToNode.ContainsKey(keyObj))
+			{
+				//NodeShadow node = new NodeShadow(keyObj.pt);
+				NodeShadow node = new NodeShadow(new Vector3(keyObj.x,keyObj.y,keyObj.z));
+				node.setSafetyLevel((int)keyObj.w);
+				//Debug.Log(parentKeyObj.pt+" , "+parentKeyObj.safetyLevel);
+				NodeShadow parentNode= (NodeShadow)mapPtToNode[parentKeyObj];
+				/*foreach(hashNodeShadowClass h in mapPtToNode.Keys)
+				{
+					Debug.Log(h.pt+" , "+h.safetyLevel);
+					Debug.Log("Parent Node = "+((NodeShadow)mapPtToNode[parentKeyObj]).getPos());
+				}*/
+				//Debug.Log("Node = "+node.getPos());
+				//Debug.Log("Parent node = "+parentNode.getPos());
+				parentNode.addChild(node);
+				//parentKeyObj should always be present in the Hashtable mapPtToNode;
+				/*if(!mapPtToNode.ContainsKey(parentKeyObj))
+				{
+				}
+				else
+				{
+				}*/
+				mapPtToNode.Add(keyObj,node);
+			}
+			else
+			{
+				NodeShadow node= (NodeShadow)mapPtToNode[keyObj];
+				NodeShadow parentNode= (NodeShadow)mapPtToNode[parentKeyObj];
+				//node.setParent(parentNode);
+				parentNode.addChild(node);
+			}
+			
+		}
+		Debug.Log ("Number of nodes are  = " + mapPtToNode.Keys.Count);
+		sr.Close ();
+		
+		return headNode;
+	}
+	private void writeNodeStructure(NodeShadow headNode,string saveDataDirName)
+	{
+		//NodeShadow tempNode = headNode;
+		/*while(tempNode.getChildren().Count>0)
+		{
+			Debug.Log("Writing Node = "+tempNode.getPos());
+			tempNode = tempNode.getChildren()[0];
+		}
+		*/
+		
+		
+		string sourceFileName = saveDataDirName + "\\"+headNode.getPos().ToString()+".txt";
+		//string tempFile = sourceFileName+"_Temp";
+		StreamWriter sw = new StreamWriter(sourceFileName);
+		//NodeSignature|ParentSignature
+		sw.WriteLine("(Vector3;level)|(Vector3;level)"+"");
+		
+		sw.Write("("+headNode.getPos()+";"+headNode.getSafetyLevel()+")|("+null+";"+null+")");
+		sw.WriteLine("");
+		List<NodeShadow> nodeSafeLevelNow = new List<NodeShadow> ();
+		List<NodeShadow> nodeSafeLevelNext = headNode.getChildren ();
+		NodeShadow parentNode = headNode;
+		while(nodeSafeLevelNext.Count>0)//while(levelOfAccess<pathPoints.Count)
+		{
+			//levelOfAccess++;
+			nodeSafeLevelNow = nodeSafeLevelNext;
+			nodeSafeLevelNext = new List<NodeShadow>();
+			
+			foreach(NodeShadow nodeNow in nodeSafeLevelNow)
+			{
+				foreach(NodeShadow nodeNowParent in nodeNow.getParent())
+				{
+					sw.Write("("+nodeNow.getPos()+";"+nodeNow.getSafetyLevel()+")|("+nodeNowParent.getPos()+";"+nodeNowParent.getSafetyLevel()+")");
+					sw.WriteLine("");
+				}
+				List<NodeShadow> childrenTemp = nodeNow.getChildren();
+				foreach(NodeShadow nxtLevelNode in childrenTemp)
+				{
+					if(!nodeSafeLevelNext.Contains(nxtLevelNode))
+					{
+						nodeSafeLevelNext.Add(nxtLevelNode);
+					}
+				}
+				
+			}
+		}
+		
+		
+		sw.Close ();
+	}
+	private void executeTrueCase()
+	{
+		setGlobalVars1();
+		standardMaxMovement = speedEnemy*(m_stepDistance/speedPlayer);
+		Debug.Log ("Initialize standardMaxMovement = " + standardMaxMovement);
+		
+		string dirName = createSaveDataDir(Application.dataPath);
+		int j1=0;
+		for(float j=m_minX;j<m_maxX && j1<discretePtsX;j+=m_step)
+		{
+			int k1=0;
+			for(float k=m_minZ;k<m_maxZ && k1<discretePtsZ;k+=m_step)
+			{
+				//Debug.Log(j1+" , "+k1);
+				Vector3 pt = new Vector3(j,1,k);
+				if(!pointInShadow(pt,0))
+				{
+					k1++;
+					continue;
+				}
+				Vector2 keyTemp = new Vector2(j1,k1);
+				
+				Debug.Log(j1+" , "+k1);
+				//if(j1==95 && k1==35)//TODO:Remove
+				if(j1==44 && k1==7)//TODO:Remove
+				{
+					showPosOfPoint(pt,Color.cyan);//TODO:Remove
+					float startTime = Time.realtimeSinceStartup;
+					executeTrueCaseFor(keyTemp,dirName);
+					float totalTime = (Time.realtimeSinceStartup - startTime)/60;
+					Debug.Log("executeTrueCase Finished. Time taken is = "+totalTime+" mins");//TODO:Remove
+					return;//TODO:Remove
+				}
+				k1++;
+			}
+			j1++;
+		}
+	}
+	
+	private void executeTrueCaseFor(Vector2 indexOfPt,string saveDataDirName)
+	{
+		//return;
+		Vector3 pt = (Vector3)h_mapIndxToPt[indexOfPt];
+		NodeShadow headNode = new NodeShadow (pt);
+		headNode.setSafetyLevel (0);
+		Hashtable h_mapPtToNode = new Hashtable();
+		int levelOfAccess = 1;
+		List<NodeShadow> nodeSafeLevelNow = new List<NodeShadow> ();
+		nodeSafeLevelNow.Add (headNode);
+		List<NodeShadow> nodeSafeLevelNext = reachableChildren (headNode,indexOfPt,levelOfAccess,h_mapPtToNode);
+		h_mapPtToNode.Clear ();
+		while(levelOfAccess<pathPoints.Count)//TODO:think other exit cases
+		{
+			levelOfAccess++;
+			nodeSafeLevelNow = nodeSafeLevelNext;
+			nodeSafeLevelNext = new List<NodeShadow>();
+			
+			foreach(NodeShadow child in nodeSafeLevelNow)
+			{
+				Vector2 indexOfPtTemp = (Vector2)h_mapPtToIndx[child.getPos()];
+				List<NodeShadow> childrenTemp = reachableChildren (child,indexOfPtTemp,levelOfAccess,h_mapPtToNode);
+				foreach(NodeShadow nxtLevelNode in childrenTemp)
+				{
+					if(!nodeSafeLevelNext.Contains(nxtLevelNode))
+					{
+						nodeSafeLevelNext.Add(nxtLevelNode);
+					}
+				}
+				
+			}
+			h_mapPtToNode.Clear();
+		}
+		writeNodeStructure (headNode,saveDataDirName);
+	}
+	private bool addPossibleChild(Vector2 tempVect2,NodeShadow node,int pathPointIndx,Hashtable h_mapPtToNode)
+	{
+		//Debug.Log ("Possible Child 1 ="+(Vector3)h_mapIndxToPt [tempVect2]);
+		if(h_mapIndxToPt.ContainsKey(tempVect2))
+		{
+			Vector3 tempVect3 = (Vector3)h_mapIndxToPt[tempVect2];
+			//Debug.Log("standardMaxMovement = "+standardMaxMovement);
+			//Debug.Log("Possible Child 2 = "+tempVect3);
+			if(pointInShadow(tempVect3,pathPointIndx) && Vector3.Distance(node.getPos(),tempVect3)<=standardMaxMovement)
+			{
+				NodeShadow nodeChild;
+				if(h_mapPtToNode.ContainsKey(tempVect3))
+				{
+					nodeChild = (NodeShadow)h_mapPtToNode[tempVect3];
+				}
+				else
+				{
+					nodeChild = new NodeShadow(tempVect3);
+					nodeChild.setSafetyLevel(pathPointIndx);
+					h_mapPtToNode.Add(tempVect3,nodeChild);
+				}
+				node.addChild(nodeChild);
+				Debug.Log(tempVect3+" added as child of "+node.getPos()+" Dist b/w them is "+Vector3.Distance(node.getPos(),tempVect3));
+				return true;
+			}
+			else
+			{
+				Debug.Log(tempVect3+" cannot be added as child of "+node.getPos()+" Dist b/w them is "+Vector3.Distance(node.getPos(),tempVect3));
+			}
+		}
+		return false;
+	}
+	private List<NodeShadow> reachableChildren(NodeShadow node,Vector2 indexOfPt,int pathPointIndx,Hashtable h_mapPtToNode)
+	{
+		int rowJ = (int)indexOfPt.x;
+		int colK = (int)indexOfPt.y;
+		addPossibleChild(indexOfPt,node,pathPointIndx,h_mapPtToNode);
+		while(true)
+		{
+			bool bStillReachable=false;
+			bool bRunAgain=false;
+			rowJ--;
+			colK--;
+			int rowLen = ((int)indexOfPt.x - rowJ)*2 +1;
+			//////////////////////////////////////////////////////////////////////&&&&&&&&&&&&&&&&&
+			Vector2 testPt2D = new Vector2(rowJ+rowLen/2,colK);
+			Vector3 testPt3D = new Vector3(0,0,0);
+			bool bPtAssigned = false;
+			if(h_mapIndxToPt.ContainsKey(testPt2D))
+			{
+				testPt3D = (Vector3)h_mapIndxToPt[testPt2D];
+				bPtAssigned = true;
+			}
+			else
+			{
+				testPt2D = new Vector2(rowJ+rowLen/2,colK+rowLen-1);
+				if(h_mapIndxToPt.ContainsKey(testPt2D))
+				{
+					testPt3D = (Vector3)h_mapIndxToPt[testPt2D];
+					bPtAssigned = true;
+				}
+				else
+				{
+					testPt2D = new Vector2(rowJ+rowLen-1,colK+rowLen/2);
+					if(h_mapIndxToPt.ContainsKey(testPt2D))
+					{
+						testPt3D = (Vector3)h_mapIndxToPt[testPt2D];
+						bPtAssigned = true;
+					}
+					else
+					{
+						testPt2D = new Vector2(rowJ,colK+rowLen/2);
+						if(h_mapIndxToPt.ContainsKey(testPt2D))
+						{
+							testPt3D = (Vector3)h_mapIndxToPt[testPt2D];
+							bPtAssigned = true;
+						}
+					}
+				}
+			}
+			if(!bPtAssigned)
+			{
+				Debug.LogError("All Possible points exhausted. No outcome. Breaking from loop");
+				break;
+			}
+			////////////////////////////////////////////////////////////////////////&&&&&&&&&&&&&&&&;
+			float testDist = Vector3.Distance(node.getPos(),testPt3D);
+			//Debug.Log("testDist = "+testDist);
+			if(testDist > standardMaxMovement)// || rowJ<0 || colK<0 || rowJ+rowLen>discretePtsX || colK+rowLen>discretePtsZ)
+				break;
+			//Debug.Log("rowJ = "+rowJ);
+			//Debug.Log("colK = "+colK);
+			//Debug.Log("rowLen = "+rowLen);
+			for(int i1=rowJ;i1<rowJ+rowLen;i1++)
+			{
+				Vector2 tempVect2 = new Vector2(i1,colK);
+				bStillReachable = addPossibleChild(tempVect2,node,pathPointIndx,h_mapPtToNode);
+				if(bStillReachable)
+					bRunAgain=true;
+				tempVect2 = new Vector2(i1,colK+rowLen-1);
+				bStillReachable = addPossibleChild(tempVect2,node,pathPointIndx,h_mapPtToNode);
+				if(bStillReachable)
+					bRunAgain=true;
+			}
+			for(int i2=colK+1;i2<colK+rowLen-1;i2++)
+			{
+				Vector2 tempVect2 = new Vector2(rowJ,i2);
+				bStillReachable = addPossibleChild(tempVect2,node,pathPointIndx,h_mapPtToNode);
+				if(bStillReachable)
+					bRunAgain=true;
+				tempVect2 = new Vector2(rowJ+rowLen-1,i2);
+				bStillReachable = addPossibleChild(tempVect2,node,pathPointIndx,h_mapPtToNode);
+				if(bStillReachable)
+					bRunAgain=true;
+			}
+			
+			
+		}
+		/*Debug.Log(node.getPos()+" has following children");
+		string childrEn="";
+		foreach(NodeShadow ch in node.getChildren())
+		{
+			childrEn+=ch.getPos()+" , ";
+		}
+		Debug.Log(childrEn);
+		*/
+		return node.getChildren ();
+	}
 	private string createSaveDataDir (string dataPath)
 	{
 		string dirName = Path.Combine(dataPath ,System.DateTime.Now.Day
@@ -191,74 +829,46 @@ public partial class Visibility1 : MonoBehaviour {
 		System.IO.Directory.CreateDirectory(dirName);
 		return dirName;
 	}
-
 	private void displayTimingAreas()
 	{
 		for(int i=0;i<discretePtsX;i++)
 		{
 			for(int j=0;j<discretePtsZ;j++)
 			{
-				//float greenNum = timingArray[i,j]/maxTimeEvaded;
-				float greenNum = pointsArray[i,j]/(pathPoints.Count-1);
-				greenNum = greenNum*255;
-				//float redNum = 1-greenNum;
-				//showPosOfPoint((Vector3)h_mapIndxToPt[new Vector2(i,j)],new Color(redNum,greenNum,0));
-				showPosOfPoint((Vector3)h_mapIndxToPt[new Vector2(i,j)],new Color(0,greenNum,0));
+				float greenNum = timingArray[i,j]/maxTimeEvaded;
+				float redNum = 1-greenNum;
+				showPosOfPoint((Vector3)h_mapIndxToPt[new Vector2(i,j)],new Color(redNum,greenNum,0));
 			}
 		}
-	}
-
-	private void initializeForGreedyCase()
-	{
-		setGlobalVars1 ();
-		timingArray = new float[discretePtsX,discretePtsZ];
-		pointsArray = new int[discretePtsX,discretePtsZ];
-		Vector3 tempVec = (Vector3)h_mapIndxToPt[new Vector2(m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ)];
-		//Vector3 tempVec = new Vector3 (m_nCurrDiscretePtIndxX, 1, m_nCurrDiscretePtIndxZ);
-		placeEnemyGreedyAt(tempVec);
-		resetCase ();
 	}
 	private void initializeForNearMissCase()
 	{
 		setGlobalVars1 ();
 		timingArray = new float[discretePtsX,discretePtsZ];
-		pointsArray = new int[discretePtsX,discretePtsZ];
 		Vector3 tempVec = (Vector3)h_mapIndxToPt[new Vector2(m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ)];
 		//Vector3 tempVec = new Vector3 (m_nCurrDiscretePtIndxX, 1, m_nCurrDiscretePtIndxZ);
 		placeEnemyNearMissAt(tempVec);
 		resetCase ();
 	}
-	private void initializeShadowEdgeAssisted()
-	{
-		setGlobalVars1 ();
-		timingArray = new float[discretePtsX,discretePtsZ];
-		pointsArray = new int[discretePtsX,discretePtsZ];
-		Vector3 tempVec = (Vector3)h_mapIndxToPt[new Vector2(m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ)];
-		//Vector3 tempVec = new Vector3 (m_nCurrDiscretePtIndxX, 1, m_nCurrDiscretePtIndxZ);
-		placeEnemyShadowAssistedAt(tempVec);
-		resetCase ();
-	}
+	
 	private void initializeForCentroidCase()
 	{
 		setGlobalVars1 ();
 		timingArray = new float[discretePtsX,discretePtsZ];
-		pointsArray = new int[discretePtsX,discretePtsZ];
 		Vector3 tempVec = (Vector3)h_mapIndxToPt[new Vector2(m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ)];
 		//Vector3 tempVec = new Vector3 (m_nCurrDiscretePtIndxX, 1, m_nCurrDiscretePtIndxZ);
 		placeEnemyCentroidAt(tempVec);
 		resetCase ();
 	}
+	
 	private void readTimings()
 	{
 		setGlobalVars1 ();
 		timingArray = new float[discretePtsX,discretePtsZ];
-		pointsArray = new int[discretePtsX,discretePtsZ];
 		StreamReader sr = new StreamReader(fileTimings);
-		StreamReader sr1 = new StreamReader(filePoints);
 		int j = 0;
 		int k = 0;
 		maxTimeEvaded = float.Parse(sr.ReadLine());
-		int maxPathPoints = int.Parse(sr1.ReadLine());
 		Debug.Log ("maxTimeEvaded read = " + maxTimeEvaded);
 		List<char> sep = new List<char>();
 		sep.Add(',');
@@ -277,32 +887,9 @@ public partial class Visibility1 : MonoBehaviour {
 			j++;
 		}
 		sr.Close ();
-
-		j = 0;
-		k = 0;
-		while(!sr1.EndOfStream)
-		{
-			string str = sr1.ReadLine();
-			k=0;
-			foreach(string s in str.Split(sep.ToArray()))
-			{
-				//Debug.Log(s);
-				if(s.Length==0)
-					continue;
-				pointsArray[j,k] = int.Parse(s);
-				k++;
-			}
-			j++;
-		}
-		sr1.Close ();
 	}
-
 	private void writeTimings()
 	{
-		string tempFile1 = filePoints + "_Temp";
-		StreamWriter sw1 = new StreamWriter(tempFile1);
-		sw1.WriteLine(pathPoints.Count-1+"");
-
 		string tempFile = fileTimings + "_Temp";
 		StreamWriter sw = new StreamWriter(tempFile);
 		sw.WriteLine(maxTimeEvaded+"");
@@ -311,15 +898,10 @@ public partial class Visibility1 : MonoBehaviour {
 			for(int k=0;k<discretePtsZ;k++)
 			{
 				sw.Write(", " + timingArray[j,k]);
-				sw1.Write(", " + pointsArray[j,k]);
 			}
 			sw.WriteLine(""); 
-			sw1.WriteLine(""); 
 		}
 		sw.Close ();
-		sw1.Close ();
-		File.Replace(tempFile1,filePoints,filePoints+"Backup");
-		File.Delete (tempFile1);
 		File.Replace(tempFile,fileTimings,fileTimings+"Backup");
 		File.Delete (tempFile);
 		//FileUtil.ReplaceFile (tempFile,fileTimings);
@@ -338,35 +920,28 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			Vector3 tempVec = (Vector3)h_mapIndxToPt[new Vector2(m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ)];
 			//Vector3 tempVec = new Vector3 (m_nCurrDiscretePtIndxX, 1, m_nCurrDiscretePtIndxZ);
-			if(pointInShadow(tempVec,0) && timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]==0f)
+			if(pointInShadow(tempVec,0) && timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]==0)
 			{
 				//Assumption:Only one enemy at a time
 				playerObj.transform.position = pathPoints [0];
 				nextPlayerPath = 1;
-
-
-
-				if(m_Greedy)
-				{
-					m_enemyGreedyList[0].enemyObj.transform.position = tempVec;
-					m_enemyGreedyList[0].vNextPos.Add (findNextPosEnemyGreedy(m_enemyGreedyList[0].enemyObj));
-					m_enemyGreedyList[0].bCaught = false;
-				}
-				else if(m_NearMiss)
+				if(setUpCase==1)
 				{
 					m_enemyNearMissList[0].enemyObj.transform.position = tempVec;
-					m_enemyNearMissList[0].vNextPos.Add(findNextPosEnemyNearMiss2(m_enemyNearMissList[0].enemyObj));
+					if(nearMissAlgo==1)
+						m_enemyNearMissList[0].vNextPos.Add (findNextPosEnemyNearMiss1(m_enemyNearMissList[0].enemyObj));
+					else if(nearMissAlgo==2)
+						m_enemyNearMissList[0].vNextPos.Add(findNextPosEnemyNearMiss2(m_enemyNearMissList[0].enemyObj));
+					//currRunTimeEnemny = Time.time;
 					m_enemyNearMissList[0].bCaught = false;
+					break;
 				}
-				else if(m_ShadowEdgeAssisted)
+				else if(setUpCase==2)
 				{
-					m_enemyShadowAssistedList[0].enemyObj.transform.position = tempVec;
-					m_enemyShadowAssistedList[0].vNextPos.Add(findNextPosEnemyShadowAssisted(m_enemyShadowAssistedList[0].enemyObj));
-					m_enemyShadowAssistedList[0].bCaught = false;
+					
+					break;
 				}
-				break;
-
-
+				
 			}
 			/*else
 			{
@@ -378,7 +953,7 @@ public partial class Visibility1 : MonoBehaviour {
 				m_nCurrDiscretePtIndxX=0;
 				m_nCurrDiscretePtIndxZ+=skipPts;
 			}
-
+			
 			if (m_nCurrDiscretePtIndxZ >= discretePtsZ)
 			{
 				Debug.Break();
@@ -389,9 +964,8 @@ public partial class Visibility1 : MonoBehaviour {
 		Debug.Log("Selected At ("+m_nCurrDiscretePtIndxX+" , "+m_nCurrDiscretePtIndxZ+")");
 		writeTimings ();
 		currRunTimeEnemny = Time.time;
-		currRunPointsEnemy = 0.0f;
 	}
-
+	
 	void Update () 
 	{
 		if (bDisplayAreas || m_ExecuteTrueCase || m_ShowTrueCase || m_CalculateTrueCase)
@@ -410,34 +984,11 @@ public partial class Visibility1 : MonoBehaviour {
 		}*/
 		if(playerObj.transform.position == pathPoints[pathPoints.Count-1])
 		{
-			if(m_SetUpCase)
+			if(setUpCase==1)
 			{
-				bool bNotCaught = false;
-				if(m_Greedy)
+				if(!m_enemyNearMissList[0].bCaught)
 				{
-					if(!m_enemyGreedyList[0].bCaught)
-					{
-						bNotCaught = true;
-					}
-				}
-				else if(m_NearMiss)
-				{
-					if(!m_enemyNearMissList[0].bCaught)
-					{
-						bNotCaught = true;
-					}
-				}
-				else if(m_ShadowEdgeAssisted)
-				{
-					if(!m_enemyShadowAssistedList[0].bCaught)
-					{
-						bNotCaught = true;
-					}
-				}
-
-				if(bNotCaught)
-				{
-					pointsArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = pathPoints.Count-1;
+					
 					timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = Time.time - currRunTimeEnemny;
 					if(maxTimeEvaded<0.0)
 					{
@@ -445,6 +996,7 @@ public partial class Visibility1 : MonoBehaviour {
 					}
 					Debug.Log("Took "+timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]+" Always hidden");
 				}
+				
 				resetCase();
 				return;
 			}
@@ -464,14 +1016,14 @@ public partial class Visibility1 : MonoBehaviour {
 				l.DrawVector(allLineParent);
 			}
 			nextPlayerPath++;
-
-			/*for(int j=0;j<m_enemyCentroidList.Count;j++)
+			//startTimePlayer=Time.time;
+			for(int j=0;j<m_enemyCentroidList.Count;j++)
 			{
 				EnemyMovement centroidObj = m_enemyCentroidList[j];
 				if(centroidObj.bCaught)
 					continue;
 				Vector3 currPosEnemy = centroidObj.enemyObj.transform.position;
-
+				
 				centroidObj.vNextPos.Add(findNextPosEnemyCentroid(m_enemyCentroidList[j].enemyObj));
 				if(currPosEnemy == centroidObj.vNextPos[0])
 					centroidObj.vNextPos.RemoveAt(0);
@@ -492,9 +1044,37 @@ public partial class Visibility1 : MonoBehaviour {
 					continue;
 				}
 				//m_enemyCentroidList[j].enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,centroidObj.vNextPos[0], speedEnemy*Time.deltaTime);
-			}*/
-			findNextEnemyPositions();
-
+			}
+			for(int j=0;j<m_enemyNearMissList.Count;j++)
+			{
+				EnemyMovement nearMissObj = m_enemyNearMissList[j];
+				if(nearMissObj.bCaught)
+					continue;
+				Vector3 currPosEnemy = nearMissObj.enemyObj.transform.position;
+				
+				if(nearMissAlgo==1)
+					nearMissObj.vNextPos.Add(findNextPosEnemyNearMiss1(nearMissObj.enemyObj));
+				else if(nearMissAlgo==2)
+					nearMissObj.vNextPos.Add (findNextPosEnemyNearMiss2(nearMissObj.enemyObj));
+				if(currPosEnemy == nearMissObj.vNextPos[0])
+					nearMissObj.vNextPos.RemoveAt(0);
+				if(enemyCaught(nearMissObj.enemyObj.transform.position))
+				{
+					if(setUpCase==1)
+					{
+						timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = Time.time - currRunTimeEnemny;
+						Debug.Log("Caught!!! Took "+timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]+" to catch");
+						resetCase();
+						return;
+					}
+					Renderer rend = nearMissObj.enemyObj.GetComponent<Renderer>();
+					rend.material.shader = Shader.Find("Specular");
+					rend.material.SetColor("_SpecColor", Color.white);
+					nearMissObj.bCaught=true;
+					Debug.Log("Near Miss Enemy Caught");
+				}
+				//nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,nearMissObj.vNextPos[0], speedEnemy*Time.deltaTime);
+			}
 			/*
 			List<Vector3> centrePts = (List<Vector3>)hCentroidShadows[pathPoints[nextPlayerPath]];
 			foreach(Vector3 vect in centrePts)
@@ -504,9 +1084,21 @@ public partial class Visibility1 : MonoBehaviour {
 			*/
 		}
 		playerObj.transform.position = Vector3.MoveTowards(playerObj.transform.position, pathPoints[nextPlayerPath], speedPlayer*Time.deltaTime);
-		doPlayerMovements ();
-
-
+		for(int j=0;j<m_enemyNearMissList.Count;j++)
+		{
+			EnemyMovement nearMissObj = m_enemyNearMissList[j];
+			if(nearMissObj.bCaught)
+				continue;
+			nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(nearMissObj.enemyObj.transform.position,nearMissObj.vNextPos[0], speedEnemy*Time.deltaTime);
+		}
+		for(int j=0;j<m_enemyCentroidList.Count;j++)
+		{
+			EnemyMovement centroidObj = m_enemyCentroidList[j];
+			if(centroidObj.bCaught)
+				continue;
+			centroidObj.enemyObj.transform.position = Vector3.MoveTowards(centroidObj.enemyObj.transform.position,centroidObj.vNextPos[0], speedEnemy*Time.deltaTime);
+		}
+		
 		/*if (Input.GetMouseButtonDown (0)) {
 			GameObject.Destroy (selectedBox);
 			start_box = Input.mousePosition;
@@ -522,141 +1114,14 @@ public partial class Visibility1 : MonoBehaviour {
 			makeBox();
 		}*/
 	}
-	private void doPlayerMovements()
-	{
-		for(int j=0;j<m_enemyGreedyList.Count;j++)
-		{
-			EnemyMovement greedyObj = m_enemyGreedyList[j];
-			if(greedyObj.bCaught)
-				continue;
-			greedyObj.enemyObj.transform.position = Vector3.MoveTowards(greedyObj.enemyObj.transform.position,greedyObj.vNextPos[0], speedEnemy*Time.deltaTime);
-		}
-		for(int j=0;j<m_enemyNearMissList.Count;j++)
-		{
-			EnemyMovement nearMissObj = m_enemyNearMissList[j];
-			if(nearMissObj.bCaught)
-				continue;
-			nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(nearMissObj.enemyObj.transform.position,nearMissObj.vNextPos[0], speedEnemy*Time.deltaTime);
-		}
-		for(int j=0;j<m_enemyShadowAssistedList.Count;j++)
-		{
-			EnemyMovement shadowAssistedObj = m_enemyShadowAssistedList[j];
-			if(shadowAssistedObj.bCaught)
-				continue;
-			shadowAssistedObj.enemyObj.transform.position = Vector3.MoveTowards(shadowAssistedObj.enemyObj.transform.position,shadowAssistedObj.vNextPos[0], speedEnemy*Time.deltaTime);
-		}
-		for(int j=0;j<m_enemyCentroidList.Count;j++)
-		{
-			EnemyMovement centroidObj = m_enemyCentroidList[j];
-			if(centroidObj.bCaught)
-				continue;
-			centroidObj.enemyObj.transform.position = Vector3.MoveTowards(centroidObj.enemyObj.transform.position,centroidObj.vNextPos[0], speedEnemy*Time.deltaTime);
-		}
-	}
-	private void findNextEnemyPositions()
-	{
-		for(int j=0;j<m_enemyNearMissList.Count;j++)
-		{
-			EnemyMovement nearMissObj = m_enemyNearMissList[j];
-			if(nearMissObj.bCaught)
-				continue;
-			Vector3 currPosEnemy = nearMissObj.enemyObj.transform.position;
-
-
-			nearMissObj.vNextPos.Add (findNextPosEnemyNearMiss2(nearMissObj.enemyObj));
-			if(currPosEnemy == nearMissObj.vNextPos[0])
-				nearMissObj.vNextPos.RemoveAt(0);
-			if(enemyCaught(nearMissObj.enemyObj.transform.position))
-			{
-				if(m_SetUpCase)
-				{
-					pointsArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = nextPlayerPath-1;
-					timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = Time.time - currRunTimeEnemny;
-					Debug.Log("Caught!!! Took "+timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]+" to catch");
-					resetCase();
-					return;
-				}
-				Renderer rend = nearMissObj.enemyObj.GetComponent<Renderer>();
-				rend.material.shader = Shader.Find("Specular");
-				rend.material.SetColor("_SpecColor", Color.white);
-				nearMissObj.bCaught=true;
-				Debug.Log("Near Miss Enemy Caught");
-			}
-			//nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,nearMissObj.vNextPos[0], speedEnemy*Time.deltaTime);
-		}
-
-		for(int j=0;j<m_enemyGreedyList.Count;j++)
-		{
-			EnemyMovement greedyObj = m_enemyGreedyList[j];
-			if(greedyObj.bCaught)
-				continue;
-			Vector3 currPosEnemy = greedyObj.enemyObj.transform.position;
-
-			greedyObj.vNextPos.Add(findNextPosEnemyGreedy(greedyObj.enemyObj));
-			if(currPosEnemy == greedyObj.vNextPos[0])
-				greedyObj.vNextPos.RemoveAt(0);
-			if(enemyCaught(greedyObj.enemyObj.transform.position))
-			{
-				if(m_SetUpCase)
-				{
-					pointsArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = nextPlayerPath-1;
-					timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = Time.time - currRunTimeEnemny;
-					Debug.Log("Caught!!! Took "+timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]+" to catch");
-					resetCase();
-					return;
-				}
-				Renderer rend = greedyObj.enemyObj.GetComponent<Renderer>();
-				rend.material.shader = Shader.Find("Specular");
-				rend.material.SetColor("_SpecColor", Color.white);
-				greedyObj.bCaught=true;
-				Debug.Log("Greedy Enemy Caught");
-			}
-			//nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,nearMissObj.vNextPos[0], speedEnemy*Time.deltaTime);
-		}
-
-		for(int j=0;j<m_enemyShadowAssistedList.Count;j++)
-		{
-			EnemyMovement shadowAssistedObj = m_enemyShadowAssistedList[j];
-			if(shadowAssistedObj.bCaught)
-				continue;
-			Vector3 currPosEnemy = shadowAssistedObj.enemyObj.transform.position;
-			
-			shadowAssistedObj.vNextPos.Add(findNextPosEnemyShadowAssisted(shadowAssistedObj.enemyObj));
-			if(currPosEnemy == shadowAssistedObj.vNextPos[0])
-				shadowAssistedObj.vNextPos.RemoveAt(0);
-			if(enemyCaught(shadowAssistedObj.enemyObj.transform.position))
-			{
-				if(m_SetUpCase)
-				{
-					pointsArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = nextPlayerPath-1;
-					timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = Time.time - currRunTimeEnemny;
-					Debug.Log("Caught!!! Took "+timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]+" to catch");
-					resetCase();
-					return;
-				}
-				Renderer rend = shadowAssistedObj.enemyObj.GetComponent<Renderer>();
-				rend.material.shader = Shader.Find("Specular");
-				rend.material.SetColor("_SpecColor", Color.white);
-				shadowAssistedObj.bCaught=true;
-				Debug.Log("Greedy Enemy Caught");
-			}
-			//nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,nearMissObj.vNextPos[0], speedEnemy*Time.deltaTime);
-		}
-	}
-
 	private bool enemyCaught(Vector3 currPos)
 	{
 		if (pointInShadow (currPos, nextPlayerPath - 1))
 			return false;
 		return true;
 	}
-	//UPDATE REQUIRED
-	private Vector3 findNextPosEnemyShadowAssisted(GameObject enemyObj)
-	{
-	}
-	//UPDATE REQUIRED
 	//Nearest safepoint. Least movement.
-	private Vector3 findNextPosEnemyGreedy(GameObject enemyObj)
+	private Vector3 findNextPosEnemyNearMiss1(GameObject enemyObj)
 	{
 		if(!pointInShadow(enemyObj.transform.position,nextPlayerPath))
 		{
@@ -671,13 +1136,13 @@ public partial class Visibility1 : MonoBehaviour {
 				int angleVar=0;
 				while(!pointInShadow(vecSel,nextPlayerPath))
 				{
-
+					
 					vecSel.x = enemyObj.transform.position.x + radiiVar*Mathf.Cos(angleVar* Mathf.Deg2Rad);
 					vecSel.z = enemyObj.transform.position.z + radiiVar*Mathf.Sin(angleVar* Mathf.Deg2Rad);
 					angleVar++;
 					if(angleVar==360)
 						break;
-
+					
 				}
 				if(pointInShadow(vecSel,nextPlayerPath))
 				{
@@ -687,7 +1152,7 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 		}
 		return enemyObj.transform.position;
-
+		
 	}
 	//Reaching safest possible point:based on largest angle made in shadow region from start point.select the middle angle
 	private Vector3 findNextPosEnemyNearMiss2(GameObject enemyObj)
@@ -728,7 +1193,7 @@ public partial class Visibility1 : MonoBehaviour {
 				
 			}
 			int allAnglesCount = listAngles.Count;
-
+			
 			//////////////////////////////////////
 			/*string strAngles="( ";
 			foreach(int angleTemp in listAngles)
@@ -739,7 +1204,7 @@ public partial class Visibility1 : MonoBehaviour {
 			Debug.Log(strAngles+" )");
 			*/
 			//////////////////////////////////////;
-
+			
 			if(allAnglesCount==0)
 				return enemyObj.transform.position;
 			int lastProbableInsideAngle = -1;
@@ -756,7 +1221,7 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 			int maxDiff=-1;
 			int indxMaxDiff=-1;
-
+			
 			for(int j=0;j<=allAnglesCount-2;j+=2)
 			{
 				if(listAngles[j+1]-listAngles[j]>maxDiff)
@@ -808,7 +1273,7 @@ public partial class Visibility1 : MonoBehaviour {
 			{
 				tempPoint.x = newCentre.x + radiusMovement*Mathf.Cos(theta* Mathf.Deg2Rad);
 				tempPoint.z = newCentre.z + radiusMovement*Mathf.Cos(theta* Mathf.Deg2Rad);
-
+				
 				if(pointInShadow(tempPoint,nextPlayerPath) || CheckIfInsidePolygon(tempPoint))
 				{
 					counterShadowTemp++;
@@ -877,7 +1342,7 @@ public partial class Visibility1 : MonoBehaviour {
 			shadowArray = findSafestSpots();
 			placeEnemyStatic(shadowArray);
 		}
-		if(m_NearMiss)
+		if(m_nEnemyNearMiss>0)
 		{
 			setGlobalVars1();
 			int numNearMiss = m_nEnemyNearMiss;
@@ -890,6 +1355,9 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		if(m_nEnemyCentroid>0)
 		{
+			//createCentroidPoints();
+			//placeEnemyCentroid();
+			
 			setGlobalVars1();
 			int numCentroid = m_nEnemyCentroid;
 			while(numCentroid>0)
@@ -900,7 +1368,44 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 		}
 	}
-
+	private void createCentroidPoints ()
+	{
+		m_minX = mapBoundary[0].x;
+		m_minZ = mapBoundary[0].z;
+		m_maxX = mapBoundary[0].x;
+		m_maxZ = mapBoundary[0].z;
+		for(int i=1;i<4;i++)
+		{
+			if(m_minX>mapBoundary[i].x)
+			{
+				m_minX=mapBoundary[i].x;
+			}
+			if(m_minZ>mapBoundary[i].z)
+			{
+				m_minZ=mapBoundary[i].z;
+			}
+			if(m_maxX<mapBoundary[i].x)
+			{
+				m_maxX=mapBoundary[i].x;
+			}
+			if(m_maxZ<mapBoundary[i].z)
+			{
+				m_maxZ=mapBoundary[i].z;
+			}
+		}
+		foreach(Vector3 pathPt in pathPoints)
+		{
+			List<Geometry> shadows = (List<Geometry>)hTable[pathPt];
+			List<Vector3> centroidPtsList = new List<Vector3>();
+			foreach(Geometry geo in shadows)
+			{
+				Vector3 centroidPt = findCentroid1(geo);
+				//Debug.Log(centroidPt);
+				centroidPtsList.Add(centroidPt);
+			}
+			hCentroidShadows.Add(pathPt,centroidPtsList);
+		}
+	}
 	//TODO :Error while placing enemies. Maybe random placement works.
 	private void placeEnemyCentroid()
 	{
@@ -923,7 +1428,7 @@ public partial class Visibility1 : MonoBehaviour {
 	{
 		Vector3 vecSel = enemyObj.transform.position;
 		List<Geometry> shadowPolygonsTemp = (List<Geometry>)hTable [pathPoints [nextPlayerPath]];
-
+		
 		List<Line> allShadowEdges = new List<Line> ();
 		foreach(Geometry shadowGeo in shadowPolygonsTemp)
 		{
@@ -969,18 +1474,6 @@ public partial class Visibility1 : MonoBehaviour {
 		m_enemyCentroidList.Add(centroidObj);
 		
 	}
-	private void placeEnemyGreedyAt(Vector3 sel)
-	{
-		GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
-		Component.Destroy (enemyObj.GetComponent("Enemy"));
-		enemyObj.transform.position = sel;
-		EnemyMovement greedyObj = new EnemyMovement();
-		greedyObj.bCaught = false;
-		greedyObj.enemyObj = enemyObj;
-		greedyObj.vNextPos.Add (findNextPosEnemyGreedy(enemyObj));
-		m_enemyGreedyList.Add(greedyObj);
-	}
-	
 	private void placeEnemyNearMissAt(Vector3 sel)
 	{
 		GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
@@ -989,22 +1482,13 @@ public partial class Visibility1 : MonoBehaviour {
 		EnemyMovement nearMissObj = new EnemyMovement();
 		nearMissObj.bCaught = false;
 		nearMissObj.enemyObj = enemyObj;
-		nearMissObj.vNextPos.Add (findNextPosEnemyNearMiss2(enemyObj));
+		if(nearMissAlgo==1)
+			nearMissObj.vNextPos.Add (findNextPosEnemyNearMiss1(enemyObj));
+		else if(nearMissAlgo==2)
+			nearMissObj.vNextPos.Add (findNextPosEnemyNearMiss2(enemyObj));
 		m_enemyNearMissList.Add(nearMissObj);
-			
+		
 	}
-	private void placeEnemyShadowAssistedAt(Vector3 sel)
-	{
-		GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
-		Component.Destroy (enemyObj.GetComponent("Enemy"));
-		enemyObj.transform.position = sel;
-		EnemyMovement shadowAssistedObj = new EnemyMovement();
-		shadowAssistedObj.bCaught = false;
-		shadowAssistedObj.enemyObj = enemyObj;
-		shadowAssistedObj.vNextPos.Add (findNextPosEnemyShadowAssisted(enemyObj));
-		m_enemyShadowAssistedList.Add(shadowAssistedObj);
-	}
-
 	private Vector3 selectInitialNearMissRandomPos()
 	{
 		//sbyte[,] shadowArray = (sbyte[,])h_discreteShadows [pathPoints [0]];
@@ -1019,7 +1503,7 @@ public partial class Visibility1 : MonoBehaviour {
 				selZ = Random.Range(0,discretePtsZ);
 				sel = (Vector3)h_mapIndxToPt[new Vector2(selX,selZ)];
 			}
-
+			
 			bool selAgain = false;
 			foreach(EnemyMovement nearMissObjTemp in m_enemyNearMissList)
 			{
@@ -1061,11 +1545,9 @@ public partial class Visibility1 : MonoBehaviour {
 			numStatic--;
 		}
 	}
-	//Unused
-	/*
 	private Vector3 findCentroid1(Geometry geo)
 	{
-
+		
 		float radius_hiddenSphere = ((SphereCollider)hiddenSphere.collider).radius*((SphereCollider)hiddenSphere.collider).transform.lossyScale.x;
 		int numPts = 0;
 		float meanX = 0f;
@@ -1075,22 +1557,21 @@ public partial class Visibility1 : MonoBehaviour {
 			for(float k=m_minZ;k<m_maxZ;k+=m_step)
 			{
 				Vector3 pt = new Vector3(j,1,k);
-
+				
 				if(geo.PointInside(pt) && !Physics.CheckSphere(pt,radius_hiddenSphere))
 				{
 					numPts++;
 					meanX+=j;
 					meanZ+=k;
 				}
-
+				
 			}
 		}
 		meanX = meanX / numPts;
 		meanZ = meanZ / numPts;
 		return new Vector3 (meanX, 1, meanZ);
 	}
-	*/
-
+	
 	private void setGlobalVars1()
 	{
 		m_minX = mapBoundary[0].x;
@@ -1117,13 +1598,13 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 		}
 		int Indx = 0;
-
+		
 		
 		discretePtsX = (int)(((m_maxX - m_minX) / m_step)+0.5);
 		discretePtsZ = (int)(((m_maxZ - m_minZ) / m_step)+0.5);
 		Debug.Log("discretePtsX = "+discretePtsX);
 		Debug.Log("discretePtsZ = "+discretePtsZ);
-
+		
 		int j1=0;
 		for(float j=m_minX;j<m_maxX && j1<discretePtsX;j+=m_step)
 		{
@@ -1139,15 +1620,15 @@ public partial class Visibility1 : MonoBehaviour {
 				if(!h_mapPtToIndx.ContainsKey(pt))
 				{
 					h_mapPtToIndx.Add(pt,keyTemp);
-
+					
 				}
 				k1++;
 			}
 			j1++;
 		}
-
+		
 	}
-	/*
+	//private List<Vector3> findEnemyPath2 ()
 	private void findEnemyPath2 ()
 	{
 		setGlobalVars1 ();
@@ -1155,7 +1636,7 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			List<Geometry> shadows = (List<Geometry>)hTable[pathPt];
 			List<Vector3> centroidPtsList = new List<Vector3>();
- 			foreach(Geometry geo in shadows)
+			foreach(Geometry geo in shadows)
 			{
 				Vector3 centroidPt = findCentroid1(geo);
 				centroidPtsList.Add(centroidPt);
@@ -1163,11 +1644,10 @@ public partial class Visibility1 : MonoBehaviour {
 			hCentroidShadows.Add(pathPt,centroidPtsList);
 		}
 	}
-
 	private List<Vector3> findEnemyPath1 ()
 	{
 		enemyPath = new List<Vector3>();
-
+		
 		int centralityIndx = -1;
 		int row = -1;
 		int col = -1;
@@ -1189,7 +1669,11 @@ public partial class Visibility1 : MonoBehaviour {
 							centralityIndx = centralityIndxTemp;
 							row = j;
 							col = k;
-
+							/*centreList.Insert(0,new Vector2(row,col));
+							if(centreList.Count>numSpots)
+							{
+								centreList.RemoveAt(numSpots);
+							}*/
 						}
 					}
 				}
@@ -1199,8 +1683,22 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		return enemyPath;
 	}
-	*/
-	/*
+	/*private void createEnemies()
+	{
+		int numSafest = m_enemySafestNumbers;
+		sbyte[,] shadowArray = null;
+		if (numSafest > 0)
+			shadowArray = findSafestSpots ();
+		//return;
+		while(numSafest>0)
+		{
+			GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
+			Component.Destroy (enemyObj.GetComponent("Enemy"));
+			placeEnemy(shadowArray,enemyObj);
+			m_enemySafest.Add(enemyObj);
+			numSafest--;
+		}
+	}*/
 	private int centralityCalc2(sbyte[,] shadowArray,int j,int k)
 	{
 		return 1;
@@ -1259,7 +1757,7 @@ public partial class Visibility1 : MonoBehaviour {
 				}
 			}
 			if(antiCentralityIndxTemp>centralityIndxTemp/4)
-			//if(antiCentralityIndx>centralityIndx/10)
+				//if(antiCentralityIndx>centralityIndx/10)
 				break;
 			centralityIndx+=centralityIndxTemp;
 			antiCentralityIndx+=antiCentralityIndxTemp;
@@ -1304,7 +1802,7 @@ public partial class Visibility1 : MonoBehaviour {
 			Component.Destroy (enemyObj1.GetComponent("Enemy"));
 			enemyObj1.transform.position = (Vector3)h_mapIndxToPt[vect];
 		}
-	}*/
+	}
 	private sbyte[,] findSafestSpots()
 	{
 		Debug.Log("h_mapIndxToPt.Count = "+h_mapIndxToPt.Keys.Count);
@@ -1399,7 +1897,25 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 		}
 	}
-
+	//Vector3 first_point;
+	List<Geometry> globalTempShadowPoly = new List<Geometry>();
+	Geometry globalTempStarPoly;
+	List<List<Vector3>> globalTempintersectionPointsPerV = new List<List<Vector3>>();
+	List<Line> globalTempAllShadowLines = new List<Line>();
+	public Material mat;
+	public GameObject pathSphere;
+	public GameObject hiddenSphere;
+	public GameObject selectedBoxPrefab;
+	GameObject selectedBox;
+	List<GameObject> hiddenSphereList;
+	//GameObject shadowObject = new GameObject();
+	
+	
+	Hashtable hTable;
+	Hashtable hVisiblePolyTable;
+	Vector3 start_box,end_box;
+	Rect boundbox;
+	bool b_ShowBoundbox=false;
 	private void makeBox() 
 	{
 		Debug.Log("In makeBox");
@@ -1422,7 +1938,7 @@ public partial class Visibility1 : MonoBehaviour {
 			tempVect.x=width;
 			tempVect.z=height;
 			selectedBox.transform.localScale=tempVect;
-
+			
 			//////////////////////////////////////////
 			/// //Identify path points in box
 			Geometry boundboxGeo = new Geometry ();
@@ -1452,18 +1968,18 @@ public partial class Visibility1 : MonoBehaviour {
 				}
 				currIndex++;
 			}
-
+			
 			//if all points selected
 			if(startIndex!=-1 && endIndex==-1)
 			{
 				endIndex=currIndex-1;
 			}
-
+			
 			Debug.Log ("startIndex = " + startIndex);
 			Debug.Log ("endIndex = " + endIndex);
 			/// /////////////////////////////////////////
 			//Only show shadow polygon if only one path point is selected
-
+			
 		}
 		else
 		{
@@ -1500,7 +2016,7 @@ public partial class Visibility1 : MonoBehaviour {
 	/// <returns><c>true</c>, if edges was compared, <c>false</c> otherwise.</returns>
 	/// <param name="l1">L1.</param>
 	/// <param name="l2">L2.</param>
-	/*private bool compareEdges(Line l1,Line l2)
+	private bool compareEdges(Line l1,Line l2)
 	{
 		float limit = 0.1f;
 		float minVal = Vector3.Distance(l1.MidPoint(),l2.MidPoint());
@@ -1518,8 +2034,7 @@ public partial class Visibility1 : MonoBehaviour {
 		if (minVal <= limit)
 			return true;
 		return false;
-	}*/
-	/*
+	}
 	public Geometry consolidateShadowPolygon(Geometry geo)
 	{
 		//Removing duplicate points
@@ -1579,31 +2094,31 @@ public partial class Visibility1 : MonoBehaviour {
 					if(!bV1Done && newGeo.edges[j].vertex[0].Equals(v1))
 					{
 						newGeo.edges[j].vertex[0] = midPt;
-
+						
 						bV1Done=true;
 					}
 					if(!bV1Done && newGeo.edges[j].vertex[1].Equals(v1))
 					{
 						newGeo.edges[j].vertex[1] = midPt;
-
+						
 						bV1Done=true;
 					}
 					if(!bV2Done && newGeo.edges[j].vertex[0].Equals(v2))
 					{
 						newGeo.edges[j].vertex[0] = midPt;
-
+						
 						bV2Done=true;
 					}
 					if(!bV2Done && newGeo.edges[j].vertex[1].Equals(v2))
 					{
 						newGeo.edges[j].vertex[1] = midPt;
-
+						
 						bV2Done=true;
 					}
 				}
 				//newGeo.edges.RemoveAt(i);
 				//i--;
-
+				
 				if(bV1Done && bV2Done)
 				{
 					tobeRemoved.Add(i);
@@ -1619,7 +2134,36 @@ public partial class Visibility1 : MonoBehaviour {
 			newGeo.edges.RemoveAt(i);
 		}
 		return newGeo;
-
+		/*List<Line> hiddenLines = new List<Line> ();
+		//ForEach first path point:
+		//Identify lines behind which to hide
+		//List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [startIndex]];
+		//foreach(Geometry geo in shadowPolyTemp)
+		{
+			foreach(Line l in geo.edges)
+			{
+				List<Vector3> pair = l.PointsOnEitherSide(0.02f);
+				
+				int ct_insideObstacle=0;
+				foreach(Vector3 pt in pair)
+				{
+					foreach(Geometry g in globalPolygon)
+					{
+						if(g.PointInside(pt))
+						{
+							ct_insideObstacle++;
+						}
+					}
+				}
+				if(ct_insideObstacle==1)
+				{
+					hiddenLines.Add(l);
+				}
+			}
+		}
+		hiddenLines.RemoveAll(item=>item==null);*/
+		
+		//StandardPolygon sdTemp = new StandardPolygon();
 		foreach(Line l in geo.edges)
 		{
 			sdTemp.addPoint(l.vertex[0]);
@@ -1651,7 +2195,6 @@ public partial class Visibility1 : MonoBehaviour {
 		//geo2.edges.AddRange (hiddenLines);
 		return geo2;
 	}
-*/
 	private List<Line> removeLineFromList(List<Line> allEdges1,Line edgeToRemove)
 	{
 		int counter = 0;
@@ -1674,7 +2217,7 @@ public partial class Visibility1 : MonoBehaviour {
 		Vector3 normalVect = new Vector3 (0, 1, 0);
 		Vector3 xVect = new Vector3 (1, 0, 0);
 		Vector3 alongX = new Vector3(pPoint.x+2,pPoint.y,pPoint.z);
-
+		
 		List<Vector3> arrangedPoints = new List<Vector3> ();
 		List<float> angles = new List<float>();
 		
@@ -1771,7 +2314,7 @@ public partial class Visibility1 : MonoBehaviour {
 			{
 				Debug.Log("%%%%%%%%%%%%%%%%%%%% Line not deleted");
 			}*/
-
+			
 			////////////////////////////////////Start Here///////////////////////////////////////////////
 			List<Vector3> endPts = new List<Vector3>();
 			foreach(Line l in allEdges)
@@ -1818,9 +2361,9 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 			continue;
 			/// ///////////////////////////////////End Here////////////////////////////////////////////////////
-
+			
 			lToRemove = null;
-
+			
 			foreach(Line l in allEdges)
 			{
 				cEndPt = l.getCommonEndPoint (begLine);
@@ -1842,7 +2385,7 @@ public partial class Visibility1 : MonoBehaviour {
 				if(lToRemove!=null)
 					allEdges = removeLineFromList (allEdges,lToRemove);
 				lToRemove=null;
-
+				
 				if(!addedAnotherPt && allEdges.Count>=2)
 				{
 					Debug.Log("%%%%%%%%%%%%%%%%%%%% Pt not added. Should have been added.");
@@ -1878,7 +2421,7 @@ public partial class Visibility1 : MonoBehaviour {
 		while(addedAnother)
 		{
 			addedAnother = false;
-
+			
 			foreach(Line l in allEdges)
 			{
 				if(!l.Equals(begLine))
@@ -1896,7 +2439,7 @@ public partial class Visibility1 : MonoBehaviour {
 					endPointThird = l.GetOther(commonEndPt);
 					begLine = new Line(commonEndPt,endPointThird);
 					addedAnother = sd.addPoint(endPointThird);
-
+					
 					if(addedAnother)
 					{
 						if(bShowLogs)
@@ -1951,12 +2494,9 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			Debug.Log("arranged CounterClockwise ");
 		}
-
+		
 		return sdList;
 	}
-
-
-
 	void showPosOfPoint(Vector3 pos,Color c)
 	{
 		if (float.IsNaN (pos.x) || float.IsNaN (pos.z))
@@ -1982,7 +2522,7 @@ public partial class Visibility1 : MonoBehaviour {
 			newTriangles.Add(2);
 			newTriangles.Add(1);
 			newTriangles.Add(0);
-
+			
 			return newTriangles;
 		}
 		List<Vector3> copyPoints = new List<Vector3>();
@@ -2001,7 +2541,7 @@ public partial class Visibility1 : MonoBehaviour {
 					break;
 				if(numRuns>50)
 				{
-
+					
 					Debug.Log("numRuns>50 ******* SHOULD NEVER BE HERE ******* ");
 					Debug.Log("numRuns "+numRuns+") "+"numPts "+numPts+" itr "+itr);
 					/*foreach(Vector3 pt in copyPoints)
@@ -2047,8 +2587,8 @@ public partial class Visibility1 : MonoBehaviour {
 							Debug.Log("Does not intersect");
 							Debug.Log("numRuns "+numRuns+") "+"numPts "+numPts+" itr "+itr);
 						}
-
-
+						
+						
 					}
 					else
 					{
@@ -2066,7 +2606,7 @@ public partial class Visibility1 : MonoBehaviour {
 		newTriangles.Add(points.IndexOf(copyPoints[0]));
 		newTriangles.Add(points.IndexOf(copyPoints[1]));
 		newTriangles.Add(points.IndexOf(copyPoints[2]));
-
+		
 		if(bShowLogs)
 			Debug.Log("applyEarClipping returning");
 		return newTriangles;
@@ -2084,7 +2624,7 @@ public partial class Visibility1 : MonoBehaviour {
 			if(geo.PointInside(pt))
 				return false;
 		}
-
+		
 		List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [Indx]];
 		foreach(Geometry geo in shadowPolyTemp)
 		{
@@ -2128,7 +2668,7 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		int Indx = 0;
 		float step = 0.1f;
-
+		
 		discretePtsX = (int)(((maxX - minX) / step)+0.5);
 		discretePtsZ = (int)(((maxZ - minZ) / step)+0.5);
 		Debug.Log(""+(maxX - minX) / step+" discretePtsX = "+discretePtsX+" discretePtsZ = "+discretePtsZ);
@@ -2136,7 +2676,7 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [Indx]];
 			sbyte[,] shadowArray = new sbyte[discretePtsX,discretePtsZ];
-
+			
 			float radius_hiddenSphere = ((SphereCollider)hiddenSphere.collider).radius*((SphereCollider)hiddenSphere.collider).transform.lossyScale.x;
 			int j1=0;	
 			for(float j=minX;j<maxX && j1<discretePtsX;j+=step)
@@ -2228,7 +2768,7 @@ public partial class Visibility1 : MonoBehaviour {
 				l2.DrawVector (allLineParent);
 				ff++;
 			}*/
-
+			
 			////////////////////////////////////////////;
 			float radius_hiddenSphere = ((SphereCollider)hiddenSphere.collider).radius*((SphereCollider)hiddenSphere.collider).transform.lossyScale.x;
 			//Debug.Log ("radius" + radius_hiddenSphere);
@@ -2294,11 +2834,11 @@ public partial class Visibility1 : MonoBehaviour {
 		newTriangles.Add(0);
 		newTriangles.Add(points.Count-1);
 		newTriangles.Add(1);
-
+		
 		/*newTriangles.Add(0);
 		newTriangles.Add(points.Count);
 		newTriangles.Add(1);*/
-
+		
 		return newTriangles;
 	}
 	Hashtable h_visible_Star_Triangles = new Hashtable ();
@@ -2308,7 +2848,7 @@ public partial class Visibility1 : MonoBehaviour {
 		while(Indx<pathPoints.Count)
 		{
 			Geometry visiblePolyTemp = (Geometry)hVisiblePolyTable [pathPoints [Indx]];
-
+			
 			//List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [Indx]];
 			List<int> newTriangles;
 			List<StandardPolygon> sdList = arrangeCounterClockwise(visiblePolyTemp);
@@ -2321,17 +2861,17 @@ public partial class Visibility1 : MonoBehaviour {
 				{
 					List<Vector3> points = sd.getVertices();
 					//newTriangles = applyEarClipping(points);
-
+					
 					List<Vector3> pointsTemp = new List<Vector3>();
 					pointsTemp.Add(pathPoints[Indx]);
 					pointsTemp.AddRange(points);
 					points = pointsTemp;
-
+					
 					newTriangles = triangulateVisible(points);
 					List<int> newTrianglesReversed = reverseTriangels(newTriangles);
 					//newTriangles.AddRange(newTrianglesReversed);
 					//newTriangles = newTrianglesReversed;
-
+					
 					VisibleTriangulation tempVT = new VisibleTriangulation();
 					tempVT.setPoints(points);
 					tempVT.setTriangles(newTriangles);
@@ -2353,8 +2893,8 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			l.DrawVector(allLineParent);
 		}*/
-
-
+		
+		
 		List<int> newTriangles;
 		foreach(GameObject tempObj in shadowMeshes)
 		{
@@ -2362,7 +2902,7 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		shadowMeshes.Clear ();
 		List<VisibleTriangulation> llist = (List<VisibleTriangulation>)h_visible_Star_Triangles[Indx];
-
+		
 		foreach(VisibleTriangulation VT in llist)
 		{
 			//Debug.Log("displayShadowMeshes Index = "+Indx);
@@ -2375,7 +2915,7 @@ public partial class Visibility1 : MonoBehaviour {
 			newTriangles = VT.getTriangles();
 			shadowMeshes.Add(new GameObject("ShadowMesh"));
 			MeshFilter filter = shadowMeshes[shadowMeshes.Count-1].AddComponent<MeshFilter>();
-
+			
 			MeshRenderer meshRenderer = shadowMeshes[shadowMeshes.Count-1].AddComponent<MeshRenderer>();
 			Material material = mat;
 			if(material==null)
@@ -2419,99 +2959,104 @@ public partial class Visibility1 : MonoBehaviour {
 			//newTriangles.Clear();
 		}
 	}
-	/*
 	private void displayShadowMeshes_Old(int Indx)
 	{
 		//get the shadow polygons
 		if(bShowLogs)
 			Debug.Log("displayShadowMeshes = " + Indx);
-
+		
 		List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [Indx]];
 		//List<Vector3> newVertices = new List<Vector3>();
 		List<int> newTriangles;// = new List<int>();
 		//For each shadow polygon
-
-
+		
+		
 		for(int i=0;i<shadowPolyTemp.Count;i++)
 		{
 			Geometry shadowGeo = shadowPolyTemp[i];
 			if(bShowLogs)
 				Debug.Log("shadowGeo = "+shadowGeo.edges);
 			Geometry geo = consolidateShadowPolygon (shadowGeo);
-
+			
 			List<StandardPolygon> sdList = arrangeCounterClockwise(geo);
 			Debug.Log("sdList.Count = "+sdList.Count);
 			foreach(StandardPolygon sd in sdList)
 			{
 				Debug.Log("sd.Count = "+sd.getVertices().Count);
-			List<Vector3> points = sd.getVertices();
-			
-			newTriangles = applyEarClipping(points);
-			/////////////////Just for debugging////////////////////
-			for(int counter=0;counter<points.Count;counter++)
+				List<Vector3> points = sd.getVertices();
+				
+				newTriangles = applyEarClipping(/*shadowGeo*/points);
+				/////////////////Just for debugging////////////////////
+				for(int counter=0;counter<points.Count;counter++)
+				{
+					Line l = new Line(points[counter],points[(counter+1)%points.Count]);
+					l.name = "edge "+counter;
+					l.DrawVector (allLineParent);
+				}
+				/*for(int counter=0;counter<geo.edges.Count;counter++)
 			{
-				Line l = new Line(points[counter],points[(counter+1)%points.Count]);
+				Line l = geo.edges[counter];
 				l.name = "edge "+counter;
 				l.DrawVector (allLineParent);
-			}
-			/////////////////END: Just for debugging////////////////////
-			if(bShowLogs)
-			{
-				Debug.Log("newTriangles = "+newTriangles.Count);
-				Debug.Log("points = "+points.Count);
-			}
-
-			shadowMeshes.Add(new GameObject("ShadowMesh"));
-			MeshFilter filter = shadowMeshes[shadowMeshes.Count-1].AddComponent<MeshFilter>();
-			//shadowMeshes[shadowMeshes.Count-1].GetComponent<MeshFilter>();
-			//filter.sharedMesh = mesh;
-			MeshRenderer meshRenderer = shadowMeshes[shadowMeshes.Count-1].AddComponent<MeshRenderer>();
-			
-			Material material = mat;//Resources.Load("Shadow", typeof(Material)) as Material;
-			if(material==null)
-			{
-				Debug.Log("material not found");
-			}
-			meshRenderer.material = material;
-			
-			Mesh mesh = filter.sharedMesh;
-			if(mesh==null)
-			{
-				mesh = new Mesh();
-				filter.sharedMesh = mesh;
-			}
-			Vector2[] uvs = new Vector2[points.Count];
-
-			//shadowMeshes[shadowMeshes.Count-1].transform.position = new Vector3(0,1,0);
-
-			int i2 = 0;
-			while (i2 < uvs.Length) 
-			{
-				uvs[i2] = new Vector2(points[i2].x, points[i2].z);
-				i2++;
-			}
-			
-			Vector3[] normals = new Vector3[points.Count];
-			for (i2 = 0; i2 < normals.Length; i2++) 
-			{
-				normals[i2] = Vector3.up;
-			}
-			
-			
-			mesh.vertices = points.ToArray();
-			mesh.uv = uvs;
-			mesh.triangles = newTriangles.ToArray();
-			mesh.normals=normals;
-			
-			filter.mesh = mesh;
-			mesh.RecalculateNormals();
-			mesh.RecalculateBounds();
-			//newTriangles.Clear();
+			}*/
+				/////////////////END: Just for debugging////////////////////
+				if(bShowLogs)
+				{
+					Debug.Log("newTriangles = "+newTriangles.Count);
+					Debug.Log("points = "+points.Count);
+				}
+				
+				shadowMeshes.Add(new GameObject("ShadowMesh"));
+				MeshFilter filter = shadowMeshes[shadowMeshes.Count-1].AddComponent<MeshFilter>();
+				//shadowMeshes[shadowMeshes.Count-1].GetComponent<MeshFilter>();
+				//filter.sharedMesh = mesh;
+				MeshRenderer meshRenderer = shadowMeshes[shadowMeshes.Count-1].AddComponent<MeshRenderer>();
+				
+				Material material = mat;//Resources.Load("Shadow", typeof(Material)) as Material;
+				if(material==null)
+				{
+					Debug.Log("material not found");
+				}
+				meshRenderer.material = material;
+				
+				Mesh mesh = filter.sharedMesh;
+				if(mesh==null)
+				{
+					mesh = new Mesh();
+					filter.sharedMesh = mesh;
+				}
+				Vector2[] uvs = new Vector2[points.Count];
+				
+				//shadowMeshes[shadowMeshes.Count-1].transform.position = new Vector3(0,1,0);
+				
+				int i2 = 0;
+				while (i2 < uvs.Length) 
+				{
+					uvs[i2] = new Vector2(points[i2].x, points[i2].z);
+					i2++;
+				}
+				
+				Vector3[] normals = new Vector3[points.Count];
+				for (i2 = 0; i2 < normals.Length; i2++) 
+				{
+					normals[i2] = Vector3.up;
+				}
+				
+				
+				mesh.vertices = points.ToArray();
+				mesh.uv = uvs;
+				mesh.triangles = newTriangles.ToArray();
+				mesh.normals=normals;
+				
+				filter.mesh = mesh;
+				mesh.RecalculateNormals();
+				mesh.RecalculateBounds();
+				//newTriangles.Clear();
 			}
 		}
 		//bCallComplete=true;
 	}
-*/
+	
 	int shadowCounter=1;
 	private void showShadowMesh ()
 	{
@@ -2521,7 +3066,7 @@ public partial class Visibility1 : MonoBehaviour {
 		List<Line> newLines = new List<Line> ();
 		List<Line> allLines = new List<Line> ();
 		List<int> newTriangles = new List<int>();
-
+		
 		List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [startIndex]];
 		for(int i=0;i<shadowPolyTemp.Count;i++)
 		{
@@ -2530,14 +3075,14 @@ public partial class Visibility1 : MonoBehaviour {
 			//shadowMeshes[shadowMeshes.Count-1].GetComponent<MeshFilter>();
 			//filter.sharedMesh = mesh;
 			MeshRenderer meshRenderer = shadowMeshes[shadowMeshes.Count-1].AddComponent<MeshRenderer>();
-
+			
 			Material material = mat;//Resources.Load("Shadow", typeof(Material)) as Material;
 			if(material==null)
 			{
 				Debug.Log("material not found");
 			}
 			meshRenderer.material = material;
-
+			
 			Mesh mesh = filter.sharedMesh;
 			if(mesh==null)
 			{
@@ -2594,25 +3139,25 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 			allLines.AddRange(shadowPolyTemp[i].edges);
 			allLines.AddRange(newLines);
-
+			
 			foreach(Line l in allLines)
 			{
 				//Debug.Log("From "+l.vertex[0]+" to "+l.vertex[1]);
 				//Debug.DrawLine(l.vertex[0],l.vertex[1]);
 				l.DrawLine(Color.red);
-
-					GameObject pathObj;
-					pathObj = Instantiate(pathSphere, 
+				
+				GameObject pathObj;
+				pathObj = Instantiate(pathSphere, 
 				                      l.vertex[0], 
-					                      pathSphere.transform.rotation) as GameObject;
+				                      pathSphere.transform.rotation) as GameObject;
 				pathObj = Instantiate(pathSphere, 
 				                      l.vertex[1], 
 				                      pathSphere.transform.rotation) as GameObject;
 				
 			}
-
-
-
+			
+			
+			
 			//Creating triangles using diagonals
 			foreach(Line diagonal in newLines)
 			{
@@ -2674,10 +3219,10 @@ public partial class Visibility1 : MonoBehaviour {
 				Debug.DrawLine(newVertices[newTriangles[itr+1]],newVertices[newTriangles[itr+2]]);
 				Debug.DrawLine(newVertices[newTriangles[itr+2]],newVertices[newTriangles[itr]]);
 			}*/
-
+			
 			Vector2[] uvs = new Vector2[newVertices.Count];
 			int i2 = 0;
-
+			
 			shadowMeshes[shadowMeshes.Count-1].transform.position = new Vector3(0,1,0);//newVertices[0];
 			/*for(i2=0;i2<newVertices.Count;i2++)
 			{
@@ -2689,19 +3234,19 @@ public partial class Visibility1 : MonoBehaviour {
 				uvs[i2] = new Vector2(newVertices[i2].x, newVertices[i2].z);
 				i2++;
 			}
-
+			
 			Vector3[] normals = new Vector3[newVertices.Count];
 			for (i2 = 0; i2 < normals.Length; i2++) 
 			{
 				normals[i2] = Vector3.up;
 			}
-
-
+			
+			
 			mesh.vertices = newVertices.ToArray();
 			mesh.uv = uvs;
 			mesh.triangles = newTriangles.ToArray();
 			mesh.normals=normals;
-
+			
 			filter.mesh = mesh;
 			mesh.RecalculateNormals();
 			mesh.RecalculateBounds();
@@ -2711,7 +3256,7 @@ public partial class Visibility1 : MonoBehaviour {
 			newVertices.Clear();
 		}
 		Debug.Break();
-
+		
 	}
 	//float lastTimeUpdateCalled=Time.time;
 	//int lastUpdateCalled=100;
@@ -2746,14 +3291,14 @@ public partial class Visibility1 : MonoBehaviour {
 		if (dist > 0.05)
 			return false;
 		Debug.Log ("Found index " + index);
-
-
+		
+		
 		displayShadowMeshes(index);
 		return true;
 	}
 	bool bNearBy = false;
 	bool bCallComplete=true;
-
+	
 	int startIndex = -1;
 	int endIndex = -1;
 	void IdentifyGoodHidingSpots ()
@@ -2771,7 +3316,7 @@ public partial class Visibility1 : MonoBehaviour {
 			foreach(Line l in geo.edges)
 			{
 				List<Vector3> pair = l.PointsOnEitherSide(0.02f);
-
+				
 				int ct_insideObstacle=0;
 				//int ct_insideBoundary=0;
 				foreach(Vector3 pt in pair)
@@ -2868,7 +3413,7 @@ public partial class Visibility1 : MonoBehaviour {
 						}
 					}
 					//if(insideCounterTemp>0 && insideCounterTemp<4)
-						//Debug.Log (insideCounterTemp);
+					//Debug.Log (insideCounterTemp);
 					if(insideCounterTemp==circumPoints.Count)
 					{
 						sphereFound=true;
@@ -2884,16 +3429,16 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		hiddenSphereList.RemoveAll(item=>item==null);
 	}
-
+	
 	public void CalculateVisibilityForPath()
 	{
 		//globalPolygon = getObstacleEdges ();
-
+		
 		List<Vector3> endPoints = new List<Vector3> ();
 		hTable = new Hashtable ();
 		hVisiblePolyTable = new Hashtable ();
 		//Extract all end points
-
+		
 		foreach(Line l in mapBG.edges)
 		{
 			foreach(Vector3 vect in l.vertex)
@@ -2938,7 +3483,7 @@ public partial class Visibility1 : MonoBehaviour {
 			List<Geometry> starPoly = new List<Geometry>();
 			List<Vector3> arrangedPoints = new List<Vector3> ();
 			List<float> angles = new List<float>();
-
+			
 			foreach(Vector3 vect in endPoints)
 			{
 				float sAngle = SignedAngleBetween(pPoint-vect,alongX-pPoint,normalVect);
@@ -3008,7 +3553,7 @@ public partial class Visibility1 : MonoBehaviour {
 				}
 				//Debug.Log(ListContainsPoint(intersectionPoints,vect));
 				//Debug.Log(intersectionPoints.Count+"-----------------------------------");
-
+				
 				intersectionPointsPerV.Add(intersectionPoints);
 				//Sort Intersection Points
 				foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
@@ -3056,7 +3601,7 @@ public partial class Visibility1 : MonoBehaviour {
 			{
 				intersectionPointsPerV.RemoveAt(toRemoveIndex);
 			}*/
-
+			
 			//Remove all hidden intersection points behind visible vertices
 			//TODO Have handle special case of two vertices on same ray from V,
 			//then we might have more intersection points to consider other than 2
@@ -3112,7 +3657,7 @@ public partial class Visibility1 : MonoBehaviour {
 								//geoVisible.edges.Add(new Line(pPoint,intersectionPointsPerV[i][j]));
 								//geoVisible.edges.Add(new Line(pPoint,intersectionPointsPerV[i+1][k]));
 								Line l1 = new Line(intersectionPointsPerV[i][j],intersectionPointsPerV[nextIndex][k]);
-
+								
 								geoVisible.edges.Add(l1);
 							}
 						}
@@ -3146,12 +3691,6 @@ public partial class Visibility1 : MonoBehaviour {
 			hTable.Add(pPoint,shadowPoly);
 		}//End: Do for all path points
 	}
-
-
-
-
-
-
 	Geometry verifyVisibilityPolygon(Vector3 pPoint,Geometry visiblePoly)
 	{
 		for(int i=0;i<visiblePoly.edges.Count;i++)
@@ -3195,13 +3734,13 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		return visiblePoly;
 	}
-	/*void ValidatePolygons (List<Geometry> shadowPoly)
+	void ValidatePolygons (List<Geometry> shadowPoly)
 	{
 		foreach(Geometry g in shadowPoly)
 		{
 		}
 	}
-	*/
+	
 	private List<Geometry> FindShadowPolygons(Geometry starPoly)
 	{
 		List<Vector3> verticesStar = new List<Vector3> ();
@@ -3219,9 +3758,9 @@ public partial class Visibility1 : MonoBehaviour {
 				}
 			}
 		}
-
+		
 		List<Geometry> modObstacles = CreateModifiedObstacles(verticesStar);
-
+		
 		Geometry mapModBoundary = CreateModifiedBoundary(verticesStar);
 		List<Geometry> allGeometries = new List<Geometry> ();
 		allGeometries.AddRange (modObstacles);
@@ -3332,9 +3871,7 @@ public partial class Visibility1 : MonoBehaviour {
 		}*/
 		return shadowPoly;
 	}
-
-
-
+	
 	List<Geometry> CreateModifiedObstacles (List<Vector3> verticesStar)
 	{
 		List<Geometry> modObstacles = new List<Geometry> ();
@@ -3345,7 +3882,7 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		return modObstacles;
 	}
-
+	
 	Geometry CreateModifiedBoundary (List<Vector3> verticesStar)
 	{
 		Geometry mapModBoundary = CreateModifiedPolygon(mapBG,verticesStar);
@@ -3404,15 +3941,13 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		return obstacle;
 	}
-
-
 	private bool ListContainsPoint(List<Vector3> intersectionPoints,Vector3 intsctPoint)
 	{
 		float limit = 0.0001f;
 		foreach (Vector3 vect in intersectionPoints) 
 		{
 			if(Vector3.SqrMagnitude(vect-intsctPoint)<limit)
-			//if(Mathf.Approximately(vect.magnitude,intsctPoint.magnitude))
+				//if(Mathf.Approximately(vect.magnitude,intsctPoint.magnitude))
 				return true;
 			//Debug.Log("Points not equal"+vect+" , "+intsctPoint);
 		}
@@ -3563,14 +4098,14 @@ public partial class Visibility1 : MonoBehaviour {
 		vertex [1] = mesh.transform.TransformPoint (t [0]);
 		vertex [2] = mesh.transform.TransformPoint (t [23]);
 		vertex [3] = mesh.transform.TransformPoint (t [11]);
-
+		
 		
 		vertex [0].y = 1; 
 		vertex [1].y = 1; 
 		vertex [2].y = 1; 
 		vertex [3].y = 1; 
-
-
+		
+		
 		//these were in tempGeometry previously
 		
 		//Disabled Temporarily - Find a way to avoid floor when checking for obstacle collision
@@ -3669,3 +4204,4 @@ public partial class Visibility1 : MonoBehaviour {
 		return finalPoly;
 	}
 }
+#endif
