@@ -1,3 +1,8 @@
+//Different Speeds: optimal vs one strategy.3 speeds
+//Area proportion: % of points vs strategy vs levels vs player path
+//multiple levels: MGS level (total 3)
+//Distribution grapgh: time saved vs num of points
+//Related work: visibility vs shadow, stealth, hide and seek as game,
 using UnityEngine;
 using System.Collections;
 using System.IO;
@@ -35,8 +40,8 @@ public partial class Visibility1 : MonoBehaviour {
 	GameObject playerObj;
 	public GameObject playerPrefab;
 	public GameObject enemyPrefab;
-	public int m_nEnemyStatic = 1;
-	public int m_nEnemyNearMiss = 0;
+	int m_nEnemyStatic = 1;
+	int m_nEnemyNearMiss = 1;
 	//public int nearMissAlgo = 1;
 	public bool m_EnemyStatic = false;
 	public bool m_Greedy = false;
@@ -391,7 +396,8 @@ public partial class Visibility1 : MonoBehaviour {
 		currRunTimeEnemny = Time.time;
 		currRunPointsEnemy = 0.0f;
 	}
-
+	//Distance moved by player on each update;
+	float distBtwPlayerMovements = -1.0f;
 	void Update () 
 	{
 		if (bDisplayAreas || m_ExecuteTrueCase || m_ShowTrueCase || m_CalculateTrueCase)
@@ -503,7 +509,10 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 			*/
 		}
+		Vector3 prevPlayerPos = playerObj.transform.position;
 		playerObj.transform.position = Vector3.MoveTowards(playerObj.transform.position, pathPoints[nextPlayerPath], speedPlayer*Time.deltaTime);
+		distBtwPlayerMovements = Vector3.Distance (prevPlayerPos, playerObj.transform.position);
+		//Debug.Log ("distBtwPlayerMovements = " + distBtwPlayerMovements);
 		doPlayerMovements ();
 
 
@@ -543,6 +552,32 @@ public partial class Visibility1 : MonoBehaviour {
 			EnemyMovement shadowAssistedObj = m_enemyShadowAssistedList[j];
 			if(shadowAssistedObj.bCaught)
 				continue;
+			////////////////////////////////
+
+
+			Vector3 currPosEnemy = shadowAssistedObj.enemyObj.transform.position;
+			
+			shadowAssistedObj.vNextPos.Add(findNextPosEnemyShadowAssisted(shadowAssistedObj.enemyObj));
+			//if(currPosEnemy == shadowAssistedObj.vNextPos[0])
+			shadowAssistedObj.vNextPos.RemoveAt(0);
+			if(enemyCaught(shadowAssistedObj.enemyObj.transform.position))
+			{
+				if(m_SetUpCase)
+				{
+					pointsArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = nextPlayerPath-1;
+					timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = Time.time - currRunTimeEnemny;
+					Debug.Log("Caught!!! Took "+timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]+" to catch");
+					resetCase();
+					return;
+				}
+				Renderer rend = shadowAssistedObj.enemyObj.GetComponent<Renderer>();
+				rend.material.shader = Shader.Find("Specular");
+				rend.material.SetColor("_SpecColor", Color.white);
+				shadowAssistedObj.bCaught=true;
+				Debug.Log("Shadow Assisted Caught");
+			}
+			
+			/// //////////////////////////////
 			shadowAssistedObj.enemyObj.transform.position = Vector3.MoveTowards(shadowAssistedObj.enemyObj.transform.position,shadowAssistedObj.vNextPos[0], speedEnemy*Time.deltaTime);
 		}
 		for(int j=0;j<m_enemyCentroidList.Count;j++)
@@ -614,7 +649,7 @@ public partial class Visibility1 : MonoBehaviour {
 			//nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,nearMissObj.vNextPos[0], speedEnemy*Time.deltaTime);
 		}
 
-		for(int j=0;j<m_enemyShadowAssistedList.Count;j++)
+		/*for(int j=0;j<m_enemyShadowAssistedList.Count;j++)
 		{
 			EnemyMovement shadowAssistedObj = m_enemyShadowAssistedList[j];
 			if(shadowAssistedObj.bCaught)
@@ -641,7 +676,7 @@ public partial class Visibility1 : MonoBehaviour {
 				Debug.Log("Greedy Enemy Caught");
 			}
 			//nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,nearMissObj.vNextPos[0], speedEnemy*Time.deltaTime);
-		}
+		}*/
 	}
 
 	private bool enemyCaught(Vector3 currPos)
@@ -650,9 +685,115 @@ public partial class Visibility1 : MonoBehaviour {
 			return false;
 		return true;
 	}
+	private float distanceBwPtAndLine(Vector3 pt,Line currEdge)
+	{
+		bool validLine = false;
+		float y2 = currEdge.vertex[1].z;
+		float y1 = currEdge.vertex[0].z;
+		float x2 = currEdge.vertex[1].x;
+		float x1 = currEdge.vertex[0].x;
+		float x3 = pt.x;
+		float y3 = pt.z;
+
+		float k = ((y2 - y1) * (x3 - x1) - (x2 - x1) * (y3 - y1)) / ((y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1));
+		float x4 = x3 - k * (y2-y1);
+		float y4 = y3 + k * (x2-x1);
+		Vector3 perpdicularPt = new Vector3 (x4, pt.y, y4);
+		if(currEdge.PointOnLine(perpdicularPt))
+		{
+			validLine = true;
+		}
+		/*if((pt.x >=currEdge.vertex[0].x && pt.x <=currEdge.vertex[1].x) ||   (pt.x >=currEdge.vertex[1].x && pt.x <=currEdge.vertex[0].x) || (pt.x >=currEdge.vertex[1].z && pt.x <=currEdge.vertex[0].z) || (pt.x >=currEdge.vertex[0].z && pt.x <=currEdge.vertex[1].z))
+		{
+			validLine = true;
+		}*/
+		if(!validLine)
+		{
+			/*if(Vector3.Distance(pt,currEdge.vertex[0])<Vector3.Distance(pt,currEdge.vertex[1]))
+			{
+				return Vector3.Distance(pt,currEdge.vertex[0]);
+			}
+			else
+			{
+				return Vector3.Distance(pt,currEdge.vertex[1]);
+			}*/
+			//return Vector3.Distance(pt,currEdge.MidPoint());
+			return -1.0f;
+		}
+
+		float minDist = Mathf.Abs((y2-y1)*pt.x - (x2-x1)*pt.z + x2*y1 - y2*x1);
+		minDist = minDist/Mathf.Sqrt(Mathf.Pow((y2-y1),2) + Mathf.Pow((x2-x1),2));
+		return minDist;
+	}
 	//UPDATE REQUIRED
 	private Vector3 findNextPosEnemyShadowAssisted(GameObject enemyObj)
 	{
+		Vector3 vecSel = enemyObj.transform.position;
+		//float timePlayer = Vector3.Distance(pathPoints[nextPlayerPath],pathPoints[nextPlayerPath-1])/speedPlayer;
+		float timePlayer = distBtwPlayerMovements/speedPlayer;
+		float radiusMovement = speedEnemy*timePlayer;
+		int currPlayerPathPoint = nextPlayerPath-1;
+		if(!pointInShadow(vecSel,currPlayerPathPoint))
+		{
+			return enemyObj.transform.position;
+		}
+		Geometry currShadowPolygon = findCurrentShadowPolygon(vecSel,currPlayerPathPoint);
+		List<Vector3> probablePointsInShadow = new List<Vector3> ();
+		int angleVar=0;
+		int angleVarStep=1;//1 or even
+		while(true)
+		{
+			vecSel = new Vector3();
+			vecSel.x = enemyObj.transform.position.x + radiusMovement*Mathf.Cos(angleVar* Mathf.Deg2Rad);
+			vecSel.y = enemyObj.transform.position.y;
+			vecSel.z = enemyObj.transform.position.z + radiusMovement*Mathf.Sin(angleVar* Mathf.Deg2Rad);
+			if(pointInShadow(vecSel,currPlayerPathPoint))
+			{
+				probablePointsInShadow.Add(vecSel);
+			}
+			angleVar+=angleVarStep;
+			if(angleVar==360)
+				break;
+		}
+		if(probablePointsInShadow.Count==0)
+		{
+			return enemyObj.transform.position;
+		}
+		else if(probablePointsInShadow.Count==1)
+		{
+			return probablePointsInShadow[0];
+		}
+		float overallMaxDist = -1.0f;
+		int overallMaxDistIndex = -1;
+		//Min distance from edges of shadow polygon
+		List<float> probablePointsMinDist = new List<float> ();
+		foreach(Vector3 pt in probablePointsInShadow)
+		{
+			float minDist = distanceBwPtAndLine(pt,currShadowPolygon.edges[0]);
+			int iActual = 1;
+			while(minDist<0.0f)
+			{
+				minDist = distanceBwPtAndLine(pt,currShadowPolygon.edges[iActual]);
+				iActual++;
+			}
+			for(int i=iActual;i<currShadowPolygon.edges.Count;i++)
+			{
+				float dist = distanceBwPtAndLine(pt,currShadowPolygon.edges[i]);
+				if(dist<0.0f)
+					continue;
+				if(dist<minDist)
+				{
+					minDist = dist;
+				}
+			}
+			if(minDist>overallMaxDist)
+			{
+				overallMaxDist = minDist;
+				overallMaxDistIndex = probablePointsMinDist.Count;
+			}
+			probablePointsMinDist.Add(minDist);
+		}
+		return probablePointsInShadow[overallMaxDistIndex];
 	}
 	//UPDATE REQUIRED
 	//Nearest safepoint. Least movement.
@@ -870,7 +1011,7 @@ public partial class Visibility1 : MonoBehaviour {
 	*/
 	private void setUpEnemyInitialPos()
 	{
-		if(m_nEnemyStatic>0)
+		if(m_EnemyStatic)
 		{
 			createDiscreteMap ();
 			sbyte[,] shadowArray = null;
@@ -887,6 +1028,15 @@ public partial class Visibility1 : MonoBehaviour {
 				placeEnemyNearMissAt(sel);
 				numNearMiss--;
 			}
+		}
+		if(m_ShadowEdgeAssisted)
+		{
+			setGlobalVars1();
+
+			Vector3 sel = selectInitialShadowAssistedRandomPos();
+			placeEnemyShadowAssistedAt(sel);
+
+
 		}
 		if(m_nEnemyCentroid>0)
 		{
@@ -1035,6 +1185,23 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 			return sel;
 		}
+	}
+	private Vector3 selectInitialShadowAssistedRandomPos()
+	{
+	
+	
+		int selX = Random.Range(0,discretePtsX);
+		int selZ = Random.Range(0,discretePtsZ);
+		Vector3 sel = (Vector3)h_mapIndxToPt[new Vector2(selX,selZ)];
+		while(!pointInShadow(sel,0))
+		{
+			selX = Random.Range(0,discretePtsX);
+			selZ = Random.Range(0,discretePtsZ);
+			sel = (Vector3)h_mapIndxToPt[new Vector2(selX,selZ)];
+		}
+
+		return sel;
+
 	}
 	private void placeEnemyStatic(sbyte[,] shadowArray)
 	{
@@ -2072,6 +2239,16 @@ public partial class Visibility1 : MonoBehaviour {
 		return newTriangles;
 	}
 	private GameObject allLineParent;
+	private Geometry findCurrentShadowPolygon(Vector3 pt,int Indx)
+	{
+		List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [Indx]];
+		foreach(Geometry geo in shadowPolyTemp)
+		{
+			if(geo.PointInside(pt))
+				return geo;
+		}
+		return null;
+	}
 	private bool pointInShadow(Vector3 pt,int Indx)
 	{
 		if (Indx >= pathPoints.Count || Indx < 0)
