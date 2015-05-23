@@ -124,6 +124,12 @@ public partial class Visibility1 : MonoBehaviour {
 			pathPoints = CommonTestCase1.definePath ();
 			m_stepDistance = CommonTestCase1.getStepDistance();
 		}
+		else if(currSceneName=="MGS.unity")
+		{
+			pathPoints = CommonMGS.definePath ();
+			m_stepDistance = CommonMGS.getStepDistance();
+			Debug.Break ();
+		}
 		///////////////////////////True Case//////////////////////////////
 		if(m_ExecuteTrueCase)
 		{
