@@ -79,14 +79,14 @@ namespace Medial{
 			arena= new ArenasGenerator(selGridInt);
 			file_prefix="moving_gaurd";
 
-			///divide each line in each layer in multiple parts horizontally of length= layer_division
-			LayerPolygonUtil LPU= new LayerPolygonUtil(arena,arena.layer_division,0f);
-
 			///and get the redefined layers
-			var layers=LPU.getLayer();
-
+			var layers=arena.getLayers();
+			
 			///init t
 			initT(layers[0][0].y,layers[1][0].y, layers[layers.Count-2][0].y);
+
+			///divide each line in each layer in multiple parts horizontally of length= layer_division
+			LayerPolygonUtil LPU= new LayerPolygonUtil(arena,arena.layer_division,0f);
 
 			//add 2 layers in-between every two layers.
 //			layers=LayerPolygonUtil.addLayers(layers,2f);
@@ -102,7 +102,7 @@ namespace Medial{
 			}
 			map.transform.position.Set(0f,0f,0f);
 
-			for(int goi=1; goi < vt.Count-2;goi++){
+			for(int goi=1; goi < vt.Count;goi++){
 				var go=(GameObject) Instantiate(boxprefab);
 				go.name="Box"+goi;
 				go.transform.parent=map;
@@ -110,6 +110,11 @@ namespace Medial{
 				go.AddComponent<MeshCollider>();
 			}
 		}
+
+		public void callRRT(){
+			RRT r= new RRT(arena,2500,start.transform.position,end.transform.position);
+		}
+
 		public void buildMedial()
 		{
 
@@ -118,7 +123,7 @@ namespace Medial{
 			string medial_output=dir+"output_medial_"+multi_triangle_input_file;
 			var gameobj2 = GameObject.Find ("Medial");
 			medialMeshObj= new MedialMesh(medial_output,gameobj2,true, true,
-			                              arena);
+			                              arena,null,false);
 
 		}
 

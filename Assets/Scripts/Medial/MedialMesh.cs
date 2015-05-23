@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using System.Diagnostics;
 using Priority_Queue;
 namespace Medial{
 	public class MedialMesh {
@@ -18,6 +19,7 @@ namespace Medial{
 		GameObject meshGameObject;
 		IntervalKDTree<int> tree;
 		ArenasGenerator arena;
+		MedialMetrics metrics1;
 
 		///for connecting opposite vertices of two common triangles
 		Hashtable linesToTriangle;
@@ -26,24 +28,25 @@ namespace Medial{
 		HashSet<int>removedVertices_global;
 
 		public MedialMesh(string InputFile, GameObject go, bool createGraphflag, bool filterNodesFlag, 
-		                  ArenasGenerator arena){
+		                  ArenasGenerator arena, MedialMetrics m1, bool measurements){
 			//.getMinX(),arena.getMaxX(), y2_min, y2_max, arena.getMinZ(), arena.getMaxZ()
 			//float x_min, float x_max,float y_min, float y_max,float z_min, float z_max
 			char[] delimiterChars = { ' ', '\t' };
 			this.meshGameObject=go;
 			string []objectFile;
 			objectFile = System.IO.File.ReadAllLines(InputFile);
-			int nvertices_totalTri = Convert.ToInt32(objectFile [0]) * 2;
-			int ntriangles = Convert.ToInt32(objectFile [1]) *2;
+			int nvertices_totalTri = Convert.ToInt32(objectFile [0]);
+			int ntriangles = Convert.ToInt32(objectFile [1]);
 			this.vertices = new List<Vector3>(nvertices_totalTri);
 			this.triangles =  new List<int>(ntriangles);
 			this.arena=arena;
 			this.removedVertices_global= new HashSet<int>();
+			this.metrics1=m1;
 			string []parsed;
 			float a,b, c;
 			int vPointer=2;
 			
-			for( int i=0; i <nvertices_totalTri/2;vPointer++, i++){
+			for( int i=0; i <nvertices_totalTri;vPointer++, i++){
 				parsed= objectFile[vPointer].Split(delimiterChars);
 				a=float.Parse(parsed[0], System.Globalization.CultureInfo.InvariantCulture);
 				b=float.Parse(parsed[1], System.Globalization.CultureInfo.InvariantCulture);
@@ -52,13 +55,15 @@ namespace Medial{
 				
 			}
 
-			for(int i=0, j=0; j< ntriangles/2 ;i=i+3,j++,vPointer++){
+			for(int i=0, j=0; j< ntriangles ;i=i+3,j++,vPointer++){
 				parsed= objectFile[vPointer].Split(delimiterChars);
 				this.triangles.Add(Convert.ToInt32(parsed[1]));
 				this.triangles.Add(Convert.ToInt32(parsed[2]));
 				this.triangles.Add(Convert.ToInt32(parsed[3]));
 			}
-
+			Stopwatch watch= null;
+			if(measurements)
+				watch= Stopwatch.StartNew();
 
 			if(filterNodesFlag)
 			{
@@ -66,22 +71,39 @@ namespace Medial{
 				removeTopBottom(arena.getMinY2(), arena.getMaxY2());
 				//update totalvertices count after removing vertices and triangles of top and bottom
 				
-				nvertices_totalTri=this.vertices.Count*2;
-				ntriangles=this.triangles.Count*2/3;
+				//no use though, except to just print
+				nvertices_totalTri=this.vertices.Count;
+				ntriangles=this.triangles.Count;
 			}
 			if(createGraphflag){
 				graphObj= new Graph(this.vertices,0f);
 				
 			}
 
-			layMesh();
-			this.meshGameObject.AddComponent<MeshCollider>();
-			udl ("Medial Skeleton created");
+			if(measurements)
+			{	watch.Stop();
+				metrics1.remove_top_bottom_time = watch.ElapsedMilliseconds;
+				watch = Stopwatch.StartNew();
+			}
+			if(createGraphflag){
+				graphObj= new Graph(this.vertices,0f);
+				
+			}
+		
 
-			createGraph();
-
+		createGraph();
+			if(measurements)
+			{
+				watch.Stop();
+				metrics1.creating_graph_time = watch.ElapsedMilliseconds;
+				metrics1.v_in_graph= graphObj.nvertices;
+				metrics1.e_in_graph=  graphObj.ndirectededges;
+			}
 			double maxrange=Mathf.Max(arena.getMaxX()-arena.getMinX(),arena.getMaxZ()-arena.getMinZ());
 			tree = new IntervalKDTree<int>(maxrange/2, 10);
+
+			layMesh();
+			this.meshGameObject.AddComponent<MeshCollider>();
 		}
 
 		private void createGraph(){
@@ -117,7 +139,7 @@ namespace Medial{
 				if(opp.Count !=2)
 					udl ("triangle count="+opp.Count);
 				graphObj.addEdge(opp[0],opp[1]);
-//					Debug.DrawLine(vertices[opp[0]],vertices[opp[1]], Color.blue,10000);
+//					UnityEngine.Debug.DrawLine(vertices[opp[0]],vertices[opp[1]], Color.blue,10000);
 
 			}
 		}
@@ -251,7 +273,10 @@ namespace Medial{
 
 		public void connect_Vs(float r){
 
+			var watch = Stopwatch.StartNew();
 			createKDTreeDictionary();
+			watch.Stop();
+			metrics1.create_KDtree_time = watch.ElapsedMilliseconds;
 
 			float dist;
 			float vy;
@@ -275,7 +300,7 @@ namespace Medial{
 									continue;
 								
 								graphObj.addEdge(i,j,dist);
-//									Debug.DrawLine(vertices[i],vertices[j], Color.magenta,100000);
+//									UnityEngine.Debug.DrawLine(vertices[i],vertices[j], Color.magenta,100000);
 							}
 						}
 					}
@@ -482,7 +507,7 @@ namespace Medial{
 			    	graphObj.removeEdge(int.Parse(ns[0]),int.Parse(ns[1]));
 				}
 				else
-					Debug.DrawLine(vertices[int.Parse(ns[0]) ],vertices[int.Parse(ns[1])], Color.blue,100000);
+					UnityEngine.Debug.DrawLine(vertices[int.Parse(ns[0]) ],vertices[int.Parse(ns[1])], Color.blue,100000);
 			}
 			foreach (var line in redlines) 
 			{
@@ -491,7 +516,7 @@ namespace Medial{
 					graphObj.removeEdge(int.Parse(ns[0]),int.Parse(ns[1]));
 				}
 				else
-					Debug.DrawLine(vertices[int.Parse(ns[0])],vertices[int.Parse(ns[1])], Color.red,100000);
+					UnityEngine.Debug.DrawLine(vertices[int.Parse(ns[0])],vertices[int.Parse(ns[1])], Color.red,100000);
 			}
 			
 			this.removedVertices_global=removedVertices;
@@ -532,7 +557,7 @@ namespace Medial{
 						if(ay<42 && ayp <7)
 						{	
 							breakflag=true;
-//							Debug.DrawLine(vertices[neighbour1.y],vertices[neighbour2.y], Color.magenta,100000);
+//							UnityEngine.Debug.DrawLine(vertices[neighbour1.y],vertices[neighbour2.y], Color.magenta,100000);
 							removedVertices.Add(i);
 							break;
 						}
@@ -605,7 +630,7 @@ namespace Medial{
 						continue;
 					//check if there isn't an edge already between n1 and n2
 					if(!graphObj.unDirectedEdges[n1.nodeId].Contains(n2)){
-						Debug.DrawLine(vertices[n1.nodeId],vertices[n2.nodeId], Color.magenta,100000);
+						UnityEngine.Debug.DrawLine(vertices[n1.nodeId],vertices[n2.nodeId], Color.magenta,100000);
 					}
 				}
 			}
@@ -658,8 +683,8 @@ namespace Medial{
 						if(f||(ay<42.0f && ay>1.0f && ayp <25.0f)){
 							if(!f)
 								breakflag=true;
-							Debug.DrawLine(vertices[neighbour1.nodeId],v, Color.magenta,100000);
-							Debug.DrawLine(vertices[neighbour2.nodeId],v,Color.blue,100000);
+							UnityEngine.Debug.DrawLine(vertices[neighbour1.nodeId],v, Color.magenta,100000);
+							UnityEngine.Debug.DrawLine(vertices[neighbour2.nodeId],v,Color.blue,100000);
 			
 							var go2= GameObject.CreatePrimitive(PrimitiveType.Capsule);
 							go2.transform.localScale= new Vector3(0.3f,0.3f,0.3f);
@@ -848,7 +873,7 @@ namespace Medial{
 				go.transform.localScale= new Vector3(0.3f,0.3f,0.3f);
 				go.transform.position=vertices[i];
 				go.name= "end";
-				go.transform.parent=go.transform;
+				go.transform.parent=go2.transform;
 			}
 		}
 

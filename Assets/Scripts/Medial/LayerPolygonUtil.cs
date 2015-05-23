@@ -15,9 +15,9 @@ namespace Medial{
 		ArenasGenerator aGen;
 
 		public LayerPolygonUtil(ArenasGenerator aGen, float layer_division, float numberofAddLayers){
-			this.covers=aGen.getCovers();;
-			this.polygons=aGen.getPolygons();
-			this.layers=aGen.getLayers();;
+			this.covers=	aGen.getCovers();
+			this.polygons=	aGen.getPolygons();
+			this.layers=	aGen.getLayers();;
 
 			mappingOriginalIndexToNewIndexOfPolygons= new List<int>();
 

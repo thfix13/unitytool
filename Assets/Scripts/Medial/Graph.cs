@@ -13,14 +13,19 @@ namespace Medial
 		private List <Vector3> vertices;
 		private float addEdgeAngleConstraint;
 
-		public int nvertices;
-		
+		public int nvertices, ndirectededges;
+		/// <summary>
+		/// Initializes a new instance of the <see cref="Medial.Graph"/> class.
+		/// </summary>
+		/// <param name="vertices">Vertices.</param>
+		/// <param name="addEdgeAngle">Add edge angle. range: [0,90)</param>
 		public Graph(List<Vector3> vertices, float addEdgeAngle){
 			this.vertices=vertices;
 			this.nvertices=vertices.Count;
 			this.directedEdges= new HashSet<edgenode>[nvertices];
 			this.unDirectedEdges= new HashSet<edgenode>[nvertices];
 			this.addEdgeAngleConstraint= addEdgeAngle;
+			this.ndirectededges=0;
 		}
 		
 		/// <summary>
@@ -57,6 +62,7 @@ namespace Medial
 				return false;
 			}
 			directedEdges[from].Add(new edgenode(to,w));
+			ndirectededges++;
 			return true;
 		}
 

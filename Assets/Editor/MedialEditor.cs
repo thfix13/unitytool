@@ -57,7 +57,10 @@ using UnityEditor;
 				g = GameObject.Find("Medial");
 				obj=g.GetComponent<Moving_guard_arena>();
 			}
-
+			if(GUILayout.Button("Run RRT",GUILayout.Width(100)))
+			{
+				obj.callRRT();
+			}
 			if(GUILayout.Button("Get Medial Skeleton+Create Graph",GUILayout.Width(200)))
 			{
 				
@@ -118,6 +121,20 @@ using UnityEditor;
 				obj.Reset();
 			}
 			GUILayout.EndHorizontal();
+		}
+	}
+	[CustomEditor(typeof(Testing))]
+	public class  MedialEditor3: Editor {
+		GameObject g=null;
+		Moving_guard_arena obj;
+		public override void OnInspectorGUI()
+		{
+			DrawDefaultInspector();
+			if(g==null)
+			{
+				g = GameObject.Find("Medial");
+				obj=g.GetComponent<Moving_guard_arena>();
+			}
 		}
 	}
 }

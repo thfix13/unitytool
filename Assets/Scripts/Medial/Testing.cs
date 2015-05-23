@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
-namespace Medialtesting{
+namespace Medial{
 	public class Testing : MonoBehaviour {
 		
 		public GameObject boxprefab, start, end;
@@ -15,22 +15,12 @@ namespace Medialtesting{
 		string file_prefix;
 		ArenasGenerator arena= null;
 		string multi_triangle_input_file, dir=@"/Users/dhsingh/Documents/Thesis/SM03Skeleton/";
-		
-		/// <summary>
-		/// the time t that increases from the lowest y to inifinity, and thus updates the player location 
-		/// in the 2D view of the game from the top. 
-		/// </summary>
-		float t=0;
-		
-		/// <summary>
-		/// Keep y_min for resetting t
-		/// </summary>
-		float t_min;
+
 		
 		MedialMesh medialMeshObj;
-		bool generate2DFlag=false;
-		GameObject player2Dprojection;
-		
+
+		public MedialMetrics metrics1;
+
 		void Start () {
 			buildTriangulatedTimeVaryingArena(4);
 			//			buildMedial();
@@ -38,43 +28,7 @@ namespace Medialtesting{
 			//			showPath();
 		}
 		
-		// Update is called once per frame
-		void Update () {
-			
-			Vector3 playerpos= generate2DFlag? medialMeshObj.movePlayer(t):Vector3.zero;
-			if(playerpos==-Vector3.one)
-			{
-				udl ("Destination reached, Game paused");
-				generate2DFlag=false;
-				return;
-			}
-			if(playerpos!= Vector3.zero)
-				player2Dprojection.transform.position= new Vector3(playerpos.x,player2Dprojection.transform.position.y,playerpos.z);
-			if(generate2DFlag){
-				arena.generate2D_movinggaurdarena(t);
-				t+=0.013f;
-				//				udl ("t= "+t);
-			}
-			
-		}
-		
-		public void playpause(){
-			generate2DFlag=!generate2DFlag;
-		}
-		public void goBack(){
-			t=Math.Max (0,t-1);
-		}
-		public void Reset(){
-			t=t_min;
-		}
-		
-		///t_min to be set equal to layers[0].y
-		///t_max to be set equal to layers[Last-1].y
-		public void initT(float val, float val2, float val3){
-			t_min=t= val;
-			arena.setMinMaxXYZ(val2,val3);
-		}
-		
+	
 		public void buildTriangulatedTimeVaryingArena(int selGridInt){
 			arena= new ArenasGenerator(selGridInt);
 			file_prefix="moving_gaurd";
@@ -84,9 +38,6 @@ namespace Medialtesting{
 			
 			///and get the redefined layers
 			var layers=LPU.getLayer();
-			
-			///init t
-			initT(layers[0][0].y,layers[1][0].y, layers[layers.Count-2][0].y);
 			
 			//add 2 layers in-between every two layers.
 			//			layers=LayerPolygonUtil.addLayers(layers,2f);
@@ -112,18 +63,25 @@ namespace Medialtesting{
 		}
 		public void buildMedial()
 		{
-			
+			var watch = Stopwatch.StartNew();
+
 			runaProcess("/Users/dhsingh/Documents/Thesis/SM03Skeleton/run.sh",multi_triangle_input_file);
-			
+			watch.Stop();
+			metrics1.medial_algo_running_time = watch.ElapsedMilliseconds;
+
 			string medial_output=dir+"output_medial_"+multi_triangle_input_file;
 			var gameobj2 = GameObject.Find ("Medial");
 			medialMeshObj= new MedialMesh(medial_output,gameobj2,true, true,
-			                              arena);
+			                              arena, metrics1, true);
 			
 		}
 		
 		public void RemoveVs(){
+			var watch = Stopwatch.StartNew();
 			medialMeshObj.connect_Vs(1.7f);
+			watch.Stop();
+			metrics1.connect_Vs_time = watch.ElapsedMilliseconds;
+
 			udl ("Nodes in "+1.7+" proximity connected");
 		}
 		
@@ -142,19 +100,6 @@ namespace Medialtesting{
 		public void showPaths(){
 			medialMeshObj.showPath();
 		}
-		public void projectPathOn2D(){
-			
-			var plane= GameObject.CreatePrimitive(PrimitiveType.Cube);
-			plane.transform.localScale=new Vector3(arena.getMaxX()-arena.getMinX(),0.1f,arena.getMaxZ()-arena.getMinZ());
-			plane.transform.position= new Vector3(0,arena.getMaxY2()+0.25f,0);
-			plane.GetComponent<Renderer>().material.color=Color.black;
-			
-			player2Dprojection= GameObject.CreatePrimitive(PrimitiveType.Sphere);
-			player2Dprojection.transform.localScale= new Vector3(2f,2f,2f);
-			player2Dprojection.GetComponent<Renderer>().material.color= Color.cyan;
-			player2Dprojection.transform.position=new Vector3(0,arena.getMaxY2()+0.5f,0);
-			
-			generate2DFlag=true;}
 		
 		void runaProcess(string filename,string arguments){
 			ProcessStartInfo startInfo = new ProcessStartInfo()
@@ -171,5 +116,22 @@ namespace Medialtesting{
 		static void udl(object s){
 			UnityEngine.Debug.Log(s);
 		}
+	}
+
+	public class MedialMetrics{
+		public long medial_algo_running_time, 
+		remove_top_bottom_time,
+		creating_graph_time, 
+		run_dijkstra_on_graph_time,
+		connect_Vs_time,
+		create_KDtree_time;
+
+		public int v_unidirected_uncut, 
+		e_unidirected_uncut,
+		v_in_graph,
+		e_in_graph;
+
+		public float time_for_shortest_path;
+
 	}
 }
