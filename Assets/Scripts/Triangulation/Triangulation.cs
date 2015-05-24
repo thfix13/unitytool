@@ -128,7 +128,7 @@ public class Triangulation : MonoBehaviour
 	{
 		if ( stopAll )
 			return;
-		
+
 		if(drawMinSpanTree){
 			GameObject temp = GameObject.Find("temp"); 
 			foreach(Line l in linesMinSpanTree)
@@ -310,14 +310,21 @@ public class Triangulation : MonoBehaviour
 		stopwatch.Stop();
 		Debug.Log("PREPROCESSING: " + stopwatch.ElapsedMilliseconds * 0.001);
 
-		/***PHASE B: COLORING***/
-		/*STEP 4 - MAKE MST OF POLYGONS*/
-		stopwatch.Reset ();
-		stopwatch.Start ();
-		MST ();
-		stopwatch.Stop ();
-		Debug.Log("MST: " + stopwatch.ElapsedMilliseconds * 0.001);
-		
+//		/***PHASE B: COLORING***/
+//		/*STEP 4 - MAKE MST OF POLYGONS*/
+//		stopwatch.Reset ();
+//		stopwatch.Start ();
+//		MST ();
+//		stopwatch.Stop ();
+//		Debug.Log("MST: " + stopwatch.ElapsedMilliseconds * 0.001);
+//		printMapToPolyFile ();
+//		printMST ();
+
+
+		scanMST ();
+		scanTriangulation ();
+		return;
+
 		/*STEP 5 - TRIANGULATE*/
 		stopwatch.Reset ();
 		stopwatch.Start ();
@@ -822,8 +829,7 @@ public class Triangulation : MonoBehaviour
 				if (tt == ttt)
 					continue; 
 				tt.ShareEdged (ttt, linesMinSpanTree);		
-			}
-			
+			}			
 		}
 		
 		triangulation.triangles = triangles;
@@ -1941,7 +1947,59 @@ public class Triangulation : MonoBehaviour
 		double percentCovered = (finalCoverage / mapArea) * 100;
 		Debug.Log ("Area Calculated. " + Math.Round( percentCovered, 5 ) + "% of map explored.");
 	}
-	
+
+	void printMapToPolyFile(){
+		string createText = "";
+		//string path = @"C:\Users\Asus\Desktop\McGill\Thesis\Week 20 Tours VPs Unions\vpsVacant.csv";
+		string path = path_start + @"\map.poly";
+		string delimeter = " ";
+		Dictionary<Vector3, int> dict = new Dictionary<Vector3, int> ();
+		Dictionary<int, Vector3> numToVect = new Dictionary<int, Vector3> ();
+		createText += totalGeoVerts.Count + " 2 0 0\n";
+		int xid = 1;
+		foreach(Vector3 v in totalGeoVerts) {
+			dict.Add( v, xid );
+			numToVect.Add( xid, v );
+			createText += xid.ToString() + " " + v.x.ToString() + " " + v.z.ToString() + "\n";
+			xid++;
+		}
+		int cnt = totalGeo.edges.Count + linesMinSpanTree.Count;
+		createText +=  cnt.ToString() + " 0\n";
+		xid = 1;
+		foreach (Line l in totalGeo.edges){
+			int x = dict[l.vertex[0]];
+			int y = dict[l.vertex[1]];
+			createText += xid++.ToString() + " " + x.ToString() + " " + y.ToString() + " 0\n";
+		}
+		foreach (Line l in linesMinSpanTree){
+			int x = dict[l.vertex[0]];
+			int y = dict[l.vertex[1]];
+			createText += xid++.ToString() + " " + x.ToString() + " " + y.ToString() + " 0\n";
+		}
+		createText += finalPoly.Count.ToString () + "\n";
+		xid = 1;
+		foreach( Geometry g in finalPoly ){
+			Vector3 v = g.PointInsidePolygon();
+			if( v.x == 0 && v.y == 0 && v.z == 0 ) Debug.Log( "Failed to get points inside holes" );
+			createText += xid++.ToString() + " " + v.x.ToString() + " " + v.z.ToString() + "\n";
+		}
+		createText += "0\n";
+		File.WriteAllText(path, createText);
+	}
+
+	void printMST(){
+		string createText = "";
+		//string path = @"C:\Users\Asus\Desktop\McGill\Thesis\Week 15 Map SVGs CSVs Scripts\tourVacant.csv";
+		//string path = @"C:\Users\Asus\Desktop\McGill\Thesis\Week 20 Tours VPs Unions\longestTourCrash.csv";
+		string path = path_start + @"\mst.csv";
+		string delimeter = ",";
+		foreach( Line l in linesMinSpanTree ){
+			createText += l.vertex[0].x.ToString()+"," + l.vertex[0].z.ToString()
+				+ "," + l.vertex[1].x.ToString() + "," + l.vertex[1].z.ToString() + ",\n";
+		}
+		File.WriteAllText(path, createText);
+	}
+
 	void printTour(){
 		string createText = "";
 		//string path = @"C:\Users\Asus\Desktop\McGill\Thesis\Week 15 Map SVGs CSVs Scripts\tourVacant.csv";
@@ -1997,8 +2055,94 @@ public class Triangulation : MonoBehaviour
 		}
 		File.WriteAllText(path, createText);
 	}
-	
-	
+
+	void scanMST(){
+		var reader = new StreamReader(File.OpenRead(path_start + @"\mst.csv"));
+		List<string> coord = new List<string> ();
+		Geometry walls = new Geometry ();
+		
+		while ( !reader.EndOfStream )
+		{
+			var line = reader.ReadLine();
+			var values = line.Split(',');
+			//Check the symbol in first column of line
+			Vector3 expPointA = new Vector3();
+			Vector3 expPointB = new Vector3();
+			expPointA.x = float.Parse(values[0]);
+			expPointA.y = 1;
+			expPointA.z = float.Parse(values[1]);
+			expPointB.x = float.Parse(values[2]);
+			expPointB.y = 1;
+			expPointB.z = float.Parse(values[3]);
+			linesMinSpanTree.Add( new Line( expPointA, expPointB ) );
+		}
+	}
+    
+	void scanTriangulation(){
+		triangles = new List<Triangle> ();
+
+		Dictionary<Vector3, int> dict = new Dictionary<Vector3, int> ();
+		Dictionary<int, Vector3> numToVect = new Dictionary<int, Vector3> ();
+		int xid = 1;
+		foreach(Vector3 v in totalGeoVerts) {
+			dict.Add( v, xid );
+			numToVect.Add( xid, v );
+			xid++;
+		}
+
+		var reader = new StreamReader(File.OpenRead(path_start + @"\map.1.ele"));
+		List<string> coord = new List<string> ();
+		Geometry walls = new Geometry ();
+		bool firstline = true;
+		int cnt = 0;
+
+		while ( !reader.EndOfStream )
+		{
+			var line = reader.ReadLine();
+			if( firstline ){
+				firstline = false;
+				continue;
+			}
+			var values = line.Split(' ');
+
+			int turn = 0;
+			int x = -1, y = -1, z = -1;
+			for( int i = 0; i < values.Length; i++ ){
+				values[i].Trim();
+				if( values[i] == "#" ) break;
+				if( values[i] == "" ) continue;
+				else{
+					//if( turn != 0 ) Debug.Log(values[i]);
+					if( turn == 1 ){
+						x = int.Parse( values[i] );
+					}
+					else if( turn == 2 ){
+						y = int.Parse( values[i] );
+					}
+					else if( turn == 3 ){
+						z = int.Parse( values[i] );
+						triangles.Add( new Triangle( numToVect[x], x, numToVect[y], y, numToVect[z], z ) );
+//						linesToAdd.Add( new Line( numToVect[x], numToVect[y] ) );
+//						linesToAdd.Add( new Line( numToVect[z], numToVect[y] ) );
+//						linesToAdd.Add( new Line( numToVect[x], numToVect[z] ) );
+						break;
+					}
+					turn++;
+				}
+			}
+		}
+//		foreach (Line l in linesToAdd) {
+//			l.DrawVector( GameObject.Find("temp"));
+//		}
+		foreach (Triangle tt in triangles) {
+			foreach (Triangle ttt in triangles) {
+				if (tt == ttt)
+					continue; 
+				tt.ShareEdged (ttt, linesMinSpanTree);		
+			}			
+		}		
+		triangulation.triangles = triangles;
+	}
 	
 	void scanTour(){
 		var reader = new StreamReader(File.OpenRead(path_start + @"\tour.csv"));

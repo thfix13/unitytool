@@ -179,55 +179,65 @@ public class Geometry
 		return vertex;
 	}
 
+//	public List<Vector3> GetReflexVertex(){//Called from outside
+//		List<Vector3> vertex = new List<Vector3>();
+//		vertex = this.GetVertex ();
+//		Vector3 minvert = new Vector3 ();
+//		minvert.x = 100000;
+//		minvert.z = 100000;
+//		minvert.y = 1;
+//		foreach (Vector3 v in vertex) {
+//			if( v.z < minvert.z )
+//				minvert = v;
+//			else if( floatCompare(v.z, minvert.z) && v.x < minvert.x )
+//				minvert = v;
+//		}
+//
+//		List<KeyValuePair<Vector3, float>> angList = new List<KeyValuePair<Vector3, float>>();
+//		foreach (Vector3 v in vertex) {
+//			float angle;
+//			if( !VectorApprox( v, minvert ) )
+//				angle = getAngle( minvert, v );
+//			else
+//				angle = -1000;
+//			angList.Add(new KeyValuePair<Vector3, float>(v, angle));
+//		}
+//		//Sort list by angle
+//		angList.Sort (CompareAngle);
+//
+//		//Graham Scan
+//		List<Vector3> reflexList = new List<Vector3> ();
+//		reflexList.Add (minvert);
+//		reflexList.Add (angList[1].Key);
+//
+//		int sz = 2;
+//		for( int i = 2; i < angList.Count; i++ ){
+//			bool vol = isLeft( reflexList[sz - 2], reflexList[sz - 1], angList[i].Key );
+//			if( vol ){
+//				reflexList.Add ( angList[i].Key );
+//				sz++;
+//			}
+//			else{
+//				reflexList.RemoveAt( reflexList.Count - 1 );
+//				if( sz == 2 )
+//					reflexList.Add ( angList[i].Key );
+//				else{
+//					--i;
+//					--sz;
+//				}
+//			}
+//		}
+//		return reflexList;
+//	}
+
 	public List<Vector3> GetReflexVertex(){//Called from outside
-		List<Vector3> vertex = new List<Vector3>();
-		vertex = this.GetVertex ();
-		Vector3 minvert = new Vector3 ();
-		minvert.x = 100000;
-		minvert.z = 100000;
-		minvert.y = 1;
-		foreach (Vector3 v in vertex) {
-			if( v.z < minvert.z )
-				minvert = v;
-			else if( floatCompare(v.z, minvert.z) && v.x < minvert.x )
-				minvert = v;
+		List<Vector3> reflexVertex = GetReflexVertexComplement ();
+		List<Vector3> toReturn = new List<Vector3> ();
+		foreach( Vector3 v in GetVertex() ){
+			if( !reflexVertex.Contains( v ) )
+				toReturn.Add(v);
 		}
-
-		List<KeyValuePair<Vector3, float>> angList = new List<KeyValuePair<Vector3, float>>();
-		foreach (Vector3 v in vertex) {
-			float angle;
-			if( !VectorApprox( v, minvert ) )
-				angle = getAngle( minvert, v );
-			else
-				angle = -1000;
-			angList.Add(new KeyValuePair<Vector3, float>(v, angle));
-		}
-		//Sort list by angle
-		angList.Sort (CompareAngle);
-
-		//Graham Scan
-		List<Vector3> reflexList = new List<Vector3> ();
-		reflexList.Add (minvert);
-		reflexList.Add (angList[1].Key);
-
-		int sz = 2;
-		for( int i = 2; i < angList.Count; i++ ){
-			bool vol = isLeft( reflexList[sz - 2], reflexList[sz - 1], angList[i].Key );
-			if( vol ){
-				reflexList.Add ( angList[i].Key );
-				sz++;
-			}
-			else{
-				reflexList.RemoveAt( reflexList.Count - 1 );
-				if( sz == 2 )
-					reflexList.Add ( angList[i].Key );
-				else{
-					--i;
-					--sz;
-				}
-			}
-		}
-		return reflexList;
+		return toReturn;
 	}
 
 	public List<Vector3> GetReflexVertexComplement(){//Called from outside
@@ -1249,6 +1259,17 @@ public class Geometry
 			}
 		}
 		return true;
+	}
+
+	public Vector3 PointInsidePolygon(){
+		foreach (Vector3 v1 in this.GetVertex()) {
+			foreach (Vector3 v2 in this.GetVertex()) {
+				Line l = new Line( v1, v2 );
+				if( LineInside( l ) && PointInside( l.MidPoint() ) )
+					return l.MidPoint();
+			}
+		}
+		return new Vector3 (0, 0, 0);
 	}
 
 	void drawSphere( Vector3 v, Color x ){
