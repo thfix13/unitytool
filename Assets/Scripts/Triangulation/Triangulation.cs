@@ -67,6 +67,23 @@ public class Triangulation : MonoBehaviour
 		//Gizmos.color = Color.red;
 		//Gizmos.DrawSphere (new Vector3(0,2,0), 1);
 	}
+	void mergePolygons(){
+		//Merge obstacles that are intersecting
+		for (int i = 0; i < obsGeos.Count; i++){
+			for (int j = i + 1; j < obsGeos.Count; j++) {
+				//Check to see if two geometries intersect
+				if( obsGeos[i].GeometryIntersect( obsGeos[j] ) ){
+					Geometry tmpG = obsGeos[i].GeometryMerge( obsGeos[j], 0 );
+					//remove item at position i, decrement i since it will be incremented in the next step, break
+					obsGeos.RemoveAt(j);
+					obsGeos.RemoveAt(i);
+					obsGeos.Add(tmpG);
+					i--;
+					break;
+				}
+			}
+		}
+	}
 	public void Update()
 	{
 
@@ -151,7 +168,7 @@ public class Triangulation : MonoBehaviour
 		colours.Add(c); 
 	}
 
-	public void TriangulationSpace ()
+	/*public void TriangulationSpace ()
 	{
 		//Compute one step of the discritzation
 		//Find this is the view
@@ -501,6 +518,6 @@ public class Triangulation : MonoBehaviour
 		}
 		
 		triangulation.triangles = triangles;
-	}
+	}*/
 
 }

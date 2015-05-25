@@ -9,7 +9,7 @@ using Vectrosity;
 //Used my implementation of line intersection function called: LineIntersectionMuntac (will change name later)
 //Another function called GetIntersectionPoint
 [Serializable]
-public class Line 
+public class Line : IEquatable<Line>
 {
 
 	public Vector3[] vertex = new Vector3[2];
@@ -23,7 +23,204 @@ public class Line
 		colours[0] = Color.cyan;
 		colours[1] = Color.cyan; 
 	}
-
+	public float specialeps = 1e-6f;
+	public bool floatCompareLIN ( float a, float b ){
+		return Math.Abs (a - b) < specialeps;
+	}
+	
+	public bool floatCompareLIN ( float a, float b, string condition ){
+		switch (condition) {
+		case(">="):
+			if (a > b || Math.Abs (a - b) < specialeps)
+				return true;
+			break;
+		case("=="):
+			if (Math.Abs (a - b) < specialeps)
+				return true;
+			break;
+		case("<="):
+			if (a < b || Math.Abs (a - b) < specialeps)
+				return true;
+			break;
+		}
+		return false;
+	}
+	public bool VectorApprox ( List<Vector3> obs_pts, Vector3 interPt ){
+		foreach (Vector3 v in obs_pts) {
+			if( Math.Abs (v.x - interPt.x) < eps && Math.Abs (v.z - interPt.z) < eps )
+				return true;
+		}
+		return false;
+	}
+	public bool VectorApprox ( Vector3 a, Vector3 b ){
+		if( Math.Abs (a.x - b.x) < eps && Math.Abs (a.z - b.z) < eps )
+			return true;
+		else
+			return false;
+	}
+	
+	public bool floatCompare ( float a, float b ){
+		return Math.Abs (a - b) < eps;
+	}
+	public float eps = 1e-5f;//the margin of accuracy for all floating point equivalence checks
+	public bool floatCompare ( float a, float b, string condition ){
+		switch (condition) {
+		case(">="):
+			if (a > b || Math.Abs (a - b) < eps)
+				return true;
+			break;
+		case("=="):
+			if (Math.Abs (a - b) < eps)
+				return true;
+			break;
+		case("<="):
+			if (a < b || Math.Abs (a - b) < eps)
+				return true;
+			break;
+		}
+		return false;
+	}
+	public Vector3 getMinVert( Vector3 a, Vector3 b ){
+		if ( floatCompare( a.x, b.x ) ){
+			if( a.z < b.z )
+				return a;
+			else
+				return b;
+		}
+		else if ( a.x < b.x )
+			return a;
+		else
+			return b;
+	}
+	public Vector3 getSharedVertex(Line l)
+	{
+		foreach(Vector3 v in vertex)
+		{
+			foreach(Vector3 w in l.vertex)
+			{
+				if(VectorApprox(v, w))
+					return v;
+			}
+		}
+		return vertex[0]; 
+	}
+	//Ignores shared endpoint collision
+	public int LineIntersectMuntacGM (Line param){
+		Vector3 a = getMinVert (this.vertex [0], this.vertex [1]);
+		Vector3 b = this.vertex[1];
+		if( a.Equals( this.vertex[1] ) )
+			b = this.vertex[0];
+		Vector3 c = getMinVert (param.vertex [0], param.vertex [1]);
+		Vector3 d = param.vertex[1];
+		if( c.Equals( param.vertex[1] ) )
+			d = param.vertex[0];
+		
+		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
+		Vector2 p0 = new Vector2 (a.x, a.z);
+		
+		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
+		Vector2 q0 = new Vector2 (c.x, c.z);
+		
+		double numerator1 = CrossProduct ((q0 - p0), v);
+		double numerator2 = CrossProduct ((q0 - p0), u);
+		double denom = CrossProduct (u, v);
+		//Debug.Log ("Denom " + denom + " num2 " + numerator2);
+		//Case 1 - Colinear
+		//if ( denom == 0 && numerator2 == 0 ) {
+		
+		if ( floatCompareLIN((float)denom, 0) && floatCompareLIN((float)numerator2,0) ) {
+			//Case 2 - Colinear and Overlapping
+			//Filter out colinear lines that only overlap at a single endpoint
+			if ( ShareVertex (param) ){
+				Vector3 shared = getSharedVertex( param );
+				Line joint = new Line ( GetOther( shared ), param.GetOther( shared ) );
+				if( joint.POL( shared ) )
+					return 0;
+			}
+			//if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
+			if( floatCompareLIN( Vector2.Dot( (q0 - p0), u ), 0, ">=" )
+			   && floatCompareLIN( Vector2.Dot( (q0 - p0), u ), Vector2.Dot( u, u ), "<=" ) )
+				return 2;
+			//if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
+			if( floatCompareLIN( Vector2.Dot( (p0 - q0), v ), 0, ">=" )
+			   && floatCompareLIN( Vector2.Dot( (p0 - q0), v ), Vector2.Dot( v, v ), "<=" ) )
+				return 2;
+			return 0;
+		}
+		//Case 3 - Parallel
+		//if (denom == 0 && numerator2 != 0)
+		if ( floatCompareLIN((float)denom, 0) && !floatCompareLIN((float)numerator2,0) )
+			return 0;
+		
+		//Case 4 - Intersects
+		double s = numerator1 / denom;
+		double t = numerator2 / denom;
+		//Debug.Log ("s " + s + " t" + t);
+		//if ((s > 0 && s < 1) && (t > 0 && t < 1))
+		if ( (floatCompareLIN( (float)s, 0f, ">=")  && floatCompareLIN((float)s, 1f, "<="))
+		    && (floatCompareLIN( (float)t, 0f, ">=")  && floatCompareLIN((float)t, 1f, "<=")) ){
+			if( ShareVertex(param) )
+				return 0;
+			else if( POL(param.vertex[0]) || POL(param.vertex[1]) 
+			        || param.POL(vertex[0]) || param.POL (vertex[1])
+			        || CounterClockCheck(param) )
+				return 1;
+			else
+				return 0;
+		}		
+		return 0;
+	}
+	public bool PointOnLineB( Vector3 pt ){
+		Vector3 a = this.vertex [0];
+		Vector3 b = this.vertex [1];
+		Vector3 c = pt;
+		//Debug.Log ("IsLeft Value: " + ((b.x - a.x) * (pt.z - a.z) - (b.z - a.z) * (c.x - a.x)));
+		return floatCompare( ((b.x - a.x)*(pt.z - a.z) - (b.z - a.z)*(c.x - a.x)), 0 );
+	}
+	public bool POL( Vector3 pt ){
+		return (this.PointOnLine (pt) && this.PointOnLineB (pt));
+	}
+	public bool PointIsLeft( Vector3 pt ){
+		Vector3 a = this.vertex [0];
+		Vector3 b = this.vertex [1];
+		Vector3 c = pt;
+		return ((b.x - a.x)*(pt.z - a.z) - (b.z - a.z)*(c.x - a.x)) > 0;
+	}
+	
+	public bool PointIsLeft( Line param ){
+		Vector3 x = this.getSharedVertex (param);
+		if (x == param.vertex [0])
+			return PointIsLeft (param.vertex [1]);
+		else
+			return PointIsLeft (param.vertex [0]);
+	}
+	
+	public int PointIsLeftInt( Vector3 pt ){
+		Vector3 a = this.vertex [0];
+		Vector3 b = this.vertex [1];
+		Vector3 c = pt;
+		float val = ((b.x - a.x) * (pt.z - a.z) - (b.z - a.z) * (c.x - a.x));
+		if (val < 0)
+			return -1;
+		else if( val > 0 )
+			return 1;
+		else
+			return 0;
+	}
+	//Checks if lines cross each other in any kind of x shape
+	public bool CounterClockCheck( Line param ){
+		int val1 = PointIsLeftInt (param.vertex [0]);
+		int val2 = PointIsLeftInt (param.vertex [1]);
+		bool flagA = false;
+		bool flagB = false;
+		if( (val1 == -1 && val2 == 1) || (val1 == 1 && val2 == -1) )
+			flagA = true;
+		val1 = param.PointIsLeftInt (vertex [0] );
+		val2 = param.PointIsLeftInt (vertex [1]);
+		if( (val1 == -1 && val2 == 1) || (val1 == 1 && val2 == -1) )
+			flagB = true;
+		return (flagA && flagB);
+	}
 	public  bool Equals(Line l)
 	{
 		//if(this.MidPoint().Equals(l.MidPoint()))

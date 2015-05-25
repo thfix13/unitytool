@@ -102,6 +102,7 @@ public partial class Visibility1 : MonoBehaviour {
 	float m_maxX = 0f;
 	float m_maxZ = 0f;
 	float m_step = 0.1f;
+	bool bTestingMGS = true;
 	void Start () 
 	{
 
@@ -128,7 +129,18 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			pathPoints = CommonMGS.definePath ();
 			m_stepDistance = CommonMGS.getStepDistance();
-			Debug.Break ();
+			Debug.Log("pathPoints.Count = "+pathPoints.Count);
+			if(bTestingMGS)
+			{
+				foreach(Vector3 vect in pathPoints)
+				{
+					GameObject pathObj;
+					pathObj = Instantiate(pathSphere, 
+					                      vect, 
+					                      pathSphere.transform.rotation) as GameObject;
+				}
+				return;
+			}
 		}
 		///////////////////////////True Case//////////////////////////////
 		if(m_ExecuteTrueCase)
@@ -420,6 +432,27 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			return;
 		}*/
+		if(bTestingMGS)
+		{
+			foreach(Transform child in allLineParent.transform)
+			{
+				GameObject.Destroy(child.gameObject);
+			}
+			mapBG.DrawGeometry (allLineParent);
+			foreach(Line l in mapBG.edges)
+			{
+				l.DrawVector(allLineParent);
+			}
+			for(int i=0;i<globalPolygon.Count;i++)
+			{
+				foreach(Line l in globalPolygon[i].edges)
+				{
+					l.DrawVector(allLineParent);
+				}
+			}
+
+			return;
+		}
 		if(playerObj.transform.position == pathPoints[pathPoints.Count-1])
 		{
 			if(m_SetUpCase)
@@ -3823,7 +3856,7 @@ public partial class Visibility1 : MonoBehaviour {
 		temp = new GameObject("temp");
 		//CODESPACE
 		//Merging Polygons
-		for (int i = 0; i < obsGeos.Count; i++) {
+		/*for (int i = 0; i < obsGeos.Count; i++) {
 			for (int j = i + 1; j < obsGeos.Count; j++) {
 				//check all line intersections
 				if( obsGeos[i].GeometryIntersect( obsGeos[j] ) ){
@@ -3837,10 +3870,24 @@ public partial class Visibility1 : MonoBehaviour {
 					break;
 				}
 			}
+		}*/
+		for (int i = 0; i < obsGeos.Count; i++){
+			for (int j = i + 1; j < obsGeos.Count; j++) {
+				//Check to see if two geometries intersect
+				if( obsGeos[i].GeometryIntersect( obsGeos[j] ) ){
+					Geometry tmpG = obsGeos[i].GeometryMerge( obsGeos[j], 0 );
+					//remove item at position i, decrement i since it will be incremented in the next step, break
+					obsGeos.RemoveAt(j);
+					obsGeos.RemoveAt(i);
+					obsGeos.Add(tmpG);
+					i--;
+					break;
+				}
+			}
 		}
 		//		mapBG.DrawGeometry (temp);
 		
-		List<Geometry> finalPoly = new List<Geometry> ();//Contains all polygons that are fully insde the map
+		/*List<Geometry> finalPoly = new List<Geometry> ();//Contains all polygons that are fully insde the map
 		foreach ( Geometry g in obsGeos ) {
 			if( mapBG.GeometryIntersect( g ) && !mapBG.GeometryInside( g ) ){
 				mapBG = mapBG.GeometryMergeInner( g );
@@ -3848,7 +3895,46 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 			else
 				finalPoly.Add(g);
-		}
+		}*/
+
+			//Check for obstacles that intersect the map boundary
+			//and change the map boundary to exclude them
+		List<Geometry> finalPoly = new List<Geometry> ();//Contains all polygons that are fully insde the map
+			finalPoly = new List<Geometry> ();//Contains all polygons that are fully insde the map
+			int xid = 0;
+			foreach (Geometry g in obsGeos) {
+				//	g.DrawGeometry(GameObject.Find(	"temp" ), xid++ );		
+			}
+			xid = -1;
+			foreach ( Geometry g in obsGeos ) {
+				if( mapBG.GeometryIntersect( g ) && !mapBG.GeometryInsideMap( g ) ){
+					Geometry tempBG = new Geometry();
+					tempBG = mapBG.GeometryMergeInner( g, xid );
+					/*if( inkscape )
+						tempBG.BoundGeometry( mapBG );
+					else
+						tempBG.BoundGeometryCrude( mapBoundary );
+						*/
+					mapBG = tempBG;
+				}
+				else
+					finalPoly.Add(g);
+			}
+			//TODO:Check if mapBG has any disjoint parts
+			//mapBG.getSortedEdges ();
+			int cnt = 0;
+			foreach (Geometry g in finalPoly) {
+				foreach( Line l in g.edges ){
+					l.name = "Wall " + cnt++.ToString();
+					totalGeo.edges.Add( l );
+				}
+			}
+			foreach( Line l in mapBG.edges ){
+				mapBGPerimeter += l.Magnitude();
+				totalGeo.edges.Add( l );
+			}
+			totalGeoVerts = totalGeo.GetVertex ();
+		
 		return finalPoly;
 	}
 }
