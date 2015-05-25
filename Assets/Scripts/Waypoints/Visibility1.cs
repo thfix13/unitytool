@@ -42,13 +42,15 @@ public partial class Visibility1 : MonoBehaviour {
 	public GameObject enemyPrefab;
 	int m_nEnemyStatic = 1;
 	int m_nEnemyNearMiss = 1;
+	int m_nEnemyGreedy = 1;
 	//public int nearMissAlgo = 1;
+	public bool m_SetUpCase = false;
 	public bool m_EnemyStatic = false;
 	public bool m_Greedy = false;
 	public bool m_NearMiss = false;
 	public bool m_ShadowEdgeAssisted = false;
 	//public int setUpCase = -1;
-	public bool m_SetUpCase = false;
+
 
 	public bool bDisplayAreas = false;
 	List<Vector3> enemyPath = null;
@@ -87,7 +89,7 @@ public partial class Visibility1 : MonoBehaviour {
 	Rect boundbox;
 	bool b_ShowBoundbox=false;
 
-	public int m_nEnemyCentroid = 0;
+	/*public */int m_nEnemyCentroid = 0;
 	List<EnemyMovement> m_enemyCentroidList = new List<EnemyMovement>();
 	List<Vector3> m_enemyNextPosCentroidList = new List<Vector3>();
 	public bool m_ExecuteTrueCase = false;
@@ -102,7 +104,7 @@ public partial class Visibility1 : MonoBehaviour {
 	float m_maxX = 0f;
 	float m_maxZ = 0f;
 	float m_step = 0.1f;
-	bool bTestingMGS = true;
+	bool bTestingMGS = false;
 	void Start () 
 	{
 
@@ -439,17 +441,17 @@ public partial class Visibility1 : MonoBehaviour {
 				GameObject.Destroy(child.gameObject);
 			}
 			mapBG.DrawGeometry (allLineParent);
-			foreach(Line l in mapBG.edges)
+			/*foreach(Line l in mapBG.edges)
 			{
 				l.DrawVector(allLineParent);
-			}
-			for(int i=0;i<globalPolygon.Count;i++)
+			}*/
+			/*for(int i=0;i<globalPolygon.Count;i++)
 			{
 				foreach(Line l in globalPolygon[i].edges)
 				{
 					l.DrawVector(allLineParent);
 				}
-			}
+			}*/
 
 			return;
 		}
@@ -1057,6 +1059,17 @@ public partial class Visibility1 : MonoBehaviour {
 			shadowArray = findSafestSpots();
 			placeEnemyStatic(shadowArray);
 		}
+		if(m_Greedy)
+		{
+			setGlobalVars1();
+			int numGreedy = m_nEnemyGreedy;
+			while(numGreedy>0)
+			{
+				Vector3 sel = selectInitialGreedyRandomPos();
+				placeEnemyGreedyAt(sel);
+				numGreedy--;
+			}
+		}
 		if(m_NearMiss)
 		{
 			setGlobalVars1();
@@ -1224,6 +1237,21 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 			return sel;
 		}
+	}
+	private Vector3 selectInitialGreedyRandomPos()
+	{
+		int selX = Random.Range(0,discretePtsX);
+		int selZ = Random.Range(0,discretePtsZ);
+		Vector3 sel = (Vector3)h_mapIndxToPt[new Vector2(selX,selZ)];
+		while(!pointInShadow(sel,0))
+		{
+			selX = Random.Range(0,discretePtsX);
+			selZ = Random.Range(0,discretePtsZ);
+			sel = (Vector3)h_mapIndxToPt[new Vector2(selX,selZ)];
+		}
+		
+		return sel;
+		
 	}
 	private Vector3 selectInitialShadowAssistedRandomPos()
 	{
@@ -3910,9 +3938,9 @@ public partial class Visibility1 : MonoBehaviour {
 				if( mapBG.GeometryIntersect( g ) && !mapBG.GeometryInsideMap( g ) ){
 					Geometry tempBG = new Geometry();
 					tempBG = mapBG.GeometryMergeInner( g, xid );
-					/*if( inkscape )
+					//if( inkscape )
 						tempBG.BoundGeometry( mapBG );
-					else
+					/*else
 						tempBG.BoundGeometryCrude( mapBoundary );
 						*/
 					mapBG = tempBG;
@@ -3922,7 +3950,7 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 			//TODO:Check if mapBG has any disjoint parts
 			//mapBG.getSortedEdges ();
-			int cnt = 0;
+			/*int cnt = 0;
 			foreach (Geometry g in finalPoly) {
 				foreach( Line l in g.edges ){
 					l.name = "Wall " + cnt++.ToString();
@@ -3933,7 +3961,7 @@ public partial class Visibility1 : MonoBehaviour {
 				mapBGPerimeter += l.Magnitude();
 				totalGeo.edges.Add( l );
 			}
-			totalGeoVerts = totalGeo.GetVertex ();
+			totalGeoVerts = totalGeo.GetVertex ();*/
 		
 		return finalPoly;
 	}

@@ -1,3 +1,5 @@
+//#define includeVisibilityTestCase1
+#if VisibilityTestCase1
 using UnityEngine;
 using System.Collections;
 using System.IO;
@@ -3415,3 +3417,4 @@ public class VisibilityTestCase1 : MonoBehaviour {
 		return finalPoly;
 	}
 }
+#endif

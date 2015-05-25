@@ -604,6 +604,24 @@ public class Geometry
 			}
 			return toReturn;
 		}
+	public bool GeometryInsideMap( Geometry G2 ){
+		if (this.edges.Count == 1 || G2.edges.Count == 1) return false;
+		List<Vector3> allvert = GetVertex ();
+		List<Vector3> interpts = GetVertex ();
+		foreach (Line L in edges) {
+			foreach(Line L2 in G2.edges){
+				if( L.LineIntersectMuntac( L2 ) > 0 )
+					return false;
+			}
+		}
+		
+		List<Vector3> G2AllVert = G2.GetVertex ();
+		foreach (Vector3 v in G2AllVert)
+			if( this.PointOutside( v ) ) return false;
+		foreach( Line l in G2.edges )
+			if( this.PointOutside( l.MidPoint() ) ) return false;
+		return true;
+	}
 	public Geometry GeometryMergeInner( Geometry G2, int xid ){//Called from outside
 		//1. Check if geometries are fully inside each other
 		
