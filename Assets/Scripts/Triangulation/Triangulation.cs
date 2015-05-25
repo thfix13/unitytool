@@ -43,6 +43,7 @@ public class Triangulation : MonoBehaviour
 	public bool inkscape = false;	
 	public bool drawTriangles = false;
 	public bool drawSPRoadMap = false;
+	public bool drawSPRoadMapExtended = false;
 	public bool drawMinSpanTree = false;
 	public bool drawMapBoundary = false;
 	public bool drawObstacles = false;
@@ -59,6 +60,7 @@ public class Triangulation : MonoBehaviour
 	
 	//Tour
 	private List<Line> spRoadMap = new List<Line> ();
+	private List<Line> spRoadMapExtended = new List<Line> ();
 	private List<Vector3> explorationTour = new List<Vector3> ();
 	private Geometry tourEdges = new Geometry ();
 	private const int tourgraphsize = 1000000;
@@ -158,6 +160,13 @@ public class Triangulation : MonoBehaviour
 			GameObject temp = GameObject.Find("temp"); 
 			foreach(Line l in spRoadMap)
 				l.DrawLine( Color.yellow );
+		}
+
+		if (drawSPRoadMapExtended){
+			GameObject temp = GameObject.Find("temp"); 
+			foreach(Line l in spRoadMapExtended)
+				l.DrawLine( Color.yellow );
+
 		}
 		
 		if( drawVP && vpnum != -1 ){
@@ -310,7 +319,9 @@ public class Triangulation : MonoBehaviour
 		stopwatch.Stop();
 		Debug.Log("PREPROCESSING: " + stopwatch.ElapsedMilliseconds * 0.001);
 
-//		/***PHASE B: COLORING***/
+		/***PHASE B: COLORING***/
+
+		scanMST ();
 //		/*STEP 4 - MAKE MST OF POLYGONS*/
 //		stopwatch.Reset ();
 //		stopwatch.Start ();
@@ -320,27 +331,24 @@ public class Triangulation : MonoBehaviour
 //		printMapToPolyFile ();
 //		printMST ();
 
+		scanTriangulation ();//Done externally by Triangle library
+//		/*STEP 5 - TRIANGULATE*/
+//		stopwatch.Reset ();
+//		stopwatch.Start ();
+//		triangulate ();
+//		stopwatch.Stop ();
+//		Debug.Log("Triangulation: " + stopwatch.ElapsedMilliseconds * 0.001);
 
-		scanMST ();
-		scanTriangulation ();
-		return;
-
-		/*STEP 5 - TRIANGULATE*/
-		stopwatch.Reset ();
-		stopwatch.Start ();
-		triangulate ();
-		stopwatch.Stop ();
-		Debug.Log("Triangulation: " + stopwatch.ElapsedMilliseconds * 0.001);
-
-		/*STEP 6 - COLOR AND GET CAMERAS*/
-		stopwatch.Reset ();
-		stopwatch.Start ();
-		colorCameras ();
-		stopwatch.Stop ();
-		Debug.Log("Cameras and Coloring: " + stopwatch.ElapsedMilliseconds * 0.001);
-		return;
+		scanCameras ();
+//		/*STEP 6 - COLOR AND GET CAMERAS*/
+//		stopwatch.Reset ();
+//		stopwatch.Start ();
+//		colorCameras ();
+//		stopwatch.Stop ();
+//		Debug.Log("Cameras and Coloring: " + stopwatch.ElapsedMilliseconds * 0.001);
 //		printCameras ();
-		//scanCameras ();
+
+		scanSPRoadMap ();
 //		/***PHASE C: TOUR***/
 //		/*STEP 7 - CREATE "SHORTEST-PATH" ROADMAP*/
 //		stopwatch.Reset ();
@@ -350,32 +358,37 @@ public class Triangulation : MonoBehaviour
 //		Debug.Log("Make SP Roadmap: " + stopwatch.ElapsedMilliseconds * 0.001);
 //		printSPRoadMap ();
 
-		//scanSPRoadMap ();
-
 		/*STEP 8 - RUN DIJKSTRA FOR EVERY CAMERA PAIR*/
-		stopwatch.Reset ();
-		stopwatch.Start ();
-		if (!makeTourOnSPR ()){
-			Debug.Log("makeTourOnSPR () failed");
-			return;
-		}
-		stopwatch.Stop ();
-		Debug.Log("Make tour: " + stopwatch.ElapsedMilliseconds * 0.001);
-		return;
-		/*STEP 9 - CREATE TOUR USING NEAREST NEIGHBOUR*/
-		//happens in makeTourOnSPR
-		//printTour ();
+		//Executed in makeTourOnSPR()
+		/*----x-----*/
 
 		scanTour ();
+//		/*STEP 9 - CREATE TOUR USING NEAREST NEIGHBOUR*/
+//		stopwatch.Reset ();
+//		stopwatch.Start ();
+//		if (!makeTourOnSPR ()){
+//			Debug.Log("makeTourOnSPR () failed");
+//			return;
+//		}
+//		stopwatch.Stop ();
+//		Debug.Log("Make tour: " + stopwatch.ElapsedMilliseconds * 0.001);
+//		printTour ();
+
+		double mapArea = mapBG.getPolygonArea (0);
+		foreach( Geometry g in finalPoly )
+			mapArea -= g.getPolygonArea(0);
+		Debug.Log (mapArea);
 		return;
-		//externalVP ();
-		scanVPS ();
+
+		//scanVPS ();
 		/***PHASE D: VISIBILITY***/
 		/*STEP 10 - GET VISIBILITY POLYGONS OF CAMERAS*/
 		//getCameraVPS ();
 		//		if (VPValidation () > 0)
 		//			return;
+		//externalVP ();
 		Debug.Log ("Vispol done");
+
 		return;
 		//		Debug.Log ("ALL VPS valid");
 		//		return;
@@ -1034,6 +1047,7 @@ public class Triangulation : MonoBehaviour
 			int v = dict[l.vertex[1]];
 			EL[u].Add(new edges( v, l.Magnitude() ));
 			EL[v].Add(new edges( u, l.Magnitude() ));
+			spRoadMapExtended.Add( l );
 		}
 		
 		/*2. CAMERA WORK*/
@@ -1048,41 +1062,60 @@ public class Triangulation : MonoBehaviour
 				masterReflexAndCamera.Add (v1);
 		}
 		//Make edges between cameras and points in spRoadMap and cameras
+		int cntx = 0;
+		int cnty = 0;
+//		foreach (Vector3 v1 in masterReflexAndCamera) {
+//			drawSphere( v1, Color.green, cntx++ );
+//		}
+		Debug.Log(cameras.Count + " " + masterReflexAndCamera.Count);
 		foreach(Vector3 v1 in cameras){
 			//drawSphere( v1, Color.red);
+			cntx++;
 			bool connected = false;
+			cnty = 0;
 			foreach(Vector3 v2 in masterReflexAndCamera){
+				cnty++;
 				if( VectorApprox( v1, v2 ) ) continue;
 				int u = dict[v1];
 				int v = dict[v2];
 				Line tmpLine = new Line( v1, v2 );
 				bool collides = false;
-				if( spRoadMap.Contains( tmpLine ) ) continue;
+				if( spRoadMap.Contains( tmpLine ) ){
+					connected = true;
+					continue;
+				}
 				bool added = false;
 				//Add link if already an obstacle or map edge
 				foreach( Line l in totalGeo.edges ){
 					if( l.Equals( tmpLine ) ){
 						EL[u].Add(new edges( v, tmpLine.Magnitude() ) );
 						EL[v].Add(new edges( u, tmpLine.Magnitude() ) );
+						connected = true;
 						added = true;
+						spRoadMapExtended.Add( l );
 						break;
 					}
 				}
 				if( added ) continue;
+
 				collides = comprehensiveCollision( tmpLine, 0 );
 				if( !collides ){
 					connected = true;
 					EL[u].Add(new edges( v, tmpLine.Magnitude() ) );
 					EL[v].Add(new edges( u, tmpLine.Magnitude() ) );
+					spRoadMapExtended.Add( new Line( v1, v2 ) );
 				}
 			}
+
+
 			if( !connected ){
 				Debug.Log("Camera not connected");
-				drawSphere( v1 );
-				return false;
+//				drawSphere( v1 );
+//				Debug.Log(cntx);
+				//return false;
 			}
 		}
-		
+
 		/*3. DIJKSTRA*/
 		//3A. Calculate All-Pair-Shortest-Path
 		dijkstra_init_value = 100000f;
@@ -2244,33 +2277,34 @@ public class Triangulation : MonoBehaviour
 			cameras.Add(expPointA);
 		}
 	}
-	//	public void externalVP(){
-	//		string createText = "";
-	//		//string path = @"C:\Users\Asus\Desktop\McGill\Thesis\Week 20 Tours VPs Unions\vpsVacant.csv";
-	//		string path = @"C:\Users\Asus\Desktop\McGill\Thesis\Week 20 Tours VPs Unions\mapVertexSortedCrash.csv";
-	//		string delimeter = ",";
-	//		List<Line> lsorted = new List<Line> ();
-	//		//Print Map
-	//		lsorted = mapBG.getSortedEdges();
-	//		for( int i = 0; i < lsorted.Count; i++ ){
-	//			createText += lsorted[i].vertex[1].x.ToString() + "," + lsorted[i].vertex[1].z.ToString()
-	//				+ ",\n";
-	//		}
-	//		createText += "M,\n";
-	//		//Print Obstacles
-	//		foreach( Geometry g in finalPoly ){
-	//			lsorted = g.getSortedEdges();
-	//			for( int i = 0; i < lsorted.Count; i++ ){
-	//				createText += lsorted[i].vertex[1].x.ToString() + "," + lsorted[i].vertex[1].z.ToString()
-	//					+ ",\n";
-	//			}
-	//			createText += "H,\n";
-	//		}
-	//		//Add tour points
-	//		foreach (Vector3 v in explorationTour)
-	//			createText += "T," + v.x.ToString() + "," + v.z.ToString() + ",\n";
-	//		File.WriteAllText(path, createText);
-	//	}
+
+		public void externalVP(){
+			string createText = "";
+			//string path = @"C:\Users\Asus\Desktop\McGill\Thesis\Week 20 Tours VPs Unions\vpsVacant.csv";
+			string path = path_start + @"\mapwithtour.csv";
+			string delimeter = ",";
+			List<Line> lsorted = new List<Line> ();
+			//Print Map
+			lsorted = mapBG.getSortedEdges();
+			for( int i = 0; i < lsorted.Count; i++ ){
+				createText += lsorted[i].vertex[1].x.ToString() + "," + lsorted[i].vertex[1].z.ToString()
+					+ ",\n";
+			}
+			createText += "M,\n";
+			//Print Obstacles
+			foreach( Geometry g in finalPoly ){
+				lsorted = g.getSortedEdges();
+				for( int i = 0; i < lsorted.Count; i++ ){
+					createText += lsorted[i].vertex[1].x.ToString() + "," + lsorted[i].vertex[1].z.ToString()
+						+ ",\n";
+				}
+				createText += "H,\n";
+			}
+			//Add tour points
+			foreach (Vector3 v in explorationTour)
+				createText += "T," + v.x.ToString() + "," + v.z.ToString() + ",\n";
+			File.WriteAllText(path, createText);
+		}
 	
 	public void subtractiveCoverage(){
 		//public List<KeyValuePair<Vector3,Geometry>> tempUnion = new List<KeyValuePair<Vector3, Geometry>>();
