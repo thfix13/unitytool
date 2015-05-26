@@ -20,8 +20,8 @@ public partial class Visibility1 : MonoBehaviour {
 	float maxTimeEvaded = -1.0f;
 	float currRunTimeEnemny = 0.0f;
 	float currRunPointsEnemy = 0.0f;
-	string fileTimings = "C:\\Users\\Navjot\\Desktop\\timingScene1.txt";
-	string filePoints = "C:\\Users\\Navjot\\Desktop\\pointsScene1.txt";
+	string fileTimings = "C:\\Users\\Dhaliwal\\Desktop\\timingScene1.txt";
+	string filePoints = "C:\\Users\\Dhaliwal\\Desktop\\pointsScene1.txt";
 	bool bShowLogs=false;
 	List<Geometry> globalPolygon;
 	List<Vector3> pathPoints;
@@ -104,14 +104,11 @@ public partial class Visibility1 : MonoBehaviour {
 	float m_maxX = 0f;
 	float m_maxZ = 0f;
 	float m_step = 0.1f;
+	float radius_enemy = -1.0f;
 	bool bTestingMGS = false;
 	void Start () 
 	{
-
-		/*float radius_hiddenSphere = (enemyPrefab.collider).radius*((SphereCollider)enemyPrefab.collider).transform.lossyScale.x;
-		Debug.Log (radius_hiddenSphere);
-		Debug.Break ();*/
-
+		float radius_enemy = ((CapsuleCollider)enemyPrefab.collider).radius*((CapsuleCollider)enemyPrefab.collider).transform.lossyScale.x;
 		spTemp = (GameObject)GameObject.Find ("StartPoint");
 		allLineParent = GameObject.Find ("allLineParent") as GameObject;
 		globalPolygon = getObstacleEdges ();
@@ -365,6 +362,7 @@ public partial class Visibility1 : MonoBehaviour {
 			//Vector3 tempVec = new Vector3 (m_nCurrDiscretePtIndxX, 1, m_nCurrDiscretePtIndxZ);
 			if(pointInShadow(tempVec,0) && timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]==0f)
 			{
+				//Debug.Log(tempVec+" in the shadow. Selecting this");
 				//Assumption:Only one enemy at a time
 				playerObj.transform.position = pathPoints [0];
 				nextPlayerPath = 1;
@@ -411,15 +409,19 @@ public partial class Visibility1 : MonoBehaviour {
 				return;
 			}
 		}
-		Debug.Log("Selected At ("+m_nCurrDiscretePtIndxX+" , "+m_nCurrDiscretePtIndxZ+")");
+		//Debug.Log("Selected At ("+m_nCurrDiscretePtIndxX+" , "+m_nCurrDiscretePtIndxZ+")");
 		writeTimings ();
 		currRunTimeEnemny = Time.time;
 		currRunPointsEnemy = 0.0f;
 	}
 	//Distance moved by player on each update;
 	float distBtwPlayerMovements = -1.0f;
+	bool bSlowShadowsDown = true;
+	int setTimerTemp = 0;
 	void Update () 
 	{
+		if (bSlowShadowsDown && setTimerTemp-- > 0)
+				return;
 		if (bDisplayAreas || m_ExecuteTrueCase || m_ShowTrueCase || m_CalculateTrueCase)
 		{
 			return;
@@ -440,18 +442,18 @@ public partial class Visibility1 : MonoBehaviour {
 			{
 				GameObject.Destroy(child.gameObject);
 			}
-			mapBG.DrawGeometry (allLineParent);
+			//mapBG.DrawGeometry (allLineParent);
 			/*foreach(Line l in mapBG.edges)
 			{
 				l.DrawVector(allLineParent);
 			}*/
-			/*for(int i=0;i<globalPolygon.Count;i++)
+			for(int i=0;i<globalPolygon.Count;i++)
 			{
 				foreach(Line l in globalPolygon[i].edges)
 				{
 					l.DrawVector(allLineParent);
 				}
-			}*/
+			}
 
 			return;
 		}
@@ -506,49 +508,28 @@ public partial class Visibility1 : MonoBehaviour {
 			{
 				GameObject.Destroy(child.gameObject);
 			}
-			foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges)
+			/*foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges)
 			{
 				l.DrawVector(allLineParent);
+			}*/
+
+			List<Geometry> shadowPolygonsTemp = (List<Geometry>)hTable [pathPoints [nextPlayerPath]];
+			foreach(Geometry geoTemp in shadowPolygonsTemp)
+			{
+				foreach(Line l in geoTemp.edges)
+				{
+					l.DrawVector(allLineParent);
+				}
+			}
+			if(bSlowShadowsDown)
+			{
+				setTimerTemp = 200;
 			}
 			nextPlayerPath++;
 
-			/*for(int j=0;j<m_enemyCentroidList.Count;j++)
-			{
-				EnemyMovement centroidObj = m_enemyCentroidList[j];
-				if(centroidObj.bCaught)
-					continue;
-				Vector3 currPosEnemy = centroidObj.enemyObj.transform.position;
 
-				centroidObj.vNextPos.Add(findNextPosEnemyCentroid(m_enemyCentroidList[j].enemyObj));
-				if(currPosEnemy == centroidObj.vNextPos[0])
-					centroidObj.vNextPos.RemoveAt(0);
-				if(enemyCaught(centroidObj.enemyObj.transform.position))
-				{
-					if(setUpCase==2)
-					{
-						timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = Time.time - currRunTimeEnemny;
-						Debug.Log("Caught!!! Took "+timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]+" to catch");
-						resetCase();
-						return;
-					}
-					Renderer rend = centroidObj.enemyObj.GetComponent<Renderer>();
-					rend.material.shader = Shader.Find("Specular");
-					rend.material.SetColor("_SpecColor", Color.white);
-					centroidObj.bCaught=true;
-					Debug.Log("Centroid Enemy Caught");
-					continue;
-				}
-				//m_enemyCentroidList[j].enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,centroidObj.vNextPos[0], speedEnemy*Time.deltaTime);
-			}*/
 			findNextEnemyPositions();
 
-			/*
-			List<Vector3> centrePts = (List<Vector3>)hCentroidShadows[pathPoints[nextPlayerPath]];
-			foreach(Vector3 vect in centrePts)
-			{
-				showPosOfPoint(vect);
-			}
-			*/
 		}
 		Vector3 prevPlayerPos = playerObj.transform.position;
 		playerObj.transform.position = Vector3.MoveTowards(playerObj.transform.position, pathPoints[nextPlayerPath], speedPlayer*Time.deltaTime);
@@ -1324,8 +1305,63 @@ public partial class Visibility1 : MonoBehaviour {
 		return new Vector3 (meanX, 1, meanZ);
 	}
 	*/
-
 	private void setGlobalVars1()
+	{
+		m_minX = mapBoundary[0].x;
+		m_minZ = mapBoundary[0].z;
+		m_maxX = mapBoundary[0].x;
+		m_maxZ = mapBoundary[0].z;
+		for(int i=1;i<4;i++)
+		{
+			if(m_minX>mapBoundary[i].x)
+			{
+				m_minX=mapBoundary[i].x;
+			}
+			if(m_minZ>mapBoundary[i].z)
+			{
+				m_minZ=mapBoundary[i].z;
+			}
+			if(m_maxX<mapBoundary[i].x)
+			{
+				m_maxX=mapBoundary[i].x;
+			}
+			if(m_maxZ<mapBoundary[i].z)
+			{
+				m_maxZ=mapBoundary[i].z;
+			}
+		}
+		int Indx = 0;
+		
+		
+		discretePtsX = (int)(((m_maxX - m_minX) / m_step)+0.5);
+		discretePtsZ = (int)(((m_maxZ - m_minZ) / m_step)+0.5);
+		Debug.Log("discretePtsX = "+discretePtsX);
+		Debug.Log("discretePtsZ = "+discretePtsZ);
+		
+		int j1=0;
+		for(float j=m_minX;j<m_maxX && j1<discretePtsX;j+=m_step)
+		{
+			int k1=0;
+			for(float k=m_minZ;k<m_maxZ && k1<discretePtsZ;k+=m_step)
+			{
+				Vector3 pt = new Vector3(j,1,k);
+				Vector2 keyTemp = new Vector2((float)j1,(float)k1);
+				if(!h_mapIndxToPt.ContainsKey(keyTemp))
+				{
+					h_mapIndxToPt.Add(keyTemp,pt);
+				}
+				if(!h_mapPtToIndx.ContainsKey(pt))
+				{
+					h_mapPtToIndx.Add(pt,keyTemp);
+					
+				}
+				k1++;
+			}
+			j1++;
+		}
+		
+	}
+	private void setGlobalVars1_Old()
 	{
 		m_minX = mapBoundary[0].x;
 		m_minZ = mapBoundary[0].z;
@@ -2320,23 +2356,57 @@ public partial class Visibility1 : MonoBehaviour {
 	{
 		if (Indx >= pathPoints.Count || Indx < 0)
 		{
-			Debug.LogError(Indx);
+			//Debug.LogError(Indx);
 			return false;
 		}
+		//If inside any obstacles, return false
 		foreach(Geometry geo in globalPolygon)
 		{
 			if(geo.PointInside(pt))
+			{
+				//Debug.Log("point not In Shadow. "+pt+" is inside an obstacle");
 				return false;
+			}
 		}
-
-		List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [Indx]];
-		foreach(Geometry geo in shadowPolyTemp)
+		//If outside the boundary, return false
+		if (!mapBG.PointInside (pt))
 		{
-			if(geo.PointInside(pt))
-				return true;
+			//Debug.Log("point not In Shadow. "+pt+" is outside the boundary");
+			return false;
 		}
-		return false;
-	}
+		bool bTestAllPoints = false;
+		List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [Indx]];
+		if(bTestAllPoints)
+		{
+			List<Vector3> pointListToTest = new List<Vector3>();
+			pointListToTest.Add (pt);
+			pointListToTest.Add(new Vector3(pt.x+radius_enemy,pt.y,pt.z));
+			pointListToTest.Add(new Vector3(pt.x-radius_enemy,pt.y,pt.z));
+			pointListToTest.Add(new Vector3(pt.x,pt.y,pt.z+radius_enemy));
+			pointListToTest.Add(new Vector3(pt.x,pt.y,pt.z-radius_enemy));
+			foreach(Vector3 pt1 in pointListToTest)
+			{
+				foreach(Geometry geo in shadowPolyTemp)
+				{
+					if(!geo.PointInside(pt1))
+						return false;
+				}
+			}
+			return true;
+		}
+		else
+		{
+			foreach(Geometry geo in shadowPolyTemp)
+			{
+				if(geo.PointInside(pt))
+				{
+					return true;
+				}
+			}
+			//Debug.Log("point not In Shadow. "+pt+" is outside shadow Polygon");
+			return false;
+		}
+}
 	//Key = path point (Vector3), Value = 2D array of 1's represent visible, 0's shadows, 2's for inside obstacle ...
 	Hashtable h_discreteShadows = new Hashtable();
 	//Key = (i,j) , Value = Vector3. i,j are indices corresponding to 2D arrays in h_discreteShadows
@@ -3294,12 +3364,22 @@ public partial class Visibility1 : MonoBehaviour {
 					//toRemoveListIndex.Add(tmpIndex);
 					intersectionPointsPerV[tmpIndex]=null;//TODO: check if will be garbage collected
 				}
+
 			}
 			intersectionPointsPerV.RemoveAll(item=>item==null);
-			/*foreach(int toRemoveIndex in toRemoveListIndex)
+			//Added new check 26th May,2015
+			/*foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
 			{
-				intersectionPointsPerV.RemoveAt(toRemoveIndex);
-			}*/
+				if(intersectionPts.Count<2)
+					continue;
+				int tmpIndex = intersectionPointsPerV.IndexOf(intersectionPts);
+				if(!mapBG.PointInside((intersectionPts[0]+intersectionPts[1])/2))
+				{
+					intersectionPointsPerV[tmpIndex]=null;//TODO: check if will be garbage collected
+				}
+			}
+			intersectionPointsPerV.RemoveAll(item=>item==null);*/
+
 
 			//Remove all hidden intersection points behind visible vertices
 			//TODO Have handle special case of two vertices on same ray from V,
@@ -3574,10 +3654,54 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			Debug.Log(l);
 		}*/
+		shadowPoly = removeMisformedShadowPolygons(shadowPoly);
 		return shadowPoly;
 	}
 
+	private List<Geometry> removeMisformedShadowPolygons(List<Geometry> shadowPoly)
+	{
+		//Check 1
+		for(int i=0;i<shadowPoly.Count;i++)
+		{
+			if(shadowPoly[i].edges.Count<3)
+			{
+				shadowPoly.RemoveAt(i);
+				i--;
+			}
 
+		}
+		//Check 2
+		for(int i=0;i<shadowPoly.Count;i++)
+		{
+
+			for(int j=0;j<shadowPoly[i].edges.Count;j++)
+			{
+				bool bRemove = false;
+				int nTimes1=0;
+				int nTimes2=0;
+				Line l1 = shadowPoly[i].edges[j];
+				for(int k=0;k<shadowPoly[i].edges.Count;k++)
+				{
+					if(j==k)
+						continue;
+					Line l2 = shadowPoly[i].edges[k];
+					bRemove = l2.PointOnLine(l1.vertex[0]);
+					if(bRemove)
+						nTimes1++;
+					bRemove = l2.PointOnLine(l1.vertex[1]);
+					if(bRemove)
+						nTimes2++;
+				}
+				if(nTimes1==0 || nTimes2==0)
+				{
+					shadowPoly[i].edges.RemoveAt(j);
+					j--;
+				}
+			}
+			
+		}
+		return shadowPoly;
+	}
 
 	List<Geometry> CreateModifiedObstacles (List<Vector3> verticesStar)
 	{

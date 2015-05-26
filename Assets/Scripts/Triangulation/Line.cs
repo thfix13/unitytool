@@ -276,6 +276,7 @@ public class Line : IEquatable<Line>
 		Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
 		                           UnityEngine.Random.Range(0.0f,1.0f),
 		                           UnityEngine.Random.Range(0.0f,1.0f)) ;
+		c = Color.green;
 
 		VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
 		line.vectorObject.transform.parent = parent.transform;
