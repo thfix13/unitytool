@@ -35,6 +35,11 @@ Introduction:
 
 Background and Related Work:
 
+	Work Mentioning Distractions 
+		http://www.digra.org/wp-content/uploads/digital-library/Game-Spaces-Speak-Volumes.pdf 
+		Use of distractions as part of indexical storytellling.
+
+
 	AI has been applied to game design.
 
 	This work is based on stealth game analysis tool for predicting behaviour.
@@ -49,6 +54,17 @@ Background and Related Work:
 	Need to look into biased RRT
 		
 		Picking up health packs similar to looking for distraction points.
+			This was done by attempting to connect to the nearest health pack every time that an node was added .
+			
+		Biased RRTs
+			http://link.springer.com/chapter/10.1007/978-1-84882-985-5_28 
+				give it an auxillary path to follow to guide it in the right direction	
+					could be useful but not for what is needed here -> possibly for more difficult levels.
+			
+		Improved RRT 
+			http://cdn.intechopen.com/pdfs/45521.pdf 
+			RRT* - SMART -> faster convergence to optimal path.
+		
 		
 	Continuous cost space for the RRT:
 http://www-preview.ri.cmu.edu/pub_files/pub4/urmson_christopher_2003_1/urmson_christopher_2003_1.pdf
@@ -96,7 +112,7 @@ Algorithm Design:
 			Keep adding points until solution is reached.
 			After each successful add, try to connect to the end node.
 
-	Distractions Continuos RRT:
+	Distractions Continuous RRT:
 
 		Guards Modified:
 			New input: time, and list of distraction times.
@@ -118,14 +134,35 @@ Algorithm Design:
 				Thus, the RRT searches the spaces and also can cause distractions.
 				
 		
-		
+	New Change:
+		Precompute linecast between every pair of points, to greatly speed up searching process.
 		
 		
 Flexibility inherent in the system / Different types of Distractions that this can cover:
 	
+	Scenario 1:	Player goes to location A, activates distraction, nearby guards move to location A, look around, and then go back to patrolling:
+		EXAMPLE: Player steps on broken glass, or other noise causing object. Or causes noise at their location in some other way.
+	Scenario 2: Player goes to locaiton A, activates distraction, some time later, guards move to location A, look around, then continue patrolling.
+		EXAMPLE: player leaves a distraction with a timer on it -> alarm clock, or bomb that makes noise after a certain delay.
+	Scenario 3: Player goes to location A, activates distraction, guards move to other locations based on where they are currently located.
+		EXAMPLE: player sets of some sort of alarm in control room, guards go to nearest alarm stations to turn off.
+			or player sends some sort of message, and the guards recieve it and go to patrol elsewhere.
+			or player sets off alarm, and guards leave guard room and begin patrolling, etc.
+	Additional Complexity:
+		Distraction can be one, where guard goes to investigate and then goes back to previous patrol route 
+			or can be one where the guard switches to a new patrol route
 
+List of Stealth Games using Distractions
+		Watch Dogs
+		Thief series
+		Splinter Cell series 
+		Assassin's Creed
 
-
+http://www.giantbomb.com/enemy-distraction/3015-5692/games/  --> Extensive list of 66 games which use the distraction game mechanic
+		
+		
+			
+http://tvtropes.org/pmwiki/pmwiki.php/Main/ThrowingTheDistraction
 
 Experiments & Results:
 
