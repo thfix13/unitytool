@@ -25,6 +25,8 @@ namespace Exploration {
 		//public float tileSizeX, tileSizeZ;
 		private int maxDist = 1;
 
+		public preCast casts;
+
 
 
 		//Geo version of GetNode
@@ -247,10 +249,16 @@ namespace Exploration {
 		//Check for collision of a path with the obstacles, x, t, y
 		public bool checkCollObs(float startX, float startY, float endX, float endY){
 			//Debug.Log ("checkCollObs");
-			Vector3 start = new Vector3(startX, 0, startY);
-			Vector3 end = new Vector3(endX, 0, endY);
-			int layerMask = 1 << 8;
-			return Physics.Linecast (start, end, layerMask);
+
+			if(casts != null){
+				return casts.getCast(startX, startY, endX, endY);
+			}
+			else{
+				Vector3 start = new Vector3(startX, 0, startY);
+				Vector3 end = new Vector3(endX, 0, endY);
+				int layerMask = 1 << 8;
+				return Physics.Linecast (start, end, layerMask);
+			}
 
 			/* OLD WAY
 			Line path = new Line(start, end);

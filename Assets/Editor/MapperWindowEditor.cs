@@ -49,6 +49,7 @@ namespace EditorArea {
 		private static bool useDist = false;
 		private static int distTime = 0;
 		public static int attemps2 = 1;
+		private static int preCompWidth = 100, preCompHeight = 100;
 
 		// Helping stuff
 		private static Vector2 scrollPos = new Vector2 ();
@@ -384,6 +385,8 @@ namespace EditorArea {
 				}
 			}
 
+
+
 			if (GUILayout.Button ("Compute Path Geo")) {
 				if(enemygeoobjs  == null){
 					enemygeoobjs  = GameObject.FindGameObjectsWithTag("EnemyGeo");
@@ -395,6 +398,9 @@ namespace EditorArea {
 
 				}
 				rrtgeo.enemies = enemygeos;
+
+
+				rrtgeo.casts = casts;
 				//triangles = GameObject.Find ("Triangulation").GetComponent<Triangulation>();
 
 
@@ -445,6 +451,15 @@ namespace EditorArea {
 				float startY = start.transform.position.z;
 				float endX = end.transform.position.x;
 				float endY = end.transform.position.z;
+
+				GameObject floora = GameObject.Find ("Floor");
+				
+				float minX = floora.GetComponent<Collider>().bounds.min.x;
+				float maxX = floora.GetComponent<Collider>().bounds.max.x;
+				float minY = floora.GetComponent<Collider>().bounds.min.z;
+				float maxY = floora.GetComponent<Collider>().bounds.max.z;
+
+
 
 
 				int seed = randomSeed;
@@ -501,7 +516,7 @@ namespace EditorArea {
 						// We have this try/catch block here to account for the issue that we don't solve when we find a path when t is near the limit
 						try {
 
-							nodes= rrtgeo.ComputeGeo (startX, startY, endX, endY, -10, 10, -10, 10, 1000, attemps, playerSpeed, distractPos2, distract2Pos2);
+							nodes= rrtgeo.ComputeGeo (startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, playerSpeed, distractPos2, distract2Pos2);
 
 							//nodes = rrt.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
 
@@ -604,8 +619,26 @@ namespace EditorArea {
 				
 			}
 			
+			EditorGUILayout.LabelField ("");
 
 
+			preCompWidth = EditorGUILayout.IntField(preCompWidth);
+			preCompHeight = EditorGUILayout.IntField(preCompHeight);
+
+
+			if (GUILayout.Button ("PreCompute Casts")){
+				GameObject floora = GameObject.Find ("Floor");
+
+
+				float minX = floora.GetComponent<Collider>().bounds.min.x;
+				float maxX = floora.GetComponent<Collider>().bounds.max.x;
+				float minY = floora.GetComponent<Collider>().bounds.min.z;
+				float maxY = floora.GetComponent<Collider>().bounds.max.z;
+				int width = preCompWidth;
+				int height = preCompHeight;
+			
+				preComputeCasts(minX, maxX, minY, maxY, width, height);
+			}
 
 
 
@@ -1056,6 +1089,61 @@ namespace EditorArea {
 			}
 			
 			SceneView.RepaintAll ();
+
+		}
+
+
+		public preCast casts;
+
+		private void preComputeCasts(float minX, float maxX, float minY, float maxY, int width, int height){
+
+
+
+			float startX = Mathf.Floor(minX);
+			float startY = Mathf.Floor(minY);
+			float stepX = ((maxX - minX) / width);
+			float stepY = ((maxY - minY) / height);
+			float curX1 = startX;
+			float curY1 = startY;
+			float curX2 = startX;
+			float curY2 = startY;
+			bool[,,,] castsA = new bool[width,height,width,height];
+
+			Debug.Log (stepX);
+			Debug.Log (stepY);
+
+			Debug.Log (curX1);
+			Debug.Log(curY1);
+			Debug.Log (curX2);
+			Debug.Log (curY2);
+
+			for (int i = 0; i < width; i++){
+				curY1 = startY;
+				for (int j = 0; j < height; j++){
+					curX2 = startX;
+					for (int k = 0; k < width; k++){
+						curY2 = startY;
+						for(int l = 0; l < height; l++){
+
+							Vector3 start = new Vector3(curX1, 0, curY1);
+							Vector3 end = new Vector3(curX2, 0, curY2);
+							int layerMask = 1 << 8;
+							castsA[i,j,k,l] = Physics.Linecast (start, end, layerMask);
+							curY2 = curY2 + stepY;
+						}
+						curX2 = curX2 + stepX;
+					}
+					curY1 = curY1 + stepY;
+				}
+				curX1 = curX1 + stepX;
+			}
+
+			Debug.Log (curX1);
+			Debug.Log(curY1);
+			Debug.Log (curX2);
+			Debug.Log (curY2);
+
+			casts = new preCast(minX, maxX, minY, maxY, width, height, stepX, stepY, castsA);
 
 		}
 
