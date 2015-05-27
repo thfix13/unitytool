@@ -390,8 +390,8 @@ public partial class Visibility1 : MonoBehaviour
 			Vector3 keyObj = new Vector3(float.Parse(line[0]),float.Parse(line[1]),float.Parse(line[2]));
 			numLevelsReached = int.Parse(line[3]);
 			float greenNum = (float)numLevelsReached/(float)numOfLevels;
-			float redNum = 1-greenNum;
-			showPosOfPoint(keyObj,new Color(redNum,greenNum,0.0f));
+			//float redNum = 1-greenNum;
+			showPosOfPoint(keyObj,new Color(0.0f,greenNum,0.0f));
 		}
 		sr.Close ();
 	}
