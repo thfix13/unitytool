@@ -1,0 +1,135 @@
+Look a Distraction! : A Tool for Analysis of Stealthy Behaviour in a Non-Deterministic Environment
+
+Abstract:
+
+
+
+Introduction:
+
+	Stealth is an important component of many games.
+	
+	NPCs also would benefit from understanding stealth.
+	
+	Complex interplay of different factors involved in understanding stealth.
+	
+	Basic idea: guards moving in some set way, player tries to avoid being seen.
+	
+	More realistic and complicated:
+		Guards should be able to react to player actions.
+		
+		Not completely pre-set deterministic patrol routes -- these are simplified and unrealistic.
+		
+		Enable distractions:
+			common game mechanic
+			added realism
+			complexity
+			
+		Continuous environment
+		
+		Large flexibility in the guard movements
+		
+		etc.
+
+
+
+
+Background and Related Work:
+
+	AI has been applied to game design.
+
+	This work is based on stealth game analysis tool for predicting behaviour.
+		That  work was set in a discretized and simplfied version of the game enviroment.
+		Only able to model a very limited set of circumstances.
+		
+	Other work has worked in many different directions, but all within this discretized world, and with completely pre-determined guard behaviour.
+	
+	RRT in other types of games:
+		I can Jump! paper
+	
+	Need to look into biased RRT
+		
+		Picking up health packs similar to looking for distraction points.
+		
+	Continuous cost space for the RRT:
+http://www-preview.ri.cmu.edu/pub_files/pub4/urmson_christopher_2003_1/urmson_christopher_2003_1.pdf
+		instead of just passable or not, keep a cost in the RRT, to achieve lower cost paths.
+	
+
+Algorithm Design:
+
+	Basic Continuous RRT:
+
+		Sample from x, y, t  being a 2D continous space, and a positive integer time component.
+			attempt to connect newly found point to closest point in the tree.
+			check for collision with obstacles and guards.
+			
+			straight line movement between the two points
+				for collision with objects simply linecast -> intersection of line with basic shapes.
+				
+				for collision with guards: per frame check of whether the guard can see the player.
+					based on distance, angle, obstacles in the way (linecast).
+				
+			Guards:
+				Access to guards via method call:
+					input: a time, 
+					output: location of guards, and direction he is facing.
+				Guards have a field of view defined by angle and distance:
+					the width of the field of view, and how far they can see.
+					
+				This allows for flexibility in the calculation of the guard positions.
+				
+				Current system: waypoint based:
+					guard has starting location and link to first waypoint.
+					then, there exists and linked list (usually one that loops) of waypoints that the guard travels between.
+						three types of basic waypoints: 
+							waiting:
+								wait at a location for a certain amount of time
+							movement:
+								move to a certain location
+								at a certain speed
+							rotation:
+								rotate to face a certain direction 
+								at a certain speed.
+					when the guard is given a time, the path that would be followed is calculated from the beginning, following the waypoint 
+					until the requested time is reached, then the current position, and facing direction are returned.
+			
+			Keep adding points until solution is reached.
+			After each successful add, try to connect to the end node.
+
+	Distractions Continuos RRT:
+
+		Guards Modified:
+			New input: time, and list of distraction times.
+			
+			New waypoint type, and field.
+				distraction waypoint:
+					rotate towards it, and then move towards it.
+				Every waypoint now has a distraction point, in addition to a next waypoint.
+					Thus, given a time when a distraction occurs, the guard will move normally, following waypoints until the time of the distraction,
+						At this point, the guard will switch to the distraction waypoint and follow that path until the given time is reached, or the next distraction time is reached.
+					In this way, there can be multiple distractions.
+					
+			Each distraction serves as a branching of the guard movement from one path to another, and it can occur at any time.
+			
+		Player changes:
+			The RRT is now biased to often select "distraction points" and try to connect them to the RRT>
+				These are points on the map that the player can go to that will cause a distraction at a certain time (relative to when they arrived).
+				
+				Thus, the RRT searches the spaces and also can cause distractions.
+				
+		
+		
+		
+		
+Flexibility inherent in the system / Different types of Distractions that this can cover:
+	
+
+
+
+
+Experiments & Results:
+
+Discussion:
+
+Conclusion:
+
