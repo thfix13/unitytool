@@ -12,7 +12,7 @@ namespace Medial{
 
 		public Vector3[] vertex = new Vector3[2];
 		public int[]vertexIndex= new int[2];
-		
+		private Ligne(){}
 		public Ligne(Vector3 v1, Vector3 v2, int v1index, int v2index)
 		{
 			vertex[0] = v1; 

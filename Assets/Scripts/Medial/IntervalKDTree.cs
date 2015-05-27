@@ -18,7 +18,8 @@ namespace Medial
 		
 		private IDictionary<Box,Node> boxNodeDictionary=new Dictionary<Box, Node>();
 		private IDictionary<T,Box> valueBoxDictionary=new Dictionary<T, Box>();
-		
+
+		private IntervalKDTree(){}
 		public IntervalKDTree(double range,int divisionThreshold)
 		{
 			this.divisionThreshold = divisionThreshold;

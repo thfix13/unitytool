@@ -15,7 +15,7 @@ namespace Medial{
 			this.layers=layers;
 			this.polygons=polygons;
 		}
-
+		private Covers(){}
 
 		/// <summary>
 		/// Finds the cover triangles.

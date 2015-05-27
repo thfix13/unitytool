@@ -19,6 +19,7 @@ namespace Medial{
 		/// </summary>
 		float min2y, max2y;
 
+		private ArenasGenerator(){}
 		public ArenasGenerator(int selGridInt){
 			option=selGridInt;
 			layers =new List<List<Vector3>>();

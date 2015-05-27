@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 namespace Medial{
 	public class PLYUtil {
-
+		private PLYUtil(){}
 		/// <summary>
 		/// Writes the vertices and triangles to PLY2 format file
 		/// The file can then be used to run Skeleton

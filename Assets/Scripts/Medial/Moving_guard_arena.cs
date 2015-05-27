@@ -41,7 +41,7 @@ namespace Medial{
 		// Update is called once per frame
 		void Update () {
 				
-			Vector3 playerpos= generate2DFlag? medialMeshObj.movePlayer(t):Vector3.zero;
+			Vector3 playerpos= generate2DFlag? medialMeshObj.movePlayerfn(t):Vector3.zero;
 			if(playerpos==-Vector3.one)
 			{
 				udl ("Destination reached, Game paused");
@@ -112,10 +112,10 @@ namespace Medial{
 		}
 
 		public void callRRT(){
-			RRT r= new RRT(arena,2500,start.transform.position,end.transform.position);
+			RRT r= new RRT(arena,2000,start.transform.position,end.transform.position, 10f, medialMeshObj.metrics1);
 		}
 
-		public void buildMedial()
+		public void buildMedial(float angleConstraint)
 		{
 
 			runaProcess("/Users/dhsingh/Documents/Thesis/SM03Skeleton/run.sh",multi_triangle_input_file);
@@ -123,7 +123,7 @@ namespace Medial{
 			string medial_output=dir+"output_medial_"+multi_triangle_input_file;
 			var gameobj2 = GameObject.Find ("Medial");
 			medialMeshObj= new MedialMesh(medial_output,gameobj2,true, true,
-			                              arena,null,false);
+			                              arena,null,false, angleConstraint);
 
 		}
 
@@ -141,12 +141,9 @@ namespace Medial{
 		}
 		public void findPaths(){
 
-			medialMeshObj.findNearests(start.transform.position,end.transform.position);
-			medialMeshObj.findPaths();
+			medialMeshObj.PathFindfn(start.transform.position,end.transform.position, true);
 		}
-		public void showPaths(){
-			medialMeshObj.showPath();
-		}
+		
 		public void projectPathOn2D(){
 
 			var plane= GameObject.CreatePrimitive(PrimitiveType.Cube);

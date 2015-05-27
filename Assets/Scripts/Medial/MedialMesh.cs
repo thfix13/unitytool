@@ -8,18 +8,20 @@ using Priority_Queue;
 namespace Medial{
 	public class MedialMesh {
 		// takes points and traingles from buildobject (reading of file).. remember that the reverse directioned 
-		//triangles have also been created... 
+		// triangles have also been created... 
 
-		List <Vector3> vertices;
-		List <int> triangles;
-		Graph graphObj;
+		public List <Vector3> vertices;
+		public List <int> triangles;
+		public Graph graphObj;
 		List<List<int>> paths= null;
-		int startNearestNode; 
+		int startNearestNode;
 		List<int> endNearestNodes;
 		GameObject meshGameObject;
-		IntervalKDTree<int> tree;
-		ArenasGenerator arena;
-		MedialMetrics metrics1;
+		public IntervalKDTree<int> tree;
+		public ArenasGenerator arena;
+		public MedialMetrics metrics1;
+		PathFinding pfobject;
+		bool measurements;
 
 		///for connecting opposite vertices of two common triangles
 		Hashtable linesToTriangle;
@@ -27,8 +29,20 @@ namespace Medial{
 		///assigned in removeVs; never instantiated by itself
 		HashSet<int>removedVertices_global;
 
+		private MedialMesh(){
+		}
+		/// <summary>
+		/// removes top bottom, creates graph and lays the mesh. Also creates the KD-tree
+		/// </summary>
+		/// <param name="InputFile">Input file.</param>
+		/// <param name="go">Go.</param>
+		/// <param name="createGraphflag">If set to <c>true</c> create graphflag.</param>
+		/// <param name="filterNodesFlag">If set to <c>true</c> filter nodes flag.</param>
+		/// <param name="arena">Arena.</param>
+		/// <param name="m1">M1.</param>
+		/// <param name="measurements">If set to <c>true</c> measurements.</param>
 		public MedialMesh(string InputFile, GameObject go, bool createGraphflag, bool filterNodesFlag, 
-		                  ArenasGenerator arena, MedialMetrics m1, bool measurements){
+		                  ArenasGenerator arena, MedialMetrics m1, bool measurements, float angleConstraint){
 			//.getMinX(),arena.getMaxX(), y2_min, y2_max, arena.getMinZ(), arena.getMaxZ()
 			//float x_min, float x_max,float y_min, float y_max,float z_min, float z_max
 			char[] delimiterChars = { ' ', '\t' };
@@ -42,6 +56,8 @@ namespace Medial{
 			this.arena=arena;
 			this.removedVertices_global= new HashSet<int>();
 			this.metrics1=m1;
+			this.pfobject=null;
+			this.measurements=measurements;
 			string []parsed;
 			float a,b, c;
 			int vPointer=2;
@@ -75,10 +91,6 @@ namespace Medial{
 				nvertices_totalTri=this.vertices.Count;
 				ntriangles=this.triangles.Count;
 			}
-			if(createGraphflag){
-				graphObj= new Graph(this.vertices,0f);
-				
-			}
 
 			if(measurements)
 			{	watch.Stop();
@@ -86,7 +98,7 @@ namespace Medial{
 				watch = Stopwatch.StartNew();
 			}
 			if(createGraphflag){
-				graphObj= new Graph(this.vertices,0f);
+				graphObj= new Graph(this.vertices,angleConstraint);
 				
 			}
 		
@@ -104,6 +116,7 @@ namespace Medial{
 
 			layMesh();
 			this.meshGameObject.AddComponent<MeshCollider>();
+
 		}
 
 		private void createGraph(){
@@ -267,16 +280,37 @@ namespace Medial{
 			this.triangles=newTriangles;
 		}
 
+		public void PathFindfn(Vector3 start, Vector3 end, bool showpathflag){
+			
+			pfobject= new PathFinding(this);//.vertices,this.triangles,tree,metrics1,this.arena,this.graphObj);
+			pfobject.findPathsMA(start,end);
+//			pfobject.findShortestPath_xz();
+//			pfobject.findTotalPaths();
+			if(showpathflag)
+				pfobject.showPath();
+		}
 
+		public Vector3 movePlayerfn(float t){
+			return pfobject.movePlayer(t);
+		}
 
 		#region Remove Vs
 
 		public void connect_Vs(float r){
 
-			var watch = Stopwatch.StartNew();
-			createKDTreeDictionary();
-			watch.Stop();
-			metrics1.create_KDtree_time = watch.ElapsedMilliseconds;
+			Stopwatch watch=null;
+			if(this.measurements){
+				watch= Stopwatch.StartNew();
+				createKDTreeDictionary();
+
+				watch.Stop();
+				metrics1.create_KDtree_time = watch.ElapsedMilliseconds;
+			}
+			else
+				createKDTreeDictionary();
+
+			if(measurements)
+				watch=Stopwatch.StartNew();
 
 			float dist;
 			float vy;
@@ -291,8 +325,8 @@ namespace Medial{
 						foundNodes= tree.GetValues(x,y,z,x+2*r,y+2*r,z+2*r,new HashSet<int>());
 						foreach(var i in foundNodes){
 							foreach(var j in foundNodes){
-								//TODO: do we have to relax the v1.y== v2.y constraint here ?
-								if(graphObj.unDirectedEdges[i]!=null && graphObj.unDirectedEdges[i].Contains(new edgenode(j,0)))
+
+								if(graphObj.unDirectedEdges[i]!=null && graphObj.unDirectedEdges[i].Contains(new edgenode(j,0,0)))
 									continue;
 
 								dist=Vector3.Distance(vertices[i],vertices[j]);
@@ -306,7 +340,10 @@ namespace Medial{
 					}
 				}
 			}
-			
+			if(measurements){
+				watch.Stop();
+				metrics1.connect_Vs_time = watch.ElapsedMilliseconds;
+			}
 		}
 
 		#region NotUsed
@@ -742,6 +779,7 @@ namespace Medial{
 		#endregion 
 		#endregion 
 
+
 		#region Add random edges
 
 		/// <summary>
@@ -772,8 +810,8 @@ namespace Medial{
 					continue;
 				}
 				hit= Physics.Raycast(vertices[r],vertices[s]-vertices[r],out obstacleHit,Mathf.Infinity);
-				rcontainss= graphObj.directedEdges[r]!=null? graphObj.directedEdges[r].Contains( new edgenode(s,0)):false;
-				scontainsr= graphObj.directedEdges[s]!=null? graphObj.directedEdges[s].Contains(new edgenode(r,0)):false;
+				rcontainss= graphObj.directedEdges[r]!=null? graphObj.directedEdges[r].Contains( new edgenode(s,0,0)):false;
+				scontainsr= graphObj.directedEdges[s]!=null? graphObj.directedEdges[s].Contains(new edgenode(r,0,0)):false;
 				hitbox= hit ? obstacleHit.transform.name.Contains("Box"):false;
 				eligibleEdge= !(rcontainss||scontainsr|| hitbox );
 				if(eligibleEdge)
@@ -809,8 +847,8 @@ namespace Medial{
 					continue;
 				}
 				hit= Physics.Raycast(vertices[r],vertices[s]-vertices[r],out obstacleHit,Mathf.Infinity);
-				rcontainss= graphObj.directedEdges[r]!=null? graphObj.directedEdges[r].Contains( new edgenode(s,0)):false;
-				scontainsr= graphObj.directedEdges[s]!=null? graphObj.directedEdges[s].Contains(new edgenode(r,0)):false;
+				rcontainss= graphObj.directedEdges[r]!=null? graphObj.directedEdges[r].Contains( new edgenode(s,0,0)):false;
+				scontainsr= graphObj.directedEdges[s]!=null? graphObj.directedEdges[s].Contains(new edgenode(r,0,0)):false;
 				hitbox= hit ? obstacleHit.transform.name.Contains("Medial"):false;
 				eligibleEdge= !(vertices[r].y==vertices[s].y|| rcontainss||scontainsr|| hitbox );
 				if(eligibleEdge)
@@ -832,185 +870,20 @@ namespace Medial{
 			return foundNodes;
 		}
 
-		#region Path Finding
-
-		public void findNearests(Vector3 start,Vector3 end){
-			float min=-1,diff;
-			int minvertex=-1;
-
-			HashSet<int> foundNodes= new HashSet<int>();
-			var v= start;
-			float r;
-			for(r=1f;foundNodes.Count==0;){
-				foundNodes= tree.GetValues(v.x-r,v.y,v.z-r,v.x+r,v.y+r,v.z+r,new HashSet<int>());
-				r++;
-			}
-			
-			foreach(var i in foundNodes){
-				diff=Vector3.Distance(vertices[i],start);
-				if(min==-1 || diff<min){
-					min=diff;
-					minvertex=i;
-				}
-			}
-
-			startNearestNode=minvertex;
-			v=end;
-			endNearestNodes= new List<int>();
-			for(float y=arena.getMinY2(); y< arena.getMaxY2()-1; y++){
-				foundNodes= new HashSet<int>();
-				for(r=1f ;foundNodes.Count==0;){
-					foundNodes= tree.GetValues(v.x-r, y, v.z-r,
-					                           v.x+r, y+1 ,v.z+r,new HashSet<int>());
-					r++;
-				}
-				endNearestNodes.AddRange(foundNodes);
-			}
-			var go2= new GameObject();
-			go2.name=  "endnearest";
-			foreach(var i in endNearestNodes){
-				var go= GameObject.CreatePrimitive(PrimitiveType.Sphere);
-				go.transform.localScale= new Vector3(0.3f,0.3f,0.3f);
-				go.transform.position=vertices[i];
-				go.name= "end";
-				go.transform.parent=go2.transform;
-			}
-		}
-
-		public void findPaths(){
-
-			//holds the visited node
-			HashSet<int> visitedNodes= new HashSet<int>();
-			Hashtable pqSet = new Hashtable();
-			HeapPriorityQueue<element> pq= new HeapPriorityQueue<element>(graphObj.nvertices);
-			Hashtable backtrack = new Hashtable();
-
-			for(int i=0;i< graphObj.nvertices;i++)
-				backtrack.Add(i,-1);
-			element currentv, tempElement;
-			tempElement= new element(startNearestNode);
-			pq.Enqueue(tempElement,0);
-			pqSet.Add(startNearestNode, new hashnode(0,tempElement));
-	
-			double currentdist, old_dist, new_dist;
-			hashnode temp;
-
-			while(pq.Count>0){
-
-				///remove the topmost nodes from the priority queue
-				currentv= pq.Dequeue();
-
-				try{
-					currentdist=((hashnode)pqSet[currentv.nodeId]).priority;
-				}
-				catch{
-					currentdist=0;
-				}
-				pqSet.Remove(currentv.nodeId);
-				visitedNodes.Add(currentv.nodeId);
-
-				if(graphObj.directedEdges[currentv.nodeId]==null)
-					continue;
-
-				///access all adjacent nodes
-				foreach(var adjv in graphObj.directedEdges[currentv.nodeId]){
-
-					if(visitedNodes.Contains (adjv.nodeId))
-						continue;
-					new_dist= currentdist + (double)adjv.weight;
-
-					//put the adjacent nodes in pq or update their priority
-					if(pqSet.Contains(adjv.nodeId))
-					{
-						temp=(hashnode)pqSet[adjv.nodeId];
-						old_dist=temp.priority;
-						if(old_dist> new_dist){
-							pq.UpdatePriority(temp.e,new_dist);
-							pqSet[adjv.nodeId]=new hashnode(new_dist,temp.e);
-							backtrack[adjv.nodeId]=currentv.nodeId;
-						}
-					}
-					else{
-						tempElement= new element(adjv.nodeId);
-						pq.Enqueue(tempElement,new_dist);
-						pqSet.Add(adjv.nodeId,new hashnode(new_dist,tempElement));
-						backtrack[adjv.nodeId]=currentv.nodeId;
-					}
-				}
-			}
-
-			paths= new List<List<int>>(endNearestNodes.Count);
-			List<int> path;
-			
-			///do this for every endNearestNode
-			foreach(var endNearestNode in endNearestNodes){
-
-				//create reverse path
-				path = new List<int>();
-				path.Insert(0,endNearestNode);
-				try{
-					for(int i=endNearestNode; i!=startNearestNode;i=(int)backtrack[i]){
-						path.Insert(0,(int)backtrack[i]);
-						}
-				}
-				catch(NullReferenceException){
-					udl ("Path not found for this endNode: "+vertices[endNearestNode]);
-					continue;
-				}
-				paths.Add(path);
-			}
-			udl ("#of endnodes"+endNearestNodes.Count);
-			udl ("#of paths"+paths.Count);
-		}
-
-		public void showPath(){
-
-			if(paths==null){
-				udl ("no paths");
-				return;
-			}
-			foreach(var path in paths){
-				Color triColor= Color.red;
-				for(int i=0;i<path.Count-1; i++)
-					UnityEngine.Debug.DrawLine(vertices[path[i]],vertices[path[i+1]],triColor,2000,false);
-//				udl ("nodes in path= "+path.Count);
-			}
-		}
-
-
-		//to be invoked from update
-		private int currentpath_i=0;
-
-		public Vector3 movePlayer(float t){
-			if(t<vertices[paths[0][0]].y)
-				return Vector3.zero;
-
-			while(currentpath_i<paths[0].Count
-			      && t>vertices[paths[0][currentpath_i]].y)
-				currentpath_i++;
-
-			if(currentpath_i>=paths[0].Count)
-				return -Vector3.one;
-			float frac1=t- vertices[paths[0][currentpath_i-1]].y, frac2= vertices[paths[0][currentpath_i]].y -t;
-			var playerpos= (vertices[paths[0][currentpath_i-1]]*frac2 + vertices[paths[0][currentpath_i]] *frac1)/(frac1+frac2);
-			return playerpos;
-		}
-
 		public static void udl(object s){
 			UnityEngine.Debug.Log(s);
 		}
-
-		#endregion
-
 	}
 
 
-	class edgenode:IEquatable<edgenode> {
+	public class edgenode:IEquatable<edgenode> {
 		public int nodeId;
-		public float weight;
-		public edgenode(int nodeid, float weight){
+		public float weight, weight_xz;
+		private edgenode(){}
+		public edgenode(int nodeid, float weight, float weight_xz){
 			this.nodeId=nodeid;
 			this.weight=weight;
+			this.weight_xz= weight_xz;
 		}
 		public override bool Equals(System.Object e){
 			return e!=null && this.nodeId==((edgenode)e).nodeId;

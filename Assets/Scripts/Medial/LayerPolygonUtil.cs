@@ -14,6 +14,7 @@ namespace Medial{
 		List<int[]>[] covers;
 		ArenasGenerator aGen;
 
+		private LayerPolygonUtil(){}
 		public LayerPolygonUtil(ArenasGenerator aGen, float layer_division, float numberofAddLayers){
 			this.covers=	aGen.getCovers();
 			this.polygons=	aGen.getPolygons();

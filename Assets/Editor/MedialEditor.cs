@@ -64,7 +64,7 @@ using UnityEditor;
 			if(GUILayout.Button("Get Medial Skeleton+Create Graph",GUILayout.Width(200)))
 			{
 				
-				obj.buildMedial();
+				obj.buildMedial(10f);
 			}
 
 //			if(GUILayout.Button("Create graph",GUILayout.Width(50)))
@@ -86,18 +86,18 @@ using UnityEditor;
 			}
 			GUILayout.EndHorizontal();
 			
-			GUILayout.BeginHorizontal("box");
+//			GUILayout.BeginHorizontal("box");
 			if(GUILayout.Button("Find All Paths",GUILayout.Width(150)))
 			{
 				
 				obj.findPaths();
 			}
-			if(GUILayout.Button("Show All Paths",GUILayout.Width(150)))
-			{
-				
-				obj.showPaths();
-			}
-			GUILayout.EndHorizontal();
+//			if(GUILayout.Button("Show All Paths",GUILayout.Width(150)))
+//			{
+//				
+//				obj.showPaths();
+//			}
+//			GUILayout.EndHorizontal();
 			GUILayout.BeginHorizontal("box");
 			
 			if(GUILayout.Button("Project Path",GUILayout.Width(100)))
