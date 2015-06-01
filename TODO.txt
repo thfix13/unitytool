@@ -1,0 +1,3 @@
+figure 7 (page 11/18 or page "309") in chung-11-search.pdf (checked into the references/ folder) is another interesting simplified test case that relates things to the work done by others (although it needs very fast enemy speed in order to perfectly avoid being seen).  If there's time, and definitely in your thesis, we should experiment with this (or similar/related contexts).
+
+Different speeds for optimal
