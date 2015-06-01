@@ -749,7 +749,7 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			validLine = true;
 		}*/
-		currEdge.DrawVector(allLineParent);
+		//currEdge.DrawVector(allLineParent);
 		if(!validLine)
 		{
 			if(Vector3.Distance(pt,currEdge.vertex[0])<Vector3.Distance(pt,currEdge.vertex[1]))
