@@ -106,6 +106,9 @@ public partial class Visibility1 : MonoBehaviour {
 	public float m_step = 0.1f;
 	float radius_enemy = -1.0f;
 	bool bTestingMGS = false;
+	bool bTestingChung = false;
+	bool bTestingMyScene1 = false;
+
 	void Start () 
 	{
 		radius_enemy = ((CapsuleCollider)enemyPrefab.collider).radius*((CapsuleCollider)enemyPrefab.collider).transform.lossyScale.x;
@@ -118,7 +121,25 @@ public partial class Visibility1 : MonoBehaviour {
 		currSceneName = sceneName[sceneName.Length -1];
 		fileTimings = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop)+"\\timingScene1.txt";
 		filePoints = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop)+"\\pointsScene1.txt";
-		if(currSceneName=="scene1.unity")
+		if(currSceneName=="myScene1.unity")
+		{
+			pathPoints = CommonMyScene1.definePath ();
+			m_stepDistance = CommonMyScene1.getStepDistance();
+			if(bTestingMyScene1)
+			{
+				setGlobalVars1();
+				CalculateVisibilityForPath();
+				foreach(Vector3 vect in pathPoints)
+				{
+					GameObject pathObj;
+					pathObj = Instantiate(pathSphere, 
+					                      vect, 
+					                      pathSphere.transform.rotation) as GameObject;
+				}
+				return;
+			}
+		}
+		else if(currSceneName=="scene1.unity")
 		{
 			pathPoints = CommonScene1.definePath ();
 			m_stepDistance = CommonScene1.getStepDistance();
@@ -134,6 +155,25 @@ public partial class Visibility1 : MonoBehaviour {
 			m_stepDistance = CommonMGS.getStepDistance();
 			Debug.Log("pathPoints.Count = "+pathPoints.Count);
 			if(bTestingMGS)
+			{
+				setGlobalVars1();
+				CalculateVisibilityForPath();
+				foreach(Vector3 vect in pathPoints)
+				{
+					GameObject pathObj;
+					pathObj = Instantiate(pathSphere, 
+					                      vect, 
+					                      pathSphere.transform.rotation) as GameObject;
+				}
+				return;
+			}
+		}
+		else if(currSceneName=="chung.unity")
+		{
+			pathPoints = CommonChung.definePath ();
+			m_stepDistance = CommonChung.getStepDistance();
+			Debug.Log("pathPoints.Count = "+pathPoints.Count);
+			if(bTestingChung)
 			{
 				setGlobalVars1();
 				CalculateVisibilityForPath();
@@ -449,7 +489,7 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			return;
 		}*/
-		if(bTestingMGS)
+		if(bTestingMGS || bTestingChung || bTestingMyScene1)
 		{
 			/*Vector3 pt4 = new Vector3(-9.9f,1.0f,-6.5f);
 			bool ptInShad = pointInShadow(pt4,nextPlayerPath);
@@ -462,10 +502,10 @@ public partial class Visibility1 : MonoBehaviour {
 				GameObject.Destroy(child.gameObject);
 			}
 			//mapBG.DrawGeometry (allLineParent);
-			/*foreach(Line l in mapBG.edges)
+			foreach(Line l in mapBG.edges)
 			{
 				l.DrawVector(allLineParent);
-			}*/
+			}
 			for(int i=0;i<globalPolygon.Count;i++)
 			{
 				foreach(Line l in globalPolygon[i].edges)
@@ -527,10 +567,10 @@ public partial class Visibility1 : MonoBehaviour {
 			{
 				GameObject.Destroy(child.gameObject);
 			}
-			/*foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges)
+			foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges)
 			{
 				l.DrawVector(allLineParent);
-			}*/
+			}
 
 			/*List<Geometry> shadowPolygonsTemp = (List<Geometry>)hTable [pathPoints [nextPlayerPath]];
 			foreach(Geometry geoTemp in shadowPolygonsTemp)

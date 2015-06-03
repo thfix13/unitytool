@@ -21,63 +21,70 @@ User locale: en-US
 System locale: en-US
 
 Running processes:
-jusched.exe (3752)
+SpotifyWebHelper.exe (2956)
+    path: C:\Users\Navjot\AppData\Roaming\Spotify\SpotifyWebHelper.exe
+    company:  Spotify Ltd
+    product:  Spotify
+    filedesc: SpotifyWebHelper
+    filever:  1.0.5.186
+    prodver:  1.0.5.186
+jusched.exe (2672)
     path: C:\Program Files (x86)\Common Files\Java\Java Update\jusched.exe
     company:  Oracle Corporation
     product:  Java(TM) Platform SE Auto Updater
     filedesc: Java(TM) Update Scheduler
     filever:  2.1.60.19
     prodver:  2.1.60.19
-jucheck.exe (4168)
+jucheck.exe (2400)
     path: C:\Program Files (x86)\Common Files\Java\Java Update\jucheck.exe
     company:  Oracle Corporation
     product:  Java(TM) Platform SE Auto Updater
     filedesc: Java(TM) Update Checker
     filever:  2.1.60.19
     prodver:  2.1.60.19
-firefox.exe (5208)
+ssh-agent.exe (2604)
+    path: C:\Users\Navjot\AppData\Local\GitHub\PortableGit_c2ba306e536fdf878271f7fe636a147ff37326ad\bin\ssh-agent.exe
+    company:  
+    product:  
+    filedesc: 
+    filever:  0.0.0.0
+    prodver:  0.0.0.0
+firefox.exe (2232)
     path: C:\Program Files (x86)\Mozilla Firefox\firefox.exe
     company:  Mozilla Corporation
     product:  Firefox
     filedesc: Firefox
-    filever:  37.0.1.5570
-    prodver:  37.0.1.0
-plugin-container.exe (3212)
-    path: C:\Program Files (x86)\Mozilla Firefox\plugin-container.exe
-    company:  Mozilla Corporation
-    product:  Firefox
-    filedesc: Plugin Container for Firefox
-    filever:  37.0.1.5570
-    prodver:  37.0.1.0
-FlashPlayerPlugin_17_0_0_169.exe (2876)
-    path: C:\Windows\SysWOW64\Macromed\Flash\FlashPlayerPlugin_17_0_0_169.exe
-    company:  Adobe Systems, Inc.
-    product:  Shockwave Flash
-    filedesc: Adobe Flash Player 17.0 r0
-    filever:  17.0.0.169
-    prodver:  17.0.0.169
-FlashPlayerPlugin_17_0_0_169.exe (4108)
-    path: C:\Windows\SysWOW64\Macromed\Flash\FlashPlayerPlugin_17_0_0_169.exe
-    company:  Adobe Systems, Inc.
-    product:  Shockwave Flash
-    filedesc: Adobe Flash Player 17.0 r0
-    filever:  17.0.0.169
-    prodver:  17.0.0.169
-MonoDevelop.exe (876)
+    filever:  38.0.5.5623
+    prodver:  38.0.5.0
+MonoDevelop.exe (2372)
     path: C:\Program Files (x86)\Unity\MonoDevelop\bin\MonoDevelop.exe
     company:  
     product:  MonoDevelop
     filedesc: MonoDevelop
     filever:  2.6.0.0
     prodver:  2.6.0.0
-Unity.exe (8756)
-    path: C:\Program Files (x86)\Unity\Editor\Unity.exe
-    company:  Unity Technologies ApS
-    product:  Unity
-    filedesc: Unity Editor
-    filever:  4.3.3.30826
-    prodver:  4.3.3.30826
-UnityBugReporter.exe (5408)
+plugin-container.exe (2788)
+    path: C:\Program Files (x86)\Mozilla Firefox\plugin-container.exe
+    company:  Mozilla Corporation
+    product:  Firefox
+    filedesc: Plugin Container for Firefox
+    filever:  38.0.5.5623
+    prodver:  38.0.5.0
+FlashPlayerPlugin_17_0_0_169.exe (3696)
+    path: C:\Windows\SysWOW64\Macromed\Flash\FlashPlayerPlugin_17_0_0_169.exe
+    company:  Adobe Systems, Inc.
+    product:  Shockwave Flash
+    filedesc: Adobe Flash Player 17.0 r0
+    filever:  17.0.0.169
+    prodver:  17.0.0.169
+FlashPlayerPlugin_17_0_0_169.exe (3484)
+    path: C:\Windows\SysWOW64\Macromed\Flash\FlashPlayerPlugin_17_0_0_169.exe
+    company:  Adobe Systems, Inc.
+    product:  Shockwave Flash
+    filedesc: Adobe Flash Player 17.0 r0
+    filever:  17.0.0.169
+    prodver:  17.0.0.169
+UnityBugReporter.exe (1092)
     path: C:\Program Files (x86)\Unity\Editor\UnityBugReporter.exe
     company:  Unity Technologies ApS
     product:  Unity Bug Reporter
