@@ -2491,12 +2491,25 @@ public partial class Visibility1 : MonoBehaviour {
 		//Debug.Log (radius_enemy + " radius_enemy");
 		if(bTestAllPoints)
 		{
-			//TODO:Add more points
+			//8 points tested
 			pointListToTest.Add (pt);
 			pointListToTest.Add(new Vector3(pt.x+radius_enemy,pt.y,pt.z));
 			pointListToTest.Add(new Vector3(pt.x-radius_enemy,pt.y,pt.z));
 			pointListToTest.Add(new Vector3(pt.x,pt.y,pt.z+radius_enemy));
 			pointListToTest.Add(new Vector3(pt.x,pt.y,pt.z-radius_enemy));
+			List<int> listAngleVars = new List<int>();
+			listAngleVars.Add(45);
+			listAngleVars.Add(-45);
+			listAngleVars.Add(135);
+			listAngleVars.Add(-135);
+			foreach(int angleVar in listAngleVars)
+			{
+				Vector3 vecSel = new Vector3();
+				vecSel.x = pt.x + radius_enemy*Mathf.Cos(angleVar* Mathf.Deg2Rad);
+				vecSel.y = pt.y;
+				vecSel.z = pt.z + radius_enemy*Mathf.Sin(angleVar* Mathf.Deg2Rad);
+				pointListToTest.Add(vecSel);
+			}
 		}
 		else
 		{
