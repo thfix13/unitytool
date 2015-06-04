@@ -106,6 +106,7 @@ public partial class Visibility1 : MonoBehaviour {
 	public float m_step = 0.1f;
 	float radius_enemy = -1.0f;
 	bool bTestingMGS = false;
+	bool bTestingMGS2 = false;
 	bool bTestingChung = false;
 	bool bTestingMyScene1 = false;
 
@@ -148,6 +149,25 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			pathPoints = CommonTestCase1.definePath ();
 			m_stepDistance = CommonTestCase1.getStepDistance();
+		}
+		else if(currSceneName=="MGS2.unity")
+		{
+			pathPoints = CommonMGS2.definePath ();
+			m_stepDistance = CommonMGS2.getStepDistance();
+			Debug.Log("pathPoints.Count = "+pathPoints.Count);
+			if(bTestingMGS2)
+			{
+				setGlobalVars1();
+				CalculateVisibilityForPath();
+				foreach(Vector3 vect in pathPoints)
+				{
+					GameObject pathObj;
+					pathObj = Instantiate(pathSphere, 
+					                      vect, 
+					                      pathSphere.transform.rotation) as GameObject;
+				}
+				return;
+			}
 		}
 		else if(currSceneName=="MGS.unity")
 		{
@@ -489,6 +509,10 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			return;
 		}*/
+		if(bTestingMGS2)
+		{
+			return;
+		}
 		if(bTestingMGS || bTestingChung || bTestingMyScene1)
 		{
 			/*Vector3 pt4 = new Vector3(-9.9f,1.0f,-6.5f);
