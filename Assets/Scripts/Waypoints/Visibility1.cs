@@ -225,12 +225,15 @@ public partial class Visibility1 : MonoBehaviour {
 			return;
 		}
 		/////////////////////////////////////////////////////////
-		foreach(Vector3 vect in pathPoints)
+		if(!bShowJustVisibilityPoly)
 		{
-			GameObject pathObj;
-			pathObj = Instantiate(pathSphere, 
-			                    vect, 
-			                    pathSphere.transform.rotation) as GameObject;
+			foreach(Vector3 vect in pathPoints)
+			{
+				GameObject pathObj;
+				pathObj = Instantiate(pathSphere, 
+				                    vect, 
+				                    pathSphere.transform.rotation) as GameObject;
+			}
 		}
 		if (bDisplayAreas)
 		{
@@ -242,10 +245,10 @@ public partial class Visibility1 : MonoBehaviour {
 		shadowMeshes = new List<GameObject>();
 		playerObj = Instantiate(playerPrefab) as GameObject;
 		playerObj.transform.position = pathPoints [0];
-		foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[0]]).edges)
+		/*foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[0]]).edges)
 		{
 			l.DrawVector(allLineParent);
-		}
+		}*/
 		if(m_SetUpCase)
 		{
 			if(m_Greedy)
@@ -491,8 +494,27 @@ public partial class Visibility1 : MonoBehaviour {
 	float distBtwPlayerMovements = -1.0f;
 	bool bSlowShadowsDown = false;
 	int setTimerTemp = 0;
+	bool bShowJustVisibilityPoly = false;
 	void Update () 
 	{
+		if(bShowJustVisibilityPoly)
+		{
+			//mapBG.DrawGeometry(allLineParent);
+			//foreach(Geometry geo in globalPolygon)
+			{
+			//	geo.DrawGeometry(allLineParent);
+			}
+
+			int ptIndex = 69;
+			showPosOfPoint(pathPoints[ptIndex],Color.cyan);
+			Debug.Log("For visibility polygon for "+ptIndex+" , edges.count = "+((Geometry)hVisiblePolyTable[pathPoints[ptIndex]]).edges.Count);
+			foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[ptIndex]]).edges)
+			{
+				l.DrawVector(allLineParent);
+			}
+			Debug.Break();
+			return;
+		}
 		if (bSlowShadowsDown && setTimerTemp-- > 0)
 				return;
 		if (bDisplayAreas || m_ExecuteTrueCase || m_ShowTrueCase || m_CalculateTrueCase)
@@ -591,6 +613,7 @@ public partial class Visibility1 : MonoBehaviour {
 			{
 				GameObject.Destroy(child.gameObject);
 			}
+			//Debug.Log("For visibility polygon for "+nextPlayerPath+" , edges.count = "+((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges.Count);
 			foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges)
 			{
 				l.DrawVector(allLineParent);
