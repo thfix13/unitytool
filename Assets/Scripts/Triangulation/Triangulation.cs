@@ -11,11 +11,15 @@ public class Triangulation : MonoBehaviour
 {
 	public float eps = 1e-5f;//the margin of accuracy for all floating point equivalence checks
 	private float dijkstra_init_value;
+	private const int sp = 0;
+	private const int tri = 1;
+	private const int widc = 2;
 	//Data holder to display and save
 	public List<Vector3> points = new List<Vector3>();
 	public List<Color> colours = new List<Color>();
 	public List<Vector3> cameras = new List<Vector3>();
-	private string path_start = @"C:\Users\Asus\Desktop\McGill\Thesis\MapData\CoDCrash";
+	//	int xsdf;
+	private string path_start;
 	// Use this for initialization
 	
 	public List<Triangle> triangles = new List<Triangle>(); 
@@ -42,6 +46,8 @@ public class Triangulation : MonoBehaviour
 	
 	public bool inkscape = false;	
 	public bool drawTriangles = false;
+	public bool drawTriRoadMap = false;
+	public bool drawTriRoadMapExtended = false;
 	public bool drawSPRoadMap = false;
 	public bool drawSPRoadMapExtended = false;
 	public bool drawMinSpanTree = false;
@@ -55,21 +61,28 @@ public class Triangulation : MonoBehaviour
 	private bool geometryDrawn = false;
 	private bool obstacleDrawn = false;
 	private bool sprDrawn = false;
-	
+
+
 	List<Vector3> masterReflex = new List<Vector3>();
+	List<Vector3> triNonCameraNodes = new List<Vector3>();
 	
 	//Tour
 	private List<Line> spRoadMap = new List<Line> ();
 	private List<Line> spRoadMapExtended = new List<Line> ();
+	private List<Line> triRoadMap = new List<Line> ();
+	private List<Line> triRoadMapExtended = new List<Line> ();
 	private List<Vector3> explorationTour = new List<Vector3> ();
+	private List<Line> explorationTourPath = new List<Line> ();
 	private Geometry tourEdges = new Geometry ();
 	private const int tourgraphsize = 1000000;
 	//Dijkstra
 	List<edges>[] EL = new List<edges>[tourgraphsize];
 	//Stores shortest path calculations with node i as source on all nodes j
-	float [,] d = new float [500, 500];
+	//float [,] d = new float [800, 800];
+	List<List<float>> d = new List<List<float>>();
 	//Stores the path for above calculation
-	int [,] parents = new int [500, 500];
+	//int [,] parents = new int [800, 800];
+	List<List<int>> parents = new List<List<int>>();
 	
 	public void Start(){
 		this.Clear ();
@@ -94,6 +107,10 @@ public class Triangulation : MonoBehaviour
 		obsGeos.Clear ();
 		masterReflex.Clear ();
 		spRoadMap.Clear ();
+		spRoadMapExtended.Clear ();
+		triNonCameraNodes.Clear ();
+		triRoadMap.Clear ();
+		triRoadMapExtended.Clear ();
 		GameObject temp = GameObject.Find("temp");
 		DestroyImmediate(temp);
 		GameObject vptmp = GameObject.Find("vptmp");
@@ -112,6 +129,7 @@ public class Triangulation : MonoBehaviour
 		sprDrawn = false;
 		stopAll = true;
 		explorationTour.Clear ();
+		explorationTourPath.Clear ();
 		cameraVPS.Clear ();
 		cameraVPS2.Clear ();
 		cameraUnion.Clear ();
@@ -130,7 +148,34 @@ public class Triangulation : MonoBehaviour
 	{
 		if ( stopAll )
 			return;
-		
+
+		if(drawTriRoadMap)
+		{
+			foreach( Line l in triRoadMap )
+				Debug.DrawLine( l.vertex[0], l.vertex[1], Color.green );
+
+//			foreach(Triangle tt in triangles){
+//				Line[] ll = tt.GetSharedLines(); 				
+//				
+//				if(ll.Length == 1)
+//					Debug.DrawLine(ll[0].MidPoint(), tt.GetCenterTriangle(),Color.red);
+//				else if(ll.Length > 2){
+//					for(int i = 0; i<ll.Length; i++)
+//						Debug.DrawLine(ll[i].MidPoint(), tt.GetCenterTriangle(),Color.red);
+//				}				
+//				else{
+//					for(int i = 0; i<ll.Length; i++)
+//						Debug.DrawLine(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint(),Color.red);
+//				}
+//			}
+		}
+
+		if (drawTriRoadMapExtended){
+			foreach(Line l in triRoadMapExtended)
+				l.DrawLine( Color.yellow );	
+		}
+
+
 		if(drawMinSpanTree){
 			GameObject temp = GameObject.Find("temp"); 
 			foreach(Line l in linesMinSpanTree)
@@ -165,8 +210,7 @@ public class Triangulation : MonoBehaviour
 		if (drawSPRoadMapExtended){
 			GameObject temp = GameObject.Find("temp"); 
 			foreach(Line l in spRoadMapExtended)
-				l.DrawLine( Color.yellow );
-			
+				l.DrawLine( Color.yellow );	
 		}
 		
 		if( drawVP && vpnum != -1 ){
@@ -184,14 +228,15 @@ public class Triangulation : MonoBehaviour
 		}
 		
 		if (drawTour) {
-			drawTour = false;
+//			drawTour = false;
 			for( int i = 0; i < explorationTour.Count - 1; i++ ){
-				if( i == 0 )
-					drawSphere( explorationTour[i], Color.red );
-				else if ( i == explorationTour.Count - 2 )
-					drawSphere( explorationTour[i + 1], Color.green );
+//				if( i == 0 )
+//					drawSphere( explorationTour[i], Color.red );
+//				else if ( i == explorationTour.Count - 2 )
+//					drawSphere( explorationTour[i + 1], Color.green );
 				Line tmpline = new Line( explorationTour[i], explorationTour[i + 1] );
-				tmpline.DrawVector( GameObject.Find("temp"), Color.blue );
+				//tmpline.DrawVector( GameObject.Find("temp"), Color.blue );
+				tmpline.DrawLine(Color.blue);
 				//Debug.DrawLine( explorationTour[i], explorationTour[i + 1] );
 			}
 		}
@@ -298,11 +343,32 @@ public class Triangulation : MonoBehaviour
 	}
 	
 	public void TriangulationSpace (){
+		//Testing point
+//		Vector2 a = new Vector2 (2, 17);
+//		Vector2 b = new Vector2 (9, 12);
+//		Debug.Log ((a - b).SqrMagnitude ());
+//		float unitdistance = 5;
+//		float div = (a - b).SqrMagnitude () / unitdistance;
+////		Debug.Log (div);
+//		Vector2 c = new Vector2 ((a.x + b.x) / div, (a.y + b.y) / div);
+//		Vector2 d = new Vector2 ((a.x + b.x) / 2, (a.y + b.y) / 2);
+////		Debug.Log (a);
+////		Debug.Log (c);
+//		Debug.Log (d);
+////		Debug.Log ((a - c).SqrMagnitude ());
+//		Debug.Log ((a - d).SqrMagnitude ());
+		
+		return;
+		path_start = @"C:\Users\Asus\Desktop\McGill\Thesis\MapData\CoDCrash";
 		this.Clear ();
 		System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch ();
 		stopwatch.Start ();
 		inkscape = true;
-		bool scandata = false;
+		bool computetilltriangulation = false;
+		bool computetilltour = false;
+		bool computetour = false;
+		bool computeexternaltour = true;
+		int roadmap = tri;
 		/***PHASE A: PREPROCESSING***/
 		/*STEP 1 - GET POLYGON POINTS*/
 		if( inkscape )
@@ -317,79 +383,131 @@ public class Triangulation : MonoBehaviour
 		defineBoundary ();
 		stopwatch.Stop();
 		Debug.Log("PREPROCESSING: " + stopwatch.ElapsedMilliseconds * 0.001);
-
+		
+		//Debug.Log (getMapArea ());
 		/***PHASE B: COLORING***/
-		scanMST ();
-		//		/*STEP 4 - MAKE MST OF POLYGONS*/
-		//		stopwatch.Reset ();
-		//		stopwatch.Start ();
-		//		MST ();
-		//		stopwatch.Stop ();
-		//		Debug.Log("MST: " + stopwatch.ElapsedMilliseconds * 0.001);
-		//		printMapToPolyFile ();
-		//		printMST ();
+		/*STEP 4 - MAKE MST OF POLYGONS*/
+		if( !computetilltriangulation )
+			scanMST ();
+		else{
+			stopwatch.Reset ();
+			stopwatch.Start ();
+			MST ();
+			stopwatch.Stop ();
+			Debug.Log("MST: " + stopwatch.ElapsedMilliseconds * 0.001);
+			printMST ();
+		}
 		
-		scanTriangulation ();//Done externally by Triangle library
-		//		/*STEP 5 - TRIANGULATE*/
-		//		stopwatch.Reset ();
-		//		stopwatch.Start ();
-		//		triangulate ();
-		//		stopwatch.Stop ();
-		//		Debug.Log("Triangulation: " + stopwatch.ElapsedMilliseconds * 0.001);
+		/*STEP 5 - TRIANGULATE*/
+		if( !computetilltriangulation )
+			scanTriangulation ();//Done externally by Triangle library
+		else{
+			//External Method
+			printMapToPolyFile ();
+			//Internal Method
+			//		stopwatch.Reset ();
+			//		stopwatch.Start ();
+			//		triangulate ();
+			//		stopwatch.Stop ();
+			//		Debug.Log("Triangulation: " + stopwatch.ElapsedMilliseconds * 0.001);
+			return;
+		}
 		
-		scanCameras ();
 		/*STEP 6 - COLOR AND GET CAMERAS*/
-		//		stopwatch.Reset ();
-		//		stopwatch.Start ();
-		//		colorCameras ();
-		//		stopwatch.Stop ();
-		//		Debug.Log("Cameras and Coloring: " + stopwatch.ElapsedMilliseconds * 0.001);
-		//		printCameras ();
+		if( !computetilltour )
+			scanCameras ();
+		else{
+			stopwatch.Reset ();
+			stopwatch.Start ();
+			colorCameras ();
+			stopwatch.Stop ();
+			Debug.Log("Cameras and Coloring: " + stopwatch.ElapsedMilliseconds * 0.001);
+			printCameras ();
+		}
 		
-		scanSPRoadMap ();
 		/***PHASE C: TOUR***/
 		/*STEP 7 - CREATE "SHORTEST-PATH" ROADMAP*/
-		//		stopwatch.Reset ();
-		//		stopwatch.Start ();
-		//		makeSPRoadMap ();
-		//		stopwatch.Stop ();
-		//		Debug.Log("Make SP Roadmap: " + stopwatch.ElapsedMilliseconds * 0.001);
-		//		printSPRoadMap ();
-		
+		if( !computetilltour ){
+			if( roadmap == sp )
+				scanSPRoadMap ();
+			else if( roadmap == tri )
+				scanTriRoadMap ();
+		}
+		else{
+			stopwatch.Reset ();
+			stopwatch.Start ();
+			if( roadmap == sp ){
+				makeSPRoadMap ();
+				printSPRoadMap ();
+			}
+			else if( roadmap == tri ){
+				makeTriRoadMap ();
+				printTriRoadMap ();
+			}
+			stopwatch.Stop ();
+			Debug.Log("Make SP Roadmap: " + stopwatch.ElapsedMilliseconds * 0.001);
+		}
+
+		/*External Tour*/
+		if( computeexternaltour ){
+			externalTour ( roadmap );
+			return;
+		}
+
 		/*STEP 8 - RUN DIJKSTRA FOR EVERY CAMERA PAIR*/
 		//Executed in makeTourOnSPR()
 		/*----x-----*/
 		
-		//		scanTour ();
 		/*STEP 9 - CREATE TOUR USING NEAREST NEIGHBOUR*/
-		stopwatch.Reset ();
-		stopwatch.Start ();
-		if (!makeTourOnSPR ()){
-			Debug.Log("makeTourOnSPR () failed");
-			return;
+		if( !computetour )
+			scanTour ();
+		else{
+			stopwatch.Reset ();
+			stopwatch.Start ();
+			if( roadmap == sp ){
+				if (!makeTourOnSPR (false, 1)){
+					Debug.Log("makeTourOnSPR () failed");
+					return;
+				}
+				stopwatch.Stop ();
+				Debug.Log("Make tour: " + stopwatch.ElapsedMilliseconds * 0.001 + "s");
+				printTour ();
+			}
+			else if( roadmap == tri ){
+				if (!makeTourOnTri (false, 1)){
+					Debug.Log("makeTourOnTri () failed");
+					return;
+				}
+				stopwatch.Stop ();
+				Debug.Log("Make tour: " + stopwatch.ElapsedMilliseconds * 0.001 + "s");
+				printTour ();
+			}
 		}
-		stopwatch.Stop ();
-		Debug.Log("Make tour: " + stopwatch.ElapsedMilliseconds * 0.001);
-		printTour ();
-		
-		//		scanVPS ();
-		//		Debug.Log (explorationTour.Count);
-		//		/***PHASE D: VISIBILITY***/
-		//		/*STEP 10 - GET VISIBILITY POLYGONS OF CAMERAS*/
-		//		getCameraVPS ();
-		//		if (VPValidation () > 0){
-		//			Debug.Log("Invalid VPs found.");
-		//			return;
-		//		}
-		//		printVPS ();
-		externalVP ();
-		Debug.Log ("Vispol done");
-		
+
 		return;
-		//		Debug.Log ("ALL VPS valid");
-		//		return;
-		//		VPValidation ();
-		//		Debug.Log ("Vispol done");
+		/***PHASE D: VISIBILITY***/
+		/*STEP 10 - GET VISIBILITY POLYGONS OF TOUR POINTS*/
+		if( !computetour )
+			scanVPS ();
+		else{
+			//External method
+			externalVP ();
+			Debug.Log ("Printed mapWithTour");
+//			Internal method
+//			getCameraVPS ();
+//			if (VPValidation () > 0){
+//				Debug.Log("Invalid VPs found.");
+//				return;
+//			}
+//			Debug.Log ("Vispol done");
+//			printVPS ();		
+		}
+//		if (VPValidation () > 0){
+//			Debug.Log("Invalid VPs found.");
+//			return;
+//		}
+		Debug.Log ("Vispol done");
+		return;
 		
 		/*STEP 11 - CHECK CAMERA VISIBILITY NESTING*/
 		//		mergeVPS ();
@@ -407,7 +525,7 @@ public class Triangulation : MonoBehaviour
 		double mapArea = mapBG.getPolygonArea (0);
 		foreach( Geometry g in finalPoly )
 			mapArea -= g.getPolygonArea(0);
-		Debug.Log (mapArea);		
+		Debug.Log (mapArea);
 		return;
 	}
 	
@@ -548,6 +666,13 @@ public class Triangulation : MonoBehaviour
 			totalGeo.edges.Add( l );
 		}
 		totalGeoVerts = totalGeo.GetVertex ();
+	}
+	
+	private float getMapArea(){
+		double mapArea = mapBG.getPolygonArea (0);
+		foreach( Geometry g in finalPoly )
+			mapArea -= g.getPolygonArea(0);
+		return (float)mapArea;
 	}
 	
 	//	void MST(){
@@ -924,7 +1049,8 @@ public class Triangulation : MonoBehaviour
 		}
 		//Debug.Log (cameras.Count);
 	}
-	
+
+	//Creates a "shortest path roadmap" also known as "reduced visibility graph"
 	private void makeSPRoadMap() {
 		//1. Get all reflex vertices from obstacles
 		masterReflex = new List<Vector3> ();
@@ -1003,6 +1129,23 @@ public class Triangulation : MonoBehaviour
 			}
 		}
 	}
+
+	private void makeTriRoadMap() {
+		foreach(Triangle tt in triangles){
+			Line[] ll = tt.GetSharedLines();
+			if(ll.Length == 1)
+				triRoadMap.Add(new Line(ll[0].MidPoint(), tt.GetCenterTriangle()));
+			else if(ll.Length > 2){
+				for(int i = 0; i<ll.Length; i++)
+					triRoadMap.Add( new Line(ll[i].MidPoint(), tt.GetCenterTriangle()) );
+			}				
+			else{
+				for(int i = 0; i<ll.Length; i++)
+					triRoadMap.Add(new Line(ll[i].MidPoint(), ll[(i+1) % ll.Length].MidPoint()));
+			}
+		}
+
+	}
 	
 	public struct edges{//used to represent graph for Dijkstra
 		public int v;
@@ -1013,13 +1156,20 @@ public class Triangulation : MonoBehaviour
 		}
 	}
 	
-	bool makeTourOnSPR(){
+	bool makeTourOnSPR( bool external, int granularity ){
 		Debug.Log ("Total Cameras: " + cameras.Count);
 		Debug.Log ("SPRoadMap: " + spRoadMap.Count);
 		if (cameras.Count < 2)	return true;
 		Dictionary<Vector3, int> dict = new Dictionary<Vector3, int> ();
 		Dictionary<int, Vector3> numToVect = new Dictionary<int, Vector3> ();
 		int N = 0;
+		//0. Deal with granularity
+		foreach( Vector3 vA in masterReflex ){
+			foreach( Vector3 vB in masterReflex ){
+				if( vA == vB ) continue;
+
+			}
+		}
 		//1. Construct graph in EL (global variable, edge list)
 		//1A. give IDs to vertices (masterReflex (without cameras) and cameras independently)
 		foreach (Vector3 v in masterReflex){
@@ -1121,11 +1271,10 @@ public class Triangulation : MonoBehaviour
 		//3A. Calculate All-Pair-Shortest-Path
 		dijkstra_init_value = 100000f;
 		for( int i = 0; i < N; i++ )
-			Dijkstra( i, N );
+			Dijkstra( i, N, numToVect );
 		for( int i = 0; i < N; i++ ){
 			for( int j = 0; j < N; j++ ){
-				//Debug.Log(i + "," + j + ":" + parents[i,j]);
-				if( i!=j && j == parents[i,j] )
+				if( i!=j && j == parents[i][j] )
 					Debug.Log("Discrepancy");
 			}
 		}
@@ -1136,23 +1285,213 @@ public class Triangulation : MonoBehaviour
 		//				tmpline.DrawVector( GameObject.Find("temp") );
 		//			}
 		//		}
-		//makeMinimumTour( GSC, N, numToVect );
-		//makeMaximumTour( GSC, N, numToVect );
-		makeClosestNonVisibleTour (GSC, N, numToVect);
+
+		if( !external ){
+			makeMinimumTour( GSC, N, numToVect );
+//			makeMaximumTour( GSC, N, numToVect );
+//			makeClosestNonVisibleTour (GSC, N, numToVect);
+		}
+		else
+			printDijkstra( GSC, N, numToVect );
 		return true;
+	}
+
+	bool makeTourOnTri( bool external, int granularity ){
+		Debug.Log ("Total Cameras: " + cameras.Count);
+		Debug.Log ("TriRoadMap: " + triRoadMap.Count);
+		if (cameras.Count < 2)	return true;
+		Dictionary<Vector3, int> dict = new Dictionary<Vector3, int> ();
+		Dictionary<int, Vector3> numToVect = new Dictionary<int, Vector3> ();
+		int N = 0;
+
+		//1. Construct graph in EL (global variable, edge list)
+		//1A. give IDs to vertices (masterReflex (without cameras) and cameras independently)
+		triNonCameraNodes = new List<Vector3> ();
+		foreach (Line l in triRoadMap) {
+			if( !triNonCameraNodes.Contains(l.vertex[0]) && !cameras.Contains(l.vertex[0]) )
+				triNonCameraNodes.Add( l.vertex[0] );
+			if( !triNonCameraNodes.Contains(l.vertex[1]) && !cameras.Contains(l.vertex[1]) )
+				triNonCameraNodes.Add( l.vertex[1] );
+		}
+		foreach (Vector3 v in triNonCameraNodes){
+			if( cameras.Contains(v) || dict.ContainsKey(v) ) continue;
+			EL[N] = new List<edges>();
+			dict.Add( v, N );
+			numToVect.Add(N, v);
+			N++;
+		}
+		int GSC = N; //graphSizeSansCameras alternatively the id of the first camera
+		foreach (Vector3 v in cameras) {
+			if( !dict.ContainsKey( v ) ){
+				EL[N] = new List<edges>();
+				dict.Add( v, N );
+				numToVect.Add(N, v);
+				N++;
+			}
+		}
+
+		//1B. Construct edges with these new ids from existing RoadMap
+		foreach (Line l in triRoadMap) {
+			int u = dict[l.vertex[0]];
+			int v = dict[l.vertex[1]];
+			EL[u].Add(new edges( v, l.Magnitude() ));
+			EL[v].Add(new edges( u, l.Magnitude() ));
+			triRoadMapExtended.Add( l );
+		}
+		
+		/*2. CAMERA WORK*/
+		//2A. Connect cameras to each other and the rest of the graph (i.e. reflex points)
+		List<Vector3> triAllNodes = new List<Vector3> ();
+		foreach (Vector3 v1 in cameras){
+			if( !triAllNodes.Contains(v1) )
+				triAllNodes.Add (v1);
+		}
+		foreach (Vector3 v1 in triNonCameraNodes){
+			if( !cameras.Contains(v1) && !triAllNodes.Contains(v1) ) 
+				triAllNodes.Add (v1);
+		}
+		//Connect each camera to the point its closest to on the roadmap
+		int cntx = 0;
+		int cnty = 0;
+		foreach(Vector3 v1 in cameras){
+			//drawSphere( v1, Color.red);
+			cntx++;
+			bool connected = false;
+			cnty = 0;
+			float mindist = 10000f;
+			Line minconnector = null;
+			foreach(Vector3 v2 in triNonCameraNodes){
+				cnty++;
+				if( VectorApprox( v1, v2 ) ) continue;
+//				int u = dict[v1];
+//				int v = dict[v2];
+				Line tmpLine = new Line( v1, v2 );
+				bool collides = false;
+				if( triRoadMap.Contains( tmpLine ) ){
+					connected = true;
+					continue;
+				}
+				bool added = false;
+				//Add link if already an obstacle or map edge
+				foreach( Line l in totalGeo.edges ){
+					if( l.Equals( tmpLine ) ){
+//						EL[u].Add(new edges( v, tmpLine.Magnitude() ) );
+//						EL[v].Add(new edges( u, tmpLine.Magnitude() ) );
+						connected = true;
+						added = true;
+//						triRoadMapExtended.Add( l );
+						break;
+					}
+				}
+				if( added ) break;
+				
+				collides = comprehensiveCollision( tmpLine, 0 );
+				if( !collides && tmpLine.Magnitude() < mindist ){
+					connected = true;
+//					EL[u].Add(new edges( v, tmpLine.Magnitude() ) );
+//					EL[v].Add(new edges( u, tmpLine.Magnitude() ) );
+//					triRoadMapExtended.Add( new Line( v1, v2 ) );
+					minconnector = tmpLine;
+					mindist = minconnector.Magnitude();
+				}
+			}
+
+			if( !connected ){
+				Debug.Log("Camera not connected");
+				return false;
+			}
+			else if( mindist != 10000f ){
+				triRoadMapExtended.Add( minconnector );
+				int u = dict[minconnector.vertex[0]];
+				int v = dict[minconnector.vertex[1]];
+				EL[u].Add(new edges( v, mindist ) );
+				EL[v].Add(new edges( u, mindist ) );
+			}
+		}
+		
+		/*3. DIJKSTRA*/
+		//3A. Calculate All-Pair-Shortest-Path
+		dijkstra_init_value = 100000f;
+		for( int i = 0; i < N; i++ )
+			Dijkstra( i, N, numToVect );
+		for( int i = 0; i < N; i++ ){
+			for( int j = 0; j < N; j++ ){
+				//Debug.Log(i + "," + j + ":" + parents[i,j]);
+				if( i!=j && j == parents[i][j] )
+					Debug.Log("Discrepancy");
+			}
+		}
+		//0 to (GSC - 1) - Draws graph
+		//		for (int i = 0; i < N; i++) {
+		//			foreach( edges l in EL[i] ){
+		//				Line tmpline = new Line( numToVect[i], numToVect[l.v] );
+		//				tmpline.DrawVector( GameObject.Find("temp") );
+		//			}
+		//		}
+		if( !external ){
+			makeMinimumTour( GSC, N, numToVect );
+//			makeMaximumTour( GSC, N, numToVect );
+//			makeClosestNonVisibleTour (GSC, N, numToVect);
+		}
+		else
+			printDijkstra( GSC, N, numToVect );
+		return true;
+	}
+	
+	private void Dijkstra( int id, int N, Dictionary<int, Vector3> numToVect ){
+		SortedDictionary< float, int > SD = new SortedDictionary< float, int > ();
+		//1. Initialization
+		int cnt = 0;
+		for (int i = 0; i < N; i++) {
+			d [id][i] = dijkstra_init_value;
+			parents[id][i] = -1;
+		}
+		d[id][id] = 0f;
+		parents [id][id] = id;
+		SD.Add( 0f, id );
+		//2. Take first node (least cost) from SD and update connected nodes
+		while( SD.Count > 0 ){
+			int u = 0;
+			float dist = 0;
+			foreach( KeyValuePair<float, int> kvp in SD ){
+				dist = kvp.Key;
+				u = kvp.Value;
+				break;
+			}
+			
+			SD.Remove(dist);//will it remove the first one when removing duplicate keys
+			foreach( edges E in EL[u] ){
+				int v = E.v;
+				float nw = dist + E.w;
+				if( nw < d[id][v] ){
+					d[id][v] = nw;
+					//TODO:Implement a more permanent solution. Multiple keys for a sorted dictionary.
+					while( SD.ContainsKey(nw) )
+						nw += eps;
+					SD.Add( nw, v );
+					parents[id][v] = u;
+				}
+			}
+		}
+		for (int i = 0; i < N; i++) {
+			if( parents[id][i] == -1 )
+				Debug.Log("All nodes not reached:" + i + " for " + id + " tour");
+		}
 	}
 	
 	public void makeMinimumTour( int GSC, int N, Dictionary<int, Vector3> numToVect ){
 		/*4. MAKE TOUR*/
-		bool [] visited = new bool [1000];
+		bool [] visited = new bool [N + 100];
 		for( int i = 0; i < N; i++ )
 			visited[i] = false;
 		//		Debug.Log ("GSC : " + GSC + " N: " + N);
 		int current = GSC;
 		float tourDistance = 0;
 		List< int > tour = new List<int> ();
-		tour.Add (GSC);
+		//Add first camera to the tour
+		tour.Add (current);
 		int xcnt = 0;
+		Debug.Log (N + "," + GSC + "," + cameras.Count);
 		//		for( int i = GSC; i < N; i++ ){
 		//			if( !visited[i] )
 		//				xcnt++;
@@ -1171,45 +1510,48 @@ public class Triangulation : MonoBehaviour
 				if( i == current ) continue;
 				if( !cameras.Contains(numToVect[i]) ) continue; //if this is not a camera
 				if( visited[i] ) continue;
-				if( d[current, i] < mindist ){
+				if( d[current][i] < mindist ){
 					nearestNeighbor = i;
-					mindist = d[current, i];
+					mindist = d[current][i];
 				}
 			}
 			if( nearestNeighbor == -1 )
 				break;
+			Debug.Log(nearestNeighbor + "," + current + ", " + d[current][nearestNeighbor]);
 			//4C. Determine the path to the chosen camera
 			int src = current;
 			int dest = nearestNeighbor;
 			Stack<int> stk = new Stack<int> ();
 			//Debug.Log( src + " " + GSC + " " + N);
+			Vector3 prevv = numToVect[dest];
 			while( src != dest ){
 				stk.Push(dest);
-				dest = parents[current,dest];
+				dest = parents[current][dest];
 				if( cameras.Contains(numToVect[dest]) )
 					visited[dest] = true;
 				xcnt++;
 			}
-			while( stk.Count != 0 )
+			while( stk.Count != 0 ){
+				Vector3 v = numToVect[stk.Peek()];
 				tour.Add( stk.Pop() );
+			}
 			//Size of tour
 			tourDistance += mindist;
 			current = nearestNeighbor;
 		}
 		//Debug.Log ("Cameras Visited: " + xcnt);
 		Debug.Log ("Size of exploration tour: " + tourDistance);
-		
-		for (int i = 0; i < tour.Count - 1; i++) {
+		float totalexp = 0;
+		for (int i = 0; i < tour.Count; i++) {
 			Vector3 v = numToVect[tour[i]];
 			explorationTour.Add(v);
 		}
-		explorationTour.Add (numToVect[tour[tour.Count - 1]]);
 		Debug.Log ("Nodes traversed on tour: " + explorationTour.Count);
 	}
 	
 	public void makeMaximumTour( int GSC, int N, Dictionary<int, Vector3> numToVect ){
 		/*4. MAKE TOUR*/
-		bool [] visited = new bool [1000];
+		bool [] visited = new bool [N + 100];
 		for( int i = 0; i < N; i++ )
 			visited[i] = false;
 		//		Debug.Log ("GSC : " + GSC + " N: " + N);
@@ -1236,9 +1578,9 @@ public class Triangulation : MonoBehaviour
 				if( i == current ) continue;
 				if( !cameras.Contains(numToVect[i]) ) continue; //if this is not a camera
 				if( visited[i] ) continue;
-				if( d[current, i] > maxdist ){
+				if( d[current][i] > maxdist ){
 					farthestNeighbor = i;
-					maxdist = d[current, i];
+					maxdist = d[current][i];
 				}
 			}
 			if( farthestNeighbor == -1 )
@@ -1249,7 +1591,7 @@ public class Triangulation : MonoBehaviour
 			Stack<int> stk = new Stack<int> ();
 			while( src != dest ){
 				stk.Push(dest);
-				dest = parents[current,dest];
+				dest = parents[current][dest];
 				if( cameras.Contains(numToVect[dest]) )
 					visited[dest] = true;
 				xcnt++;
@@ -1263,16 +1605,15 @@ public class Triangulation : MonoBehaviour
 		//Debug.Log ("Cameras Visited: " + xcnt);
 		Debug.Log ("Size of exploration tour: " + tourDistance);
 		
-		for (int i = 0; i < tour.Count - 1; i++) {
+		for (int i = 0; i < tour.Count; i++) {
 			Vector3 v = numToVect[tour[i]];
 			explorationTour.Add(v);
 		}
-		explorationTour.Add (numToVect[tour[tour.Count - 1]]);
 	}
 	
 	public void makeClosestNonVisibleTour( int GSC, int N, Dictionary<int, Vector3> numToVect ){
 		/*4. MAKE TOUR*/
-		bool [] visited = new bool [1000];
+		bool [] visited = new bool [N + 100];
 		for( int i = 0; i < N; i++ )
 			visited[i] = false;
 		//		Debug.Log ("GSC : " + GSC + " N: " + N);
@@ -1313,9 +1654,9 @@ public class Triangulation : MonoBehaviour
 				if( i == current ) continue;
 				if( visited[i] ) continue;
 				if( isVisible[current,i] == 1 ) continue;
-				if( d[current, i] < mindist ){
+				if( d[current][i] < mindist ){
 					nearestNeighbor = i;
-					mindist = d[current, i];
+					mindist = d[current][i];
 				}
 			}
 			//If no nodes found
@@ -1328,9 +1669,9 @@ public class Triangulation : MonoBehaviour
 						if( i == current ) continue;
 						if( !cameras.Contains(numToVect[i]) ) continue; //if this is not a camera
 						if( visited[i] ) continue;
-						if( d[current, i] < mindist ){
+						if( d[current][i] < mindist ){
 							nearestNeighbor = i;
-							mindist = d[current, i];
+							mindist = d[current][i];
 						}
 					}
 				}
@@ -1343,7 +1684,7 @@ public class Triangulation : MonoBehaviour
 			//Debug.Log( src + " " + GSC + " " + N);
 			while( src != dest ){
 				stk.Push(dest);
-				dest = parents[current,dest];
+				dest = parents[current][dest];
 				if( current == -1 || dest == -1 ){
 					Debug.Log("-1 found");
 					return;
@@ -1364,52 +1705,11 @@ public class Triangulation : MonoBehaviour
 		//Debug.Log ("Cameras Visited: " + xcnt);
 		Debug.Log ("Size of exploration tour: " + tourDistance);
 		
-		for (int i = 0; i < tour.Count - 1; i++) {
+		for (int i = 0; i < tour.Count; i++) {
 			Vector3 v = numToVect[tour[i]];
 			explorationTour.Add(v);
 		}
-		explorationTour.Add (numToVect[tour[tour.Count - 1]]);
 		Debug.Log ("Nodes traversed on tour: " + explorationTour.Count);
-	}
-	
-	private void Dijkstra( int id, int N ){
-		SortedDictionary< float, int > SD = new SortedDictionary< float, int > ();
-		//1. Initialization
-		for (int i = 0; i < N; i++) {
-			d [id, i] = dijkstra_init_value;
-			parents[id, i] = -1;
-		}
-		d[id, id] = 0f;
-		parents [id, id] = id;
-		SD.Add( 0f, id );
-		//2. Take first node (least cost) from SD and update connected nodes
-		while( SD.Count > 0 ){
-			int u = 0;
-			float dist = 0;
-			foreach( KeyValuePair<float, int> kvp in SD ){
-				dist = kvp.Key;
-				u = kvp.Value;
-				break;
-			}
-			
-			SD.Remove(dist);//will it remove the first one when removing duplicate keys
-			foreach( edges E in EL[u] ){
-				int v = E.v;
-				float nw = E.w + dist;
-				if( nw < d[id, v] ){
-					d[id, v] = nw;
-					//TODO:Implement a more permanent solution. Multiple keys for a sorted dictionary.
-					while( SD.ContainsKey(nw) )
-						nw += eps;
-					SD.Add( nw, v );
-					parents[ id, v ] = u;
-				}
-			}
-		}
-		for (int i = 0; i <= N; i++) {
-			if( parents[id, i] == -1 )
-				Debug.Log("All nodes not reached:" + i + " for " + id + " tour");
-		}
 	}
 	
 	void drawSphere( Vector3 v ){
@@ -1612,7 +1912,7 @@ public class Triangulation : MonoBehaviour
 				bool FL = connectable( templistA[0], templistB[indB] );
 				bool FF = connectable( templistA[0], templistB[0] );
 				if( xid == 9 && cnt == 2 ){
-					Debug.Log( LL + " " + LF + " " + FL + " " + FF );
+					//Debug.Log( LL + " " + LF + " " + FL + " " + FF );
 					//					foreach( Vector3 vyv in templistA )
 					//						drawSphere( vyv, Color.grey, 1 );									
 					//					foreach( Vector3 vyv in templistB )
@@ -1943,14 +2243,14 @@ public class Triangulation : MonoBehaviour
 		int xid = 0;
 		foreach (Vector3 v in explorationTour) {
 			//if( cameras.Contains(v) && !tempcam.Contains(v) ){
-			if( !tempcam.Contains(v) ){
-				tempcam.Add(v);
-				//if( xid == 81 )
-				cameraVPS.Add ( new KeyValuePair<Vector3, Geometry>( v, visibilityPolygon( v, xid ) ) );
-				xid++;
-				//if( xid > 9 ) return;
-				//return;
-			}
+			//			if( !tempcam.Contains(v) ){
+			//				tempcam.Add(v);
+			//if( xid == 81 )
+			cameraVPS.Add ( new KeyValuePair<Vector3, Geometry>( v, visibilityPolygon( v, xid ) ) );
+			xid++;
+			//				//if( xid > 9 ) return;
+			//				//return;
+			//			}
 		}
 	}
 	
@@ -1958,33 +2258,36 @@ public class Triangulation : MonoBehaviour
 		int cnt = 0;
 		int invalid = 0;
 		foreach (KeyValuePair<Vector3, Geometry> kvp in cameraVPS){
+			cnt++;
 			foreach( Line l in kvp.Value.edges ){
 				if( comprehensiveCollision( l , 0 ) ){
 					//					if( cnt == 92 )
-					//						l.DrawVector(GameObject.Find("temp"));
+					//					l.DrawVector(GameObject.Find("temp"));
 					Debug.Log("Invalid VP at: " + cnt);
+					//					kvp.Value.DrawGeometry(GameObject.Find("temp"));
+					return 1;
 					invalid++;
 					break;
 				}
 			}
-			for( int i = 0; i < kvp.Value.edges.Count; i++ ){
-				bool invflag = false;
-				for( int j = i + 1; j < kvp.Value.edges.Count; j++ ){
-					int casetype = kvp.Value.edges[i].LineIntersectMuntacGM( kvp.Value.edges[j] );
-					if( casetype != 0 ){
-						Debug.Log("B Invalid VP at: " + cnt);
-						//						kvp.Value.edges[i].DrawVector(GameObject.Find("temp"));
-						//						kvp.Value.edges[j].DrawVector(GameObject.Find("temp"));
-						//						Debug.Log(casetype);
-						//						return 1;
-						invflag = true;
-						invalid++;
-						break;
-					}
-				}
-				if( invflag ) break;
-			}
-			cnt++;
+			//			for( int i = 0; i < kvp.Value.edges.Count; i++ ){
+			//				bool invflag = false;
+			//				for( int j = i + 1; j < kvp.Value.edges.Count; j++ ){
+			//					int casetype = kvp.Value.edges[i].LineIntersectMuntacGM( kvp.Value.edges[j] );
+			//					if( casetype != 0 ){
+			//						Debug.Log("B Invalid VP at: " + cnt);
+			//						//						kvp.Value.edges[i].DrawVector(GameObject.Find("temp"));
+			//						//						kvp.Value.edges[j].DrawVector(GameObject.Find("temp"));
+			//						//						Debug.Log(casetype);
+			//						//						return 1;
+			//						invflag = true;
+			//						invalid++;
+			//						break;
+			//					}
+			//				}
+			//				if( invflag ) break;
+			//			}
+			//			cnt++;
 		}
 		if( invalid > 0 )
 			Debug.Log (invalid + " invalid VPs found. Debug vispol function.");
@@ -2128,7 +2431,6 @@ public class Triangulation : MonoBehaviour
 	
 	void printMapToPolyFile(){
 		string createText = "";
-		//string path = @"C:\Users\Asus\Desktop\McGill\Thesis\Week 20 Tours VPs Unions\vpsVacant.csv";
 		string path = path_start + @"\map.poly";
 		string delimeter = " ";
 		Dictionary<Vector3, int> dict = new Dictionary<Vector3, int> ();
@@ -2191,7 +2493,6 @@ public class Triangulation : MonoBehaviour
 	
 	void printVPS(){
 		string createText = "";
-		//string path = @"C:\Users\Asus\Desktop\McGill\Thesis\Week 20 Tours VPs Unions\vpsVacant.csv";
 		string path = path_start + @"\vps.csv";
 		string delimeter = ",";
 		for( int i = 0; i < cameraVPS.Count; i++ ){
@@ -2207,7 +2508,6 @@ public class Triangulation : MonoBehaviour
 	
 	void printCameras(){
 		string createText = "";
-		//string path = @"C:\Users\Asus\Desktop\McGill\Thesis\Week 20 Tours VPs Unions\vpsVacant.csv";
 		string path = path_start + @"\cameras.csv";
 		string delimeter = ",";
 		foreach( Vector3 v in cameras )
@@ -2217,7 +2517,6 @@ public class Triangulation : MonoBehaviour
 	
 	void printSPRoadMap(){
 		string createText = "";
-		//string path = @"C:\Users\Asus\Desktop\McGill\Thesis\Week 20 Tours VPs Unions\vpsVacant.csv";
 		string path = path_start + @"\SPRoadMap.csv";
 		string delimeter = ",";
 		foreach( Line l in spRoadMap ){
@@ -2225,6 +2524,20 @@ public class Triangulation : MonoBehaviour
 				+ "," + l.vertex[1].x.ToString() + "," + l.vertex[1].z.ToString() + ",\n";
 		}
 		foreach( Vector3 v in masterReflex ){
+			createText += "M," + v.x.ToString() + "," + v.z.ToString() + ",\n";
+		}
+		File.WriteAllText(path, createText);
+	}
+
+	void printTriRoadMap(){
+		string createText = "";
+		string path = path_start + @"\TriRoadMap.csv";
+		string delimeter = ",";
+		foreach( Line l in triRoadMap ){
+			createText += "L," + l.vertex[0].x.ToString()+","+l.vertex[0].z.ToString()
+				+ "," + l.vertex[1].x.ToString() + "," + l.vertex[1].z.ToString() + ",\n";
+		}
+		foreach( Vector3 v in triNonCameraNodes ){
 			createText += "M," + v.x.ToString() + "," + v.z.ToString() + ",\n";
 		}
 		File.WriteAllText(path, createText);
@@ -2399,6 +2712,37 @@ public class Triangulation : MonoBehaviour
 			}
 		}
 	}
+
+	void scanTriRoadMap(){
+		var reader = new StreamReader(File.OpenRead(path_start + @"\TriRoadMap.csv"));
+		List<string> coord = new List<string> ();
+		Geometry walls = new Geometry ();
+		
+		while ( !reader.EndOfStream )
+		{
+			var line = reader.ReadLine();
+			var values = line.Split(',');
+			//Check the symbol in first column of line
+			if( values[0].Equals ("L") ){
+				Vector3 expPointA = new Vector3();
+				Vector3 expPointB = new Vector3();
+				expPointA.x = float.Parse(values[1]);
+				expPointA.y = 1;
+				expPointA.z = float.Parse(values[2]);
+				expPointB.x = float.Parse(values[3]);
+				expPointB.y = 1;
+				expPointB.z = float.Parse(values[4]);
+				triRoadMap.Add(new Line(expPointA, expPointB));
+			}
+			else{
+				Vector3 mrpoint = new Vector3();
+				mrpoint.x = float.Parse(values[1]);
+				mrpoint.y = 1;
+				mrpoint.z = float.Parse(values[2]);
+				triNonCameraNodes.Add(mrpoint);
+			}
+		}	
+	}
 	
 	void scanCameras(){
 		var reader = new StreamReader(File.OpenRead(path_start + @"\cameras.csv"));
@@ -2418,10 +2762,103 @@ public class Triangulation : MonoBehaviour
 			cameras.Add(expPointA);
 		}
 	}
-	
+
+	private void externalTour( int roadmap ){
+		if( roadmap == sp )
+			makeTourOnSPR (true, 1);
+		else if( roadmap == tri )
+			makeTourOnTri (true, 1);
+		string createText = "";
+		string path = path_start + @"\mapwithtourall.csv";
+		string delimeter = ",";
+		List<Line> lsorted = new List<Line> ();
+		//Print Map
+		lsorted = mapBG.getSortedEdges();
+		for( int i = 0; i < lsorted.Count; i++ ){
+			createText += lsorted[i].vertex[1].x.ToString() + "," + lsorted[i].vertex[1].z.ToString()
+				+ ",\n";
+		}
+		createText += "M,\n";
+		//Print Obstacles
+		foreach( Geometry g in finalPoly ){
+			lsorted = g.getSortedEdges();
+			for( int i = 0; i < lsorted.Count; i++ ){
+				createText += lsorted[i].vertex[1].x.ToString() + "," + lsorted[i].vertex[1].z.ToString()
+					+ ",\n";
+			}
+			createText += "H,\n";
+		}
+
+		List<Vector3> tourall = new List<Vector3> ();
+
+		if( roadmap == sp ){
+			foreach ( Vector3 v in masterReflex )
+				if( !tourall.Contains( v ) ) tourall.Add( v );
+		}
+		else if( roadmap == tri ){
+			foreach ( Vector3 v in triNonCameraNodes )
+				if( !tourall.Contains( v ) ) tourall.Add( v );
+		}
+		foreach (Vector3 v in cameras )
+			if( !tourall.Contains( v ) ) tourall.Add( v );
+		//Add points all points that can be used for building a tour
+		foreach (Vector3 v in tourall)
+			createText += "T," + v.x.ToString() + "," + v.z.ToString() + ",\n";
+		File.WriteAllText(path, createText);
+	}
+
+	public void printDijkstra( int GSC, int N, Dictionary<int,Vector3> numToVect ){
+		string createText = "";
+		string path = path_start + @"\dijkstra.csv";
+		string delimeter = ",";
+		File.WriteAllText(path, createText);
+		int [,] isVisible = new int [N + 10, N + 10];
+		for( int i = 0; i < N + 10; i++ )
+			for( int j = 0; j < N + 10; j++ )
+				isVisible[i,j] = 0;
+		
+		for (int i = 0; i < N; i++) {
+			for (int j = i + 1; j < N; j++) {
+				Vector3 v1 = numToVect[i];
+				Vector3 v2 = numToVect[j];
+				Line ln = new Line( v1, v2 );
+				if( !comprehensiveCollision( ln, 0 ) ){
+					isVisible[i,j] = 1;
+					isVisible[j,i] = 1;
+				}
+			}
+		}
+
+		//List<Line> lsorted = new List<Line> ();
+		for( int i = 0; i < N; i++ ){
+			int iscam = 0;
+			if( cameras.Contains(numToVect[i]) ) iscam = 1;
+			createText += "Index," + i.ToString() + "," + iscam.ToString() + "," + numToVect[i].x.ToString()
+				+ "," + numToVect[i].z.ToString() + ",\n";
+			createText += "d";
+			for( int j = 0; j < N; j++ )
+				createText += "," + d[i][j].ToString();			
+			File.AppendAllText( path, createText );
+			createText = "";
+			createText += ",\n";
+			createText += "parents";
+			for( int j = 0; j < N; j++ )
+				createText += "," + parents[i][j].ToString();
+			createText += ",\n";
+			File.AppendAllText( path, createText );
+			createText = "";
+			createText += "isvisible";
+			for( int j = 0; j < N; j++ )
+				createText += "," + isVisible[i,j].ToString();
+			createText += ",\n";
+			File.AppendAllText( path, createText );
+			createText = "";
+		}
+	}
+
+
 	public void externalVP(){
 		string createText = "";
-		//string path = @"C:\Users\Asus\Desktop\McGill\Thesis\Week 20 Tours VPs Unions\vpsVacant.csv";
 		string path = path_start + @"\mapwithtour.csv";
 		string delimeter = ",";
 		List<Line> lsorted = new List<Line> ();
