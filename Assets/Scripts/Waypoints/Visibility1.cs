@@ -20,6 +20,7 @@ public partial class Visibility1 : MonoBehaviour {
 	float maxTimeEvaded = -1.0f;
 	float currRunTimeEnemny = 0.0f;
 	float currRunPointsEnemy = 0.0f;
+	string fileLastCaseExecutedFor = "C:\\Users\\Dhaliwal\\Desktop\\lastCaseExecutedFor1.txt";
 	string fileTimings = "C:\\Users\\Dhaliwal\\Desktop\\timingScene1.txt";
 	string filePoints = "C:\\Users\\Dhaliwal\\Desktop\\pointsScene1.txt";
 	bool bShowLogs=false;
@@ -45,6 +46,7 @@ public partial class Visibility1 : MonoBehaviour {
 	int m_nEnemyGreedy = 1;
 	//public int nearMissAlgo = 1;
 	public bool m_SetUpCase = false;
+	public bool m_ContinueCase = false;
 	public bool m_EnemyStatic = false;
 	public bool m_Greedy = false;
 	public bool m_NearMiss = false;
@@ -93,6 +95,7 @@ public partial class Visibility1 : MonoBehaviour {
 	List<EnemyMovement> m_enemyCentroidList = new List<EnemyMovement>();
 	List<Vector3> m_enemyNextPosCentroidList = new List<Vector3>();
 	public bool m_ExecuteTrueCase = false;
+
 	public bool m_CalculateTrueCase = false;
 	public bool m_ShowTrueCase = false;
 	private string currSceneName;
@@ -120,6 +123,7 @@ public partial class Visibility1 : MonoBehaviour {
 		globalPolygon = getObstacleEdges ();
 		string[] sceneName = EditorApplication.currentScene.Split(char.Parse("/"));
 		currSceneName = sceneName[sceneName.Length -1];
+		fileLastCaseExecutedFor = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop)+"\\lastCaseExecutedFor1.txt";
 		fileTimings = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop)+"\\timingScene1.txt";
 		filePoints = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop)+"\\pointsScene1.txt";
 		if(currSceneName=="myScene1.unity")
@@ -265,6 +269,45 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 			return;
 		}
+		else if(m_ContinueCase)
+		{
+			readTimings();
+			StreamReader sr = new StreamReader(fileLastCaseExecutedFor);
+
+
+			List<char> sep = new List<char>();
+			sep.Add(',');
+			string str = sr.ReadLine();
+			sr.Close();
+			string[] strArr = str.Split(sep.ToArray());
+
+			m_nCurrDiscretePtIndxX = int.Parse(strArr[0]);
+			m_nCurrDiscretePtIndxZ = int.Parse(strArr[1]);
+
+
+			Debug.Log ("m_nCurrDiscretePtIndxX read = " + m_nCurrDiscretePtIndxX);
+			Debug.Log ("m_nCurrDiscretePtIndxZ read = " + m_nCurrDiscretePtIndxZ);
+
+			Vector3 tempVec = (Vector3)h_mapIndxToPt[new Vector2(m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ)];
+			Debug.Log("placeEnemyNearMissAt = "+tempVec);
+
+			if(m_Greedy)
+			{
+				placeEnemyGreedyAt(tempVec);
+			}
+			else if(m_NearMiss)
+			{
+				placeEnemyNearMissAt(tempVec);
+			}
+			else if(m_ShadowEdgeAssisted)
+			{
+				placeEnemyShadowAssistedAt(tempVec);
+			}
+			resetCase ();
+			Debug.Log("After resetCase: m_nCurrDiscretePtIndxX = "+m_nCurrDiscretePtIndxX);
+			Debug.Log("After resetCase: m_nCurrDiscretePtIndxZ = "+m_nCurrDiscretePtIndxZ);
+			return;
+		}
 		////////////For Single run//////////////
 		setUpEnemyInitialPos ();
 	}
@@ -349,6 +392,7 @@ public partial class Visibility1 : MonoBehaviour {
 		pointsArray = new int[discretePtsX,discretePtsZ];
 		StreamReader sr = new StreamReader(fileTimings);
 		StreamReader sr1 = new StreamReader(filePoints);
+
 		int j = 0;
 		int k = 0;
 		maxTimeEvaded = float.Parse(sr.ReadLine());
@@ -393,6 +437,30 @@ public partial class Visibility1 : MonoBehaviour {
 
 	private void writeTimings()
 	{
+		if (!System.IO.File.Exists(fileLastCaseExecutedFor))
+		{
+			//System.IO.File.WriteAllText(fileLastCaseExecutedFor, "This is text that goes into the text file fileLastCaseExecutedFor");
+			System.IO.File.CreateText(fileLastCaseExecutedFor);
+		}
+		if (!System.IO.File.Exists(filePoints))
+		{
+			//System.IO.File.WriteAllText(filePoints, "This is text that goes into the text file filePoints");
+			System.IO.File.CreateText(filePoints);
+		}
+		if (!System.IO.File.Exists(fileTimings))
+		{
+			//System.IO.File.WriteAllText(fileTimings, "This is text that goes into the text file fileTimings");
+			System.IO.File.CreateText(fileTimings);
+		}
+
+		//string tempFile2 = fileLastCaseExecutedFor + "_Temp";
+		string tempFile2 = fileLastCaseExecutedFor;
+		StreamWriter sw2 = new StreamWriter(tempFile2);
+		sw2.WriteLine(m_nCurrDiscretePtIndxX+","+m_nCurrDiscretePtIndxZ+"");
+		sw2.Close ();
+		//File.Replace(tempFile2,fileLastCaseExecutedFor,fileLastCaseExecutedFor+"Backup");
+		//File.Delete (tempFile2);
+
 		string tempFile1 = filePoints + "_Temp";
 		StreamWriter sw1 = new StreamWriter(tempFile1);
 		sw1.WriteLine(pathPoints.Count-1+"");
@@ -432,7 +500,7 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			Vector3 tempVec = (Vector3)h_mapIndxToPt[new Vector2(m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ)];
 			//Vector3 tempVec = new Vector3 (m_nCurrDiscretePtIndxX, 1, m_nCurrDiscretePtIndxZ);
-			if(pointInShadow(tempVec,0) && timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]==0f)
+			if(pointInShadow(tempVec,0) && pointsArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]==0)
 			{
 				//Debug.Log(tempVec+" in the shadow. Selecting this");
 				//Assumption:Only one enemy at a time
@@ -495,20 +563,19 @@ public partial class Visibility1 : MonoBehaviour {
 	bool bSlowShadowsDown = false;
 	int setTimerTemp = 0;
 	bool bShowJustVisibilityPoly = false;
+	int bShowJustVisibilityPolyForIndex = 53;
 	void Update () 
 	{
 		if(bShowJustVisibilityPoly)
 		{
-			//mapBG.DrawGeometry(allLineParent);
-			//foreach(Geometry geo in globalPolygon)
+			/*mapBG.DrawGeometry(allLineParent);
+			foreach(Geometry geo in globalPolygon)
 			{
-			//	geo.DrawGeometry(allLineParent);
-			}
-
-			int ptIndex = 69;
-			showPosOfPoint(pathPoints[ptIndex],Color.cyan);
-			Debug.Log("For visibility polygon for "+ptIndex+" , edges.count = "+((Geometry)hVisiblePolyTable[pathPoints[ptIndex]]).edges.Count);
-			foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[ptIndex]]).edges)
+				geo.DrawGeometry(allLineParent);
+			}*/
+			showPosOfPoint(pathPoints[bShowJustVisibilityPolyForIndex],Color.cyan);
+			Debug.Log("For visibility polygon for "+bShowJustVisibilityPolyForIndex+" , edges.count = "+((Geometry)hVisiblePolyTable[pathPoints[bShowJustVisibilityPolyForIndex]]).edges.Count);
+			foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[bShowJustVisibilityPolyForIndex]]).edges)
 			{
 				l.DrawVector(allLineParent);
 			}
@@ -613,7 +680,7 @@ public partial class Visibility1 : MonoBehaviour {
 			{
 				GameObject.Destroy(child.gameObject);
 			}
-			//Debug.Log("For visibility polygon for "+nextPlayerPath+" , edges.count = "+((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges.Count);
+			Debug.Log("For visibility polygon for "+nextPlayerPath+" , edges.count = "+((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges.Count);
 			foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges)
 			{
 				l.DrawVector(allLineParent);
@@ -3392,7 +3459,20 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		hiddenSphereList.RemoveAll(item=>item==null);
 	}
-
+	public bool floatCompare ( float a, float b ){
+		return Mathf.Abs (a - b) < eps;
+	}
+	private float eps = 0.01f;
+	public bool VectorApprox ( Vector3 a, Vector3 b ){
+		if( Mathf.Abs (a.x - b.x) < eps && Mathf.Abs (a.z - b.z) < eps )
+		{
+			//Debug.Log(Mathf.Abs (a.x - b.x) +"<"+ eps);
+			//Debug.Log(Mathf.Abs (a.z - b.z) +"<"+ eps);
+			return true;
+		}
+		else
+			return false;
+	}
 	public void CalculateVisibilityForPath()
 	{
 		//globalPolygon = getObstacleEdges ();
@@ -3434,12 +3514,24 @@ public partial class Visibility1 : MonoBehaviour {
 				}
 			}
 		}
+		/*foreach(Vector3 ptTemp in endPoints)
+		{
+			showPosOfPoint(ptTemp,Color.blue);
+		}*/
 		//
 		Vector3 normalVect = new Vector3 (0, 1, 0);
 		Vector3 xVect = new Vector3 (1, 0, 0);
 		//Do for all path points
+		int pathIndexTemp = -1;
 		foreach(Vector3 pPoint in pathPoints)
 		{
+			//Debug.Log(pPoint);
+			if(bShowJustVisibilityPoly)
+			{
+				pathIndexTemp++;
+				if(pathIndexTemp!=bShowJustVisibilityPolyForIndex)
+					continue;
+			}
 			if(hVisiblePolyTable.ContainsKey(pPoint))
 				continue;
 			Vector3 alongX = new Vector3(pPoint.x+2,pPoint.y,pPoint.z);
@@ -3447,10 +3539,49 @@ public partial class Visibility1 : MonoBehaviour {
 			List<Vector3> arrangedPoints = new List<Vector3> ();
 			List<float> angles = new List<float>();
 
-			foreach(Vector3 vect in endPoints)
+			for(int i=0;i<endPoints.Count;i++)
 			{
+				Vector3 vect = endPoints[i];
 				float sAngle = SignedAngleBetween(pPoint-vect,alongX-pPoint,normalVect);
-				//Debug.Log(pPoint+" , "+vect+" , "+sAngle);
+				/*float sAngleRounded =  Mathf.Round(sAngle * 100f) / 100f;
+				//
+				bool bDuplicateOnSameObs = false;
+				foreach(float angleTemp in angles)
+				{
+					float angleTempRounded =  Mathf.Round(angleTemp * 100f) / 100f;
+
+					if(angleTempRounded==sAngleRounded)
+					{
+						//Debug.Log(sAngle);
+						int prevIndex = angles.IndexOf(angleTemp);
+
+						if(existOnSameLineOfPolygon(endPoints[i],endPoints[prevIndex]))
+						{
+							//find which one is greater, then remove/ignore the smaller
+							if(sAngle<angleTemp)
+							{
+								//ignore
+								bDuplicateOnSameObs=true;
+								endPoints.RemoveAt(i);
+								i--;
+								break;
+							}
+							else
+							{
+								bDuplicateOnSameObs=true;
+								angles.RemoveAt(prevIndex);
+								endPoints.RemoveAt(prevIndex);
+								angles.Add(sAngle);
+								i--;
+								break;
+							}
+						}
+					}
+
+				}
+				if(bDuplicateOnSameObs)
+					continue;*/
+
 				angles.Add(sAngle);
 			}
 			int numTemp = angles.Count;
@@ -3466,6 +3597,7 @@ public partial class Visibility1 : MonoBehaviour {
 						indexAngle = i;
 					}
 				}
+				//Debug.Log("Angle processed = "+angles[indexAngle]);
 				arrangedPoints.Add(endPoints[indexAngle]);
 				angles[indexAngle]=370;
 				numTemp--;
@@ -3480,6 +3612,8 @@ public partial class Visibility1 : MonoBehaviour {
 				Vector3 extendedPoint = rayTemp.GetPoint(mapDiagonalLength);
 				//Debug.Log(pPoint+" , "+vect+" , "+extendedPoint);
 				Line longRayLine = new Line(pPoint,extendedPoint);
+				//showPosOfPoint(vect,Color.red);
+				//longRayLine.DrawVector(allLineParent);
 				//Find intersection points for longRayLine
 				List<Vector3> intersectionPoints = new List<Vector3>();
 				//Intersection with holes
@@ -3514,6 +3648,11 @@ public partial class Visibility1 : MonoBehaviour {
 						}
 					}
 				}
+				/*foreach(Vector3 intsctPoint in intersectionPoints)
+				{
+					showPosOfPoint(intsctPoint,Color.red);
+					(new Line(pPoint,intsctPoint)).DrawVector(allLineParent);
+				}*/
 				//Debug.Log(ListContainsPoint(intersectionPoints,vect));
 				//Debug.Log(intersectionPoints.Count+"-----------------------------------");
 
@@ -3546,6 +3685,7 @@ public partial class Visibility1 : MonoBehaviour {
 						intersectionPts[j] = tmpB;
 					}
 				}
+
 			}
 			//Debug.Log(intersectionPointsPerV[0].Count);
 			//Remove vertex which is not visible
@@ -3553,14 +3693,30 @@ public partial class Visibility1 : MonoBehaviour {
 			foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
 			{
 				int tmpIndex = intersectionPointsPerV.IndexOf(intersectionPts);
-				if(intersectionPts[0]!=arrangedPoints[tmpIndex])
-				{
-					//toRemoveListIndex.Add(tmpIndex);
-					intersectionPointsPerV[tmpIndex]=null;//TODO: check if will be garbage collected
-				}
 
+				//1st approach
+				if(!VectorApprox(intersectionPts[0],arrangedPoints[tmpIndex]))
+				{
+					//Debug.Log(intersectionPts[0].z+"!="+arrangedPoints[tmpIndex].z);
+					//showPosOfPoint(arrangedPoints[tmpIndex],Color.red);
+					intersectionPointsPerV[tmpIndex]=null;
+					//Debug.Break();
+				}
+				//2nd approach
+				/*for(int itr1=0;itr1<intersectionPts.Count-1;itr1++)
+				{
+					Vector3 midPt = Vector3.Lerp(intersectionPts[itr1],intersectionPts[itr1+1],0.5f);
+					sdfds;
+				}*/
 			}
 			intersectionPointsPerV.RemoveAll(item=>item==null);
+			/*foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
+			{
+				foreach(Vector3 intsctPoint in intersectionPts)
+				{
+					(new Line(pPoint,intsctPoint)).DrawVector(allLineParent);
+				}
+			}*/
 			//Added new check 26th May,2015
 			/*foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
 			{
@@ -3584,7 +3740,34 @@ public partial class Visibility1 : MonoBehaviour {
 					continue;
 				//if second point is on same polygon, just keep the single vertex and remove all behind it
 				//if(existOnSamePolygon(intersectionPts[0],intersectionPts[1]))
-				if(CheckIfInsidePolygon((intersectionPts[0]+intersectionPts[1])/2))
+				for(int itr1=0;itr1<intersectionPts.Count-1;itr1++)
+				{
+					/*if(existOnSameLineOfPolygon(intersectionPts[itr1],intersectionPts[itr1+1]))
+					{
+						intersectionPts.RemoveAt(itr1);
+						itr1--;
+						continue;
+					}*/
+					Vector3 mdPt = Vector3.Lerp(intersectionPts[itr1],intersectionPts[itr1+1],0.5f);
+					if(existOnSameLineOfPolygon(intersectionPts[itr1],mdPt))
+					{
+						continue;
+					}
+					if(CheckIfInsidePolygon(mdPt))
+					{
+						/*if(ListContainsPoint(arrangedPoints,intersectionPts[itr1+1]))
+						{
+						}
+						else
+						{*/
+							//Debug.Log(itr1+":"+intersectionPts.Count);
+							intersectionPts.RemoveRange(itr1+1,intersectionPts.Count-1-itr1);
+							break;
+						/*}*/
+					}
+				}
+				/*Vector3 mdPt = Vector3.Lerp(intersectionPts[0],intersectionPts[1],0.5);
+				if(CheckIfInsidePolygon(mdPt))
 				{
 					intersectionPts.RemoveRange(1,intersectionPts.Count-1);
 				}
@@ -3592,8 +3775,15 @@ public partial class Visibility1 : MonoBehaviour {
 				else
 				{
 					intersectionPts.RemoveRange(2,intersectionPts.Count-2);
-				}
+				}*/
 			}
+			/*foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
+			{
+				foreach(Vector3 intsctPoint in intersectionPts)
+				{
+					(new Line(pPoint,intsctPoint)).DrawVector(allLineParent);
+				}
+			}*/
 			/*if(pPoint==pathPoints[pathIndexToShowShadow])
 			{
 				foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
@@ -3620,10 +3810,15 @@ public partial class Visibility1 : MonoBehaviour {
 				//All three cases, choose points on same polygon
 				else
 				{
+					bool bOnlyOneEdgeAdded = false;
 					for(int j=0;j<intersectionPointsPerV[i].Count;j++)
 					{
+						if(bOnlyOneEdgeAdded)
+							break;
 						for(int k=0;k<intersectionPointsPerV[nextIndex].Count;k++)
 						{
+							if(bOnlyOneEdgeAdded)
+								break;
 							//if(existOnSamePolygon(intersectionPointsPerV[i][j],intersectionPointsPerV[i+1][k]))
 							if(existOnSameLineOfPolygon(intersectionPointsPerV[i][j],intersectionPointsPerV[nextIndex][k]))
 							{
@@ -3632,6 +3827,7 @@ public partial class Visibility1 : MonoBehaviour {
 								Line l1 = new Line(intersectionPointsPerV[i][j],intersectionPointsPerV[nextIndex][k]);
 
 								geoVisible.edges.Add(l1);
+								bOnlyOneEdgeAdded=true;
 							}
 						}
 					}
@@ -3646,12 +3842,14 @@ public partial class Visibility1 : MonoBehaviour {
 				{
 				}*/
 				starPoly.Add(geoVisible);
+				//geoVisible.DrawGeometry(allLineParent);
 			}
 			//Combining all visible edges
 			Geometry visiblePoly = new Geometry();
 			foreach(Geometry geo in starPoly)
 				visiblePoly.edges.AddRange(geo.edges);
-			visiblePoly = verifyVisibilityPolygon(pPoint,visiblePoly);
+			//visiblePoly = verifyVisibilityPolygon(pPoint,visiblePoly);
+			//visiblePoly.DrawGeometry(allLineParent);
 			hVisiblePolyTable.Add(pPoint,visiblePoly);
 			List<Geometry> shadowPoly = FindShadowPolygons(visiblePoly);
 			//ValidatePolygons(shadowPoly);
@@ -3676,10 +3874,22 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			Vector3 midPt = visiblePoly.edges[i].MidPoint();
 			Line l = new Line(pPoint,midPt);
+			/*float? slopeL = l.getSlope();
+			float? slopeI = visiblePoly.edges[i].getSlope();
+			if(slopeI==null && slopeL==null)
+			{
+				continue;
+			}
+			if(slopeI!=null && slopeL!=null)
+			{
+				if(floatCompare(slopeI.Value,slopeL.Value))
+					continue;
+			}*/
 			for(int j=0;j<visiblePoly.edges.Count;j++)
 			{
 				if(i==j)
 					continue;
+
 				if(visiblePoly.edges[j].LineIntersection(l))
 				{
 					/*float gradx1 = (l.vertex [1].x - l.vertex [0].x);

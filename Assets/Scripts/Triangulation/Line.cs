@@ -62,6 +62,12 @@ public class Line : IEquatable<Line>
 	public bool floatCompare ( float a, float b ){
 		return Math.Abs (a - b) < eps;
 	}
+	public float? getSlope()
+	{
+		if((vertex [1].x != vertex [0].x))
+			return ((vertex [1].z - vertex [0].z) / (vertex [1].x - vertex [0].x));
+		return null;
+	}
 	public float eps = 1e-5f;//the margin of accuracy for all floating point equivalence checks
 	public bool floatCompare ( float a, float b, string condition ){
 		switch (condition) {

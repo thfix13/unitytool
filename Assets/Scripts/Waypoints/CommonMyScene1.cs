@@ -64,14 +64,14 @@ public static class CommonMyScene1
 		Vector3 pt3 = new Vector3 (pt2.x+step, pt2.y, pt2.z);
 		//showPosOfPoint (pt3, Color.green);
 
-		step = 37 * stepPath;
+		step = 22 * stepPath;
 		step = step * step;
-		xVar = 4.8f;
+		xVar = 1.0f;
 		zVar = Mathf.Sqrt(step - xVar * xVar);
 		Vector3 pt4 = new Vector3 (pt3.x+xVar, pt3.y, pt3.z-zVar);
 		//showPosOfPoint (pt4, Color.green);
 
-		step = 17 * stepPath;
+		step = 40 * stepPath;
 		Vector3 pt5 = new Vector3 (pt4.x+step, pt4.y, pt4.z);
 		//showPosOfPoint (pt5, Color.green);
 

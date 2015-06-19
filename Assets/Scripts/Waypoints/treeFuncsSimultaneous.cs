@@ -39,7 +39,6 @@ public partial class Visibility1 : MonoBehaviour
 		}
 		sw.Close ();
 	}
-	/*public*/ bool m_bContinueExecuteTrueCase = false;
 	private void executeTrueCase2()
 	{
 		setGlobalVars1();
@@ -50,9 +49,9 @@ public partial class Visibility1 : MonoBehaviour
 		string dirName = createSaveDataDir(Application.dataPath);
 
 
-		if(m_bContinueExecuteTrueCase)
-			continueExecuteTrueCase (dirName);
-		else
+		//if(m_ContinueExecuteTrueCase)
+		//	continueExecuteTrueCase (dirName);
+		//else
 			executeTrueCaseFor2(dirName);
 		
 		float totalTime = (Time.realtimeSinceStartup - startTime)/60;
