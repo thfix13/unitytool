@@ -568,8 +568,8 @@ public partial class Visibility1 : MonoBehaviour {
 	{
 		if(bShowJustVisibilityPoly)
 		{
-			/*mapBG.DrawGeometry(allLineParent);
-			foreach(Geometry geo in globalPolygon)
+			//mapBG.DrawGeometry(allLineParent);
+			/*foreach(Geometry geo in globalPolygon)
 			{
 				geo.DrawGeometry(allLineParent);
 			}*/
@@ -3463,8 +3463,19 @@ public partial class Visibility1 : MonoBehaviour {
 		return Mathf.Abs (a - b) < eps;
 	}
 	private float eps = 0.01f;
+	private float eps2 = 0.0001f;
 	public bool VectorApprox ( Vector3 a, Vector3 b ){
 		if( Mathf.Abs (a.x - b.x) < eps && Mathf.Abs (a.z - b.z) < eps )
+		{
+			//Debug.Log(Mathf.Abs (a.x - b.x) +"<"+ eps);
+			//Debug.Log(Mathf.Abs (a.z - b.z) +"<"+ eps);
+			return true;
+		}
+		else
+			return false;
+	}
+	public bool VectorApprox2 ( Vector3 a, Vector3 b ){
+		if( Mathf.Abs (a.x - b.x) < eps2 && Mathf.Abs (a.z - b.z) < eps2 )
 		{
 			//Debug.Log(Mathf.Abs (a.x - b.x) +"<"+ eps);
 			//Debug.Log(Mathf.Abs (a.z - b.z) +"<"+ eps);
@@ -3695,7 +3706,8 @@ public partial class Visibility1 : MonoBehaviour {
 				int tmpIndex = intersectionPointsPerV.IndexOf(intersectionPts);
 
 				//1st approach
-				if(!VectorApprox(intersectionPts[0],arrangedPoints[tmpIndex]))
+				if(!VectorApprox2(intersectionPts[0],arrangedPoints[tmpIndex]))
+				//if((intersectionPts[0]!=arrangedPoints[tmpIndex]))
 				{
 					//Debug.Log(intersectionPts[0].z+"!="+arrangedPoints[tmpIndex].z);
 					//showPosOfPoint(arrangedPoints[tmpIndex],Color.red);
@@ -3732,8 +3744,6 @@ public partial class Visibility1 : MonoBehaviour {
 
 
 			//Remove all hidden intersection points behind visible vertices
-			//TODO Have handle special case of two vertices on same ray from V,
-			//then we might have more intersection points to consider other than 2
 			foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
 			{
 				if(intersectionPts.Count<2)
@@ -3749,21 +3759,21 @@ public partial class Visibility1 : MonoBehaviour {
 						continue;
 					}*/
 					Vector3 mdPt = Vector3.Lerp(intersectionPts[itr1],intersectionPts[itr1+1],0.5f);
-					if(existOnSameLineOfPolygon(intersectionPts[itr1],mdPt))
+					if(isTheMidPtOfBoundary(mdPt) || existOnSameLineOfPolygon(intersectionPts[itr1],mdPt) 
+					   || existOnSameLineOfPolygon(intersectionPts[itr1],intersectionPts[itr1+1]) || existOnSameLineOfPolygon(intersectionPts[itr1+1],mdPt))
 					{
+						//(new Line(pPoint,mdPt)).DrawVector(allLineParent);
 						continue;
 					}
-					if(CheckIfInsidePolygon(mdPt))
+					if(CheckIfInsidePolygon(mdPt) || !mapBG.PointInside(mdPt))
 					{
-						/*if(ListContainsPoint(arrangedPoints,intersectionPts[itr1+1]))
-						{
-						}
-						else
-						{*/
-							//Debug.Log(itr1+":"+intersectionPts.Count);
-							intersectionPts.RemoveRange(itr1+1,intersectionPts.Count-1-itr1);
-							break;
-						/*}*/
+
+
+						//showPosOfPoint(mdPt,Color.red);
+
+						intersectionPts.RemoveRange(itr1+1,intersectionPts.Count-1-itr1);
+						break;
+
 					}
 				}
 				/*Vector3 mdPt = Vector3.Lerp(intersectionPts[0],intersectionPts[1],0.5);
@@ -3795,11 +3805,17 @@ public partial class Visibility1 : MonoBehaviour {
 			//Build geometries
 			for(int i=0;i<intersectionPointsPerV.Count;i++)
 			{
+				/*foreach(Vector3 intersectionPt in intersectionPointsPerV[i])
+				{
+					showPosOfPoint(intersectionPt,Color.magenta);
+
+				}*/
 				int nextIndex = (i+1)%intersectionPointsPerV.Count;
 				Geometry geoVisible = new Geometry();
 				for(int j=0;j<intersectionPointsPerV[i].Count-1;j++)
 				{
 					geoVisible.edges.Add(new Line(intersectionPointsPerV[i][j],intersectionPointsPerV[i][j+1]));
+					//(new Line(intersectionPointsPerV[i][j],intersectionPointsPerV[i][j+1])).DrawVector(allLineParent);
 				}
 				if(intersectionPointsPerV[i].Count==1 && intersectionPointsPerV[nextIndex].Count==1)
 				{
@@ -3849,7 +3865,7 @@ public partial class Visibility1 : MonoBehaviour {
 			foreach(Geometry geo in starPoly)
 				visiblePoly.edges.AddRange(geo.edges);
 			//visiblePoly = verifyVisibilityPolygon(pPoint,visiblePoly);
-			//visiblePoly.DrawGeometry(allLineParent);
+
 			hVisiblePolyTable.Add(pPoint,visiblePoly);
 			List<Geometry> shadowPoly = FindShadowPolygons(visiblePoly);
 			//ValidatePolygons(shadowPoly);
@@ -4222,6 +4238,31 @@ public partial class Visibility1 : MonoBehaviour {
 				break;
 		}
 		return result;
+	}
+	private bool isTheMidPtOfBoundary(Vector3 pt1)
+	{
+		foreach (Line l in mapBG.edges) 
+		{
+			if(VectorApprox(l.MidPoint(),pt1))
+			
+				return true;
+
+		}
+		return false;
+	}
+	private bool existOnBoundaryOfPolygon(Vector3 pt1)
+	{
+		bool pt1Found=false;
+		foreach (Line l in mapBG.edges) 
+		{
+			//showPosOfPoint(l.MidPoint(),Color.yellow);
+			//pt1Found = l.PointOnLine_LessAccurate(pt1);
+			pt1Found = l.PointOnLine(pt1);
+			if(pt1Found)
+				break;
+			//pt1Found = l.POL(pt1);
+		}
+		return pt1Found;
 	}
 	private bool existOnSameLineOfPolygon(Vector3 pt1,Vector3 pt2)
 	{
