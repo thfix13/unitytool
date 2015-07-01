@@ -398,7 +398,7 @@ public partial class Visibility1 : MonoBehaviour
 	{
 		float startTime = Time.realtimeSinceStartup;
 		List<NodeShadow> headNodes = readNodeStructureFor2 ();
-		Debug.Log ("Num of headNodes = "+headNodes.Count);
+		//Debug.Log ("Num of headNodes = "+headNodes.Count);
 		//return;
 		int numOfLevels = pathPoints.Count-1;//m_lastPathIndex;
 
@@ -441,7 +441,7 @@ public partial class Visibility1 : MonoBehaviour
 		string str;// = sr.ReadLine();
 		while(true)
 		{
-			Debug.Log("Reading "+sourceFileName);
+			//Debug.Log("Reading "+sourceFileName);
 			////////////////////////////////////////////////////////////////////////////////////////
 			while(!sr.EndOfStream /*&& jk>0*/)
 			{

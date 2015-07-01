@@ -1,0 +1,8 @@
+Scene Name = chung.unity
+Discrete rows & cols = 112 X 83
+Speed of the Player = 1
+Distance covered by the player = 0.16
+Max speed of the Enemy = 1
+Max distance covered by the Enemy = 0.16
+Time taken to calculate tree structure = 28.80993 mins
+Current Date = Friday, June 26, 2015. Time = 6:19:06 AM
