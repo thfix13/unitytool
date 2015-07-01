@@ -22,7 +22,7 @@ public static class CommonMyScene1
 		
 		List<Vector3> wayPoints = createWayPoints (sp.transform.position,ep.transform.position);
 		
-		List<Vector3>  pathPts = selectPath3(wayPoints);
+		List<Vector3>  pathPts = selectPath1(wayPoints);
 		createPathPoints (pathPts);
 		
 		return pathPts;

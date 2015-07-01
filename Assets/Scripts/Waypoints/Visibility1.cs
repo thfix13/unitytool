@@ -680,7 +680,7 @@ public partial class Visibility1 : MonoBehaviour {
 			{
 				GameObject.Destroy(child.gameObject);
 			}
-			Debug.Log("For visibility polygon for "+nextPlayerPath+" , edges.count = "+((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges.Count);
+			//Debug.Log("For visibility polygon for "+nextPlayerPath+" , edges.count = "+((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges.Count);
 			foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges)
 			{
 				l.DrawVector(allLineParent);
