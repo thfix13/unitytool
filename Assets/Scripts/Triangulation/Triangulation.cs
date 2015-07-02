@@ -14,6 +14,8 @@ public class Triangulation : MonoBehaviour
 	private const int sp = 0;
 	private const int tri = 1;
 	private const int widc = 2;
+	private int roadmap;
+	private int granularity;
 	//Data holder to display and save
 	public List<Vector3> points = new List<Vector3>();
 	public List<Color> colours = new List<Color>();
@@ -75,6 +77,8 @@ public class Triangulation : MonoBehaviour
 	private List<Line> explorationTourPath = new List<Line> ();
 	private Geometry tourEdges = new Geometry ();
 	private const int tourgraphsize = 1000000;
+	private List<Vector3> granularityPoints = new List<Vector3>();
+	private float unitDistance = 0f;
 	//Dijkstra
 	List<edges>[] EL = new List<edges>[tourgraphsize];
 	//Stores shortest path calculations with node i as source on all nodes j
@@ -133,6 +137,7 @@ public class Triangulation : MonoBehaviour
 		cameraVPS.Clear ();
 		cameraVPS2.Clear ();
 		cameraUnion.Clear ();
+		granularityPoints.Clear ();
 		GameObject vpa = GameObject.Find("vpA");
 		if( vpa != null )
 			DestroyImmediate(vpa);
@@ -343,32 +348,17 @@ public class Triangulation : MonoBehaviour
 	}
 	
 	public void TriangulationSpace (){
-		//Testing point
-//		Vector2 a = new Vector2 (2, 17);
-//		Vector2 b = new Vector2 (9, 12);
-//		Debug.Log ((a - b).SqrMagnitude ());
-//		float unitdistance = 5;
-//		float div = (a - b).SqrMagnitude () / unitdistance;
-////		Debug.Log (div);
-//		Vector2 c = new Vector2 ((a.x + b.x) / div, (a.y + b.y) / div);
-//		Vector2 d = new Vector2 ((a.x + b.x) / 2, (a.y + b.y) / 2);
-////		Debug.Log (a);
-////		Debug.Log (c);
-//		Debug.Log (d);
-////		Debug.Log ((a - c).SqrMagnitude ());
-//		Debug.Log ((a - d).SqrMagnitude ());
-		
-		return;
 		path_start = @"C:\Users\Asus\Desktop\McGill\Thesis\MapData\CoDCrash";
 		this.Clear ();
 		System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch ();
 		stopwatch.Start ();
 		inkscape = true;
-		bool computetilltriangulation = false;
-		bool computetilltour = false;
-		bool computetour = false;
-		bool computeexternaltour = true;
-		int roadmap = tri;
+		bool computetilltriangulation = false;//MST(), printMapToPolyFile()/triangulate()
+		bool computetilltour = false;//makeSPRoadMap()/makeTriRoadMap()
+		bool computetour = true;//MakeTourOnSPR/Tri, makeMinTour()/makeMaxTour()/makeClosestNonVis()
+		bool computeexternaltour = true;//externalTour(), makeTourOnSPR/tri, printDijkstra()
+		roadmap = tri;//Values: {sp, tri}
+		granularity = 1;//Values: {1, 2, 3}
 		/***PHASE A: PREPROCESSING***/
 		/*STEP 1 - GET POLYGON POINTS*/
 		if( inkscape )
@@ -453,7 +443,7 @@ public class Triangulation : MonoBehaviour
 			externalTour ( roadmap );
 			return;
 		}
-
+		return;
 		/*STEP 8 - RUN DIJKSTRA FOR EVERY CAMERA PAIR*/
 		//Executed in makeTourOnSPR()
 		/*----x-----*/
@@ -465,7 +455,7 @@ public class Triangulation : MonoBehaviour
 			stopwatch.Reset ();
 			stopwatch.Start ();
 			if( roadmap == sp ){
-				if (!makeTourOnSPR (false, 1)){
+				if (!makeTourOnSPR (false)){
 					Debug.Log("makeTourOnSPR () failed");
 					return;
 				}
@@ -474,7 +464,7 @@ public class Triangulation : MonoBehaviour
 				printTour ();
 			}
 			else if( roadmap == tri ){
-				if (!makeTourOnTri (false, 1)){
+				if (!makeTourOnTri (false)){
 					Debug.Log("makeTourOnTri () failed");
 					return;
 				}
@@ -1156,22 +1146,101 @@ public class Triangulation : MonoBehaviour
 		}
 	}
 	
-	bool makeTourOnSPR( bool external, int granularity ){
+	bool makeTourOnSPR( bool external ){
 		Debug.Log ("Total Cameras: " + cameras.Count);
-		Debug.Log ("SPRoadMap: " + spRoadMap.Count);
 		if (cameras.Count < 2)	return true;
 		Dictionary<Vector3, int> dict = new Dictionary<Vector3, int> ();
 		Dictionary<int, Vector3> numToVect = new Dictionary<int, Vector3> ();
-		int N = 0;
+		List<Vector3> masterReflexAndCamera = new List<Vector3> ();
 		//0. Deal with granularity
-		foreach( Vector3 vA in masterReflex ){
-			foreach( Vector3 vB in masterReflex ){
-				if( vA == vB ) continue;
+		//Collect all roadmap and camera points
+		if( granularity > 1 ){
+			//Do not allow granularity greater than 4
+			if( granularity > 4 ) granularity = 4;
 
+			foreach (Vector3 v1 in cameras){
+				if( !masterReflexAndCamera.Contains(v1) )
+					masterReflexAndCamera.Add (v1);
 			}
+			foreach (Vector3 v1 in masterReflex){
+				if( !cameras.Contains(v1) && !masterReflexAndCamera.Contains(v1) ) 
+					masterReflexAndCamera.Add (v1);
+			}
+
+			//Find average distance between them
+			float averagedistance = 0f;
+			float maxdist = 0f;
+			float mindist = 10000f;
+			int numoflines = 0;
+			for( int i = 0; i < masterReflexAndCamera.Count; i++ ){
+				for( int j = i + 1; j < masterReflexAndCamera.Count; j++ ){
+					Vector3 v1 = masterReflexAndCamera[i];
+					Vector3 v2 = masterReflexAndCamera[j];
+					if( v1 ==  v2 ) continue;
+					Line ln = new Line( v1, v2 );
+					if( comprehensiveCollision( ln, 0 ) ) continue;
+					averagedistance += ln.Magnitude();
+					if( ln.Magnitude() > maxdist ) maxdist = ln.Magnitude();
+					if( ln.Magnitude() < mindist ) mindist = ln.Magnitude();
+					numoflines++;
+				}
+			}
+//			foreach( Line l in spRoadMap )
+//				averagedistance += l.Magnitude();
+			averagedistance /= numoflines;
+//			averagedistance /= spRoadMap.Count;
+			//float unitdistance = averagedistance / granularity;
+			unitDistance = averagedistance / (granularity);
+//			Debug.Log("Dists:" + mindist + "," + averagedistance + "," + maxdist);
+			//return true;
+			Debug.Log("Unit Distance:" + unitDistance);
+
+//			int outcnt = 0;
+//			for( int i = 0; i < masterReflexAndCamera.Count; i++ ){
+//				for( int j = i + 1; j < masterReflexAndCamera.Count; j++ ){
+//					Vector3 v1 = masterReflexAndCamera[i];
+//					Vector3 v2 = masterReflexAndCamera[j];
+//					if( v1 ==  v2 ) continue;
+//					Line ln = new Line( v1, v2 );
+//					if( comprehensiveCollision( ln, 0 ) ) continue;
+//					float length = ln.Magnitude();
+//					Vector3 current = v1;
+//					while( ln.Magnitude() >= 2 * unitDistance ){
+//						outcnt++;
+//						Vector3 vA = current;
+//						Vector3 vB = v2;
+//						Vector2 vA2d = new Vector2( vA.x, vA.z );
+//						Vector2 vB2d = new Vector2( vB.x, vB.z );
+//						Line tmpline = new Line (vA, vB);
+//						Vector2 dirA2d = vB2d - vA2d;//Direction from A towards B
+//						float alp = unitDistance / ln.Magnitude();
+//						Vector2 vB_new2d = vA2d + (alp * dirA2d);
+//						current.x = (float)Math.Round(vB_new2d.x, 5);
+//						current.z = (float)Math.Round(vB_new2d.y, 5);
+//						ln = new Line( current, v2 );
+//						if( !granularityPoints.Contains( current ) && !masterReflex.Contains( current ) 
+//						   && !cameras.Contains( current ) ){
+//							granularityPoints.Add( current );
+//						}
+//						if( outcnt > 3000 ){
+//							Debug.Log("Too Many Points");
+//							Debug.Log( i + "," + j + "," + masterReflexAndCamera.Count );
+//							return true;
+//						}
+//					}
+//				}
+//			}
+			Debug.Log( "Granularity Done" );
+			Debug.Log ("Original Roadmap Nodes: " + masterReflexAndCamera.Count);
+			Debug.Log( "New Points To Add: " + granularityPoints.Count );
+			masterReflexAndCamera.Clear();
 		}
+		else
+			unitDistance = -1;
+
 		//1. Construct graph in EL (global variable, edge list)
 		//1A. give IDs to vertices (masterReflex (without cameras) and cameras independently)
+		int N = 0;
 		foreach (Vector3 v in masterReflex){
 			if( cameras.Contains(v) || dict.ContainsKey(v) ) continue;
 			EL[N] = new List<edges>();
@@ -1203,7 +1272,7 @@ public class Triangulation : MonoBehaviour
 		
 		/*2. CAMERA WORK*/
 		//2A. Connect cameras to each other and the rest of the graph (i.e. reflex points)
-		List<Vector3> masterReflexAndCamera = new List<Vector3> ();
+//		List<Vector3> masterReflexAndCamera = new List<Vector3> ();
 		foreach (Vector3 v1 in cameras){
 			if( !masterReflexAndCamera.Contains(v1) )
 				masterReflexAndCamera.Add (v1);
@@ -1266,7 +1335,7 @@ public class Triangulation : MonoBehaviour
 				//return false;
 			}
 		}
-		
+		Debug.Log ("Roadmap Nodes After Enhanced Granularity: " + masterReflexAndCamera.Count);
 		/*3. DIJKSTRA*/
 		//3A. Calculate All-Pair-Shortest-Path
 		dijkstra_init_value = 100000f;
@@ -1296,7 +1365,7 @@ public class Triangulation : MonoBehaviour
 		return true;
 	}
 
-	bool makeTourOnTri( bool external, int granularity ){
+	bool makeTourOnTri( bool external ){
 		Debug.Log ("Total Cameras: " + cameras.Count);
 		Debug.Log ("TriRoadMap: " + triRoadMap.Count);
 		if (cameras.Count < 2)	return true;
@@ -1442,9 +1511,13 @@ public class Triangulation : MonoBehaviour
 		SortedDictionary< float, int > SD = new SortedDictionary< float, int > ();
 		//1. Initialization
 		int cnt = 0;
+		d.Add (new List<float> ());
+		parents.Add (new List<int> ());
 		for (int i = 0; i < N; i++) {
-			d [id][i] = dijkstra_init_value;
-			parents[id][i] = -1;
+			d[id].Add( dijkstra_init_value );
+			//d [id][i] = dijkstra_init_value;
+			//parents[id][i] = -1;
+			parents[id].Add( -1 );
 		}
 		d[id][id] = 0f;
 		parents [id][id] = id;
@@ -2431,7 +2504,7 @@ public class Triangulation : MonoBehaviour
 	
 	void printMapToPolyFile(){
 		string createText = "";
-		string path = path_start + @"\map.poly";
+		string path = path_start + @"\Triangulation\map.poly";
 		string delimeter = " ";
 		Dictionary<Vector3, int> dict = new Dictionary<Vector3, int> ();
 		Dictionary<int, Vector3> numToVect = new Dictionary<int, Vector3> ();
@@ -2469,7 +2542,7 @@ public class Triangulation : MonoBehaviour
 	
 	void printMST(){
 		string createText = "";
-		string path = path_start + @"\mst.csv";
+		string path = path_start + @"\Triangulation\mst.csv";
 		string delimeter = ",";
 		foreach( Line l in linesMinSpanTree ){
 			createText += l.vertex[0].x.ToString()+"," + l.vertex[0].z.ToString()
@@ -2493,7 +2566,7 @@ public class Triangulation : MonoBehaviour
 	
 	void printVPS(){
 		string createText = "";
-		string path = path_start + @"\vps.csv";
+		string path = path_start + @"\VisibilityPolygon\vps.csv";
 		string delimeter = ",";
 		for( int i = 0; i < cameraVPS.Count; i++ ){
 			createText += "Start,"+ cameraVPS[i].Key.x.ToString() + "," + cameraVPS[i].Key.z.ToString() + ",\n";
@@ -2508,7 +2581,7 @@ public class Triangulation : MonoBehaviour
 	
 	void printCameras(){
 		string createText = "";
-		string path = path_start + @"\cameras.csv";
+		string path = path_start + @"\Triangulation\cameras.csv";
 		string delimeter = ",";
 		foreach( Vector3 v in cameras )
 			createText += v.x.ToString() + "," + v.z.ToString() + ",\n";
@@ -2517,7 +2590,7 @@ public class Triangulation : MonoBehaviour
 	
 	void printSPRoadMap(){
 		string createText = "";
-		string path = path_start + @"\SPRoadMap.csv";
+		string path = path_start + @"\SPRoadMap\SPRoadMap.csv";
 		string delimeter = ",";
 		foreach( Line l in spRoadMap ){
 			createText += "L," + l.vertex[0].x.ToString()+","+l.vertex[0].z.ToString()
@@ -2531,7 +2604,7 @@ public class Triangulation : MonoBehaviour
 
 	void printTriRoadMap(){
 		string createText = "";
-		string path = path_start + @"\TriRoadMap.csv";
+		string path = path_start + @"\TriRoadMap\TriRoadMap.csv";
 		string delimeter = ",";
 		foreach( Line l in triRoadMap ){
 			createText += "L," + l.vertex[0].x.ToString()+","+l.vertex[0].z.ToString()
@@ -2544,7 +2617,7 @@ public class Triangulation : MonoBehaviour
 	}
 	
 	void scanMST(){
-		var reader = new StreamReader(File.OpenRead(path_start + @"\mst.csv"));
+		var reader = new StreamReader(File.OpenRead(path_start + @"\Triangulation\mst.csv"));
 		List<string> coord = new List<string> ();
 		Geometry walls = new Geometry ();
 		
@@ -2577,7 +2650,7 @@ public class Triangulation : MonoBehaviour
 			xid++;
 		}
 		
-		var reader = new StreamReader(File.OpenRead(path_start + @"\map.1.ele"));
+		var reader = new StreamReader(File.OpenRead(path_start + @"\Triangulation\map.1.ele"));
 		List<string> coord = new List<string> ();
 		Geometry walls = new Geometry ();
 		bool firstline = true;
@@ -2656,7 +2729,7 @@ public class Triangulation : MonoBehaviour
 	}
 	
 	void scanVPS(){
-		var reader = new StreamReader(File.OpenRead(path_start + @"\vps.csv"));
+		var reader = new StreamReader(File.OpenRead(path_start + @"\VisibilityPolygon\vps.csv"));
 		List<string> coord = new List<string> ();
 		Geometry vptemp = new Geometry ();
 		Vector3 kernel = new Vector3 ();
@@ -2683,7 +2756,7 @@ public class Triangulation : MonoBehaviour
 	}
 	
 	void scanSPRoadMap(){
-		var reader = new StreamReader(File.OpenRead(path_start + @"\SPRoadMap.csv"));
+		var reader = new StreamReader(File.OpenRead(path_start + @"\SPRoadMap\SPRoadMap.csv"));
 		List<string> coord = new List<string> ();
 		Geometry walls = new Geometry ();
 		
@@ -2714,7 +2787,7 @@ public class Triangulation : MonoBehaviour
 	}
 
 	void scanTriRoadMap(){
-		var reader = new StreamReader(File.OpenRead(path_start + @"\TriRoadMap.csv"));
+		var reader = new StreamReader(File.OpenRead(path_start + @"\TriRoadMap\TriRoadMap.csv"));
 		List<string> coord = new List<string> ();
 		Geometry walls = new Geometry ();
 		
@@ -2745,7 +2818,7 @@ public class Triangulation : MonoBehaviour
 	}
 	
 	void scanCameras(){
-		var reader = new StreamReader(File.OpenRead(path_start + @"\cameras.csv"));
+		var reader = new StreamReader(File.OpenRead(path_start + @"\Triangulation\cameras.csv"));
 		List<string> coord = new List<string> ();
 		Geometry walls = new Geometry ();
 		
@@ -2765,11 +2838,15 @@ public class Triangulation : MonoBehaviour
 
 	private void externalTour( int roadmap ){
 		if( roadmap == sp )
-			makeTourOnSPR (true, 1);
+			makeTourOnSPR (true);
 		else if( roadmap == tri )
-			makeTourOnTri (true, 1);
+			makeTourOnTri (true);
 		string createText = "";
-		string path = path_start + @"\mapwithtourall.csv";
+		string pathadd = "";
+		if( roadmap == sp ) pathadd = @"\SPRoadMap";
+		else if( roadmap == tri ) pathadd = @"\TriRoadMap";
+		pathadd += @"\Granularity" + granularity.ToString ();
+		string path = path_start + pathadd + @"\mapwithtourall.csv";
 		string delimeter = ",";
 		List<Line> lsorted = new List<Line> ();
 		//Print Map
@@ -2804,12 +2881,17 @@ public class Triangulation : MonoBehaviour
 		//Add points all points that can be used for building a tour
 		foreach (Vector3 v in tourall)
 			createText += "T," + v.x.ToString() + "," + v.z.ToString() + ",\n";
+
 		File.WriteAllText(path, createText);
 	}
 
 	public void printDijkstra( int GSC, int N, Dictionary<int,Vector3> numToVect ){
 		string createText = "";
-		string path = path_start + @"\dijkstra.csv";
+		string pathadd = "";
+		if( roadmap == sp ) pathadd = @"\SPRoadMap";
+		else if( roadmap == tri ) pathadd = @"\TriRoadMap";
+		pathadd += @"\Granularity" + granularity.ToString ();
+		string path = path_start + pathadd + @"\dijkstra.csv";
 		string delimeter = ",";
 		File.WriteAllText(path, createText);
 		int [,] isVisible = new int [N + 10, N + 10];
@@ -2854,12 +2936,16 @@ public class Triangulation : MonoBehaviour
 			File.AppendAllText( path, createText );
 			createText = "";
 		}
+		createText = "unitdistance," + unitDistance.ToString () + ",\n";
+		File.AppendAllText (path, createText);
+		createText = "granularity," + granularity.ToString () + ",\n";
+		File.AppendAllText (path, createText);
 	}
 
 
 	public void externalVP(){
 		string createText = "";
-		string path = path_start + @"\mapwithtour.csv";
+		string path = path_start + @"\VisibilityPolygon\mapwithtour.csv";
 		string delimeter = ",";
 		List<Line> lsorted = new List<Line> ();
 		//Print Map
