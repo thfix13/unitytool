@@ -33,7 +33,7 @@ public partial class Visibility1 : MonoBehaviour
 			NodeShadow nodeNow = (NodeShadow)h_mapPtToNode[vect];
 			foreach(NodeShadow nodeNowParent in nodeNow.getParent())
 			{
-				sw.Write("("+nodeNow.getPos()+";"+nodeNow.getSafetyLevel()+")|("+nodeNowParent.getPos()+";"+nodeNowParent.getSafetyLevel()+")");
+				sw.Write("("+nodeNow.getPos().x+","+nodeNow.getPos().y+","+nodeNow.getPos().z+";"+nodeNow.getSafetyLevel()+")|("+nodeNowParent.getPos().x+","+nodeNow.getPos().y+","+nodeNow.getPos().z+";"+nodeNowParent.getSafetyLevel()+")");
 				sw.WriteLine("");
 			}
 		}
@@ -64,6 +64,11 @@ public partial class Visibility1 : MonoBehaviour
 		Hashtable h_mapPtToNode = new Hashtable();
 		int levelOfAccess = 0;
 		List<NodeShadow> nodeSafeLevelNow = new List<NodeShadow> ();
+
+		/*Vector3 pt = new Vector3 (-3.8f, 1.0f, -3.5f);
+		NodeShadow headNode = new NodeShadow (pt);
+		headNode.setSafetyLevel (levelOfAccess);
+		nodeSafeLevelNow.Add (headNode);*/
 		int j1=0;
 		for(float j=m_minX;j<m_maxX && j1<discretePtsX;j+=m_step)
 		{
@@ -82,8 +87,11 @@ public partial class Visibility1 : MonoBehaviour
 				NodeShadow headNode = new NodeShadow (pt);
 				headNode.setSafetyLevel (levelOfAccess);
 				nodeSafeLevelNow.Add (headNode);
+
 				k1++;
+
 			}
+
 			j1++;
 		}
 		int numOfLevels = pathPoints.Count-1;//m_lastPathIndex;
@@ -408,7 +416,7 @@ public partial class Visibility1 : MonoBehaviour
 		foreach(NodeShadow headNode in headNodes)
 		{
 			int numLevelsReached = findFurthestPathPointReached(headNode);
-			sw.WriteLine(headNode.getPos().ToString()+";"+numLevelsReached);
+			sw.Write("("+headNode.getPos().x+","+headNode.getPos().y+","+headNode.getPos().z+")"+";"+numLevelsReached);
 			sw.WriteLine("");
 			/*float greenNum = numLevelsReached/numOfLevels;
 			float redNum = 1-greenNum;
@@ -446,7 +454,7 @@ public partial class Visibility1 : MonoBehaviour
 			while(!sr.EndOfStream /*&& jk>0*/)
 			{
 				str = sr.ReadLine();
-				
+
 				string[] line1 = str.Split(sep.ToArray());
 				//Debug.Log(str);
 				List<string> line = new List<string>();
@@ -519,6 +527,15 @@ public partial class Visibility1 : MonoBehaviour
 			if(!fInfo.Exists)
 				break;
 			sr = new StreamReader(sourceFileName);
+			/////////Check for empty file
+			str = sr.ReadLine();
+			if(str=="")
+			{
+				break;
+			}
+			sr.Close ();
+			sr = new StreamReader(sourceFileName);
+			/////////Check for empty file;
 		}
 		return headNodes;
 	}

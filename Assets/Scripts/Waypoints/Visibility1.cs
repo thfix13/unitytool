@@ -115,7 +115,7 @@ public partial class Visibility1 : MonoBehaviour {
 
 	void Start () 
 	{
-		radius_enemy = ((CapsuleCollider)enemyPrefab.collider).radius*((CapsuleCollider)enemyPrefab.collider).transform.lossyScale.x;
+		radius_enemy = ((CapsuleCollider)enemyPrefab.GetComponent<Collider>()).radius*((CapsuleCollider)enemyPrefab.GetComponent<Collider>()).transform.lossyScale.x;
 		//Debug.Log ("radius_enemy = "+radius_enemy);
 
 		spTemp = (GameObject)GameObject.Find ("StartPoint");
@@ -566,6 +566,7 @@ public partial class Visibility1 : MonoBehaviour {
 	int bShowJustVisibilityPolyForIndex = 53;
 	void Update () 
 	{
+		//mapBG.DrawGeometry(allLineParent);
 		if(bShowJustVisibilityPoly)
 		{
 			//mapBG.DrawGeometry(allLineParent);
@@ -586,6 +587,7 @@ public partial class Visibility1 : MonoBehaviour {
 				return;
 		if (bDisplayAreas || m_ExecuteTrueCase || m_ShowTrueCase || m_CalculateTrueCase)
 		{
+			Debug.Break();
 			return;
 		}
 		/*if (bCallComplete) 
@@ -1878,7 +1880,7 @@ public partial class Visibility1 : MonoBehaviour {
 			b_ShowBoundbox = true;
 			float centreX=(start_box.x+end_box.x)/2;
 			float centreZ=(start_box.z+end_box.z)/2;
-			selectedBox.renderer.enabled=true;
+			selectedBox.GetComponent<Renderer>().enabled=true;
 			Vector3 tempVect = new Vector3(centreX,1,centreZ);
 			selectedBox.transform.position=tempVect;
 			tempVect.x=width;
@@ -2712,7 +2714,7 @@ public partial class Visibility1 : MonoBehaviour {
 			List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [Indx]];
 			sbyte[,] shadowArray = new sbyte[discretePtsX,discretePtsZ];
 
-			float radius_hiddenSphere = ((SphereCollider)hiddenSphere.collider).radius*((SphereCollider)hiddenSphere.collider).transform.lossyScale.x;
+			float radius_hiddenSphere = ((SphereCollider)hiddenSphere.GetComponent<Collider>()).radius*((SphereCollider)hiddenSphere.GetComponent<Collider>()).transform.lossyScale.x;
 			int j1=0;	
 			for(float j=minX;j<maxX && j1<discretePtsX;j+=step)
 			{
@@ -2805,7 +2807,7 @@ public partial class Visibility1 : MonoBehaviour {
 			}*/
 
 			////////////////////////////////////////////;
-			float radius_hiddenSphere = ((SphereCollider)hiddenSphere.collider).radius*((SphereCollider)hiddenSphere.collider).transform.lossyScale.x;
+			float radius_hiddenSphere = ((SphereCollider)hiddenSphere.GetComponent<Collider>()).radius*((SphereCollider)hiddenSphere.GetComponent<Collider>()).transform.lossyScale.x;
 			//Debug.Log ("radius" + radius_hiddenSphere);
 			hiddenSphereList = new List<GameObject> ();
 			//Foreach point:
@@ -3388,7 +3390,7 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		*/
 		hiddenLines.RemoveAll(item=>item==null);
-		float radius_hiddenSphere = ((SphereCollider)hiddenSphere.collider).radius*((SphereCollider)hiddenSphere.collider).transform.lossyScale.x;
+		float radius_hiddenSphere = ((SphereCollider)hiddenSphere.GetComponent<Collider>()).radius*((SphereCollider)hiddenSphere.GetComponent<Collider>()).transform.lossyScale.x;
 		//Debug.Log ("radius" + radius_hiddenSphere);
 		hiddenSphereList = new List<GameObject> ();
 		//Foreach line:
