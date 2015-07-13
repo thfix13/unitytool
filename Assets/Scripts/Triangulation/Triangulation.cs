@@ -43,6 +43,7 @@ public class Triangulation : MonoBehaviour
 	public List<KeyValuePair<Vector3,Geometry>> cameraVPS = new List<KeyValuePair<Vector3, Geometry>>();
 	public List<KeyValuePair<Vector3,Geometry>> cameraVPS2 = new List<KeyValuePair<Vector3, Geometry>>();
 	public List<KeyValuePair<Vector3,Geometry>> cameraUnion = new List<KeyValuePair<Vector3, Geometry>>();
+	private Dictionary<int, Vector3> globalNumToVect = new Dictionary<int, Vector3> ();
 	//Contains all the visibility polygons for cameras
 	public int vpnum = -1;
 	
@@ -348,16 +349,16 @@ public class Triangulation : MonoBehaviour
 	}
 	
 	public void TriangulationSpace (){
-		path_start = @"C:\Users\Asus\Desktop\McGill\Thesis\MapData\CoDCrash";
+		path_start = @"C:\Users\Asus\Desktop\McGill\Thesis\MapData\CoDVacant";
 		this.Clear ();
 		System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch ();
 		stopwatch.Start ();
 		inkscape = true;
 		bool computetilltriangulation = false;//MST(), printMapToPolyFile()/triangulate()
 		bool computetilltour = false;//makeSPRoadMap()/makeTriRoadMap()
-		bool computetour = true;//MakeTourOnSPR/Tri, makeMinTour()/makeMaxTour()/makeClosestNonVis()
+		bool computetour = false;//MakeTourOnSPR/Tri, makeMinTour()/makeMaxTour()/makeClosestNonVis()
 		bool computeexternaltour = true;//externalTour(), makeTourOnSPR/tri, printDijkstra()
-		roadmap = tri;//Values: {sp, tri}
+		roadmap = sp;//Values: {sp, tri}
 		granularity = 1;//Values: {1, 2, 3}
 		/***PHASE A: PREPROCESSING***/
 		/*STEP 1 - GET POLYGON POINTS*/
@@ -368,12 +369,14 @@ public class Triangulation : MonoBehaviour
 		
 		/*STEP 2 - MERGE POLYGONS*/
 		mergePolygons ();
-		
+
+
 		/*STEP 3 - DEFINE MAP BOUNDARY*/
 		defineBoundary ();
 		stopwatch.Stop();
 		Debug.Log("PREPROCESSING: " + stopwatch.ElapsedMilliseconds * 0.001);
-		
+
+		epsEstimator ();
 		//Debug.Log (getMapArea ());
 		/***PHASE B: COLORING***/
 		/*STEP 4 - MAKE MST OF POLYGONS*/
@@ -518,7 +521,55 @@ public class Triangulation : MonoBehaviour
 		Debug.Log (mapArea);
 		return;
 	}
-	
+
+	void epsEstimator(){
+		float mn = 10000f;
+		Line mnline = null;
+		foreach (Line l in totalGeo.edges) {
+			if( l.Magnitude() < mn ){
+				mn = l.Magnitude();
+				mnline = l;
+			}
+		}
+		Debug.Log ("Smallest Line Size: " + mn);
+		mnline.DrawVector (GameObject.Find ("temp"));
+		mn = 10000f;
+		Debug.Log (mn);
+		foreach (Line l1 in totalGeo.edges){
+			foreach (Line l2 in totalGeo.edges){
+				if( l1.ShareVertex(l2) || l1 == l2 ) continue;
+				if( new Line( l1.vertex[0], l2.vertex[0] ).Magnitude() < mn ){
+					mn = new Line( l1.vertex[0], l2.vertex[0] ).Magnitude();
+					mnline = new Line( l1.vertex[0], l2.vertex[0] );
+				}
+				if( new Line( l1.vertex[0], l2.vertex[1] ).Magnitude() < mn ){
+					mn = new Line( l1.vertex[0], l2.vertex[1] ).Magnitude();
+					mnline = new Line( l1.vertex[0], l2.vertex[1] );
+				}
+				if( new Line( l1.vertex[1], l2.vertex[0] ).Magnitude() < mn ){
+					mn = new Line( l1.vertex[1], l2.vertex[0] ).Magnitude();
+					mnline = new Line( l1.vertex[1], l2.vertex[0] );
+				}
+				if( new Line( l1.vertex[1], l2.vertex[1] ).Magnitude() < mn ){
+					mn = new Line( l1.vertex[1], l2.vertex[1] ).Magnitude();
+					mnline = new Line( l1.vertex[1], l2.vertex[1] );
+				}
+			}
+		}
+		Debug.Log ("Smallest Distance Between Two Disconnected Lines: " + mn);
+		mnline.DrawVector (GameObject.Find ("temp"));
+		mn = 10000f;
+		Geometry mng = null;
+		foreach (Geometry g in finalPoly) {
+			if( g.getPolygonArea( 0 ) < mn ){
+				mn = (float)g.getPolygonArea( 0 );
+				mng = g;
+			}
+		}
+		Debug.Log ("Smallest Area of an obstacle: " + mn);
+		mng.DrawGeometry (GameObject.Find ("temp"));
+	}
+
 	void getPolygons(){
 		//Compute one step of the discritzation
 		//Find this is the view
@@ -2865,22 +2916,9 @@ public class Triangulation : MonoBehaviour
 			}
 			createText += "H,\n";
 		}
-
-		List<Vector3> tourall = new List<Vector3> ();
-
-		if( roadmap == sp ){
-			foreach ( Vector3 v in masterReflex )
-				if( !tourall.Contains( v ) ) tourall.Add( v );
-		}
-		else if( roadmap == tri ){
-			foreach ( Vector3 v in triNonCameraNodes )
-				if( !tourall.Contains( v ) ) tourall.Add( v );
-		}
-		foreach (Vector3 v in cameras )
-			if( !tourall.Contains( v ) ) tourall.Add( v );
-		//Add points all points that can be used for building a tour
-		foreach (Vector3 v in tourall)
-			createText += "T," + v.x.ToString() + "," + v.z.ToString() + ",\n";
+		//GlobalNumToVect is used so that the exact same coordinates as dijkstra.csv are printed
+		for (int i = 0; i < globalNumToVect.Count; i++)
+			createText += "T," + globalNumToVect[i].x.ToString() + "," + globalNumToVect[i].z.ToString() + ",\n";		
 
 		File.WriteAllText(path, createText);
 	}
@@ -2940,6 +2978,8 @@ public class Triangulation : MonoBehaviour
 		File.AppendAllText (path, createText);
 		createText = "granularity," + granularity.ToString () + ",\n";
 		File.AppendAllText (path, createText);
+		//This variable is created so that exact same coordinates appear in mapwithtourall.csv
+		globalNumToVect = numToVect;
 	}
 
 
