@@ -566,6 +566,7 @@ public partial class Visibility1 : MonoBehaviour {
 	int bShowJustVisibilityPolyForIndex = 53;
 	void Update () 
 	{
+		//mapBG.DrawGeometry(allLineParent);
 		if(bShowJustVisibilityPoly)
 		{
 			//mapBG.DrawGeometry(allLineParent);
@@ -586,6 +587,7 @@ public partial class Visibility1 : MonoBehaviour {
 				return;
 		if (bDisplayAreas || m_ExecuteTrueCase || m_ShowTrueCase || m_CalculateTrueCase)
 		{
+			Debug.Break();
 			return;
 		}
 		/*if (bCallComplete) 
