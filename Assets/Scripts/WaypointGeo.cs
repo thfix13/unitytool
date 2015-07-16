@@ -7,6 +7,7 @@ namespace Objects {
 		
 		public WaypointGeo next;
 		public WaypointGeo distractPoint;
+		public List<WaypointGeo> distractPoints;
 		//types of waypoints will be wait, move, and rotate.
 		//thus you will do that thing, at the given speed until you match the objects stuff.
 		public string type = "wait";

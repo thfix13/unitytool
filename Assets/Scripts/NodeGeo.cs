@@ -14,6 +14,7 @@ namespace Common {
 		public float playerhp;
 		public int distractTime = -1;
 		public List<int> distractTimes = new List<int>();
+		public List<int> distractNums = new List<int>();
 		[XmlIgnore]
 		public Dictionary<Enemy, float> enemyhp;
 		[XmlIgnore]

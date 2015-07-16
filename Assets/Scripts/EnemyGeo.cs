@@ -92,6 +92,29 @@ namespace Objects {
 			return forT;
 		}
 
+		public Vector3 getPositionDistsN(int t, List<int> ts, List<int> ns){
+			int t2 = ts[0];
+			if(t2 > t){
+				computeAtTime(t);
+			}
+			else{
+				computeAtTimesDistsN(t, ts, ns);
+			}
+			
+			return posT;
+		}
+		public Vector3 getForwardDistsN(int t, List<int> ts, List<int> ns){
+			int t2 = ts[0];
+			if(t2 > t){
+				computeAtTime(t);
+			}
+			else{
+				computeAtTimesDistsN(t, ts, ns);
+			}
+			
+			return forT;
+		}
+
 		private void computeAtTimesDists(int t, List<int> ts){
 			if(t == curT){
 				return;
@@ -183,6 +206,102 @@ namespace Objects {
 			}
 		}
 
+		private void computeAtTimesDistsN(int t, List<int> ts, List<int> ns){
+			if(t == curT){
+				return;
+			}
+			int ti = ts[0];
+			int ni = ns[0];
+			computeAtTime(ti);
+			int tj = ts[ts.Count-1];
+			int nj = ns[ns.Count-1];
+			for(int j = 1; j < ts.Count; j++){
+				tj = ts[j];
+				nj = ts[j];
+				if(tj != curT){
+					curT = tj;
+					timeLeft = tj-ti;
+					WaypointGeo distWay = nextWay.distractPoints[ni];
+					ni = nj;
+					nextWay = distWay.next;
+					tryRotDist(distWay);
+					if(timeLeft <= 0 ){
+						continue;
+					}
+					tryMove(distWay);
+					if(timeLeft <= 0){
+						continue;
+					}
+					while(timeLeft > 0){
+						switch (nextWay.type)
+						{
+						case "wait" :
+							//Debug.Log ("wait");
+							timeLeft = timeLeft - nextWay.waitTime;
+							break;
+						case "move" :
+							//Debug.Log ("move");
+							tryMove(nextWay);
+							break;
+						case "rot" :
+							//Debug.Log ("rot");
+							tryRot(nextWay);
+							break;
+						default:
+							Debug.LogError("UNIDENTIFIED WAYPOINT FOUND, EVERTHING WILL NOW BREAK");
+							break;
+						}
+						
+						nextWay = nextWay.next;
+					}
+				}
+			}
+			
+			if(t != curT){
+				curT = t;
+				timeLeft = t-tj;
+				WaypointGeo distWay = nextWay.distractPoints[nj];
+				tryRotDist(distWay);
+				if( timeLeft <= 0){
+					
+					return;
+				}
+				tryMove(distWay);
+				if(timeLeft <= 0){
+					
+					
+					return;
+				}
+				
+				
+				nextWay = distWay.next;
+				
+				while(timeLeft > 0){
+					switch (nextWay.type)
+					{
+					case "wait" :
+						//Debug.Log ("wait");
+						timeLeft = timeLeft - nextWay.waitTime;
+						break;
+					case "move" :
+						//Debug.Log ("move");
+						tryMove(nextWay);
+						break;
+					case "rot" :
+						//Debug.Log ("rot");
+						tryRot(nextWay);
+						break;
+					default:
+						Debug.LogError("UNIDENTIFIED WAYPOINT FOUND, EVERTHING WILL NOW BREAK");
+						break;
+					}
+					
+					nextWay = nextWay.next;
+				}
+			}
+		}
+
+
 		private void computeAtTimeDist(int t, int t2){
 			computeAtTime(t2);
 			if(t != curT){
@@ -241,7 +360,61 @@ namespace Objects {
 			}
 
 		}
+
+		private void computeAtTimeDistN(int t, int t2, int n){
+			
+			computeAtTime(t2);
+			if(t != curT){
+				curT = t;
+				timeLeft = t-t2;
+				WaypointGeo distWay = nextWay.distractPoints[n];
+				tryRotDist(distWay);
+				if( timeLeft <= 0){
+					
+					return;
+				}
+				tryMove(distWay);
+				if(timeLeft <= 0){
+					
+					
+					return;
+				}
 				
+				
+				nextWay = distWay.next;
+				
+				//int bob = 100;
+				//Debug.Log (timeLeft);
+				while(timeLeft > 0){// && bob > 0){
+					//bob--;
+					//Debug.Log ("bob");
+					//Debug.Log (bob);
+					//Debug.Log ("end bob");
+					switch (nextWay.type)
+					{
+					case "wait" :
+						//Debug.Log ("wait");
+						timeLeft = timeLeft - nextWay.waitTime;
+						break;
+					case "move" :
+						//Debug.Log ("move");
+						tryMove(nextWay);
+						break;
+					case "rot" :
+						//Debug.Log ("rot");
+						tryRot(nextWay);
+						break;
+					default:
+						Debug.LogError("UNIDENTIFIED WAYPOINT FOUND, EVERTHING WILL NOW BREAK");
+						break;
+					}
+					
+					nextWay = nextWay.next;
+				}
+			}
+		}
+
+
 		private void tryRotDist(WaypointGeo dist){
 			Vector3 trgtAngle = dist.gameObject.transform.position - posT;
 			trgtAngle.Normalize();
@@ -378,6 +551,15 @@ namespace Objects {
 			Vector3 tmp2 = getForwardDists(t, ts);
 			transform.forward = tmp2;
 		}
+
+		public void goToFrameDistsN(int t, List<int> ts, List<int> ns){
+			Vector3 tmp = getPositionDistsN(t, ts, ns);
+			transform.position = tmp;
+			
+			Vector3 tmp2 = getForwardDistsN(t, ts, ns);
+			transform.forward = tmp2;
+		}
+
 
 		public void Start(){
 			playingTime = 0;

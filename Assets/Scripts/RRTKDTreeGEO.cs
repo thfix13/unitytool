@@ -96,6 +96,7 @@ namespace Exploration {
 				float ry;
 
 				bool distractPick = false;
+				int distractNum = -1;
 			
 
 				if(Random.Range (0, 100) > 50) {
@@ -103,11 +104,13 @@ namespace Exploration {
 						rx = distractPos.x;
 						ry = distractPos.y;
 						distractPick = true;
+						distractNum = 0;
 					}
 					else{
 						rx = distractPos2.x;
 						ry = distractPos2.y;
 						distractPick = true;
+						distractNum = 1;
 					}
 				}
 				else{
@@ -153,20 +156,25 @@ namespace Exploration {
 				if(nodeTheClosestTo.distractTimes.Count == maxDist){
 					//Debug.Log ("maxDist");
 					nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
+					nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
 				}
 				else if(nodeTheClosestTo.distractTimes.Count > 0){
 					if(distractPick){
 						//Debug.Log ("distractPick");
 						nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
+						nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
 						nodeVisiting.distractTimes.Add (nodeVisiting.t);
+						nodeVisiting.distractNums.Add (distractNum);
 					}
 					else{
 						//Debug.Log ("Non-distractPick");
 						nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
+						nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
 					}
 				}
 				else if(distractPick){
 					nodeVisiting.distractTimes.Add (nodeVisiting.t);
+					nodeVisiting.distractNums.Add (distractNum);
 				}
 
 				//Old Backup Distract
@@ -189,7 +197,7 @@ namespace Exploration {
 				//		continue;
 				//}
 
-				if(checkCollEs(p2.x, p2.z, (int)p2.y, p1.x, p1.z, (int)p1.y, enemies, 1, depth, nodeVisiting.distractTimes)){
+				if(checkCollEs(p2.x, p2.z, (int)p2.y, p1.x, p1.z, (int)p1.y, enemies, 1, depth, nodeVisiting.distractTimes, nodeVisiting.distractNums)){
 							continue;
 				}
 
@@ -222,7 +230,7 @@ namespace Exploration {
 					NodeGeo endNode = GetNodeGeo ((int)pd.y, pd.x, pd.z);
 
 
-					if (!checkCollObs(p1.x, p1.z, p2.x, p2.z) && !checkCollEs(p1.x, p1.z, (int)p1.y, pd.x, pd.z, (int)pd.y, enemies, 1, depth, nodeVisiting.distractTimes)) {
+					if (!checkCollObs(p1.x, p1.z, p2.x, p2.z) && !checkCollEs(p1.x, p1.z, (int)p1.y, pd.x, pd.z, (int)pd.y, enemies, 1, depth, nodeVisiting.distractTimes, nodeVisiting.distractNums)) {
 						//Debug.Log ("Done3");
 						endNode.parent = nodeVisiting;
 						return ReturnPathGeo (endNode, smooth);
@@ -275,7 +283,7 @@ namespace Exploration {
 		}
 
 		//Check for collision of a path with the enemies
-		public bool checkCollEs(float startX, float startY,int startT, float endX, float endY,  int endT, List<EnemyGeo> enems, int d, int depth, List<int> distractTimes){
+		public bool checkCollEs(float startX, float startY,int startT, float endX, float endY,  int endT, List<EnemyGeo> enems, int d, int depth, List<int> distractTimes, List<int> distractNums){
 			//Debug.Log ("CheckCollEs");
 			if(enems == null){
 				//Debug.Log ("no enems");
@@ -287,10 +295,10 @@ namespace Exploration {
 
 			if(d == 1){
 				foreach(EnemyGeo e in enems){
-					if(checkCollE(e, startX, startT, startY, distractTimes)){
+					if(checkCollE(e, startX, startT, startY, distractTimes, distractNums)){
 							return true;
 					}
-					if(checkCollE(e, endX, endT, endY, distractTimes)){
+					if(checkCollE(e, endX, endT, endY, distractTimes, distractNums)){
 							return true;
 					}
 				}
@@ -304,25 +312,25 @@ namespace Exploration {
 						return false;
 					}
 					else{
-						if(checkCollEs(newX, newY, newT, endX, endY, endT, enems, d+1, depth, distractTimes)){
+						if(checkCollEs(newX, newY, newT, endX, endY, endT, enems, d+1, depth, distractTimes, distractNums)){
 							return true;
 						}
 					}
 				}
 				else if( endT - newT <=interval){
-					if(checkCollEs(startX, startY, startT, newX, newY, newT, enems, d+1, depth, distractTimes)){
+					if(checkCollEs(startX, startY, startT, newX, newY, newT, enems, d+1, depth, distractTimes, distractNums)){
 						return true;
 					}
 				}
 				else{
 					foreach(EnemyGeo e in enems){
-						if(checkCollE(e, newX, newT, newY, distractTimes)){
+						if(checkCollE(e, newX, newT, newY, distractTimes, distractNums)){
 							return true;
 						}
-						if(checkCollEs(startX, startY, startT, newX, newY, newT, enems, d+1, depth, distractTimes)){
+						if(checkCollEs(startX, startY, startT, newX, newY, newT, enems, d+1, depth, distractTimes, distractNums)){
 							return true;
 						}
-						if(checkCollEs(newX, newY, newT, endX, endY, endT, enems, d+1, depth, distractTimes)){
+						if(checkCollEs(newX, newY, newT, endX, endY, endT, enems, d+1, depth, distractTimes, distractNums)){
 							return true;
 						}
 					}
@@ -356,14 +364,14 @@ namespace Exploration {
 		}
 		
 
-		public bool checkCollE(EnemyGeo e, float x, int t, float y, List<int> distractTimes){
+		public bool checkCollE(EnemyGeo e, float x, int t, float y, List<int> distractTimes, List<int> distractNums){
 			//Debug.Log ("CheckCollE");
 			Vector3 posE3;
 			Vector3 forw;
 			if(distractTimes.Count > 0){
 				//Debug.Log ("distracted movement");
-				posE3 = e.getPositionDists(t, distractTimes);
-				forw = e.getForwardDists(t, distractTimes);
+				posE3 = e.getPositionDistsN(t, distractTimes, distractNums);
+				forw = e.getForwardDistsN(t, distractTimes, distractNums);
 			}
 			else{
 				posE3 = e.getPosition (t);
