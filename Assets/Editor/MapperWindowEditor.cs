@@ -10,9 +10,11 @@ using Exploration;
 using Path = Common.Path;
 using Extra;
 using Objects;
+using Vectrosity;
 
 namespace EditorArea {
 	public class MapperWindowEditor : EditorWindow {
+
 
 		#region variables
 
@@ -47,7 +49,9 @@ namespace EditorArea {
 		private static int curFrame = 0, realFrame = 0, totalFrames = 0;
 		private static bool ignoreFrameLimit = true;
 		private static bool useDist = false;
+		private static bool useDists = false;
 		private static int distTime = 0;
+
 		public static int attemps2 = 1;
 		private static int preCompWidth = 100, preCompHeight = 100;
 
@@ -64,6 +68,10 @@ namespace EditorArea {
 		private MapperEditorDrawer drawer;
 		private DateTime previous = DateTime.Now;
 		private long accL = 0L;
+
+
+		//Material lineMaterial = Resources.Load ("Arrow", typeof(Material)) as Material;
+		//Texture2D backTex = Resources.Load ("arrowStart", typeof(Texture2D)) as Texture2D;
 
 		#endregion variables
 
@@ -354,8 +362,8 @@ namespace EditorArea {
 			EditorGUILayout.LabelField ("");
 
 			useDist = EditorGUILayout.Toggle ("Use Distraction", useDist);
+			useDists = EditorGUILayout.Toggle ("Use Distractions", useDists);
 			distTime = EditorGUILayout.IntField("Distraction Time", distTime);
-
 
 			if (GUILayout.Button (playingGeo ? "StopGeo" : "PlayGeo")) {
 				playingGeo = !playingGeo;
@@ -641,7 +649,94 @@ namespace EditorArea {
 			}
 
 
+			if (GUILayout.Button ("Color Code Waypoints")){
 
+
+				GameObject waypoints = GameObject.Find ("Waypoints");
+				List<Line> normals = new List<Line>();
+				List<Line> toDistract = new List<Line>();
+				List<Line> fromDistract = new List<Line>();
+				Vector3 curPos = Vector3.zero;
+				Vector3 nexPos = Vector3.zero;
+				Vector3 disPos = Vector3.zero;
+
+
+				foreach (WaypointGeo wp in waypoints.GetComponentsInChildren<WaypointGeo>()){
+					curPos = wp.transform.position;
+					nexPos = wp.next.transform.position;
+					disPos = wp.distractPoint.transform.position;
+					if(wp.type != "distract"){
+						normals.Add(new Line(curPos, nexPos));
+					}
+					else{
+						List<WaypointGeo> visited = new List<WaypointGeo>();
+
+						fromDistract.Add (new Line(curPos, nexPos));
+						WaypointGeo current = wp.next;
+						WaypointGeo next = current.next;						
+						curPos = wp.transform.position;
+						nexPos = current.transform.position;
+						fromDistract.Add (new Line(curPos, nexPos));
+						bool check = false;
+						while(!check){
+							visited.Add (current);
+							curPos = current.transform.position;
+							nexPos = next.transform.position;
+							fromDistract.Add ( new Line(curPos, nexPos));
+							current = next;
+							next = next.next;
+							foreach(WaypointGeo way in visited){
+								if(way == current){
+									check = true;
+								}
+							}
+						}
+
+
+					}
+					toDistract.Add (new Line(curPos, disPos));
+				}
+
+				//foreach (WaypointGeo waypoint in waypoints.GetComponentsInChildren<WaypointGeo>()){
+				/*WaypointGeo waypoint = waypoints.GetComponentInChildren<WaypointGeo>();
+				WaypointGeo current = waypoint.next;
+				WaypointGeo next = current.next;
+
+				curPos = waypoint.transform.position;
+				nexPos = current.transform.position;
+				normals.Add (new Line(curPos, nexPos));
+				while(current != waypoint){
+					curPos = current.transform.position;
+					nexPos = next.transform.position;
+					normals.Add ( new Line(curPos, nexPos));
+					current = next;
+					next = next.next;
+				}*/
+				//}
+
+
+
+				GameObject temp = GameObject.Find ("temp");
+				foreach(Line l in normals){
+					l.DrawManArrow (temp, Color.blue, 2.0f);
+				}
+				foreach(Line l in toDistract){
+					l.DrawManArrow (temp, Color.red, 4.0f);
+				}
+				foreach(Line l in fromDistract){
+					l.DrawManArrow(temp, Color.green, 6.0f);
+				}
+				foreach(Line l in normals){
+					l.DrawManArrow (temp, Color.blue, 2.0f);
+				}
+			}
+
+			/*if (GUILayout.Button ("Set Arrow Endpoint")){
+				VectorLine.SetEndCap ("Arrow", EndCap.Back, lineMaterial, backTex);
+			}
+			if(GUILayout.Button ("Remove Arrow Endpoint")){
+				VectorLine.SetEndCap ("Arrow", EndCap.None);
+			}*/
 
 			EditorGUILayout.LabelField ("");
 			EditorGUILayout.LabelField ("");
@@ -1165,9 +1260,27 @@ namespace EditorArea {
 					e.goToFrameDist(t, distTime);
 				}
 			}
+			else if(useDists){
+				List<NodeGeo> path;
+				try{
+					path = pathsgeo.Last().points;
+				}
+				catch(Exception e){
+					return;
+				}
+				NodeGeo last = path.Last ();
+				List<int> distTimes = last.distractTimes;
 
-			foreach(EnemyGeo e in enemygeos){
-				e.goToFrame(t);
+
+
+				foreach(EnemyGeo e in enemygeos){
+					e.goToFrameDists(t, distTimes);
+				}
+			}
+			else{
+				foreach(EnemyGeo e in enemygeos){
+					e.goToFrame(t);
+				}
 			}
 			goToFrameP(t);
 		}
@@ -1263,6 +1376,8 @@ namespace EditorArea {
 				}
 			}
 		}
+	
+
 
 		#region notmineL
 

@@ -371,6 +371,14 @@ namespace Objects {
 			transform.forward = tmp2;
 		}
 
+		public void goToFrameDists(int t, List<int> ts){
+			Vector3 tmp = getPositionDists(t, ts);
+			transform.position = tmp;
+
+			Vector3 tmp2 = getForwardDists(t, ts);
+			transform.forward = tmp2;
+		}
+
 		public void Start(){
 			playingTime = 0;
 			//tim= 0;

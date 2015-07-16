@@ -20,8 +20,13 @@ public class Line
 	public List<int> valueGrid = new List<int>();
 	public Color costColor = Color.black;
 
+	Material lineMaterial = Resources.Load ("Arrow", typeof(Material)) as Material;
+	Texture2D backTex = Resources.Load ("arrowStart", typeof(Texture2D)) as Texture2D;
+
 	public Line(Vector3 v1, Vector3 v2)
 	{
+
+
 		vertex[0] = v1; 
 		vertex[1] = v2; 
 		colours[0] = Color.cyan;
@@ -105,6 +110,71 @@ public class Line
 		line.vectorObject.transform.parent = parent.transform;
 		line.Draw3D();
 	}
+
+	public void DrawVector(GameObject parent,Color c, float linewidth)
+	{
+		
+		VectorLine line = new VectorLine("Line",vertex,c,null,linewidth);
+		line.vectorObject.transform.parent = parent.transform;
+		line.Draw3D();
+	}
+	public void DrawArrow(GameObject parent, Color c, float linewidth){
+		VectorLine line = new VectorLine("Line", vertex, c, null, linewidth);
+		line.vectorObject.transform.parent = parent.transform;
+		
+		line.endCap = "Arrow";
+		line.Draw3D ();
+
+
+	}
+
+	public float fractionSizeArrow = 0.1f;
+	public float angleArrow = 15f;
+
+
+	public void DrawManArrow(GameObject parent, Color c, float linewidth){
+		VectorLine line = new VectorLine("Line", vertex, c, null, linewidth);
+		line.vectorObject.transform.parent = parent.transform;
+
+		line.Draw3D ();
+
+		Vector3 startPoint = vertex[0];
+		Vector3 endPoint = vertex[1];
+		float dist = Vector2.Distance(startPoint, endPoint);
+		float size = fractionSizeArrow * dist;
+
+
+		Vector3 linePoint1 = endPoint + ((startPoint-endPoint) * fractionSizeArrow);
+		Vector3 linePoint2 = linePoint1;
+
+		linePoint1.x = endPoint.x + ((linePoint1.x - endPoint.x) * Mathf.Cos (Mathf.Deg2Rad * angleArrow)) - ((linePoint1.z - endPoint.z) * Mathf.Sin (Mathf.Deg2Rad * angleArrow));
+		linePoint1.z = endPoint.z + ((linePoint1.x - endPoint.x) * Mathf.Sin (Mathf.Deg2Rad * angleArrow)) + ((linePoint1.z - endPoint.z) * Mathf.Cos (Mathf.Deg2Rad * angleArrow));
+
+		linePoint2.x = endPoint.x + ((linePoint2.x - endPoint.x) * Mathf.Cos (Mathf.Deg2Rad * -angleArrow)) - ((linePoint2.z - endPoint.z) * Mathf.Sin (Mathf.Deg2Rad * -angleArrow));
+		linePoint2.z = endPoint.z+ ((linePoint2.x - endPoint.x) * Mathf.Sin (Mathf.Deg2Rad * -angleArrow)) + ((linePoint2.z - endPoint.z) * Mathf.Cos (Mathf.Deg2Rad * -angleArrow));
+	
+		Vector3[] vertex1 = new Vector3[] {linePoint1, endPoint};
+		Vector3[] vertex2 = new Vector3[] {linePoint2, endPoint};
+
+		VectorLine line1 = new VectorLine("Line", vertex1, c, null, linewidth);
+		line1.vectorObject.transform.parent = parent.transform;
+
+		line1.Draw3D ();
+
+		VectorLine line2 = new VectorLine("Line", vertex2, c, null, linewidth);
+		line2.vectorObject.transform.parent = parent.transform;
+	
+		line2.Draw3D ();
+
+
+
+
+	}
+
+	public void setEndCap(){
+		VectorLine.SetEndCap ("Arrow", EndCap.Back, lineMaterial, backTex);
+	}
+
 	public bool ShareVertex(Line l)
 	{
 		foreach(Vector3 v in vertex)
