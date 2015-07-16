@@ -413,6 +413,24 @@ public partial class Visibility1 : MonoBehaviour
 		string sourceDirName = EditorUtility.OpenFolderPanel("Please select results dir", Application.dataPath,"");
 		string resultFileName = sourceDirName+"\\Result.txt";
 		StreamWriter sw = new StreamWriter (resultFileName);
+		//////////////////Reading Info file for step distance
+		string infoFileName = sourceDirName+"\\Info.txt";
+		StreamReader sr = new StreamReader (infoFileName);
+		string line = sr.ReadLine ();
+		while(true)
+		{
+			if(line.Contains("Distance covered by the player"))
+			{
+				int indx = line.IndexOf(" = ");
+				string numberStr = line.Substring(indx+3);
+				Debug.Log(numberStr);
+				m_stepDistance = float.Parse(numberStr);
+				break;
+			}
+		}
+		Debug.Break ();
+		return;
+		///////////////////
 		foreach(NodeShadow headNode in headNodes)
 		{
 			int numLevelsReached = findFurthestPathPointReached(headNode);
@@ -550,6 +568,9 @@ public partial class Visibility1 : MonoBehaviour
 		List<NodeShadow> stack = new List<NodeShadow> ();
 		stack.Add (headNode);
 		int topIndex = -1;
+		float timePlayer = m_stepDistance/speedPlayer;
+		float radiusMovement = speedEnemy*timePlayer;
+
 		while(stack.Count>0)
 		{
 			//pop the top
@@ -568,7 +589,15 @@ public partial class Visibility1 : MonoBehaviour
 			{
 				maxIndex = nodeTop.getSafetyLevel();
 			}
-			stack.AddRange(nodeTop.getChildren());
+			//stack.AddRange(nodeTop.getChildren());
+			//Add children depending on speed
+			foreach(NodeShadow child in nodeTop.getChildren())
+			{
+
+				if(Vector3.Distance(child.getPos(),nodeTop.getPos())<=radiusMovement)
+					stack.Add(child);
+			}
+			/////////////////////////////////
 			if(maxIndex==lastIndex)
 				break;
 
