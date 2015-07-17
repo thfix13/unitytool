@@ -23,7 +23,7 @@ namespace Exploration {
 		private int depth = 5;
 		//public Vector3 min;
 		//public float tileSizeX, tileSizeZ;
-		private int maxDist = 1;
+		private int maxDist = 2;
 
 		public preCast casts;
 
