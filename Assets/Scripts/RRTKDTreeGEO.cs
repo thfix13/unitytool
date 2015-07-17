@@ -100,6 +100,7 @@ namespace Exploration {
 			
 
 				if(Random.Range (0, 100) > 50) {
+					//TODO
 					if(Random.Range (0, 100) > 50){
 						rx = distractPos.x;
 						ry = distractPos.y;
@@ -233,6 +234,8 @@ namespace Exploration {
 					if (!checkCollObs(p1.x, p1.z, p2.x, p2.z) && !checkCollEs(p1.x, p1.z, (int)p1.y, pd.x, pd.z, (int)pd.y, enemies, 1, depth, nodeVisiting.distractTimes, nodeVisiting.distractNums)) {
 						//Debug.Log ("Done3");
 						endNode.parent = nodeVisiting;
+						endNode.distractTimes = nodeVisiting.distractTimes;
+						endNode.distractNums = nodeVisiting.distractNums;
 						return ReturnPathGeo (endNode, smooth);
 					}
 				}

@@ -732,7 +732,7 @@ namespace EditorArea {
 				foreach(Line l in normals){
 					l.DrawManArrow (temp, Color.blue, 2.0f);
 				}
-			}*/
+			}
 
 
 
@@ -752,6 +752,7 @@ namespace EditorArea {
 					curPos = wp.transform.position;
 					nexPos = wp.next.transform.position;
 					disPos = wp.distractPoints[colorCodeIndex].transform.position;
+					toDistract.Add (new Line(curPos, disPos));
 					if(wp.type != "distract"){
 						normals.Add(new Line(curPos, nexPos));
 					}
@@ -781,7 +782,7 @@ namespace EditorArea {
 						
 						
 					}
-					toDistract.Add (new Line(curPos, disPos));
+
 				}
 
 				GameObject temp = GameObject.Find ("temp" + colorCodeIndex);
@@ -797,6 +798,82 @@ namespace EditorArea {
 				foreach(Line l in normals){
 					l.DrawManArrow (temp, Color.blue, 2.0f);
 				}
+			}*/
+
+			if (GUILayout.Button ("Color Code Waypoints Set Via Guards")){
+				
+				
+				GameObject waypoints = GameObject.Find ("Waypoints");
+				GameObject guards = GameObject.Find ("Enemies");
+				List<Line> normals = new List<Line>();
+				List<Line> toDistract = new List<Line>();
+				List<Line> fromDistract = new List<Line>();
+				Vector3 curPos = Vector3.zero;
+				Vector3 nexPos = Vector3.zero;
+				Vector3 disPos = Vector3.zero;
+
+				foreach(EnemyGeo eg in guards.GetComponentsInChildren<EnemyGeo>()){
+					WaypointGeo current = eg.initialTarget;
+					WaypointGeo next = current.next;
+					curPos = eg.transform.position;
+					nexPos = current.transform.position;
+					normals.Add(new Line(curPos, nexPos));
+					List<WaypointGeo> visited = new List<WaypointGeo>();
+					bool check = false;
+					while(!check){
+						visited.Add (current);
+						curPos = current.transform.position;
+						nexPos = current.next.transform.position;
+						disPos = current.distractPoints[colorCodeIndex].transform.position;
+						toDistract.Add (new Line(curPos, disPos));
+						normals.Add (new Line(curPos, nexPos));
+						current = next;
+						next = next.next;
+						foreach(WaypointGeo way in visited){
+							if(way == current){
+								check = true;
+							}
+						}
+				}
+
+				foreach (WaypointGeo wp in waypoints.GetComponentsInChildren<WaypointGeo>()){		
+					if(wp.type == "distract"){
+						visited = new List<WaypointGeo>();
+						current = wp;
+						next = current.next;
+						check = false;
+						while(!check){
+							visited.Add (current);
+							curPos = current.transform.position;
+							nexPos = next.transform.position;
+							fromDistract.Add ( new Line(curPos, nexPos));
+							current = next;
+							next = next.next;
+							foreach(WaypointGeo way in visited){
+								if(way == current){
+									check = true;
+								}
+							}
+						}
+					}
+				}
+				normals = returnUniqueLineSet(normals);
+				toDistract = returnUniqueLineSet(toDistract);
+				fromDistract = returnUniqueLineSet(fromDistract);
+				GameObject temp = GameObject.Find ("temp" + colorCodeIndex);
+				foreach(Line l in normals){
+					l.DrawManArrow (temp, Color.blue, 2.0f);
+				}
+				foreach(Line l in toDistract){
+					l.DrawManArrow (temp, Color.red, 4.0f);
+				}
+				foreach(Line l in fromDistract){
+					l.DrawManArrow(temp, Color.green, 6.0f);
+				}
+				foreach(Line l in normals){
+					l.DrawManArrow (temp, Color.blue, 2.0f);
+				}
+			}
 			}
 
 			if (GUILayout.Button ("Clear Color Code Waypoints")){
@@ -1252,8 +1329,38 @@ namespace EditorArea {
 			
 			SceneView.RepaintAll ();
 
-		}
+			}
 
+		private List<Line> returnUniqueLineSet(List<Line> lines){
+
+			List<Line> toReturn = new List<Line>();
+			foreach(Line l in lines){
+				Vector3 start = l.vertex[0];
+				Vector3 end = l.vertex[1];
+				if(Vector3.Equals(start, end)){
+				}
+				else if(toReturn.Count < 1){
+					toReturn.Add (l);
+				}
+				else{
+					bool notEqual = true;
+					foreach(Line l2 in toReturn){
+						if(Vector3.Equals (l.vertex[0], l2.vertex[0]) && Vector3.Equals (l.vertex[1], l2.vertex[1])){
+
+							notEqual = false;
+							break;
+						}
+						else{
+
+						}
+					}
+					if(notEqual){
+						toReturn.Add (l);
+					}
+				}
+			}
+			return toReturn;
+		}
 
 		public preCast casts;
 
@@ -1317,6 +1424,15 @@ namespace EditorArea {
 			for(int i = 0; i < path.Count; i++){
 				current = path[i];
 				Debug.Log (current.ToString());
+			}
+			NodeGeo last = path.Last();
+			Debug.Log ("distractTimes");
+			foreach(int j in last.distractTimes){
+				Debug.Log (j);
+			}
+			Debug.Log ("distractNums");
+			foreach(int j in last.distractNums){
+				Debug.Log (j);
 			}
 		}
 
