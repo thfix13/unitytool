@@ -108,6 +108,9 @@ public partial class Visibility1 : MonoBehaviour {
 	float m_maxZ = 0f;
 	public float m_step = 0.1f;
 	float radius_enemy = -1.0f;
+
+	public bool bAgentBasedAssignment = false;
+
 	bool bTestingMGS = false;
 	bool bTestingMGS2 = false;
 	bool bTestingChung = false;
@@ -115,6 +118,8 @@ public partial class Visibility1 : MonoBehaviour {
 
 	void Start () 
 	{
+		//testFunc();
+		//return;
 		radius_enemy = ((CapsuleCollider)enemyPrefab.GetComponent<Collider>()).radius*((CapsuleCollider)enemyPrefab.GetComponent<Collider>()).transform.lossyScale.x;
 		//Debug.Log ("radius_enemy = "+radius_enemy);
 
@@ -210,6 +215,11 @@ public partial class Visibility1 : MonoBehaviour {
 				}
 				return;
 			}
+		}
+		if(bAgentBasedAssignment)
+		{
+			agentBasedAssignment();
+			return;
 		}
 		///////////////////////////True Case//////////////////////////////
 		if(m_ExecuteTrueCase)
@@ -585,7 +595,7 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		if (bSlowShadowsDown && setTimerTemp-- > 0)
 				return;
-		if (bDisplayAreas || m_ExecuteTrueCase || m_ShowTrueCase || m_CalculateTrueCase)
+		if (bAgentBasedAssignment|| bDisplayAreas || m_ExecuteTrueCase || m_ShowTrueCase || m_CalculateTrueCase)
 		{
 			Debug.Break();
 			return;
@@ -1665,10 +1675,6 @@ public partial class Visibility1 : MonoBehaviour {
 	}
 	*/
 	/*
-	private int centralityCalc2(sbyte[,] shadowArray,int j,int k)
-	{
-		return 1;
-	}
 	private int centralityCalc(sbyte[,] shadowArray,int j,int k)
 	{
 		int rowJ = j;
@@ -2680,35 +2686,7 @@ public partial class Visibility1 : MonoBehaviour {
 	int discretePtsZ = -1;
 	private void createDiscreteMap()
 	{
-		float minX = mapBoundary[0].x;
-		float minZ = mapBoundary[0].z;
-		float maxX = mapBoundary[0].x;
-		float maxZ = mapBoundary[0].z;
-		for(int i=1;i<4;i++)
-		{
-			if(minX>mapBoundary[i].x)
-			{
-				minX=mapBoundary[i].x;
-			}
-			if(minZ>mapBoundary[i].z)
-			{
-				minZ=mapBoundary[i].z;
-			}
-			if(maxX<mapBoundary[i].x)
-			{
-				maxX=mapBoundary[i].x;
-			}
-			if(maxZ<mapBoundary[i].z)
-			{
-				maxZ=mapBoundary[i].z;
-			}
-		}
 		int Indx = 0;
-		float step = 0.1f;
-
-		discretePtsX = (int)(((maxX - minX) / step)+0.5);
-		discretePtsZ = (int)(((maxZ - minZ) / step)+0.5);
-		Debug.Log(""+(maxX - minX) / step+" discretePtsX = "+discretePtsX+" discretePtsZ = "+discretePtsZ);
 		while(Indx<pathPoints.Count)
 		{
 			List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [Indx]];
@@ -2716,20 +2694,13 @@ public partial class Visibility1 : MonoBehaviour {
 
 			float radius_hiddenSphere = ((SphereCollider)hiddenSphere.GetComponent<Collider>()).radius*((SphereCollider)hiddenSphere.GetComponent<Collider>()).transform.lossyScale.x;
 			int j1=0;	
-			for(float j=minX;j<maxX && j1<discretePtsX;j+=step)
+			for(float j=m_minX;j<m_maxX && j1<discretePtsX;j+=m_step)
 			{
 				int k1=0;
-				for(float k=minZ;k<maxZ && k1<discretePtsZ;k+=step)
+				for(float k=m_minZ;k<m_maxZ && k1<discretePtsZ;k+=m_step)
 				{
 					Vector3 pt = new Vector3(j,1,k);
-					Vector2 keyTemp = new Vector2(j1,k1);
-					if(!h_mapIndxToPt.ContainsKey(keyTemp))
-					{
-						//Debug.Log("Adding key value pair to h_mapIndxToPt"+j1+" , "+k1);
-						h_mapIndxToPt.Add(keyTemp,pt);
-					}
-					//Debug.Log(j1+" , "+k1);
-					//Debug.Log(j+" < "+maxX+" , "+k+" < "+maxZ);
+
 					if(pointInShadow(pt,Indx) && !Physics.CheckSphere(pt,radius_hiddenSphere))
 					{
 						shadowArray[j1,k1]=0;
@@ -2748,8 +2719,6 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 			h_discreteShadows.Add(pathPoints[Indx],shadowArray);
 			Indx++;
-			//Debug.Log("h_mapIndxToPt.Count = "+h_mapIndxToPt.Keys.Count);
-			//Debug.Log("h_discreteShadows.Count = "+h_discreteShadows.Keys.Count);
 		}
 	}
 	private void displayStrategicPoints (int Indx)
