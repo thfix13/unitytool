@@ -656,11 +656,12 @@ public partial class Visibility1 : MonoBehaviour
 				}
 			}
 		}
-		
+		sbyte[,] shadowArrayPrev;
+		sbyte[,] shadowArrayNext;
 		for(int i=0;i<pathPoints.Count-1;i++)
 		{
-			sbyte[,] shadowArrayPrev = (sbyte[,])h_discreteShadows [pathPoints [i]];
-			sbyte[,] shadowArrayNext = (sbyte[,])h_discreteShadows [pathPoints [i+1]];
+			shadowArrayPrev = (sbyte[,])h_discreteShadows [pathPoints [i]];
+			shadowArrayNext = (sbyte[,])h_discreteShadows [pathPoints [i+1]];
 			for(int j=0;j<discretePtsX;j++)
 			{
 				for(int k=0;k<discretePtsZ;k++)
@@ -672,8 +673,8 @@ public partial class Visibility1 : MonoBehaviour
 				}
 			}
 		}
-		sbyte[,] shadowArrayPrev = (sbyte[,])h_discreteShadows [pathPoints [0]];
-		sbyte[,] shadowArrayNext = (sbyte[,])h_discreteShadows [pathPoints [pathPoints.Count-1]];
+		shadowArrayPrev = (sbyte[,])h_discreteShadows [pathPoints [0]];
+		shadowArrayNext = (sbyte[,])h_discreteShadows [pathPoints [pathPoints.Count-1]];
 		Debug.Log("Agents at start = "+countAgents(shadowArrayPrev));
 		Debug.Log("Agents surviving at the end = "+countAgents(shadowArrayNext));
 		displaySurvivingAgents ();
@@ -709,7 +710,7 @@ public partial class Visibility1 : MonoBehaviour
 			}
 		}
 	}
-	private int placeAgent(sbyte[,] shadowArrayNext,int j,int k)
+	private void placeAgent(sbyte[,] shadowArrayNext,int j,int k)
 	{
 		int rowJ = j;
 		int colK = k;
@@ -763,7 +764,7 @@ public partial class Visibility1 : MonoBehaviour
 		}
 		//Selecting a random pos
 		int selIndx = (int)Random.Range (0, listOfAvailablePos.Count - 1);
-		shadowArrayNext [listOfAvailablePos [selIndx].x, listOfAvailablePos [selIndx].y] = 9;
+		shadowArrayNext [(int)listOfAvailablePos [selIndx].x, (int)listOfAvailablePos [selIndx].y] = 9;
 	}
 }
 #endif
