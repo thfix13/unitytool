@@ -136,13 +136,27 @@ public class Geometry
 	public bool PointOutside( Vector3 pt ){//Called by LineInside, GeometryInside and LineCollision
 		Line lray = new Line(pt, new Vector3(-100, 1f, -100)); 
 		int count = 0; 
+		//If any intersection point happens to be an endpoint, it must have been counted twice due
+		//to the two different lines that point is an endpoint of
+		List<Vector3> intersectionpoints = new List<Vector3> ();
 		foreach(Line myLine in edges){
-			//EndPt because ray might pass through corners
-			if( myLine.LineIntersectMuntacEndPt(lray) > 0 )
+			//Collecting the intersection points because ray might pass through corners
+			if( myLine.LineIntersectRegular(lray) > 0 ){
 				count++;
+				Vector3 intpt = myLine.GetIntersectionPoint( lray );
+				intersectionpoints.Add( intpt );
+			}
 			//Check if the intersection point is on the polygon edge
 			if( myLine.PointOnLine( pt ) && myLine.PointOnLineB( pt ) )
 				return false;
+		}
+		//Checking to see if any intersection point appeared twice
+		//This would mean it's a corner point (i.e. a vertex on the polygon)
+		for (int i = 0; i < intersectionpoints.Count; i++) {
+			for (int j = i + 1; j < intersectionpoints.Count; j++) {
+				if( VectorApprox( intersectionpoints[i], intersectionpoints[j] ) )
+					count--;
+			}
 		}
 		return count % 2 == 0;
 	}
@@ -151,16 +165,28 @@ public class Geometry
 //		Line lray = new Line(pt, new Vector3(-100, 1f, -100)); 
 //		//lray.DrawVector (GameObject.Find ("temp"), Color.blue);
 //		int count = 0; 
+//		//If any intersection point happens to be an endpoint, it must have been counted twice due
+//		//to the two different lines that point is an endpoint of
+//		List<Vector3> intersectionpoints = new List<Vector3> ();
 //		foreach(Line myLine in edges){
-//			//EndPt because ray might pass through corners
-//			if( myLine.LineIntersectMuntacEndPt(lray) > 0 ){
+//			//Collecting the intersection points because ray might pass through corners
+//			if( myLine.LineIntersectRegular(lray) > 0 ){
 //				count++;
+//				Vector3 intpt = myLine.GetIntersectionPoint( lray );
+//				intersectionpoints.Add( intpt );
 //			}
 //			//Check if the intersection point is on the polygon edge
 //			if( myLine.PointOnLine( pt ) && myLine.PointOnLineB( pt ) )
 //				return false;
 //		}
+//		for (int i = 0; i < intersectionpoints.Count; i++) {
+//			for (int j = i + 1; j < intersectionpoints.Count; j++) {
+//				if( VectorApprox( intersectionpoints[i], intersectionpoints[j] ) )
+//					count--;
+//			}
+//		}
 //		Debug.Log ("DBG: " + count);
+//		lray.DrawVector (GameObject.Find ("temp"));
 //		return count % 2 == 0;
 //	}
 
