@@ -1,0 +1,9 @@
+Scene Name = MGS2.unity
+Last Path Index = 224
+Discrete rows & cols = 130 X 80
+Speed of the Player = 2
+Distance covered by the player = 0.1
+Max speed of the Enemy = 4
+Max distance covered by the Enemy = 0.2
+Time taken to calculate tree structure = 123.2294 mins
+Current Date = Monday, August 10, 2015. Time = 3:30:46 PM

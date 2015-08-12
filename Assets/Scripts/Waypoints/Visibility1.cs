@@ -70,6 +70,8 @@ public partial class Visibility1 : MonoBehaviour {
 			vNextPos = new List<Vector3>();
 			bCaught = false;
 		}
+		List<float[,]> timingArray = new List<float[,]> ();
+		List<float[,]> pointsArray = new List<float[,]> ();
 	}
 
 	List<Geometry> globalTempShadowPoly = new List<Geometry>();
@@ -131,6 +133,12 @@ public partial class Visibility1 : MonoBehaviour {
 		fileLastCaseExecutedFor = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop)+"\\lastCaseExecutedFor1.txt";
 		fileTimings = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop)+"\\timingScene1.txt";
 		filePoints = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop)+"\\pointsScene1.txt";
+
+		if(bMultiplePaths)
+		{
+			setUpMultiplePaths();
+			return;
+		}
 		if(currSceneName=="myScene1.unity")
 		{
 			pathPoints = CommonMyScene1.definePath ();
@@ -218,7 +226,10 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		if(bAgentBasedAssignment)
 		{
-			agentBasedAssignment();
+			setGlobalVars1();
+			CalculateVisibilityForPath();
+			//agentBasedAssignment();
+			agentBasedAssignmentFromEnd();
 			return;
 		}
 		///////////////////////////True Case//////////////////////////////
@@ -230,7 +241,8 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		if(m_CalculateTrueCase)
 		{
-			calculatePredictedPaths();
+			//calculatePredictedPaths();
+			calculatePredictedPathsNew();
 			return;
 		}
 		if(m_ShowTrueCase)
@@ -576,6 +588,11 @@ public partial class Visibility1 : MonoBehaviour {
 	int bShowJustVisibilityPolyForIndex = 53;
 	void Update () 
 	{
+		if(bMultiplePaths)
+		{
+			UpdateMultiplePaths();
+			return;
+		}
 		//mapBG.DrawGeometry(allLineParent);
 		if(bShowJustVisibilityPoly)
 		{
@@ -2555,6 +2572,10 @@ public partial class Visibility1 : MonoBehaviour {
 	}
 	private bool pointInShadow(Vector3 pt,int Indx)
 	{
+		if(bMultiplePaths)
+		{
+			return pointInShadowMultiplePaths(pt,Indx);
+		}
 		if (Indx >= pathPoints.Count || Indx < 0)
 		{
 			//Debug.LogError(Indx);

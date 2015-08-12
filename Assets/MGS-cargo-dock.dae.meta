@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: 20d0ab0d810651140910c49b6d1152c1
 ModelImporter:
-  serializedVersion: 15
+  serializedVersion: 18
   fileIDToRecycleName:
     100000: Camera
     100002: mesh1
@@ -62,6 +62,22 @@ ModelImporter:
     2300008: mesh5
     2300010: mesh6
     2300012: mesh7
+    2300014: mesh10
+    2300016: mesh11
+    2300018: mesh12
+    2300020: mesh13
+    2300022: mesh14
+    2300024: mesh15
+    2300026: mesh16
+    2300028: mesh17
+    2300030: mesh18
+    2300032: mesh19
+    2300034: mesh20
+    2300036: mesh21
+    2300038: mesh22
+    2300040: mesh23
+    2300042: mesh8
+    2300044: mesh9
     3300000: mesh1
     3300002: mesh2
     3300004: mesh3
@@ -69,6 +85,22 @@ ModelImporter:
     3300008: mesh5
     3300010: mesh6
     3300012: mesh7
+    3300014: mesh10
+    3300016: mesh11
+    3300018: mesh12
+    3300020: mesh13
+    3300022: mesh14
+    3300024: mesh15
+    3300026: mesh16
+    3300028: mesh17
+    3300030: mesh18
+    3300032: mesh19
+    3300034: mesh20
+    3300036: mesh21
+    3300038: mesh22
+    3300040: mesh23
+    3300042: mesh8
+    3300044: mesh9
     4300000: mesh1
     4300002: mesh2
     4300004: mesh3
@@ -76,6 +108,22 @@ ModelImporter:
     4300008: mesh5
     4300010: mesh6
     4300012: mesh7
+    4300014: mesh8
+    4300016: mesh9
+    4300018: mesh10
+    4300020: mesh11
+    4300022: mesh12
+    4300024: mesh13
+    4300026: mesh14
+    4300028: mesh15
+    4300030: mesh16
+    4300032: mesh17
+    4300034: mesh18
+    4300036: mesh19
+    4300038: mesh20
+    4300040: mesh21
+    4300042: mesh22
+    4300044: mesh23
     6400000: mesh1
     6400002: mesh2
     6400004: mesh3
@@ -83,6 +131,22 @@ ModelImporter:
     6400008: mesh5
     6400010: mesh6
     6400012: mesh7
+    6400014: mesh10
+    6400016: mesh11
+    6400018: mesh12
+    6400020: mesh13
+    6400022: mesh14
+    6400024: mesh15
+    6400026: mesh16
+    6400028: mesh17
+    6400030: mesh18
+    6400032: mesh19
+    6400034: mesh20
+    6400036: mesh21
+    6400038: mesh22
+    6400040: mesh23
+    6400042: mesh8
+    6400044: mesh9
     9500000: //RootNode
   materials:
     importMaterials: 0
@@ -91,11 +155,18 @@ ModelImporter:
   animations:
     legacyGenerateAnimations: 4
     bakeSimulation: 0
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
     animationCompression: 1
     animationRotationError: .5
     animationPositionError: .5
     animationScaleError: .5
     animationWrapMode: 0
+    extraExposedTransformPaths: []
     clipAnimations: []
     isReadable: 1
   meshes:
@@ -108,11 +179,13 @@ ModelImporter:
     generateSecondaryUV: 0
     useFileUnits: 1
     optimizeMeshForGPU: 0
+    keepQuads: 0
     weldVertices: 1
     secondaryUVAngleDistortion: 8
     secondaryUVAreaDistortion: 15.000001
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
+    useFileScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     splitTangentsAcrossUV: 1
@@ -123,7 +196,6 @@ ModelImporter:
   humanDescription:
     human: []
     skeleton: []
-    handles: []
     armTwist: .5
     foreArmTwist: .5
     upperLegTwist: .5
@@ -133,6 +205,8 @@ ModelImporter:
     feetSpacing: 0
     rootMotionBoneName: 
   lastHumanDescriptionAvatarSource: {instanceID: 0}
-  additionalBone: 1
   animationType: 2
+  additionalBone: 1
   userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -14,6 +14,7 @@ public partial class Visibility1 : MonoBehaviour
 		string sourceFileName = dirName+"\\Info"+".txt";
 		StreamWriter sw = new StreamWriter(sourceFileName);
 		sw.WriteLine("Scene Name = "+currSceneName+"");
+		sw.WriteLine("Last Path Index = "+lastPathIndex()+"");
 		sw.WriteLine("Discrete rows & cols = "+discretePtsX+" X "+discretePtsZ+"");
 		sw.WriteLine("Speed of the Player = "+speedPlayer+"");
 		sw.WriteLine("Distance covered by the player = "+m_stepDistance+"");
@@ -76,10 +77,21 @@ public partial class Visibility1 : MonoBehaviour
 			{
 				//Debug.Log(j1+" , "+k1);
 				Vector3 pt = new Vector3(j,1,k);
-				if(!pointInShadow(pt,0))
+				if(bMultiplePaths)
 				{
-					k1++;
-					continue;
+					if(!pointInShadowMultiplePaths(pt,0))
+					{
+						k1++;
+						continue;
+					}
+				}
+				else 
+				{
+					if(!pointInShadow(pt,0))
+					{
+						k1++;
+						continue;
+					}
 				}
 				Vector2 keyTemp = new Vector2((float)j1,(float)k1);
 				pt = (Vector3)h_mapIndxToPt[keyTemp];
@@ -93,7 +105,7 @@ public partial class Visibility1 : MonoBehaviour
 
 			j1++;
 		}
-		int numOfLevels = pathPoints.Count-1;//m_lastPathIndex;
+		int numOfLevels = lastPathIndex ();//pathPoints.Count-1;//m_lastPathIndex;
 		while(levelOfAccess<numOfLevels)//TODO:think other exit cases
 		{
 			levelOfAccess++;
@@ -122,26 +134,53 @@ public partial class Visibility1 : MonoBehaviour
 			//Vector4 tempVect4 = new Vector4(tempVect3.x,tempVect3.y,tempVect3.z,pathPointIndx);
 			//Debug.Log("standardMaxMovement = "+standardMaxMovement);
 			//Debug.Log("Possible Child 2 = "+tempVect3);
-			if(pointInShadow(tempVect3,pathPointIndx) && Vector3.Distance(node.getPos(),tempVect3)<=standardMaxMovement)
+			if(bMultiplePaths)
 			{
-				NodeShadow nodeChild;
-				if(h_mapPtToNode.ContainsKey(tempVect3))
+				if(pointInShadowMultiplePaths(tempVect3,pathPointIndx) && Vector3.Distance(node.getPos(),tempVect3)<=standardMaxMovement)
 				{
-					nodeChild = (NodeShadow)h_mapPtToNode[tempVect3];
+					NodeShadow nodeChild;
+					if(h_mapPtToNode.ContainsKey(tempVect3))
+					{
+						nodeChild = (NodeShadow)h_mapPtToNode[tempVect3];
+					}
+					else
+					{
+						nodeChild = new NodeShadow(tempVect3);
+						nodeChild.setSafetyLevel(pathPointIndx);
+						h_mapPtToNode.Add(tempVect3,nodeChild);
+					}
+					node.addChild(nodeChild);
+					//Debug.Log(tempVect3+" added as child of "+node.getPos()+" Dist b/w them is "+Vector3.Distance(node.getPos(),tempVect3));
+					return true;
 				}
 				else
 				{
-					nodeChild = new NodeShadow(tempVect3);
-					nodeChild.setSafetyLevel(pathPointIndx);
-					h_mapPtToNode.Add(tempVect3,nodeChild);
+					//Debug.Log(tempVect3+" cannot be added as child of "+node.getPos()+" Dist b/w them is "+Vector3.Distance(node.getPos(),tempVect3));
 				}
-				node.addChild(nodeChild);
-				//Debug.Log(tempVect3+" added as child of "+node.getPos()+" Dist b/w them is "+Vector3.Distance(node.getPos(),tempVect3));
-				return true;
 			}
 			else
 			{
-				//Debug.Log(tempVect3+" cannot be added as child of "+node.getPos()+" Dist b/w them is "+Vector3.Distance(node.getPos(),tempVect3));
+				if(pointInShadow(tempVect3,pathPointIndx) && Vector3.Distance(node.getPos(),tempVect3)<=standardMaxMovement)
+				{
+					NodeShadow nodeChild;
+					if(h_mapPtToNode.ContainsKey(tempVect3))
+					{
+						nodeChild = (NodeShadow)h_mapPtToNode[tempVect3];
+					}
+					else
+					{
+						nodeChild = new NodeShadow(tempVect3);
+						nodeChild.setSafetyLevel(pathPointIndx);
+						h_mapPtToNode.Add(tempVect3,nodeChild);
+					}
+					node.addChild(nodeChild);
+					//Debug.Log(tempVect3+" added as child of "+node.getPos()+" Dist b/w them is "+Vector3.Distance(node.getPos(),tempVect3));
+					return true;
+				}
+				else
+				{
+					//Debug.Log(tempVect3+" cannot be added as child of "+node.getPos()+" Dist b/w them is "+Vector3.Distance(node.getPos(),tempVect3));
+				}
 			}
 		}
 		return false;
@@ -365,7 +404,7 @@ public partial class Visibility1 : MonoBehaviour
 	private void displayPredictedPaths3()
 	{
 		float startTime = Time.realtimeSinceStartup;
-		int numOfLevels = pathPoints.Count-1;//m_lastPathIndex;
+		int numOfLevels = lastPathIndex();//m_lastPathIndex;
 		
 		string sourceDirName = EditorUtility.OpenFolderPanel("Please select results dir", Application.dataPath,"");
 		string resultFileName = sourceDirName+"\\Result.txt";
@@ -433,7 +472,7 @@ public partial class Visibility1 : MonoBehaviour
 		List<NodeShadow> headNodes = readNodeStructureFor2 ();
 		//Debug.Log ("Num of headNodes = "+headNodes.Count);
 		//return;
-		int numOfLevels = pathPoints.Count-1;//m_lastPathIndex;
+		int numOfLevels = lastPathIndex ();//pathPoints.Count-1;//m_lastPathIndex;
 
 		string sourceDirName = EditorUtility.OpenFolderPanel("Please select results dir", Application.dataPath,"");
 		string resultFileName = sourceDirName+"\\Result.txt";
@@ -469,8 +508,100 @@ public partial class Visibility1 : MonoBehaviour
 		}
 		sw.Close ();
 	}
+	List<NodeShadow> getNodesWithIndex(int endIndxTemp)
+	{
+		List<NodeShadow> nodeList = new List<NodeShadow> ();
+		foreach(Vector4 vect in m_hCompleteNodeTable.Keys)
+		{
+			if(vect.w==endIndxTemp && ((NodeShadow)(m_hCompleteNodeTable[vect])).getCanReachLimit()<0)
+			{
+				nodeList.Add((NodeShadow)m_hCompleteNodeTable[vect]);
+			}
+		}
+		return nodeList;
+	}
+	void setCanReachLimit(List<NodeShadow> nodeList,int endIndxTemp)
+	{
+		foreach(NodeShadow node in nodeList)
+		{
+			node.setCanReachLimit(endIndxTemp);
+		}
+	}
+	List<NodeShadow> getParentList(List<NodeShadow> nodeList,float radiusMovement)
+	{
+		List<NodeShadow> nodeParentList = new List<NodeShadow> ();
+		foreach (NodeShadow node in nodeList) 
+		{
+			List<NodeShadow> parentList = node.getParent();
+			foreach (NodeShadow parentNode in parentList) 
+			{
+				if(!nodeParentList.Contains(parentNode) && parentNode.getCanReachLimit()<0 && Vector3.Distance(parentNode.getPos(),node.getPos())<=radiusMovement)
+					nodeParentList.Add(parentNode);
+			}
+		}
+		return nodeParentList;
+	}
+	private void calculatePredictedPathsNew()
+	{
+		float startTime = Time.realtimeSinceStartup;
+		List<NodeShadow> headNodes = readNodeStructureFor2 ();
+		//m_EndIndx
+		int endIndxTemp = m_EndIndx;
 
+		int numOfLevels = lastPathIndex ();//pathPoints.Count-1;//m_lastPathIndex;
+		
+		string sourceDirName = EditorUtility.OpenFolderPanel("Please select results dir", Application.dataPath,"");
+		string resultFileName = sourceDirName+"\\Result.txt";
+		StreamWriter sw = new StreamWriter (resultFileName);
+		//////////////////Reading Info file for step distance
+		string infoFileName = sourceDirName+"\\Info.txt";
+		StreamReader sr = new StreamReader (infoFileName);
+		string line = sr.ReadLine ();
+		while(true)
+		{
+			if(line.Contains("Distance covered by the player"))
+			{
+				int indx = line.IndexOf(" = ");
+				string numberStr = line.Substring(indx+3);
+				
+				m_stepDistance = float.Parse(numberStr);
+				
+				sr.Close ();
+				break;
+			}
+			line = sr.ReadLine ();
+		}
+		float timePlayer = m_stepDistance/speedPlayer;
+		float radiusMovement = speedEnemy*timePlayer;
+		while(endIndxTemp>0)
+		{
+			List<NodeShadow> nodeList = getNodesWithIndex(endIndxTemp);
+			setCanReachLimit(nodeList,endIndxTemp);
+			List<NodeShadow> nodeParentList = getParentList(nodeList,radiusMovement);
+			while(nodeParentList.Count!=0)
+			{
+				setCanReachLimit(nodeParentList,endIndxTemp);
+				nodeParentList = getParentList(nodeParentList,radiusMovement);
+			}
+			endIndxTemp--;
+		}
+		///////////////////
+		foreach(NodeShadow headNode in headNodes)
+		{
+			int numLevelsReached = headNode.getCanReachLimit();//findFurthestPathPointReached(headNode);
+			if(numLevelsReached<0)
+				numLevelsReached=0;
+			sw.Write("("+headNode.getPos().x+","+headNode.getPos().y+","+headNode.getPos().z+")"+";"+numLevelsReached);
+			sw.WriteLine("");
+			/*float greenNum = numLevelsReached/numOfLevels;
+			float redNum = 1-greenNum;
+			showPosOfPoint(headNode.getPos(),new Color(redNum,greenNum,0));
+			*/
+		}
+		sw.Close ();
+	}
 
+	int m_EndIndx = -1;
 	private List<NodeShadow> readNodeStructureFor2()
 	{
 		List<NodeShadow> headNodes = new List<NodeShadow> ();
@@ -535,6 +666,10 @@ public partial class Visibility1 : MonoBehaviour
 					node = new NodeShadow(new Vector3(keyObj.x,keyObj.y,keyObj.z));
 					node.setSafetyLevel((int)keyObj.w);
 					m_hCompleteNodeTable.Add(keyObj,node);
+					if(m_EndIndx<node.getSafetyLevel())
+					{
+						m_EndIndx = node.getSafetyLevel();
+					}
 				}
 				else
 				{
@@ -587,7 +722,7 @@ public partial class Visibility1 : MonoBehaviour
 
 	private int findFurthestPathPointReached (NodeShadow headNode)
 	{
-		int lastIndex = pathPoints.Count - 1;//m_lastPathIndex;
+		int lastIndex = lastPathIndex();//m_lastPathIndex;
 		int maxIndex = 0;
 
 		List<NodeShadow> traversedNodes = new List<NodeShadow> ();
@@ -619,7 +754,6 @@ public partial class Visibility1 : MonoBehaviour
 			//Add children depending on speed
 			foreach(NodeShadow child in nodeTop.getChildren())
 			{
-
 				if(Vector3.Distance(child.getPos(),nodeTop.getPos())<=radiusMovement)
 					stack.Add(child);
 			}
@@ -632,139 +766,5 @@ public partial class Visibility1 : MonoBehaviour
 		}
 		return maxIndex;
 	}
-
-
-
-
-
-	//Implementing now
-	private void agentBasedAssignment()
-	{
-		createDiscreteMap ();
-		int row = -1;
-		int col = -1;
-		int numSpots = 1;
-		//Initialize:Placing agents
-		sbyte[,] shadowArray = (sbyte[,])h_discreteShadows [pathPoints [0]];
-		for(int j=0;j<discretePtsX;j++)
-		{
-			for(int k=0;k<discretePtsZ;k++)
-			{
-				if(shadowArray[j,k]==0)
-				{
-					shadowArray[j,k]=9;
-				}
-			}
-		}
-		sbyte[,] shadowArrayPrev;
-		sbyte[,] shadowArrayNext;
-		for(int i=0;i<pathPoints.Count-1;i++)
-		{
-			shadowArrayPrev = (sbyte[,])h_discreteShadows [pathPoints [i]];
-			shadowArrayNext = (sbyte[,])h_discreteShadows [pathPoints [i+1]];
-			for(int j=0;j<discretePtsX;j++)
-			{
-				for(int k=0;k<discretePtsZ;k++)
-				{
-					if(shadowArrayPrev[j,k]==9)
-					{
-						placeAgent(shadowArrayNext,j,k);
-					}
-				}
-			}
-		}
-		shadowArrayPrev = (sbyte[,])h_discreteShadows [pathPoints [0]];
-		shadowArrayNext = (sbyte[,])h_discreteShadows [pathPoints [pathPoints.Count-1]];
-		Debug.Log("Agents at start = "+countAgents(shadowArrayPrev));
-		Debug.Log("Agents surviving at the end = "+countAgents(shadowArrayNext));
-		displaySurvivingAgents ();
-	}
-	int countAgents(sbyte[,] shadowArray)
-	{
-		int counterAgents = 0;
-		for(int j=0;j<discretePtsX;j++)
-		{
-			for(int k=0;k<discretePtsZ;k++)
-			{
-				if(shadowArray[j,k]==9)
-				{
-					counterAgents++;
-				}
-			}
-		}
-		return counterAgents;
-	}
-	private void displaySurvivingAgents()
-	{
-		sbyte[,] shadowArray = (sbyte[,])h_discreteShadows [pathPoints [pathPoints.Count-1]];
-		for(int j=0;j<discretePtsX;j++)
-		{
-			for(int k=0;k<discretePtsZ;k++)
-			{
-				if(shadowArray[j,k]==9)
-				{
-					GameObject clone1 = (GameObject)Instantiate(hiddenSphere);
-					clone1.transform.position = (Vector3)h_mapIndxToPt[new Vector2(j,k)];
-					hiddenSphereList.Add(clone1);
-				}
-			}
-		}
-	}
-	private void placeAgent(sbyte[,] shadowArrayNext,int j,int k)
-	{
-		int rowJ = j;
-		int colK = k;
-		standardMaxMovement = speedEnemy*(m_stepDistance/speedPlayer);
-		Vector3 currPos = ((Vector3)h_mapIndxToPt[new Vector2(j,k)]);
-		List<Vector2> listOfAvailablePos = new List<Vector2> ();
-
-
-		bool runAgain = true;
-
-		if(shadowArrayNext[j,k]==0)
-		{
-			listOfAvailablePos.Add(new Vector2(j,k));
-		}
-		while(runAgain)
-		{
-			runAgain = false;
-			rowJ--;
-			colK--;
-			int rowLen = (j - rowJ)*2 +1;
-			if(rowJ<0 || colK<0 || rowJ+rowLen>discretePtsX || colK+rowLen>discretePtsZ)
-				break;
-			int centralityIndxTemp = 0;
-			int antiCentralityIndxTemp = 0;
-			for(int i1=rowJ;i1<rowLen;i1++)
-			{
-				if(shadowArrayNext[i1,colK]==0 && Vector3.Distance(currPos,(Vector3)h_mapIndxToPt[new Vector2(i1,colK)])<=standardMaxMovement)
-				{
-					runAgain = true;
-					listOfAvailablePos.Add(new Vector2(i1,colK));
-				}
-				if(shadowArrayNext[i1,colK+rowLen-1]==0 && Vector3.Distance(currPos,(Vector3)h_mapIndxToPt[new Vector2(i1,colK+rowLen-1)])<=standardMaxMovement)
-				{
-					runAgain = true;
-					listOfAvailablePos.Add(new Vector2(i1,colK+rowLen-1));
-				}
-			}
-			for(int i2=colK+1;i2<rowLen-1;i2++)
-			{
-				if(shadowArrayNext[rowJ,i2]==0 && Vector3.Distance(currPos,(Vector3)h_mapIndxToPt[new Vector2(rowJ,i2)])<=standardMaxMovement)
-				{
-					runAgain = true;
-					listOfAvailablePos.Add(new Vector2(rowJ,i2));
-				}
-				if(shadowArrayNext[rowJ+rowLen-1,i2]==0 && Vector3.Distance(currPos,(Vector3)h_mapIndxToPt[new Vector2(rowJ+rowLen-1,i2)])<=standardMaxMovement)
-				{
-					runAgain = true;
-					listOfAvailablePos.Add(new Vector2(rowJ+rowLen-1,i2));
-				}
-			}
-		}
-		//Selecting a random pos
-		int selIndx = (int)Random.Range (0, listOfAvailablePos.Count - 1);
-		shadowArrayNext [(int)listOfAvailablePos [selIndx].x, (int)listOfAvailablePos [selIndx].y] = 9;
-	}
 }
-#endif
+	#endif

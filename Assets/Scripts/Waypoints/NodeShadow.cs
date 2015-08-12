@@ -19,6 +19,7 @@ public class NodeShadow
 		children = new List<NodeShadow> ();
 		minDistFromHead = -1.0f;
 		parentSelected = null;
+		canReachIndex = -1;
 	}
 	public NodeShadow (Vector3 pt)
 	{
@@ -28,6 +29,7 @@ public class NodeShadow
 		children = new List<NodeShadow> ();
 		minDistFromHead = -1.0f;
 		parentSelected = null;
+		canReachIndex = -1;
 	}
 	public void addChild(NodeShadow nodeChild)
 	{
@@ -89,6 +91,15 @@ public class NodeShadow
 	{
 		return parentSelected;
 	}
+	public void setCanReachLimit(int endIndx)
+	{
+		if(canReachIndex<0)
+			canReachIndex = endIndx;
+	}
+	public int getCanReachLimit()
+	{
+		return canReachIndex;
+	}
 
 	Vector3 currPt;
 	List<NodeShadow> children;
@@ -96,6 +107,7 @@ public class NodeShadow
 	int safetyLevel;//The index of path point of player for when this node is safe
 	float minDistFromHead;
 	NodeShadow parentSelected;
+	int canReachIndex;
 }
 
 

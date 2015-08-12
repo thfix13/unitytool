@@ -12,6 +12,32 @@ using System.Collections.Generic;
 public static class CommonMyScene1
 {
 	static float stepPath = 0.16f;
+	public static List<Vector3> definePathFromIndx(int pathIndx)
+	{
+		//List<Vector3> pathPts = new List<Vector3> ();
+		GameObject sp = (GameObject)GameObject.Find ("StartPoint");
+		GameObject ep = (GameObject)GameObject.Find ("EndPoint");
+		//pathPts.Add(sp.transform.position);
+		
+		
+		List<Vector3> wayPoints = createWayPoints (sp.transform.position,ep.transform.position);
+		
+		List<Vector3> pathPts = new List<Vector3>();
+		if(pathIndx==1)
+		{
+			pathPts = selectPath1(wayPoints);
+		}
+		else if(pathIndx==2)
+		{
+			pathPts = selectPath2(wayPoints);
+		}
+		else if(pathIndx==3)
+		{
+			pathPts = selectPath3(wayPoints);
+		}
+		createPathPoints (pathPts);
+		return pathPts;
+	}
 	public static List<Vector3> definePath()
 	{
 		//List<Vector3> pathPts = new List<Vector3> ();
