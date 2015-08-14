@@ -7,7 +7,6 @@ using System.Linq;
 using Vectrosity; 
 using EditorArea;
 using ClusteringSpace;
-using EditorArea;
 
 public class AreaDist
 {
@@ -46,8 +45,8 @@ public class AreaDist
 	public static double areaFromInterpolation3D(Path path1, Path path2)
 	{
 		int numberLines = 20;
-		Vector3[] set1 = MapperWindowEditor.GetSetPointsWithN(path1.getPoints3D(), numberLines); 
-		Vector3[] set2 = MapperWindowEditor.GetSetPointsWithN(path2.getPoints3D(), numberLines); 
+		Vector3[] set1 = ClusteringEditorWindow.GetSetPointsWithN(path1.getPoints3D(), numberLines); 
+		Vector3[] set2 = ClusteringEditorWindow.GetSetPointsWithN(path2.getPoints3D(), numberLines); 
 		
 		// shape formed from set1[i], set1[i+1] to set2[i], set2[i+1]
 		double area = 0.0;
@@ -79,7 +78,7 @@ public class AreaDist
 		if(g != null)
 		{
 			Triangulation tObject = g.GetComponent<Triangulation>(); 
-			float area = tObject.TriangulationCurves(path1.getPoints3D(), path2.getPoints3D(),MapperWindowEditor.only2DTriangulation);
+			float area = tObject.TriangulationCurves(path1.getPoints3D(), path2.getPoints3D(),ClusteringEditorWindow.only2DTriangulation);
 //			Debug.Log("A: "+area);
 			return area;
 		}

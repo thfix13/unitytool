@@ -128,9 +128,9 @@ namespace ClusteringSpace
 			if (distMetric == (int)Metrics.Frechet || distMetric == (int)Metrics.Hausdorff)
 			{
 				numSelectedDimensions = 0;
-				for (int dim = 0; dim < MapperWindowEditor.dimensionEnabled.Count(); dim ++)
+				for (int dim = 0; dim < ClusteringEditorWindow.dimensionEnabled.Count(); dim ++)
 				{
-					if (MapperWindowEditor.dimensionEnabled[dim])
+					if (ClusteringEditorWindow.dimensionEnabled[dim])
 					{
 						numSelectedDimensions ++;
 					}
@@ -199,9 +199,9 @@ namespace ClusteringSpace
 				{
 					double[] curve = new double[numSelectedDimensions];
 					int curvePos = 0;
-					for (int j = 0; j < MapperWindowEditor.dimensionEnabled.Count(); j ++)
+					for (int j = 0; j < ClusteringEditorWindow.dimensionEnabled.Count(); j ++)
 					{
-						if (MapperWindowEditor.dimensionEnabled[j])
+						if (ClusteringEditorWindow.dimensionEnabled[j])
 						{
 							if (j == (int)Dimensions.X) curve[curvePos] = path1.points[i].xD;
 							else if (j == (int)Dimensions.Y) curve[curvePos] = path1.points[i].yD;
@@ -220,9 +220,9 @@ namespace ClusteringSpace
 				{
 					double[] curve = new double[numSelectedDimensions];
 					int curvePos = 0;
-					for (int j = 0; j < MapperWindowEditor.dimensionEnabled.Count(); j ++)
+					for (int j = 0; j < ClusteringEditorWindow.dimensionEnabled.Count(); j ++)
 					{
-						if (MapperWindowEditor.dimensionEnabled[j])
+						if (ClusteringEditorWindow.dimensionEnabled[j])
 						{
 							if (j == (int)Dimensions.X) curve[curvePos] = path2.points[i].xD;
 							else if (j == (int)Dimensions.Y) curve[curvePos] = path2.points[i].yD;

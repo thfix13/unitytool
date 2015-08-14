@@ -19,18 +19,15 @@ namespace ClusteringSpace
 		public Vector2 startPos = new Vector2();
 		public List<Line> obstacles = new List<Line>();
 		public List<Line> smallerObstacles = new List<Line>();
-		
-		public static Vector2 zero = new Vector2 ();
-		public static Vector2 tileSize = new Vector2 ();
-		
+				
 		public const int OBSTACLE_LAYER = 8;
 				
-		public void loadPlatformerLevel()
+		public void loadPlatformerLevel(String path)
 		{
 			// load the level information (currently just floor pos + scale)
 			XmlSerializer ser = new XmlSerializer (typeof(PlatformerLevelInfo));
 			PlatformerLevelInfo loaded = null;
-			using (FileStream stream = new FileStream ("batchpaths/levelinfo.xml", FileMode.Open)) {
+			using (FileStream stream = new FileStream (path + "/levelinfo.xml", FileMode.Open)) {
 				loaded = (PlatformerLevelInfo)ser.Deserialize (stream);
 				stream.Close ();
 			}
@@ -44,6 +41,7 @@ namespace ClusteringSpace
 			{
 			    GameObject.DestroyImmediate(levelObj.transform.GetChild(i).gameObject);
 			}
+			levelObj.transform.position = new Vector3(0, 0, 0);
 			
 			// add new floor!
 			GameObject templateWall = GameObject.Find("TemplateWall");
@@ -53,10 +51,8 @@ namespace ClusteringSpace
 				GameObject wall = wallTransform.gameObject;
 				wall.name = "Platform";
 				wall.tag = "Platform";
-			//	floorScales[count].x *= tileSize.x;
-			//	floorScales[count].y *= tileSize.y;
-				wall.transform.position = new Vector3((floorPositions[count].x) * tileSize.x + zero.x, 0, floorPositions[count].y * tileSize.y + zero.y);
-				wall.transform.localScale = new Vector3(floorScales[count].x*tileSize.x, 3, floorScales[count].y*tileSize.y);
+				wall.transform.position = new Vector3((floorPositions[count].x), 0, floorPositions[count].y);
+				wall.transform.localScale = new Vector3(floorScales[count].x, 3, floorScales[count].y);
 				wall.transform.parent = levelObj.transform;
 				wall.SetActive(true);
 			}
@@ -90,6 +86,26 @@ namespace ClusteringSpace
 				}
 			}
 		}
+
+		public void loadPuzzleLevel(String path)
+		{
+			// load the level information (currently just floor pos + scale)
+			XmlSerializer ser = new XmlSerializer (typeof(PuzzleLevelInfo));
+			PuzzleLevelInfo loaded = null;
+			using (FileStream stream = new FileStream (path + "/levelinfo.xml", FileMode.Open)) {
+				loaded = (PuzzleLevelInfo)ser.Deserialize (stream);
+				stream.Close ();
+			}
+			startPos = loaded.startPos;
+			
+			// destroy current floor
+			GameObject levelObj = GameObject.Find("Level"); 
+			for (int i = levelObj.transform.childCount - 1; i > -1; i--)
+			{
+			    GameObject.DestroyImmediate(levelObj.transform.GetChild(i).gameObject);
+			}
+			levelObj.transform.position = new Vector3(0, 0, 0);
+		}
 		
 		public void loadStealthLevel()
 		{
@@ -110,8 +126,6 @@ namespace ClusteringSpace
 			{
 		        if (obj.gameObject.layer == OBSTACLE_LAYER)
 		        {
-//					floorPositions.Add(new Vector2(obj.localPosition.x / tileSize.x - zero.x, obj.localPosition.z / tileSize.x - zero.y));
-//					floorScales.Add(new Vector2(obj.localScale.x / tileSize.x, obj.localScale.z / tileSize.y));
 					floorPositions.Add(new Vector2(obj.localPosition.x, obj.localPosition.z));
 					floorScales.Add(new Vector2(obj.localScale.x, obj.localScale.z));
 			//		Debug.Log("Obs found");

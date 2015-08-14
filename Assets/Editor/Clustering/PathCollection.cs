@@ -93,7 +93,7 @@ namespace ClusteringSpace
 			
 			for (int i = 0; i < interpolatedPaths.Count; i ++)
 			{ // make each path have same # of points
-				Vector3[] set1 = MapperWindowEditor.GetSetPointsWithN(interpolatedPaths[i].getPoints3D(), (int)(Math.Sqrt(maxTime)), false);
+				Vector3[] set1 = ClusteringEditorWindow.GetSetPointsWithN(interpolatedPaths[i].getPoints3D(), (int)(Math.Sqrt(maxTime)), false);
 	//			Debug.Log("Paths now have " + Math.Sqrt(maxTime) + " points.");
 				interpolatedPaths[i].points = new List<Node>();
 				foreach(Vector3 v in set1)
@@ -157,7 +157,7 @@ namespace ClusteringSpace
 
         public void UpdateCentroid()
         {	
-	/*		if (MapperWindowEditor.altCentroidComp)
+	/*		if (ClusteringEditorWindow.altCentroidComp)
 			{
 				Node[] nodes = new Node[this[0].points.Count()];
 				for (int count = 0; count < this[0].points.Count(); count ++)
@@ -190,11 +190,11 @@ namespace ClusteringSpace
 				int pIndex = -1;
 				for (int i = 0; i < this.Count; i ++)
 				{
-					if (MapperWindowEditor.clustAlg == 0 && KMeans.weights.Count() < Convert.ToInt32(this[i].name))
+					if (ClusteringEditorWindow.clustAlg == 0 && KMeans.weights.Count() < Convert.ToInt32(this[i].name))
 					{
 						Debug.Log("KMeans.weights size: " + KMeans.weights.Count() + " but need index " + Convert.ToInt32(this[i].name));
 					}
-					double weightOfI = (MapperWindowEditor.clustAlg == 0 ? KMeans.weights[Convert.ToInt32(this[i].name)] : 1.0);
+					double weightOfI = (ClusteringEditorWindow.clustAlg == 0 ? KMeans.weights[Convert.ToInt32(this[i].name)] : 1.0);
 					double currentPathTotalMinDist = 0;
 					for (int j = 0; j < this.Count; j ++)
 					{

@@ -29,6 +29,15 @@ namespace ClusteringSpace
         public Vector2[] floorScales;
 		public Vector2 startPos;
     }
+	
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Xml", "4.0.30319.17020")]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+	[Serializable, XmlRoot("LevelInfo")]
+	public partial class PuzzleLevelInfo
+	{
+		public Vector2 startPos;
+    }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Xml", "4.0.30319.17020")]
     [System.Diagnostics.DebuggerStepThroughAttribute()]
