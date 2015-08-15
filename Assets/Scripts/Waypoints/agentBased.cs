@@ -59,11 +59,12 @@ public partial class Visibility1 : MonoBehaviour
 	private void fillNextLevel(sbyte[,] shadowArrayNext,Hashtable nodeTable,Hashtable parentTable,int level)
 	{
 		int fillingCurrentCount = 1;
-		//int numRuns = 1000;
-		while(parentTable.Keys.Count>0)// && numRuns-->0)
+		int numRuns = 1000;
+		while(parentTable.Keys.Count>0 && numRuns-->0)
 		{
 			bool bStartAgain = false;
 			int leastFilledCount = -1;
+			Vector2 keySelected = new Vector2();
 			foreach(Vector2 key in parentTable.Keys)
 			{
 				//Vector2 key = (Vector2)parentTable.Keys[i];
@@ -82,11 +83,13 @@ public partial class Visibility1 : MonoBehaviour
 						if(NotFilledCount<leastFilledCount)
 						{
 							leastFilledCount = NotFilledCount;
+							keySelected = key;
 						}
 					}
 					else
 					{
 						leastFilledCount = NotFilledCount;
+						keySelected = key;
 					}
 				}
 			}
@@ -96,10 +99,20 @@ public partial class Visibility1 : MonoBehaviour
 				Debug.Log("leastFilledCount = "+leastFilledCount);
 				break;
 			}
-			//Debug.Log("level = "+level);
-			//Debug.Log("leastFilledCount = "+leastFilledCount);
+			Debug.Log("level = "+level);
+			Debug.Log("leastFilledCount = "+leastFilledCount);
+			int sel = (int)Random.Range(0,((List<AgentNode>)parentTable[keySelected]).Count-1);
+			AgentNode nodeSel= ((List<AgentNode>)parentTable[keySelected])[sel];
+			while(nodeSel.getFillStatus())
+			{
+				sel = (int)Random.Range(0,((List<AgentNode>)parentTable[keySelected]).Count-1);
+				nodeSel= ((List<AgentNode>)parentTable[keySelected])[sel];
+			}
+			nodeSel.fillNode();
+			parentTable.Remove(keySelected);
+
 			//found leastFilledCount;
-			foreach(Vector2 key in parentTable.Keys)
+			/*foreach(Vector2 key in parentTable.Keys)
 			{
 				//Vector2 key = (Vector2)parentTable.Keys[i];
 				int NotFilledCount=0;
@@ -124,7 +137,7 @@ public partial class Visibility1 : MonoBehaviour
 					bStartAgain = true;
 					break;
 				}
-			}
+			}*/
 			Debug.Log("parentTable.Keys.Count = "+parentTable.Keys.Count);
 			//if(!bStartAgain)
 				//fillingCurrentCount++;

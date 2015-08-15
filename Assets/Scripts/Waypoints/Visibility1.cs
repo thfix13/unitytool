@@ -117,7 +117,7 @@ public partial class Visibility1 : MonoBehaviour {
 	bool bTestingMGS2 = false;
 	bool bTestingChung = false;
 	bool bTestingMyScene1 = false;
-
+	bool bTestingMyCrash = false;
 	void Start () 
 	{
 		//testFunc();
@@ -127,9 +127,9 @@ public partial class Visibility1 : MonoBehaviour {
 
 		spTemp = (GameObject)GameObject.Find ("StartPoint");
 		allLineParent = GameObject.Find ("allLineParent") as GameObject;
-		globalPolygon = getObstacleEdges ();
 		string[] sceneName = EditorApplication.currentScene.Split(char.Parse("/"));
 		currSceneName = sceneName[sceneName.Length -1];
+		globalPolygon = getObstacleEdges ();
 		fileLastCaseExecutedFor = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop)+"\\lastCaseExecutedFor1.txt";
 		fileTimings = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop)+"\\timingScene1.txt";
 		filePoints = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop)+"\\pointsScene1.txt";
@@ -139,7 +139,25 @@ public partial class Visibility1 : MonoBehaviour {
 			setUpMultiplePaths();
 			return;
 		}
-		if(currSceneName=="myScene1.unity")
+		if(currSceneName=="myCrash.unity")
+		{
+			pathPoints = CommonCrash.definePath ();
+			m_stepDistance = CommonCrash.getStepDistance();
+			if(bTestingMyCrash)
+			{
+				setGlobalVars1();
+				CalculateVisibilityForPath();
+				foreach(Vector3 vect in pathPoints)
+				{
+					GameObject pathObj;
+					pathObj = Instantiate(pathSphere, 
+					                      vect, 
+					                      pathSphere.transform.rotation) as GameObject;
+				}
+				return;
+			}
+		}
+		else if(currSceneName=="myScene1.unity")
 		{
 			pathPoints = CommonMyScene1.definePath ();
 			m_stepDistance = CommonMyScene1.getStepDistance();
@@ -631,7 +649,7 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			return;
 		}
-		if(bTestingMGS || bTestingChung || bTestingMyScene1)
+		if(bTestingMGS || bTestingChung || bTestingMyScene1 || bTestingMyCrash)
 		{
 			/*Vector3 pt4 = new Vector3(-9.9f,1.0f,-6.5f);
 			bool ptInShad = pointInShadow(pt4,nextPlayerPath);
@@ -4357,6 +4375,8 @@ public partial class Visibility1 : MonoBehaviour {
 		//Compute one step of the discritzation
 		//Find this is the view
 		floor = (GameObject)GameObject.Find ("Floor");
+
+
 		
 		Vector3 [] vertex = new Vector3[4]; 
 		
@@ -4395,6 +4415,12 @@ public partial class Visibility1 : MonoBehaviour {
 		
 		for (int i = 0; i < 4; i++) {
 			mapBoundary [i] = vertex [i];
+		}
+		if(currSceneName=="myCrash.unity")
+		{
+			obsGeos.Clear();
+			drawingFromFile_LevelCrash();
+			return obsGeos;
 		}
 		
 		//Geometry mapBG = new Geometry (); 

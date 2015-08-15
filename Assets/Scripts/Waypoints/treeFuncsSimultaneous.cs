@@ -136,7 +136,7 @@ public partial class Visibility1 : MonoBehaviour
 			//Debug.Log("Possible Child 2 = "+tempVect3);
 			if(bMultiplePaths)
 			{
-				if(pointInShadowMultiplePaths(tempVect3,pathPointIndx) && Vector3.Distance(node.getPos(),tempVect3)<=standardMaxMovement)
+				if(pointInShadowMultiplePaths(tempVect3,pathPointIndx) && Vector3.Distance(node.getPos(),tempVect3)<=standardMaxMovement  && CheckStraightLineVisibility(node.getPos(),tempVect3))
 				{
 					NodeShadow nodeChild;
 					if(h_mapPtToNode.ContainsKey(tempVect3))
@@ -160,7 +160,7 @@ public partial class Visibility1 : MonoBehaviour
 			}
 			else
 			{
-				if(pointInShadow(tempVect3,pathPointIndx) && Vector3.Distance(node.getPos(),tempVect3)<=standardMaxMovement)
+				if(pointInShadow(tempVect3,pathPointIndx) && Vector3.Distance(node.getPos(),tempVect3)<=standardMaxMovement && CheckStraightLineVisibility(node.getPos(),tempVect3))
 				{
 					NodeShadow nodeChild;
 					if(h_mapPtToNode.ContainsKey(tempVect3))
@@ -184,6 +184,25 @@ public partial class Visibility1 : MonoBehaviour
 			}
 		}
 		return false;
+	}
+	private bool CheckStraightLineVisibility(Vector3 pPoint,Vector3 vect)
+	{
+		Line longRayLine = new Line(pPoint,vect);
+
+		//Find intersection points for longRayLine
+		List<Vector3> intersectionPoints = new List<Vector3>();
+		//Intersection with holes
+		foreach (Geometry g in globalPolygon) 
+		{
+			foreach(Line l in g.edges)
+			{
+				if(l.LineIntersectMuntacEndPt(longRayLine)!=0)
+				{
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 	private void reachableChildren2(NodeShadow node,Vector2 indexOfPt,int pathPointIndx,Hashtable h_mapPtToNode)
 	{
