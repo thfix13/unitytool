@@ -188,11 +188,13 @@ public partial class Visibility1 : MonoBehaviour
 	private bool CheckStraightLineVisibility(Vector3 pPoint,Vector3 vect)
 	{
 		Line longRayLine = new Line(pPoint,vect);
-
+		List<Geometry> allGeometries = new List<Geometry>();
+		allGeometries.Add (mapBG);
+		allGeometries.AddRange(globalPolygon);
 		//Find intersection points for longRayLine
 		List<Vector3> intersectionPoints = new List<Vector3>();
 		//Intersection with holes
-		foreach (Geometry g in globalPolygon) 
+		foreach (Geometry g in allGeometries) 
 		{
 			foreach(Line l in g.edges)
 			{
