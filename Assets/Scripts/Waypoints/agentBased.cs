@@ -44,6 +44,7 @@ public partial class Visibility1 : MonoBehaviour
 			}
 			//completed Hashtables
 			fillNextLevel(shadowArrayNext,nodeTable,parentTable,i);
+
 		}
 		//shadowArrayNext = (sbyte[,])h_discreteShadows [pathPoints [2]];
 		//shadowArrayPrev = (sbyte[,])h_discreteShadows [pathPoints [pathPoints.Count-1]];
@@ -59,22 +60,57 @@ public partial class Visibility1 : MonoBehaviour
 	private void fillNextLevel(sbyte[,] shadowArrayNext,Hashtable nodeTable,Hashtable parentTable,int level)
 	{
 		int fillingCurrentCount = 1;
-		int numRuns = 1000;
-		while(parentTable.Keys.Count>0 && numRuns-->0)
+		int numRuns = 10;
+		List<AgentNode> listToRemovedAgentNodes;
+		while(parentTable.Keys.Count>0)// && numRuns-->0)
 		{
 			bool bStartAgain = false;
 			int leastFilledCount = -1;
 			Vector2 keySelected = new Vector2();
+			List<Vector2> listTobeRemoved = new List<Vector2>();
+			/*int NotFilledCount=0;
+			foreach(Vector2 key in parentTable.Keys)
+			{
+				NotFilledCount=0;
+				foreach(AgentNode node in (List<AgentNode>)parentTable[key])
+				{
+					if(!node.getFillStatus())
+					{
+						NotFilledCount++;
+						break;
+					}
+				}
+				if(NotFilledCount>0)
+				{
+					keySelected = key;
+					break;
+				}
+				else
+				{
+					listTobeRemoved.Add(key);
+				}
+			}
+			if(NotFilledCount==0)
+				break;*/
 			foreach(Vector2 key in parentTable.Keys)
 			{
 				//Vector2 key = (Vector2)parentTable.Keys[i];
 				int NotFilledCount=0;
+				listToRemovedAgentNodes = new List<AgentNode>();
 				foreach(AgentNode node in (List<AgentNode>)parentTable[key])
 				{
 					if(!node.getFillStatus())
 					{
 						NotFilledCount++;
 					}
+					else
+					{
+						listToRemovedAgentNodes.Add(node);
+					}
+				}
+				foreach(AgentNode node in listToRemovedAgentNodes)
+				{
+					((List<AgentNode>)parentTable[key]).Remove(node);
 				}
 				if(NotFilledCount>0)
 				{
@@ -92,22 +128,52 @@ public partial class Visibility1 : MonoBehaviour
 						keySelected = key;
 					}
 				}
+				else
+				{
+					listTobeRemoved.Add(key);
+				}
 			}
+
 			if(leastFilledCount<0)
 			{
 				Debug.Log("level = "+level);
 				Debug.Log("leastFilledCount = "+leastFilledCount);
 				break;
 			}
-			Debug.Log("level = "+level);
-			Debug.Log("leastFilledCount = "+leastFilledCount);
-			int sel = (int)Random.Range(0,((List<AgentNode>)parentTable[keySelected]).Count-1);
-			AgentNode nodeSel= ((List<AgentNode>)parentTable[keySelected])[sel];
-			while(nodeSel.getFillStatus())
+			foreach(Vector2 vect in listTobeRemoved)
 			{
-				sel = (int)Random.Range(0,((List<AgentNode>)parentTable[keySelected]).Count-1);
-				nodeSel= ((List<AgentNode>)parentTable[keySelected])[sel];
+				parentTable.Remove(vect);
 			}
+			//Debug.Log("level = "+level);
+			//Debug.Log("leastFilledCount = "+leastFilledCount);
+			listToRemovedAgentNodes = new List<AgentNode>();
+			foreach(AgentNode node in (List<AgentNode>)parentTable[keySelected])
+			{
+				if(node.getFillStatus())
+				{
+					listToRemovedAgentNodes.Add(node);
+				}
+			}
+			foreach(AgentNode node in listToRemovedAgentNodes)
+			{
+				((List<AgentNode>)parentTable[keySelected]).Remove(node);
+			}
+			int sel = (int)Random.Range(0,((List<AgentNode>)parentTable[keySelected]).Count-1);
+			//Debug.Log("sel = "+sel);
+			//int sel = 0;
+			AgentNode nodeSel= ((List<AgentNode>)parentTable[keySelected])[sel];
+
+			/*while(true)
+			{
+				//sel = (int)Random.Range(0,((List<AgentNode>)parentTable[keySelected]).Count-1);
+				//Debug.Log("sel = "+sel);
+				if(!nodeSel.getFillStatus())
+					break;
+				sel++;
+				nodeSel= ((List<AgentNode>)parentTable[keySelected])[sel];
+
+			}
+			Debug.Log("Now selected = "+(sel));*/
 			nodeSel.fillNode();
 			parentTable.Remove(keySelected);
 
@@ -138,7 +204,7 @@ public partial class Visibility1 : MonoBehaviour
 					break;
 				}
 			}*/
-			Debug.Log("parentTable.Keys.Count = "+parentTable.Keys.Count);
+			//Debug.Log("parentTable.Keys.Count = "+parentTable.Keys.Count);
 			//if(!bStartAgain)
 				//fillingCurrentCount++;
 		}
@@ -192,12 +258,14 @@ public partial class Visibility1 : MonoBehaviour
 				break;
 			for(int i1=rowJ;i1<rowJ+rowLen;i1++)
 			{
-				if(shadowArrayNext[i1,colK]==0 && Vector3.Distance(currPos,(Vector3)h_mapIndxToPt[new Vector2(i1,colK)])<=standardMaxMovement)
+				Vector3 vectPos = (Vector3)h_mapIndxToPt[new Vector2(i1,colK)];
+				if(shadowArrayNext[i1,colK]==0 && Vector3.Distance(currPos,vectPos)<=standardMaxMovement && CheckStraightLineVisibility(currPos,vectPos))
 				{
 					runAgain = true;
 					listOfAvailablePos.Add(new Vector2(i1,colK));
 				}
-				if(shadowArrayNext[i1,colK+rowLen-1]==0 && Vector3.Distance(currPos,(Vector3)h_mapIndxToPt[new Vector2(i1,colK+rowLen-1)])<=standardMaxMovement)
+				vectPos = (Vector3)h_mapIndxToPt[new Vector2(i1,colK+rowLen-1)];
+				if(shadowArrayNext[i1,colK+rowLen-1]==0 && Vector3.Distance(currPos,vectPos)<=standardMaxMovement && CheckStraightLineVisibility(currPos,vectPos))
 				{
 					runAgain = true;
 					listOfAvailablePos.Add(new Vector2(i1,colK+rowLen-1));
@@ -205,12 +273,14 @@ public partial class Visibility1 : MonoBehaviour
 			}
 			for(int i2=colK+1;i2<colK+rowLen-1;i2++)
 			{
-				if(shadowArrayNext[rowJ,i2]==0 && Vector3.Distance(currPos,(Vector3)h_mapIndxToPt[new Vector2(rowJ,i2)])<=standardMaxMovement)
+				Vector3 vectPos = (Vector3)h_mapIndxToPt[new Vector2(rowJ,i2)];
+				if(shadowArrayNext[rowJ,i2]==0 && Vector3.Distance(currPos,vectPos)<=standardMaxMovement && CheckStraightLineVisibility(currPos,vectPos))
 				{
 					runAgain = true;
 					listOfAvailablePos.Add(new Vector2(rowJ,i2));
 				}
-				if(shadowArrayNext[rowJ+rowLen-1,i2]==0 && Vector3.Distance(currPos,(Vector3)h_mapIndxToPt[new Vector2(rowJ+rowLen-1,i2)])<=standardMaxMovement)
+				vectPos = (Vector3)h_mapIndxToPt[new Vector2(rowJ+rowLen-1,i2)];
+				if(shadowArrayNext[rowJ+rowLen-1,i2]==0 && Vector3.Distance(currPos,vectPos)<=standardMaxMovement && CheckStraightLineVisibility(currPos,vectPos))
 				{
 					runAgain = true;
 					listOfAvailablePos.Add(new Vector2(rowJ+rowLen-1,i2));

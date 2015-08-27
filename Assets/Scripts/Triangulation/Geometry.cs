@@ -82,7 +82,7 @@ public class Geometry
 		//Line lray = new Line(pt, new Vector3(-100,1,-100)); 
 		int count = 0;
 		List<Line> lRayList = new List<Line> ();
-		int extreme = 100;
+		int extreme = 500;
 		lRayList.Add (new Line (pt, new Vector3 (-extreme, 1,-extreme)));
 		lRayList.Add (new Line (pt, new Vector3 (extreme, 1, -extreme)));
 		lRayList.Add (new Line (pt, new Vector3 (extreme, 1, extreme)));

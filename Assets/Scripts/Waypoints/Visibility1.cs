@@ -118,10 +118,13 @@ public partial class Visibility1 : MonoBehaviour {
 	bool bTestingChung = false;
 	bool bTestingMyScene1 = false;
 	bool bTestingMyCrash = false;
+	bool bJustTestCrashNow = false;
 	void Start () 
 	{
 		//testFunc();
 		//return;
+
+
 		radius_enemy = ((CapsuleCollider)enemyPrefab.GetComponent<Collider>()).radius*((CapsuleCollider)enemyPrefab.GetComponent<Collider>()).transform.lossyScale.x;
 		//Debug.Log ("radius_enemy = "+radius_enemy);
 
@@ -139,22 +142,65 @@ public partial class Visibility1 : MonoBehaviour {
 			setUpMultiplePaths();
 			return;
 		}
-		if(currSceneName=="myCrash.unity")
+		float playerScaleForCrash = 2.5f;
+		if(currSceneName=="Crash.unity")
 		{
+			//Debug.Log("Before changing radius = "+radius_enemy);
+			radius_enemy*=playerScaleForCrash;
+			//Debug.Log("After changing radius = "+radius_enemy);
+
 			pathPoints = CommonCrash.definePath ();
 			m_stepDistance = CommonCrash.getStepDistance();
-			if(bTestingMyCrash)
+			m_step = m_stepDistance/2;
+			//***********************************************************************
+			if(false)
 			{
-				setGlobalVars1();
-				CalculateVisibilityForPath();
-				foreach(Vector3 vect in pathPoints)
+			int totalVertices = 0;
+			totalVertices+=mapBG.edges.Count;
+			int itr9=0;
+			while(itr9<totalVertices)
+			{
+				GameObject allLineParentTemp = new GameObject();
+				LineRenderer line1 = allLineParentTemp.AddComponent<LineRenderer> ();
+				line1.material = mat;
+				line1.SetWidth (0.3f, 0.3f);
+				//line1.SetColors(Color.blue,Color.blue);
+				line1.SetVertexCount (2);
+				line1.SetPosition (0, mapBG.edges[itr9].vertex [0]);
+				line1.SetPosition (1, mapBG.edges[itr9].vertex [1]);
+				itr9++;
+			}
+			totalVertices=0;
+
+			for(int i=0;i<globalPolygon.Count;i++)
+			{
+				totalVertices+=globalPolygon[i].edges.Count;
+			}
+			for(int i=0;i<globalPolygon.Count;i++)
+			{
+				foreach(Line l in globalPolygon[i].edges)
 				{
-					GameObject pathObj;
-					pathObj = Instantiate(pathSphere, 
-					                      vect, 
-					                      pathSphere.transform.rotation) as GameObject;
+					GameObject allLineParentTemp = new GameObject();
+					LineRenderer line1 = allLineParentTemp.AddComponent<LineRenderer> ();
+					line1.material = mat;
+					line1.SetWidth (0.3f, 0.3f);
+					line1.SetVertexCount (2);
+					line1.SetPosition (0, l.vertex [0]);
+					line1.SetPosition (1, l.vertex [1]);
+
 				}
-				return;
+			}
+				if(bJustTestCrashNow)
+				{
+					foreach(Vector3 vect in pathPoints)
+					{
+						GameObject pathObj;
+						pathObj = Instantiate(pathSphere, 
+						                      vect, 
+						                      pathSphere.transform.rotation) as GameObject;
+					}
+					return;
+				}
 			}
 		}
 		else if(currSceneName=="myScene1.unity")
@@ -254,7 +300,8 @@ public partial class Visibility1 : MonoBehaviour {
 		if(m_ExecuteTrueCase)
 		{
 			CalculateVisibilityForPath ();
-			executeTrueCase2();
+			//executeTrueCase2();
+			executeTrueCase3();
 			return;
 		}
 		if(m_CalculateTrueCase)
@@ -265,7 +312,57 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		if(m_ShowTrueCase)
 		{
+
+			if(currSceneName=="Crash.unity")
+			{
+
+					int totalVertices = 0;
+					totalVertices+=mapBG.edges.Count;
+					int itr9=0;
+					while(itr9<totalVertices)
+					{
+						GameObject allLineParentTemp = new GameObject();
+						LineRenderer line1 = allLineParentTemp.AddComponent<LineRenderer> ();
+						line1.material = mat;
+						line1.SetWidth (0.3f, 0.3f);
+						//line1.SetColors(Color.blue,Color.blue);
+						line1.SetVertexCount (2);
+						line1.SetPosition (0, mapBG.edges[itr9].vertex [0]);
+						line1.SetPosition (1, mapBG.edges[itr9].vertex [1]);
+						itr9++;
+					}
+					totalVertices=0;
+					
+					for(int i=0;i<globalPolygon.Count;i++)
+					{
+						totalVertices+=globalPolygon[i].edges.Count;
+					}
+					for(int i=0;i<globalPolygon.Count;i++)
+					{
+						foreach(Line l in globalPolygon[i].edges)
+						{
+							GameObject allLineParentTemp = new GameObject();
+							LineRenderer line1 = allLineParentTemp.AddComponent<LineRenderer> ();
+							line1.material = mat;
+							line1.SetWidth (0.3f, 0.3f);
+							line1.SetVertexCount (2);
+							line1.SetPosition (0, l.vertex [0]);
+							line1.SetPosition (1, l.vertex [1]);
+							
+						}
+					}
+				
+			}
 			displayPredictedPaths3();
+
+
+			foreach(Vector3 vect in pathPoints)
+			{
+				GameObject pathObj;
+				pathObj = Instantiate(pathSphere, 
+				                      vect, 
+				                      pathSphere.transform.rotation) as GameObject;
+			}
 			return;
 		}
 		/////////////////////////////////////////////////////////
@@ -288,6 +385,17 @@ public partial class Visibility1 : MonoBehaviour {
 		CalculateVisibilityForPath ();
 		shadowMeshes = new List<GameObject>();
 		playerObj = Instantiate(playerPrefab) as GameObject;
+
+		if(currSceneName=="Crash.unity")
+		{
+			Vector3 lscale= playerObj.transform.localScale;
+			lscale.x*=playerScaleForCrash;
+			lscale.y*=playerScaleForCrash;
+			lscale.z*=playerScaleForCrash;
+			Renderer rend = playerObj.GetComponent<Renderer>();
+			rend.transform.localScale = lscale;
+		}
+
 		playerObj.transform.position = pathPoints [0];
 		/*foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[0]]).edges)
 		{
@@ -598,6 +706,7 @@ public partial class Visibility1 : MonoBehaviour {
 		currRunTimeEnemny = Time.time;
 		currRunPointsEnemy = 0.0f;
 	}
+	public Material matGreen;
 	//Distance moved by player on each update;
 	float distBtwPlayerMovements = -1.0f;
 	bool bSlowShadowsDown = false;
@@ -606,6 +715,11 @@ public partial class Visibility1 : MonoBehaviour {
 	int bShowJustVisibilityPolyForIndex = 53;
 	void Update () 
 	{
+		if(bJustTestCrashNow && currSceneName=="Crash.unity")
+		{
+			return;
+		}
+
 		if(bMultiplePaths)
 		{
 			UpdateMultiplePaths();
@@ -632,7 +746,7 @@ public partial class Visibility1 : MonoBehaviour {
 				return;
 		if (bAgentBasedAssignment|| bDisplayAreas || m_ExecuteTrueCase || m_ShowTrueCase || m_CalculateTrueCase)
 		{
-			Debug.Break();
+			//Debug.Break();
 			return;
 		}
 		/*if (bCallComplete) 
@@ -730,7 +844,16 @@ public partial class Visibility1 : MonoBehaviour {
 			//Debug.Log("For visibility polygon for "+nextPlayerPath+" , edges.count = "+((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges.Count);
 			foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges)
 			{
-				l.DrawVector(allLineParent);
+				GameObject allLineParentChild = new GameObject();
+				LineRenderer lineR = allLineParentChild.AddComponent<LineRenderer>();
+				lineR.material = matGreen;
+				lineR.SetWidth(0.25f,0.25f);
+				lineR.SetVertexCount(2);
+				lineR.SetPosition(0,l.vertex[0]);
+				lineR.SetPosition(1,l.vertex[1]);
+				allLineParentChild.transform.parent = allLineParent.transform;
+
+				//l.DrawVector(allLineParent);
 			}
 
 			/*List<Geometry> shadowPolygonsTemp = (List<Geometry>)hTable [pathPoints [nextPlayerPath]];
@@ -1382,6 +1505,15 @@ public partial class Visibility1 : MonoBehaviour {
 	private void placeEnemyCentroidAt(Vector3 sel)
 	{
 		GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
+		if(currSceneName=="Crash.unity")
+		{
+			Vector3 lscale= enemyObj.transform.localScale;
+			lscale.x*=5f;
+			lscale.y*=5f;
+			lscale.z*=5f;
+			Renderer rend = enemyObj.GetComponent<Renderer>();
+			rend.transform.localScale = lscale;
+		}
 		Component.Destroy (enemyObj.GetComponent("Enemy"));
 		enemyObj.transform.position = sel;
 		EnemyMovement centroidObj = new EnemyMovement();
@@ -1394,6 +1526,15 @@ public partial class Visibility1 : MonoBehaviour {
 	private void placeEnemyGreedyAt(Vector3 sel)
 	{
 		GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
+		if(currSceneName=="Crash.unity")
+		{
+			Vector3 lscale= enemyObj.transform.localScale;
+			lscale.x*=5f;
+			lscale.y*=5f;
+			lscale.z*=5f;
+			Renderer rend = enemyObj.GetComponent<Renderer>();
+			rend.transform.localScale = lscale;
+		}
 		Component.Destroy (enemyObj.GetComponent("Enemy"));
 		enemyObj.transform.position = sel;
 		EnemyMovement greedyObj = new EnemyMovement();
@@ -1406,6 +1547,15 @@ public partial class Visibility1 : MonoBehaviour {
 	private void placeEnemyNearMissAt(Vector3 sel)
 	{
 		GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
+		if(currSceneName=="Crash.unity")
+		{
+			Vector3 lscale= enemyObj.transform.localScale;
+			lscale.x*=5f;
+			lscale.y*=5f;
+			lscale.z*=5f;
+			Renderer rend = enemyObj.GetComponent<Renderer>();
+			rend.transform.localScale = lscale;
+		}
 		Component.Destroy (enemyObj.GetComponent("Enemy"));
 		enemyObj.transform.position = sel;
 		EnemyMovement nearMissObj = new EnemyMovement();
@@ -1418,6 +1568,15 @@ public partial class Visibility1 : MonoBehaviour {
 	private void placeEnemyShadowAssistedAt(Vector3 sel)
 	{
 		GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
+		if(currSceneName=="Crash.unity")
+		{
+			Vector3 lscale= enemyObj.transform.localScale;
+			lscale.x*=5f;
+			lscale.y*=5f;
+			lscale.z*=5f;
+			Renderer rend = enemyObj.GetComponent<Renderer>();
+			rend.transform.localScale = lscale;
+		}
 		Component.Destroy (enemyObj.GetComponent("Enemy"));
 		enemyObj.transform.position = sel;
 		EnemyMovement shadowAssistedObj = new EnemyMovement();
@@ -2469,8 +2628,14 @@ public partial class Visibility1 : MonoBehaviour {
 		//GameObject sp = (GameObject)GameObject.Find ("StartPoint");
 		//GameObject tempObj = (GameObject)GameObject.Instantiate (sp);
 		GameObject tempObj = Instantiate(pathSphere, pos, pathSphere.transform.rotation) as GameObject;
+		Vector3 lscale= tempObj.transform.localScale;
+		lscale.x*=10f;
+		lscale.y*=10f;
+		lscale.z*=10f;
+
 		Renderer rend = tempObj.GetComponent<Renderer>();
 		rend.material.color = c;
+		rend.transform.localScale = lscale;
 		tempObj.transform.position=pos;
 	}
 	List<int> applyEarClipping(/*Geometry shadowGeo,*/ List<Vector3> points)
@@ -2728,6 +2893,11 @@ public partial class Visibility1 : MonoBehaviour {
 		int Indx = 0;
 		while(Indx<pathPoints.Count)
 		{
+			if(h_discreteShadows.ContainsKey(pathPoints[Indx]))
+			{
+				Indx++;
+				continue;
+			}
 			List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [Indx]];
 			sbyte[,] shadowArray = new sbyte[discretePtsX,discretePtsZ];
 
@@ -3474,6 +3644,7 @@ public partial class Visibility1 : MonoBehaviour {
 	}
 	private float eps = 0.01f;
 	private float eps2 = 0.0001f;
+	private float eps3 = 0.5f;
 	public bool VectorApprox ( Vector3 a, Vector3 b ){
 		if( Mathf.Abs (a.x - b.x) < eps && Mathf.Abs (a.z - b.z) < eps )
 		{
@@ -3484,15 +3655,28 @@ public partial class Visibility1 : MonoBehaviour {
 		else
 			return false;
 	}
-	public bool VectorApprox2 ( Vector3 a, Vector3 b ){
-		if( Mathf.Abs (a.x - b.x) < eps2 && Mathf.Abs (a.z - b.z) < eps2 )
+	public bool VectorApprox2 ( Vector3 a, Vector3 b )
+	{
+		if(currSceneName == "Crash.unity")
 		{
-			//Debug.Log(Mathf.Abs (a.x - b.x) +"<"+ eps);
-			//Debug.Log(Mathf.Abs (a.z - b.z) +"<"+ eps);
-			return true;
+			if( Mathf.Abs (a.x - b.x) < eps3 && Mathf.Abs (a.z - b.z) < eps3 )
+			{
+				return true;
+			}
+			else
+				return false;
 		}
 		else
-			return false;
+		{
+			if( Mathf.Abs (a.x - b.x) < eps2 && Mathf.Abs (a.z - b.z) < eps2 )
+			{
+				//Debug.Log(Mathf.Abs (a.x - b.x) +"<"+ eps);
+				//Debug.Log(Mathf.Abs (a.z - b.z) +"<"+ eps);
+				return true;
+			}
+			else
+				return false;
+		}
 	}
 	public void CalculateVisibilityForPath()
 	{
@@ -3666,6 +3850,7 @@ public partial class Visibility1 : MonoBehaviour {
 						{
 							//Debug.Log("Adding from intersection with boundary "+intsctPoint.z);
 							intersectionPoints.Add(intsctPoint);
+
 						}
 					}
 				}
@@ -3711,6 +3896,8 @@ public partial class Visibility1 : MonoBehaviour {
 			//Debug.Log(intersectionPointsPerV[0].Count);
 			//Remove vertex which is not visible
 			//List<int> toRemoveListIndex = new List<int>();
+
+
 			foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
 			{
 				int tmpIndex = intersectionPointsPerV.IndexOf(intersectionPts);
@@ -3719,8 +3906,14 @@ public partial class Visibility1 : MonoBehaviour {
 				if(!VectorApprox2(intersectionPts[0],arrangedPoints[tmpIndex]))
 				//if((intersectionPts[0]!=arrangedPoints[tmpIndex]))
 				{
-					//Debug.Log(intersectionPts[0].z+"!="+arrangedPoints[tmpIndex].z);
-					//showPosOfPoint(arrangedPoints[tmpIndex],Color.red);
+					//if(arrangedPoints[tmpIndex].x==15f)
+					{
+						//Debug.Log ("->->->->->->->->->->->->->->->->->->");
+						//Debug.Log(intersectionPts[0].x+"!="+arrangedPoints[tmpIndex].x);
+						//Debug.Log(intersectionPts[0].z+"!="+arrangedPoints[tmpIndex].z);
+						//Debug.Log ("<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-");
+						//showPosOfPoint(arrangedPoints[tmpIndex],Color.red);
+					}
 					intersectionPointsPerV[tmpIndex]=null;
 					//Debug.Break();
 				}
@@ -3732,6 +3925,21 @@ public partial class Visibility1 : MonoBehaviour {
 				}*/
 			}
 			intersectionPointsPerV.RemoveAll(item=>item==null);
+			if(pPoint == pathPoints[20])
+			{
+				/*for(int itr1=0;itr1<arrangedPoints.Count;itr1++)
+				{
+					showPosOfPoint(arrangedPoints[itr1],Color.blue);
+				}
+				foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
+				{
+					
+					for(int itr1=0;itr1<intersectionPts.Count;itr1++)
+					{
+						showPosOfPoint(intersectionPts[itr1],Color.blue);
+					}
+				}*/
+			}
 			/*foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
 			{
 				foreach(Vector3 intsctPoint in intersectionPts)
@@ -3797,21 +4005,21 @@ public partial class Visibility1 : MonoBehaviour {
 					intersectionPts.RemoveRange(2,intersectionPts.Count-2);
 				}*/
 			}
-			/*foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
+			if(pPoint==pathPoints[20])
 			{
-				foreach(Vector3 intsctPoint in intersectionPts)
+				/*foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
 				{
-					(new Line(pPoint,intsctPoint)).DrawVector(allLineParent);
-				}
-			}*/
-			/*if(pPoint==pathPoints[pathIndexToShowShadow])
-			{
-				foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
+					foreach(Vector3 intsctPoint in intersectionPts)
+					{
+						(new Line(pPoint,intsctPoint)).DrawVector(allLineParent);
+					}
+				}*/
+				/*foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
 				{
 					Line l1 = new Line(intersectionPts[0],intersectionPts[intersectionPts.Count-1]);
 					l1.DrawVector(allLineParent);
-				}
-			}*/
+				}*/
+			}
 			//Build geometries
 			for(int i=0;i<intersectionPointsPerV.Count;i++)
 			{
@@ -3877,6 +4085,22 @@ public partial class Visibility1 : MonoBehaviour {
 			//visiblePoly = verifyVisibilityPolygon(pPoint,visiblePoly);
 
 			hVisiblePolyTable.Add(pPoint,visiblePoly);
+			/*if(hVisiblePolyTable.ContainsKey(pathPoints[20]))
+			{
+				foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[20]]).edges)
+				{
+					GameObject allLineParentChild = new GameObject();
+					LineRenderer lineR = allLineParentChild.AddComponent<LineRenderer>();
+					lineR.material = matGreen;
+					lineR.SetWidth(0.25f,0.25f);
+					lineR.SetVertexCount(2);
+					lineR.SetPosition(0,l.vertex[0]);
+					lineR.SetPosition(1,l.vertex[1]);
+					allLineParentChild.transform.parent = allLineParent.transform;
+
+				}
+				break;
+			}*/
 			List<Geometry> shadowPoly = FindShadowPolygons(visiblePoly);
 			//ValidatePolygons(shadowPoly);
 			//globalTempArrangedPoints.AddRange(arrangedPoints);
@@ -4375,7 +4599,7 @@ public partial class Visibility1 : MonoBehaviour {
 		//Compute one step of the discritzation
 		//Find this is the view
 		floor = (GameObject)GameObject.Find ("Floor");
-
+		//LineRenderer line = floor.AddComponent<LineRenderer>();
 
 		
 		Vector3 [] vertex = new Vector3[4]; 
@@ -4416,7 +4640,7 @@ public partial class Visibility1 : MonoBehaviour {
 		for (int i = 0; i < 4; i++) {
 			mapBoundary [i] = vertex [i];
 		}
-		if(currSceneName=="myCrash.unity")
+		if(currSceneName=="Crash.unity")
 		{
 			obsGeos.Clear();
 			drawingFromFile_LevelCrash();
