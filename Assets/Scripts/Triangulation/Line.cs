@@ -282,12 +282,22 @@ public class Line : IEquatable<Line>
 		Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
 		                           UnityEngine.Random.Range(0.0f,1.0f),
 		                           UnityEngine.Random.Range(0.0f,1.0f)) ;
-		c = Color.green;
+		c = Color.black;
 
-		VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
+		/*VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
+
+
 		line.vectorObject.transform.parent = parent.transform;
 		line.vectorObject.name = name;
-		line.Draw3D();
+		line.Draw3D();*/
+		GameObject allLineParentChild = new GameObject();
+		LineRenderer lineR = allLineParentChild.AddComponent<LineRenderer>();
+
+		lineR.SetWidth(0.75f,0.75f);
+		lineR.SetVertexCount(2);
+		lineR.SetPosition(0,vertex[0]);
+		lineR.SetPosition(1,vertex[1]);
+		allLineParentChild.transform.parent = parent.transform;
 	}
 	public void DrawVector(GameObject parent,Color c)
 	{
