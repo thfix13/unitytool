@@ -301,7 +301,8 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			CalculateVisibilityForPath ();
 			//executeTrueCase2();
-			executeTrueCase3();
+			//executeTrueCase3();
+			executeTrueCase4();
 			return;
 		}
 		if(m_CalculateTrueCase)
