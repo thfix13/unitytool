@@ -84,16 +84,10 @@ namespace EditorArea {
 			}
 			else if (drawMap && fullMap != null)
 			{
-				// check if one of the heat maps is requested to be in color
-				int numColors = 0;
-				foreach (bool b in MapperWindowEditor.drawHeatMapColors) if (b) numColors ++;
-				
-				if (numColors > 0 && heatMapColored != null)
+				if (heatMapColored != null)
 				{
 					for (int color = 0; color < MapperWindowEditor.colors.Count(); color ++)
-					{
-						if (!MapperWindowEditor.drawHeatMapColors[color]) continue;
-						
+					{						
 						for (int x = 0; x < fullMap[timeSlice].Length; x++)
 						{
 							for (int y = 0; y < fullMap[timeSlice][x].Length; y++)

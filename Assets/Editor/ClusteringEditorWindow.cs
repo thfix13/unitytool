@@ -23,7 +23,7 @@ namespace EditorArea {
 
 		// Parameters with default values
 		public static int timeSamples = 2000, attemps = 25000, iterations = 1, gridSize = 60, ticksBehind = 0;
-		private static bool drawMap = false, drawHeatMap = false, drawPath = true, limitImportablePathsToCurLevel = true;
+		private static bool drawHeatMap = false, drawPath = true, limitImportablePathsToCurLevel = true;
 		private static float stepSize = 1 / 10f;
 		private static int nbPaths = -1, nbBatch = -1,fileloaded = -1;
 
@@ -45,6 +45,7 @@ namespace EditorArea {
 		private static bool autoSavePaths = true, discardHighDangerPaths = true, drawHeatMapColored = false, useColors = false, showNoise = false;
 		public static bool altCentroidComp = false, useScalable = false;
 		public static bool[] drawHeatMapColors = new bool[ClusteringEditorWindow.colors.Count()];
+		public static bool drawAllHeatMap = true;
 		LevelRepresentation rep;
 		public static bool only2DTriangulation = true;
 		public static ClustEnv clustEnvironment = ClustEnv.ENV_STEALTH;
@@ -150,6 +151,7 @@ namespace EditorArea {
 					resetClusteringData();
 					origPaths = new List<Path>();
 					precomputeMaps();
+					gridSize = 60;
 				
 					List<Path> pathsImported = PathBulk.LoadPathsFromFile(pathFileNames[chosenFileIndex]);
 
@@ -305,9 +307,51 @@ namespace EditorArea {
 						path.points = pathPoints; // LineReduction.DouglasPeuckerReduction(rep, pathPoints, rdpTolerance, true);
 						path.name = pathNum.ToString();
 						pathNum ++;
-					
+												
 						pathsImported.Add(path);
 					}
+					
+					// get translation for points with vals < 0
+					
+					bool negative = false;
+					double lowestNegativeX = 0;
+					double lowestNegativeY = 0;
+					foreach (Path p in pathsImported) {
+						for (int i = 0; i < p.points.Count; i++) {
+							if (p.points[i].x < 0 || p.points[i].y < 0) {
+								negative = true;
+								if (p.points[i].xD < lowestNegativeX)
+									lowestNegativeX = p.points[i].xD;
+								if (p.points[i].yD < lowestNegativeY)
+									lowestNegativeY = p.points[i].yD;
+							}
+						}
+					}
+					
+					if (negative) {
+						foreach (Path p in pathsImported) {
+							for (int i = 0; i < p.points.Count; i++) {
+								p.points[i].x += -(int)lowestNegativeX;
+								p.points[i].y += -(int)lowestNegativeY;
+								p.points[i].xD += -lowestNegativeX;
+								p.points[i].yD += -lowestNegativeY;
+							}
+						}							
+					}
+					rep.updateObstaclePos(-lowestNegativeX, -lowestNegativeY);
+					
+				/*	double highestVal = 0;
+					foreach (Path p in pathsImported) {
+						for (int i = 0; i < p.points.Count; i++) {
+							if (p.points[i].xD > highestVal)
+								highestVal = p.points[i].xD;
+							if (p.points[i].yD > highestVal)
+								highestVal = p.points[i].yD;
+						}
+					}
+					
+					gridSize = (int)highestVal + 1; */
+					gridSize = 500;
 				
 					// Setup parenting
 					foreach (Path p in pathsImported) {
@@ -322,6 +366,8 @@ namespace EditorArea {
 						toggleStatus.Add (p, true);
 						paths.Add(p);
 					}
+					
+					ComputeHeatMap (paths);
 				
 			/*		for (int count = 0; count < paths.Count(); count ++)
 					{
@@ -523,17 +569,19 @@ namespace EditorArea {
 			drawPath = EditorGUILayout.Toggle ("Draw paths", drawPath);
 			
 			if (drawer != null) {
-				drawer.heatMap = null;
+		//		drawer.heatMap = null;
 
-				if (drawHeatMap) {
+		//		if (drawHeatMap) {
 					drawer.heatMap = heatMap;
-				}
+		//		}
 			}
 			
 			if (GUILayout.Button ("Show all colors"))
 			{
 				for(int i = 0; i < showPaths.Count(); i ++) showPaths[i] = true;
 				foreach (Path p in paths) p.color.a = 1;
+				
+				drawAllHeatMap = true;
 				
 				currentColor = -1;
 				
@@ -1331,10 +1379,10 @@ namespace EditorArea {
 			}
 			if (!drawHeatMapColored)
 			{
-				if (GUILayout.Button ("Show heat map for current colors"))
+				if (GUILayout.Button ("Show heatmap for current colors"))
 				{
+					drawAllHeatMap = false;
 					drawHeatMapColored = true;
-					drawer.drawMap = drawMap = true;
 					drawer.drawPath = drawPath = false;
 					
 					for (int i = 0; i < colors.Count(); i ++)
@@ -1345,10 +1393,10 @@ namespace EditorArea {
 			}
 			else
 			{
-				if (GUILayout.Button ("Hide heat map"))
+				if (GUILayout.Button ("Hide heatmap for current colors"))
 				{
+					drawAllHeatMap = true;
 					drawHeatMapColored = false;
-					drawer.drawMap = drawMap = false;
 					drawer.drawPath = drawPath = true;
 					
 					for (int i = 0; i < colors.Count(); i ++)
@@ -1406,7 +1454,6 @@ namespace EditorArea {
 			if (drawer != null) {
 				drawer.timeSlice = timeSlice;
 				drawer.drawHeatMap = drawHeatMap;
-				drawer.drawMap = drawMap;
 				drawer.drawPath = drawPath;
 				drawer.paths = toggleStatus;
 				drawer.textDraw = textDraw;
@@ -1617,7 +1664,6 @@ namespace EditorArea {
 			
 				window.drawer.timeSlice = timeSlice;
 				window.drawer.drawHeatMap = drawHeatMap;
-				window.drawer.drawMap = drawMap;
 				window.drawer.drawPath = drawPath;
 				window.drawer.paths = toggleStatus;
 				window.drawer.textDraw = window.textDraw;

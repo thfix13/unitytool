@@ -42,12 +42,11 @@ namespace EditorArea {
 		private static float dbsScanEps = 11.0f;
 		private static List<Path> clusterCentroids = new List<Path>(), origPaths = new List<Path>();
 		private static bool[] showPaths = new bool[colors.Count()];
-		private static bool autoSavePaths = true, discardHighDangerPaths = true, drawHeatMapColored = false, useColors = false, showNoise = false;
+		private static bool autoSavePaths = true, discardHighDangerPaths = true, useColors = false, showNoise = false;
 		public static bool altCentroidComp = false, useScalable = false;
 	//	public int numberLines = 20; 
 	//	public float interpolationValue = 0.0f;
 	//	public float interpolationValueCheck = 0.0f; 
-		public static bool[] drawHeatMapColors = new bool[MapperWindowEditor.colors.Count()];
 		LevelRepresentation rep;
 
 		// Computed parameters

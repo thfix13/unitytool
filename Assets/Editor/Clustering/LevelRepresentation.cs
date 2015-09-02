@@ -12,6 +12,12 @@ namespace ClusteringSpace
 		public Vector2 start;
 		public Vector2 end;
 		public Line(Vector2 s_, Vector2 e_) { start = s_; end = e_; }
+		public void add(double x_, double y_) {
+			start.x += System.Convert.ToSingle(x_);
+			start.y += System.Convert.ToSingle(y_);
+			end.x += System.Convert.ToSingle(x_);
+			end.y += System.Convert.ToSingle(y_);
+		}
 	}
 	
 	public class LevelRepresentation
@@ -84,6 +90,20 @@ namespace ClusteringSpace
 			//		Debug.Log("Midpoint " + count2 +" : " + midpoints[count2]);
 					smallerObstacles.Add(new Line(midpoints[count2], midpoints[(count2+1)%midpoints.Count]));
 				}
+			}
+		}
+		
+		public void updateObstaclePos(double x_, double y_)
+		{
+			foreach (Line l in obstacles) {
+				l.add(x_, y_);
+			}
+			foreach (Line l in smallerObstacles) {
+				l.add(x_, y_);
+			}
+			GameObject[] objs = GameObject.FindGameObjectsWithTag ("Platform") as GameObject[];
+			for (int i = 0; i < objs.Length; i++) {
+				objs[i].transform.position = new Vector3(System.Convert.ToSingle(objs[i].transform.position.x+x_), 0, System.Convert.ToSingle(objs[i].transform.position.z+y_));
 			}
 		}
 

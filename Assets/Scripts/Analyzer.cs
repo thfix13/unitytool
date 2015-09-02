@@ -662,6 +662,8 @@ namespace Extra {
 				int[,] hm = new int[sizeX, sizeY];
 				foreach (Node node in path.points) {
 					if (node.parent == null || node.parent == node) {
+					//	if (node.x > sizeX || node.y > sizeY)
+					//		Debug.Log("! " + node.x + ", " + node.y);
 						hm [node.x, node.y] += 10;
 						continue;
 					}

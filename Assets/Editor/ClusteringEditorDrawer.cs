@@ -11,7 +11,7 @@ namespace EditorArea {
 	public class ClusteringEditorDrawer : MonoBehaviour {
 		
 		// Options
-		public bool drawMap = true, drawHeatMap = true, drawPath = false, editGrid = false;
+		public bool drawHeatMap = true, drawPath = false, editGrid = false;
 		
 		// Caller must set these up
 		public Cell[][][] fullMap;
@@ -39,17 +39,17 @@ namespace EditorArea {
 		
 		public void OnDrawGizmos () {
 			// We need 2 if blocks since we are using 2 different variables to poke the data from
-			if (drawMap && fullMap != null)
+			if (fullMap != null)
 			{
 				// check if one of the heat maps is requested to be in color
 				int numColors = 0;
 				foreach (bool b in ClusteringEditorWindow.drawHeatMapColors) if (b) numColors ++;
 				
-				if (numColors > 0 && heatMapColored != null)
+				if ( (numColors > 0 || ClusteringEditorWindow.drawAllHeatMap) && heatMapColored != null)
 				{
 					for (int color = 0; color < ClusteringEditorWindow.colors.Count(); color ++)
 					{
-						if (!ClusteringEditorWindow.drawHeatMapColors[color]) continue;
+						if (!ClusteringEditorWindow.drawAllHeatMap && !ClusteringEditorWindow.drawHeatMapColors[color]) continue;
 						
 						for (int x = 0; x < fullMap[timeSlice].Length; x++)
 						{
@@ -73,12 +73,13 @@ namespace EditorArea {
 					{
 						for (int y = 0; y < fullMap[timeSlice][x].Length; y++)
 						{
-							Cell c = fullMap [timeSlice] [x] [y];
+					//		Cell c = fullMap [timeSlice] [x] [y];
 					
-							if (drawHeatMap) {
+							if (drawHeatMap && ClusteringEditorWindow.drawAllHeatMap) {
 								if (heatMap != null)
+//									Debug.Log("80: " + x + ", " + y);
 									Gizmos.color = Color.Lerp (Color.white, Color.black, (float)heatMap [x, y] / (heatMapMax * 6f / 8f));
-							} else {
+							} /*else {
 								if (c.safe)
 									Gizmos.color = Color.blue;
 								else if (c.blocked)
@@ -93,7 +94,7 @@ namespace EditorArea {
 									Gizmos.color = Color.white;
 								else
 									Gizmos.color = Color.green;
-							}
+							}*/
 					
 							Gizmos.DrawCube (new Vector3
 							                 (x * tileSize.x + zero.x + tileSize.x / 2f,
