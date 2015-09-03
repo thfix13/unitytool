@@ -282,7 +282,7 @@ public class Line : IEquatable<Line>
 		Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
 		                           UnityEngine.Random.Range(0.0f,1.0f),
 		                           UnityEngine.Random.Range(0.0f,1.0f)) ;
-		c = Color.black;
+		//c = Color.black;
 
 		/*VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
 
@@ -297,6 +297,7 @@ public class Line : IEquatable<Line>
 		lineR.SetVertexCount(2);
 		lineR.SetPosition(0,vertex[0]);
 		lineR.SetPosition(1,vertex[1]);
+		lineR.SetColors (c, c);
 		allLineParentChild.transform.parent = parent.transform;
 	}
 	public void DrawVector(GameObject parent,Color c)

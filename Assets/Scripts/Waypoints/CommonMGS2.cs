@@ -48,6 +48,10 @@ public static class CommonMGS2
 		{
 			pathPts = selectPath6(wayPoints);
 		}
+		else if(pathIndx==7)
+		{
+			pathPts = selectPath7(wayPoints);
+		}
 		createPathPoints (pathPts);
 		return pathPts;
 	}
@@ -60,8 +64,8 @@ public static class CommonMGS2
 		
 		
 		List<Vector3> wayPoints = createWayPoints (sp.transform.position,ep.transform.position);
-		
-		List<Vector3>  pathPts = selectPath6(wayPoints);
+		stepPath *= 1.2f; 
+		List<Vector3>  pathPts = selectPath7(wayPoints);
 		createPathPoints (pathPts);
 		
 		return pathPts;
@@ -247,6 +251,26 @@ public static class CommonMGS2
 		path1.Add (wayPoints [1]);
 		path1.Add (wayPoints [2]);
 		path1.Add (wayPoints [3]);
+		path1.Add (wayPoints [7]);
+		path1.Add (wayPoints [10]);
+		path1.Add (wayPoints [14]);
+		path1.Add (wayPoints [15]);
+		path1.Add (wayPoints [11]);
+		path1.Add (wayPoints [12]);
+		path1.Add (wayPoints [13]);
+		path1.Add (wayPoints [9]);
+		path1.Add (wayPoints [16]);
+		return path1;
+	}
+	private static List<Vector3> selectPath7 (List<Vector3> wayPoints)
+	{
+		List<Vector3> path1 = new List<Vector3> ();
+		path1.Add (wayPoints [0]);
+		path1.Add (wayPoints [1]);
+		path1.Add (wayPoints [2]);
+		path1.Add (wayPoints [3]);
+		path1.Add (wayPoints [4]);
+		path1.Add (wayPoints [8]);
 		path1.Add (wayPoints [7]);
 		path1.Add (wayPoints [10]);
 		path1.Add (wayPoints [14]);

@@ -101,7 +101,7 @@ public partial class Visibility1 : MonoBehaviour
 			{
 				//Debug.Log(j1+" , "+k1);
 				Vector3 pt = new Vector3(j,1,k);
-				findNeighbors(pt,j1,k1,relationMap);
+				relationMap = findNeighbors(pt,j1,k1,relationMap);
 				k1++;
 			}
 			j1++;
@@ -109,11 +109,10 @@ public partial class Visibility1 : MonoBehaviour
 		return relationMap;		
 
 	}
-	private void findNeighbors(Vector3 pt,int j1,int k1,Hashtable relationMap)
+	private Hashtable findNeighbors(Vector3 pt,int j1,int k1,Hashtable relationMap)
 	{
 		int rowJ = j1;
 		int colK = k1;
-		standardMaxMovement = speedEnemy*(m_stepDistance/speedPlayer);
 		Vector3 currPos = pt;//((Vector3)h_mapIndxToPt[keyTemp]);
 		List<Vector3> listOfAvailablePos = new List<Vector3> ();
 		
@@ -185,12 +184,13 @@ public partial class Visibility1 : MonoBehaviour
 			}
 		}
 		relationMap.Add(pt,listOfAvailablePos);
+		return relationMap;
 	}
 	private void fillMapWithChildren4(Vector3 pt,Vector2 keyTemp,int levelOfAccess,Hashtable h_mapChild_Parent,Hashtable relationMap)
 	{
 		int rowJ = (int)keyTemp.x;
 		int colK = (int)keyTemp.y;
-		standardMaxMovement = speedEnemy*(m_stepDistance/speedPlayer);
+		//standardMaxMovement = speedEnemy*(m_stepDistance/speedPlayer);
 		Vector3 currPos = pt;//((Vector3)h_mapIndxToPt[keyTemp]);
 		List<Vector3> listOfAvailablePos = new List<Vector3> ();
 		
@@ -199,7 +199,7 @@ public partial class Visibility1 : MonoBehaviour
 		{
 			if(pointInShadow(pt1,levelOfAccess-1))
 			{
-				listOfAvailablePos.Add(pt);
+				listOfAvailablePos.Add(pt1);
 			}
 		}
 		h_mapChild_Parent.Add(pt,listOfAvailablePos);
@@ -760,12 +760,12 @@ public partial class Visibility1 : MonoBehaviour
 
 			Vector3 keyObj = new Vector3(float.Parse(line[0]),float.Parse(line[1]),float.Parse(line[2]));
 			numLevelsReached = int.Parse(line[3]);
-			//float greenNum = (float)numLevelsReached/(float)numOfLevels;
+			float greenNum = (float)numLevelsReached/(float)numOfLevels;
 			float G = (255 * numLevelsReached) / numOfLevels;
 			float R = (255 * (numOfLevels - numLevelsReached)) / numOfLevels ;
 			float B = 0;
-			//showPosOfPoint(keyObj,new Color(0.0f,greenNum,0.0f));
-			showPosOfPoint(keyObj,new Color(R,G,B));
+			showPosOfPoint(keyObj,new Color(0.0f,greenNum,0.0f));
+			//showPosOfPoint(keyObj,new Color(R,G,B));
 		}
 		sr.Close ();
 	}

@@ -151,9 +151,9 @@ public partial class Visibility1 : MonoBehaviour {
 
 			pathPoints = CommonCrash.definePath ();
 			m_stepDistance = CommonCrash.getStepDistance();
-			m_step = m_stepDistance/2;
+			m_step = m_stepDistance;
 			//***********************************************************************
-			if(false)
+			if(true)
 			{
 			int totalVertices = 0;
 			totalVertices+=mapBG.edges.Count;
@@ -233,6 +233,7 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		else if(currSceneName=="MGS2.unity")
 		{
+			setGlobalVars1();//deleteNow
 			pathPoints = CommonMGS2.definePath ();
 			m_stepDistance = CommonMGS2.getStepDistance();
 			Debug.Log("pathPoints.Count = "+pathPoints.Count);
@@ -847,16 +848,39 @@ public partial class Visibility1 : MonoBehaviour {
 			{
 				GameObject allLineParentChild = new GameObject();
 				LineRenderer lineR = allLineParentChild.AddComponent<LineRenderer>();
-				lineR.material = matGreen;
-				lineR.SetWidth(0.25f,0.25f);
+				//lineR.material = matGreen;
+				lineR.SetWidth(0.15f,0.15f);
 				lineR.SetVertexCount(2);
 				lineR.SetPosition(0,l.vertex[0]);
 				lineR.SetPosition(1,l.vertex[1]);
+				Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
+				                    UnityEngine.Random.Range(0.0f,1.0f),
+				                    UnityEngine.Random.Range(0.0f,1.0f)) ;
+				lineR.SetColors (c, c);
 				allLineParentChild.transform.parent = allLineParent.transform;
+
 
 				//l.DrawVector(allLineParent);
 			}
-
+			{
+				/*foreach(Line lineBG in mapBG.edges)
+					{
+						lineBG.DrawVector(allLineParent);
+					}*/
+				Geometry visibleGeoTemp = (Geometry)hVisiblePolyTable[pathPoints [nextPlayerPath]];
+				foreach(Vector3 vectSafe in h_mapPtToIndx.Keys)
+				{
+					//Debug.Log(vectSafe);
+					if(visibleGeoTemp.PointInside(vectSafe))
+						//if(pointInShadow(vectSafe,nextPlayerPath))
+					{
+						
+						showPosOfPoint(vectSafe,Color.green);
+						
+					}
+				}
+				Debug.Break();
+			}
 			/*List<Geometry> shadowPolygonsTemp = (List<Geometry>)hTable [pathPoints [nextPlayerPath]];
 			foreach(Geometry geoTemp in shadowPolygonsTemp)
 			{
@@ -2630,14 +2654,15 @@ public partial class Visibility1 : MonoBehaviour {
 		//GameObject tempObj = (GameObject)GameObject.Instantiate (sp);
 		GameObject tempObj = Instantiate(pathSphere, pos, pathSphere.transform.rotation) as GameObject;
 		Vector3 lscale= tempObj.transform.localScale;
-		lscale.x*=10f;
-		lscale.y*=10f;
-		lscale.z*=10f;
+		//lscale.x*=10f;
+		//lscale.y*=10f;
+		//lscale.z*=10f;
 
 		Renderer rend = tempObj.GetComponent<Renderer>();
 		rend.material.color = c;
 		rend.transform.localScale = lscale;
 		tempObj.transform.position=pos;
+		tempObj.transform.parent = allLineParent.transform;
 	}
 	List<int> applyEarClipping(/*Geometry shadowGeo,*/ List<Vector3> points)
 	{
@@ -4614,7 +4639,7 @@ public partial class Visibility1 : MonoBehaviour {
 		
 		//Floor
 		Vector3[] f = new Vector3[4];
-		MeshFilter mesh = (MeshFilter)(floor.GetComponent ("MeshFilter"));
+		MeshFilter mesh = (MeshFilter)(floor.GetComponent<MeshFilter>());
 		Vector3[] t = mesh.sharedMesh.vertices; 
 		
 		Geometry tempGeometry = new Geometry (); 
@@ -4667,9 +4692,10 @@ public partial class Visibility1 : MonoBehaviour {
 		//triangulation.colours.Clear (); 
 		
 		//Only one geometry for now
-		
-		foreach (GameObject o in obs) {
-			mesh = (MeshFilter)(o.GetComponent ("MeshFilter"));
+
+		foreach (GameObject o in obs) 
+		{
+			mesh = o.GetComponent<MeshFilter>();
 			t = mesh.sharedMesh.vertices; 
 			tempGeometry = new Geometry();
 			
@@ -4682,7 +4708,8 @@ public partial class Visibility1 : MonoBehaviour {
 			vertex [2].y = 1;
 			vertex [1].y = 1;
 			vertex [3].y = 1;
-			for (int i = 0; i< vertex.Length; i+=1) {
+			for (int i = 0; i< vertex.Length; i+=1) 
+			{
 				if (i < vertex.Length - 1)
 					tempGeometry.edges.Add (new Line (vertex [i], vertex [i + 1]));
 				else 	       

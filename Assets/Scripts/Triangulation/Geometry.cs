@@ -79,14 +79,37 @@ public class Geometry
 	//TODO: Fix for lines colinear
 	public bool PointInside( Vector3 pt )
 	{
+		int extreme = 500;
+		List<Line> lRayList = new List<Line> ();
+		List<Vector3> pointListToTest = new List<Vector3>();
+		List<int> listAngleVars = new List<int>();
+		for(int itr=10;itr<360;itr+=30)
+		{
+			listAngleVars.Add(itr);
+		}
+		listAngleVars.Add(45);
+		listAngleVars.Add(-45);
+		listAngleVars.Add(135);
+		listAngleVars.Add(-135);
+		foreach(int angleVar in listAngleVars)
+		{
+			Vector3 vecSel = new Vector3();
+			vecSel.x = pt.x + extreme*Mathf.Cos(angleVar* Mathf.Deg2Rad);
+			vecSel.y = pt.y;
+			vecSel.z = pt.z + extreme*Mathf.Sin(angleVar* Mathf.Deg2Rad);
+			pointListToTest.Add(vecSel);
+		}
 		//Line lray = new Line(pt, new Vector3(-100,1,-100)); 
 		int count = 0;
-		List<Line> lRayList = new List<Line> ();
-		int extreme = 500;
-		lRayList.Add (new Line (pt, new Vector3 (-extreme, 1,-extreme)));
-		lRayList.Add (new Line (pt, new Vector3 (extreme, 1, -extreme)));
-		lRayList.Add (new Line (pt, new Vector3 (extreme, 1, extreme)));
-		lRayList.Add (new Line (pt, new Vector3 (-extreme, 1, extreme)));
+		foreach(Vector3 vectVar in pointListToTest)
+		{
+			lRayList.Add (new Line (pt, vectVar));
+		}
+
+		//lRayList.Add (new Line (pt, new Vector3 (-extreme, 1,-extreme)));
+		//lRayList.Add (new Line (pt, new Vector3 (extreme, 1, -extreme)));
+		//lRayList.Add (new Line (pt, new Vector3 (extreme, 1, extreme)));
+		//lRayList.Add (new Line (pt, new Vector3 (-extreme, 1, extreme)));
 		int count1 = 0;
 		foreach(Line lray in lRayList)
 		{
