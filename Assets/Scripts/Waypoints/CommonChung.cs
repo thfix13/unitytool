@@ -63,66 +63,72 @@ public static class CommonChung
 		Vector3 pt3 = new Vector3 (pt2.x-step, pt2.y, pt2.z);
 		//showPosOfPoint (pt3, Color.green);
 
+		step = 8 * stepPath;
+		Vector3 pt4 = new Vector3 (pt3.x, pt3.y, pt3.z+step);
 
-		Vector3 pt4 = new Vector3 (pt2.x, pt2.y, pt2.z);
+
+		Vector3 pt5 = new Vector3 (pt3.x, pt3.y, pt3.z);
 		//showPosOfPoint (pt4, Color.green);
 
 		
-		Vector3 pt5 = new Vector3 (pt1.x, pt1.y, pt1.z);
+		Vector3 pt6 = new Vector3 (pt2.x, pt2.y, pt2.z);
 		//showPosOfPoint (pt5, Color.green);
 
-		Vector3 pt6 = new Vector3 (startPt.x, startPt.y, startPt.z);
+		Vector3 pt7 = new Vector3 (pt1.x, pt1.y, pt1.z);
 		//showPosOfPoint (pt6, Color.green);
+
+		Vector3 pt8 = new Vector3 (startPt.x, startPt.y, startPt.z);
 
 
 		step = 14 * stepPath;
 		step = step * step;
 		xVar = 2.0f;
 		zVar = Mathf.Sqrt(step - xVar * xVar);
-		Vector3 pt7 = new Vector3 (pt6.x+xVar, pt6.y, pt6.z-zVar);
+		Vector3 pt9 = new Vector3 (pt8.x+xVar, pt8.y, pt8.z-zVar);
 		//showPosOfPoint (pt7, Color.green);
 
 		step = 33 * stepPath;
-		Vector3 pt8 = new Vector3 (pt7.x, pt7.y, pt7.z-step);
+		Vector3 pt10 = new Vector3 (pt9.x, pt9.y, pt9.z-step);
 		//showPosOfPoint (pt8, Color.green);
 
 		step = 14 * stepPath;
-		Vector3 pt9 = new Vector3 (pt8.x-step, pt8.y, pt8.z);
+		Vector3 pt11 = new Vector3 (pt10.x-step, pt10.y, pt10.z);
 		//showPosOfPoint (pt9, Color.green);
 
-		Vector3 pt10 = new Vector3 (pt8.x, pt8.y, pt8.z);
-		//showPosOfPoint (pt10, Color.green);
+		step = 8 * stepPath;
+		Vector3 pt12 = new Vector3 (pt11.x, pt11.y, pt11.z+step);
 
-		Vector3 pt11 = new Vector3 (pt7.x, pt7.y, pt7.z);
-		//showPosOfPoint (pt11, Color.green);
+		Vector3 pt13 = new Vector3 (pt11.x, pt11.y, pt11.z);
+		Vector3 pt14 = new Vector3 (pt10.x, pt10.y, pt10.z);
+		Vector3 pt15 = new Vector3 (pt9.x, pt9.y, pt9.z);
 
 		step = 14 * stepPath;
 		step = step * step;
 		xVar = 2.0f;
 		zVar = Mathf.Sqrt(step - xVar * xVar);
-		Vector3 pt12 = new Vector3 (pt11.x+xVar, pt11.y, pt11.z+zVar);
+		Vector3 pt16 = new Vector3 (pt15.x+xVar, pt15.y, pt15.z+zVar);
 		//showPosOfPoint (pt12, Color.green);
 
-		step = 14 * stepPath;
+		step = 12 * stepPath;
 		step = step * step;
-		xVar = 1.9f;
+		xVar = 1.7f;
 		zVar = Mathf.Sqrt(step - xVar * xVar);
-		Vector3 pt13 = new Vector3 (pt12.x+xVar, pt12.y, pt12.z-zVar);
+		Vector3 pt17 = new Vector3 (pt16.x+xVar, pt16.y, pt16.z-zVar);
+		Vector3 pt23 = new Vector3 (pt17.x, pt17.y, pt17.z);
 		//showPosOfPoint (pt13, Color.green);
 
 		step = 32 * stepPath;
-		Vector3 pt14 = new Vector3 (pt13.x, pt13.y, pt13.z-step);
+		Vector3 pt18 = new Vector3 (pt17.x, pt17.y, pt17.z-step);
+		Vector3 pt22 = new Vector3 (pt18.x, pt18.y, pt18.z);
 		//showPosOfPoint (pt14, Color.green);
 
 		step = 13 * stepPath;
-		Vector3 pt15 = new Vector3 (pt14.x-step, pt14.y, pt14.z);
+		Vector3 pt19 = new Vector3 (pt18.x-step, pt18.y, pt18.z);
+		Vector3 pt21 = new Vector3 (pt19.x, pt19.y, pt19.z);
 		//showPosOfPoint (pt15, Color.green);
 
-		Vector3 pt16 = new Vector3 (pt14.x, pt14.y, pt14.z);
-		//showPosOfPoint (pt16, Color.green);
-
-		Vector3 pt17 = new Vector3 (pt13.x, pt13.y, pt13.z);
-		//showPosOfPoint (pt17, Color.green);
+		step = 8 * stepPath;
+		Vector3 pt20 = new Vector3 (pt19.x, pt19.y, pt19.z+step);
 
 		wayPoints.Add (startPt);//0
 		wayPoints.Add (pt1);
@@ -142,7 +148,13 @@ public static class CommonChung
 		wayPoints.Add (pt15);
 		wayPoints.Add (pt16);
 		wayPoints.Add (pt17);
-		wayPoints.Add (endPt);//18
+		wayPoints.Add (pt18);
+		wayPoints.Add (pt19);
+		wayPoints.Add (pt20);
+		wayPoints.Add (pt21);
+		wayPoints.Add (pt22);
+		wayPoints.Add (pt23);
+		wayPoints.Add (endPt);//24
 		return wayPoints;
 	}
 	private static List<Vector3> selectPath1 (List<Vector3> wayPoints)
@@ -167,6 +179,12 @@ public static class CommonChung
 		path1.Add (wayPoints [16]);
 		path1.Add (wayPoints [17]);
 		path1.Add (wayPoints [18]);
+		path1.Add (wayPoints [19]);
+		path1.Add (wayPoints [20]);
+		path1.Add (wayPoints [21]);
+		path1.Add (wayPoints [22]);
+		path1.Add (wayPoints [23]);
+		path1.Add (wayPoints [24]);
 		return path1;
 	}
 
