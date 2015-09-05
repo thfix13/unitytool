@@ -40,11 +40,23 @@ public partial class Visibility1 : MonoBehaviour
 		}
 		sw.Close ();
 	}
+	private void justDisplayExecute(Hashtable relationMap)
+	{
+		foreach(Vector3 pt in relationMap.Keys)
+		{
+			//if(pointInShadow(pt,0))
+			Debug.Log(((List<Vector3>)relationMap[pt]).Count);
+			//showPosOfPoint(pt,Color.blue);
+		}
+	}
 	private void executeTrueCase4()
 	{
 		setGlobalVars1();
+		//justDisplay ();
+		//return;
 		standardMaxMovement = speedEnemy*(m_stepDistance/speedPlayer);
 		Hashtable relationMap = createRelationships ();
+
 		float startTime = Time.realtimeSinceStartup;
 		string dirName = createSaveDataDir(Application.dataPath);
 		int levelOfAccess = 1;
@@ -57,7 +69,7 @@ public partial class Visibility1 : MonoBehaviour
 			Hashtable h_mapChild_Parent = new Hashtable();
 			if(levelOfAccess>pathPoints.Count-1)
 				break;
-			int j1=0;
+			/*int j1=0;
 			for(float j=m_minX;j<m_maxX && j1<discretePtsX;j+=m_step)
 			{
 				int k1=0;
@@ -82,8 +94,20 @@ public partial class Visibility1 : MonoBehaviour
 				}
 				
 				j1++;
+			}*/
+			foreach(Vector3 pt in h_mapPtToIndx.Keys)
+			{
+				if(!pointInShadow(pt,levelOfAccess))
+				{
+					continue;
+				}
+				
+				Vector2 keyTemp = (Vector2)h_mapPtToIndx[pt];
+
+				fillMapWithChildren4(pt,keyTemp,levelOfAccess,h_mapChild_Parent,relationMap);
 			}
 			DumpEdgesForLevel3(h_mapChild_Parent,levelOfAccess,dirName);
+
 			levelOfAccess++;
 		}
 		float totalTime = (Time.realtimeSinceStartup - startTime)/60;
@@ -93,23 +117,28 @@ public partial class Visibility1 : MonoBehaviour
 	private Hashtable createRelationships()
 	{
 		Hashtable relationMap = new Hashtable ();
-		int j1=0;
-		for(float j=m_minX;j<m_maxX && j1<discretePtsX;j+=m_step)
-		{
-			int k1=0;
-			for(float k=m_minZ;k<m_maxZ && k1<discretePtsZ;k+=m_step)
-			{
+		//int j1=0;
+		//for(float j=m_minX;j<m_maxX && j1<discretePtsX;j+=m_step)
+		//{
+			//int k1=0;
+			//for(float k=m_minZ;k<m_maxZ && k1<discretePtsZ;k+=m_step)
+			//{
 				//Debug.Log(j1+" , "+k1);
-				Vector3 pt = new Vector3(j,1,k);
-				relationMap = findNeighbors(pt,j1,k1,relationMap);
-				k1++;
-			}
-			j1++;
+				//Vector3 pt = new Vector3(j,1,k);
+				//relationMap = findNeighbors(pt,j1,k1,relationMap);
+				//k1++;
+			//}
+			//j1++;
+		//}
+		foreach(Vector3 pt in h_mapPtToIndx.Keys)
+		{
+			Vector2 indx = (Vector2)h_mapPtToIndx[pt];
+			findNeighbors(pt,(int)indx.x,(int)indx.y,relationMap);
 		}
 		return relationMap;		
 
 	}
-	private Hashtable findNeighbors(Vector3 pt,int j1,int k1,Hashtable relationMap)
+	private void findNeighbors(Vector3 pt,int j1,int k1,Hashtable relationMap)
 	{
 		int rowJ = j1;
 		int colK = k1;
@@ -137,7 +166,7 @@ public partial class Visibility1 : MonoBehaviour
 				
 					vectPos = (Vector3)h_mapIndxToPt[vect2Pos];
 
-					if(Vector3.Distance(currPos,vectPos)<=standardMaxMovement && CheckStraightLineVisibility(currPos,vectPos))
+					if(Vector3.Distance(currPos,vectPos)<=standardMaxMovement && CheckStraightLineVisibility(currPos,vectPos) && !CheckIfInsidePolygon(vectPos))
 					{
 						runAgain = true;
 						listOfAvailablePos.Add(vectPos);
@@ -149,7 +178,7 @@ public partial class Visibility1 : MonoBehaviour
 				{
 					vectPos = (Vector3)h_mapIndxToPt[vect2Pos];
 
-					if(Vector3.Distance(currPos,vectPos)<=standardMaxMovement && CheckStraightLineVisibility(currPos,vectPos))
+					if(Vector3.Distance(currPos,vectPos)<=standardMaxMovement && CheckStraightLineVisibility(currPos,vectPos) && !CheckIfInsidePolygon(vectPos))
 					{
 						runAgain = true;
 						listOfAvailablePos.Add(vectPos);
@@ -163,7 +192,7 @@ public partial class Visibility1 : MonoBehaviour
 				if(h_mapIndxToPt.ContainsKey(vect2Pos))
 				{
 					vectPos = (Vector3)h_mapIndxToPt[vect2Pos];
-					if(Vector3.Distance(currPos,vectPos)<=standardMaxMovement && CheckStraightLineVisibility(currPos,vectPos))
+					if(Vector3.Distance(currPos,vectPos)<=standardMaxMovement && CheckStraightLineVisibility(currPos,vectPos) && !CheckIfInsidePolygon(vectPos))
 					{
 						runAgain = true;
 						listOfAvailablePos.Add(vectPos);
@@ -174,7 +203,7 @@ public partial class Visibility1 : MonoBehaviour
 				if(h_mapIndxToPt.ContainsKey(vect2Pos))
 				{
 					vectPos = (Vector3)h_mapIndxToPt[vect2Pos];
-					if(Vector3.Distance(currPos,vectPos)<=standardMaxMovement && CheckStraightLineVisibility(currPos,vectPos))
+					if(Vector3.Distance(currPos,vectPos)<=standardMaxMovement && CheckStraightLineVisibility(currPos,vectPos) && !CheckIfInsidePolygon(vectPos))
 					{
 						runAgain = true;
 						listOfAvailablePos.Add(vectPos);
@@ -184,7 +213,7 @@ public partial class Visibility1 : MonoBehaviour
 			}
 		}
 		relationMap.Add(pt,listOfAvailablePos);
-		return relationMap;
+		//return relationMap;
 	}
 	private void fillMapWithChildren4(Vector3 pt,Vector2 keyTemp,int levelOfAccess,Hashtable h_mapChild_Parent,Hashtable relationMap)
 	{
@@ -262,13 +291,13 @@ public partial class Visibility1 : MonoBehaviour
 		string sourceFileName = dirName+"\\Edges"+levelOfAccess+".txt";
 		StreamWriter sw = new StreamWriter(sourceFileName);
 
-
+		int parentLevelOfAccess = levelOfAccess - 1;
 		foreach(Vector3 key in h_mapChild_Parent.Keys)
 		{
 			List<Vector3> ptList = (List<Vector3>)h_mapChild_Parent[key];
 			foreach(Vector3 pt in ptList)
 			{
-				sw.Write("("+key.x+","+key.y+","+key.z+";"+levelOfAccess+")|("+pt.x+","+pt.y+","+pt.z+";"+(levelOfAccess-1)+")");
+				sw.Write("("+key.x+","+key.y+","+key.z+";"+levelOfAccess+")|("+pt.x+","+pt.y+","+pt.z+";"+parentLevelOfAccess+")");
 				sw.WriteLine("");
 			}
 		}
@@ -764,8 +793,8 @@ public partial class Visibility1 : MonoBehaviour
 			float G = (255 * numLevelsReached) / numOfLevels;
 			float R = (255 * (numOfLevels - numLevelsReached)) / numOfLevels ;
 			float B = 0;
-			showPosOfPoint(keyObj,new Color(0.0f,greenNum,0.0f));
-			//showPosOfPoint(keyObj,new Color(R,G,B));
+			//showPosOfPoint(keyObj,new Color(0.0f,greenNum,0.0f));
+			showPosOfPoint(keyObj,new Color(R,G,B));
 		}
 		sr.Close ();
 	}
@@ -870,16 +899,82 @@ public partial class Visibility1 : MonoBehaviour
 		}
 		return nodeParentList;
 	}
+	private void justDisplay()
+	{
+		List<NodeShadow> headNodes = new List<NodeShadow> ();
+		setGlobalVars1 ();
+		string sourceDirName = EditorUtility.OpenFolderPanel("Please select data node dir", Application.dataPath,"");
+		
+		List<char> sep = new List<char>();
+		sep.Add(',');
+		sep.Add(' ');
+		sep.Add(';');
+		sep.Add('(');
+		sep.Add(')');
+		sep.Add('|');
+		int levelOfAccess = 1;
+		string sourceFileName = sourceDirName+"\\Edges"+levelOfAccess+".txt";
+		FileInfo fInfo = new FileInfo(sourceFileName);
+
+		StreamReader sr = new StreamReader(sourceFileName);
+		string str;// = sr.ReadLine();
+		List<Vector4> alreadyParent = new List<Vector4> ();
+
+			//Debug.Log("Reading "+sourceFileName);
+			////////////////////////////////////////////////////////////////////////////////////////
+			while(!sr.EndOfStream /*&& jk>0*/)
+			{
+				str = sr.ReadLine();
+				
+				string[] line1 = str.Split(sep.ToArray());
+				//Debug.Log(str);
+				List<string> line = new List<string>();
+				for(int i=0;i<line1.Length;i++)
+				{
+					if(line1[i]=="")
+						continue;
+					line.Add(line1[i]);
+					//Debug.Log(line1[i]);
+				}
+				
+				Vector4 parentKeyObj = new Vector4();
+				Vector4 keyObj = new Vector4(float.Parse(line[0]),float.Parse(line[1]),float.Parse(line[2]),float.Parse(line[3]));
+				
+				/*if(keyObj.w==0.0f)//A head Node
+				{
+					NodeShadow headNode = new NodeShadow(new Vector3(keyObj.x,keyObj.y,keyObj.z));
+					headNode.setSafetyLevel((int)keyObj.w);
+					if(!m_hCompleteNodeTable.ContainsKey(keyObj))
+					{
+						m_hCompleteNodeTable.Add(keyObj,headNode);
+					}
+					//headNodes.Add(headNode);
+					continue;
+				}*/
+				//else
+				//{
+				parentKeyObj = new Vector4(float.Parse(line[4]),float.Parse(line[5]),float.Parse(line[6]),float.Parse(line[7]));
+			if(!alreadyParent.Contains(parentKeyObj))
+			{
+				alreadyParent.Add(parentKeyObj);
+				showPosOfPoint(new Vector3(parentKeyObj.x,parentKeyObj.y,parentKeyObj.z),Color.blue);
+			}
+		}
+	}
 	private void calculatePredictedPathsNew()
 	{
+		//justDisplay ();
+		//return;
+
 		float startTime = Time.realtimeSinceStartup;
 		List<NodeShadow> headNodes = readNodeStructureFor2 ();
-		//m_EndIndx
+
 		int endIndxTemp = m_EndIndx;
 
 		int numOfLevels = lastPathIndex ();//pathPoints.Count-1;//m_lastPathIndex;
 		
 		string sourceDirName = EditorUtility.OpenFolderPanel("Please select results dir", Application.dataPath,"");
+		Debug.Log ("sourceDirName = "+sourceDirName);
 		string resultFileName = sourceDirName+"\\Result.txt";
 		StreamWriter sw = new StreamWriter (resultFileName);
 		//////////////////Reading Info file for step distance
@@ -888,6 +983,15 @@ public partial class Visibility1 : MonoBehaviour
 		string line = sr.ReadLine ();
 		while(true)
 		{
+			if(line.Contains("Last Path Index"))
+			{
+				int indx = line.IndexOf(" = ");
+				string numberStr = line.Substring(indx+3);
+				
+				m_EndIndx = int.Parse(numberStr);
+				endIndxTemp = m_EndIndx;
+				line = sr.ReadLine ();
+			}
 			if(line.Contains("Distance covered by the player"))
 			{
 				int indx = line.IndexOf(" = ");
@@ -919,7 +1023,15 @@ public partial class Visibility1 : MonoBehaviour
 		{
 			int numLevelsReached = headNode.getCanReachLimit();//findFurthestPathPointReached(headNode);
 			if(numLevelsReached<0)
+			{
+
+				Debug.Log("Head node's can reach limit is ="+numLevelsReached);
 				numLevelsReached=0;
+			}
+			else
+			{
+				Debug.Log("Head node's can reach limit is ="+numLevelsReached);
+			}
 			sw.Write("("+headNode.getPos().x+","+headNode.getPos().y+","+headNode.getPos().z+")"+";"+numLevelsReached);
 			sw.WriteLine("");
 			/*float greenNum = numLevelsReached/numOfLevels;
@@ -1021,7 +1133,8 @@ public partial class Visibility1 : MonoBehaviour
 				parentNode.addChild(node);
 				if(levelOfAccess==1)
 				{
-					headNodes.Add(parentNode);
+					if(!headNodes.Contains(parentNode))
+						headNodes.Add(parentNode);
 				}
 				
 				

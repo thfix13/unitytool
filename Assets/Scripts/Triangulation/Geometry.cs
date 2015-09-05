@@ -83,12 +83,14 @@ public class Geometry
 		List<Line> lRayList = new List<Line> ();
 		List<Vector3> pointListToTest = new List<Vector3>();
 		List<int> listAngleVars = new List<int>();
-		for(int itr=10;itr<360;itr+=30)
+		/*for(int itr=10;itr<360;itr+=30)
 		{
 			listAngleVars.Add(itr);
-		}
+		}*/
 		listAngleVars.Add(45);
 		listAngleVars.Add(-45);
+		listAngleVars.Add(90);
+		listAngleVars.Add(-90);
 		listAngleVars.Add(135);
 		listAngleVars.Add(-135);
 		foreach(int angleVar in listAngleVars)

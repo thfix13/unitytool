@@ -233,7 +233,7 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		else if(currSceneName=="MGS2.unity")
 		{
-			setGlobalVars1();//deleteNow
+			//setGlobalVars1();//deleteNow
 			pathPoints = CommonMGS2.definePath ();
 			m_stepDistance = CommonMGS2.getStepDistance();
 			Debug.Log("pathPoints.Count = "+pathPoints.Count);
