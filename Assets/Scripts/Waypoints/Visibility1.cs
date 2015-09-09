@@ -358,13 +358,13 @@ public partial class Visibility1 : MonoBehaviour {
 			displayPredictedPaths3();
 
 
-			foreach(Vector3 vect in pathPoints)
+			/*foreach(Vector3 vect in pathPoints)
 			{
 				GameObject pathObj;
 				pathObj = Instantiate(pathSphere, 
 				                      vect, 
 				                      pathSphere.transform.rotation) as GameObject;
-			}
+			}*/
 			return;
 		}
 		/////////////////////////////////////////////////////////
@@ -2643,8 +2643,34 @@ public partial class Visibility1 : MonoBehaviour {
 
 		return sdList;
 	}
-
-
+	public GameObject rectangleShow;
+	void showPosOfPointRectangle(Vector3 pos,Color c)
+	{
+		if (float.IsNaN (pos.x) || float.IsNaN (pos.z))
+			return;
+		//GameObject sp = (GameObject)GameObject.Find ("StartPoint");
+		//GameObject tempObj = (GameObject)GameObject.Instantiate (sp);
+		GameObject tempObj = Instantiate(rectangleShow, pos, rectangleShow.transform.rotation) as GameObject;
+		Vector3 lscale= tempObj.transform.localScale;
+		if(currSceneName=="Crash.unity")
+		{
+			lscale.x*=5;
+			lscale.y*=5;
+			lscale.z*=5;
+		}
+		else
+		{
+		lscale.x*=0.36f;
+		lscale.y*=0.36f;
+		lscale.z*=0.36f;
+		}
+		
+		Renderer rend = tempObj.GetComponent<Renderer>();
+		rend.material.color = c;
+		rend.transform.localScale = lscale;
+		tempObj.transform.position=pos;
+		tempObj.transform.parent = allLineParent.transform;
+	}
 
 	void showPosOfPoint(Vector3 pos,Color c)
 	{

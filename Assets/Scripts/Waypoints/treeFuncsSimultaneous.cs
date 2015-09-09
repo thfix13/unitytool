@@ -752,7 +752,101 @@ public partial class Visibility1 : MonoBehaviour
 			
 		}
 	}
+	List<Color> colorList = new List<Color>();
+	void setUpColorList_Old(float numOfLevels)
+	{
+		float colorNum = 0.0f;
+		//function makeColor(value) 
+		while(colorNum<=numOfLevels)
+		{
+			float value = colorNum/numOfLevels;
+			// value must be between [0, numOfLevels]
+			value = Mathf.Min(Mathf.Max(0,value), 1) * 255*4;
 
+			float redValue;
+			float greenValue;
+			if (value < 255) 
+			{
+				redValue = 255;
+				greenValue = Mathf.Sqrt(value) * 255;
+				greenValue = Mathf.Round(greenValue);
+			} else 
+			{
+				greenValue = 255;
+				value = value - 255;
+				redValue = 256 - (value * value / 255);
+				redValue = Mathf.Round(redValue);
+			}
+			
+			//return "#" + intToHex(redValue) + intToHex(greenValue) + "00";
+			colorList.Add(new Color(redValue,greenValue,0));
+			colorNum+=1.0f;
+		}
+	}
+	void setUpColorList()
+	{
+		colorList.Add(new Color(255,0,0));
+		for(int i=1;i<128;i++)
+		{
+			colorList.Add(new Color(255,i,0));
+		}
+		colorList.Add(new Color(255,128,0));
+		for(int i=129;i<255;i++)
+		{
+			colorList.Add(new Color(255,i,0));
+		}
+		colorList.Add(new Color(255,255,0));
+		for(int i=254;i>128;i--)
+		{
+			colorList.Add(new Color(i,255,0));
+		}
+		colorList.Add(new Color(128,255,0));
+		for(int i=127;i>0;i--)
+		{
+			colorList.Add(new Color(i,255,0));
+		}
+		colorList.Add(new Color(0,255,0));
+		/*for(int i=1;i<128;i++)
+		{
+			colorList.Add(new Color(0,255,i));
+		}
+		colorList.Add(new Color(0,255,128));
+		for(int i=129;i<255;i++)
+		{
+			colorList.Add(new Color(0,255,i));
+		}
+		colorList.Add(new Color(0,255,255));
+		for(int i=254;i>128;i--)
+		{
+			colorList.Add(new Color(0,i,255));
+		}
+		colorList.Add(new Color(0,128,255));
+		for(int i=127;i>0;i--)
+		{
+			colorList.Add(new Color(0,i,255));
+		}
+		colorList.Add(new Color(0,0,255));
+		for(int i=1;i<127;i++)
+		{
+			colorList.Add(new Color(i,0,255));
+		}
+		colorList.Add(new Color(127,0,255));
+		for(int i=128;i<255;i++)
+		{
+			colorList.Add(new Color(i,0,255));
+		}
+		colorList.Add(new Color(255,0,255));
+		for(int i=254;i>127;i--)
+		{
+			colorList.Add(new Color(255,0,i));
+		}
+		colorList.Add(new Color(255,0,127));*/
+	}
+	Color getColorFromList(int numReached,int numOfLevels)
+	{
+		int num1 = (int)((float)numReached / (float)numOfLevels) * (colorList.Count-1);
+		return colorList [num1];
+	}
 	private void displayPredictedPaths3()
 	{
 		//////////////////////////////////////////////////////////////////////////////////////////////////
@@ -760,6 +854,7 @@ public partial class Visibility1 : MonoBehaviour
 		/// //////////////////////////////////////////////////////////////////////////////////////////////
 		float startTime = Time.realtimeSinceStartup;
 		int numOfLevels = lastPathIndex();//m_lastPathIndex;
+		setUpColorList ();
 		
 		string sourceDirName = EditorUtility.OpenFolderPanel("Please select results dir", Application.dataPath,"");
 		string resultFileName = sourceDirName+"\\Result.txt";
@@ -777,7 +872,6 @@ public partial class Visibility1 : MonoBehaviour
 		while(!sr.EndOfStream)
 		{
 			str = sr.ReadLine();
-			sr.ReadLine();
 			string[] line1 = str.Split(sep.ToArray());
 			List<string> line = new List<string>();
 			for(int i=0;i<line1.Length;i++)
@@ -792,9 +886,15 @@ public partial class Visibility1 : MonoBehaviour
 			float greenNum = (float)numLevelsReached/(float)numOfLevels;
 			float G = (255 * numLevelsReached) / numOfLevels;
 			float R = (255 * (numOfLevels - numLevelsReached)) / numOfLevels ;
-			float B = 0;
+			float B = 0f;
 			//showPosOfPoint(keyObj,new Color(0.0f,greenNum,0.0f));
-			showPosOfPoint(keyObj,new Color(R,G,B));
+			//showPosOfPoint(keyObj,new Color(R,G,B));
+			//showPosOfPointRectangle(keyObj,Color.Lerp(Color.white,Color.green,greenNum));
+			showPosOfPointRectangle(keyObj,Color.Lerp(Color.white,Color.grey,greenNum));
+			//showPosOfPoint(keyObj,getColorFromList(numLevelsReached,numOfLevels));
+			//showPosOfPointRectangle(keyObj,new Color(R,G,B));
+			//showPosOfPointRectangle(keyObj,new Color(0.0f,greenNum,0.0f));
+			//showPosOfPointRectangle(keyObj,getColorFromList(numLevelsReached,numOfLevels));
 		}
 		sr.Close ();
 	}
@@ -968,6 +1068,14 @@ public partial class Visibility1 : MonoBehaviour
 
 		float startTime = Time.realtimeSinceStartup;
 		List<NodeShadow> headNodes = readNodeStructureFor2 ();
+
+		/*
+		foreach(NodeShadow node in headNodes)
+		{
+			showPosOfPoint(node.getPos(),Color.green);
+		}
+		return;*/
+
 
 		int endIndxTemp = m_EndIndx;
 
