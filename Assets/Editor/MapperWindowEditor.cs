@@ -175,6 +175,8 @@ namespace EditorArea {
 				
 				original = mapper.PrecomputeMaps (SpaceState.Editor, floor.collider.bounds.min, floor.collider.bounds.max, gridSize, gridSize, timeSamples, stepSize, ticksBehind, baseMap);
 
+
+
 				drawer.fullMap = original;
 				float maxSeenGrid;
 				drawer.seenNeverSeen = Analyzer.ComputeSeenValuesGrid (original, out maxSeenGrid);
@@ -184,6 +186,26 @@ namespace EditorArea {
 				
 				ResetAI ();
 				previous = DateTime.Now;
+
+				////JOHNHERE
+				// Count the cells 
+				int vfov= 0;
+				int vfree = 0; 
+
+				for (int i = 0; i< original.Length; i++)
+				{
+					for (int j =0; j<original[i].Length;j++)
+					{
+						for (int k =0; k<original[i][j].Length;k++)
+						{
+							if (original[i][j][k].blocked == false)
+								vfree+=1;
+							if (original[i][j][k].seen == true)
+								vfov+=1;
+						}
+					}
+				}
+				Debug.Log((float)(vfov)/vfree);
 			} 
 			EditorGUILayout.LabelField ("");
 			
