@@ -27,6 +27,8 @@ namespace Exploration {
 
 		public preCast casts;
 
+		private bool debugging = false;
+
 
 
 		//Geo version of GetNode
@@ -250,6 +252,10 @@ namespace Exploration {
 
 			//End RRT algo
 
+			if(debugging){
+				DrawTree(start);
+			}
+
 			return new List<NodeGeo> ();
 		}
 
@@ -426,6 +432,12 @@ namespace Exploration {
 
 			return points;
 		}
+
+		private void DrawTree(NodeGeo start){
+
+		}
+
+
 
 		#region oldcode
 		//To prevent errors temporarily

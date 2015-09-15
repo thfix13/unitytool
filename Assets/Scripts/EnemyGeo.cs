@@ -217,7 +217,7 @@ namespace Objects {
 			int nj = ns[ns.Count-1];
 			for(int j = 1; j < ts.Count; j++){
 				tj = ts[j];
-				nj = ts[j];
+				nj = ns[j];
 				if(tj != curT){
 					curT = tj;
 					timeLeft = tj-ti;
@@ -498,6 +498,7 @@ namespace Objects {
 		private void tryMove(WaypointGeo trgt){
 			//Debug.Log (posT);
 			//Debug.Log (trgt.transform.position);
+
 			float distance = Vector3.Distance(posT, trgt.transform.position);
 			//Debug.Log(distance);
 			int steps = Mathf.CeilToInt(distance / trgt.movSpeed);
