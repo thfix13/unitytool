@@ -27,7 +27,7 @@ namespace Exploration {
 
 		public preCast casts;
 
-		private bool debugging = false;
+		private bool debugging = true;
 
 
 
@@ -238,6 +238,9 @@ namespace Exploration {
 						endNode.parent = nodeVisiting;
 						endNode.distractTimes = nodeVisiting.distractTimes;
 						endNode.distractNums = nodeVisiting.distractNums;
+						if(debugging){
+							DrawTree(start, minX, maxX, minY, maxY, maxT);
+						}
 						return ReturnPathGeo (endNode, smooth);
 					}
 				}
@@ -245,6 +248,9 @@ namespace Exploration {
 				//Might be adding the neighboor as a the goal
 				if (Mathf.Approximately(nodeVisiting.x, end.x) & Mathf.Approximately(nodeVisiting.y,end.y)) {
 					//Debug.Log ("Done2");
+					if(debugging){
+						DrawTree(start, minX, maxX, minY, maxY, maxT);
+					}
 					return ReturnPathGeo (nodeVisiting, smooth);
 					
 				}
@@ -253,16 +259,12 @@ namespace Exploration {
 			//End RRT algo
 
 			if(debugging){
-				DrawTree(start);
+				DrawTree(start, minX, maxX, minY, maxY, maxT);
 			}
 
 			return new List<NodeGeo> ();
 		}
-
-
-
-	
-
+		
 		//Check for collision of a path with the obstacles, x, t, y
 		public bool checkCollObs(float startX, float startY, float endX, float endY){
 			//Debug.Log ("checkCollObs");
@@ -433,10 +435,62 @@ namespace Exploration {
 			return points;
 		}
 
-		private void DrawTree(NodeGeo start){
+		private void DrawTree(NodeGeo start, float minX, float maxX, float minY, float maxY, int maxT){
+			Debug.Log ("DRAWTREE CALLED");
+			double[] min = new double[3];
+			double[] max = new double[3];
+			min[0] = minX;
+			min[1] = 0;
+			min[2] = minY;
+			max[0] = maxX;
+			max[1] = maxT;
+			max[2] = maxY;
+			NodeGeo node;
+			GameObject treePic = new GameObject("treePic");
+
+			foreach(object obj in tree.range (min, max)){
+				node = (NodeGeo)obj;
+				DrawNode(node, treePic);
+			}
+			
 
 		}
 
+		private void DrawNode(NodeGeo node, GameObject parent){
+			GameObject nod = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+			nod.transform.parent = parent.transform;
+			nod.transform.position = node.GetVector3();
+			/*nod.transform.position.x = node.x;
+			nod.transform.position.z = node.y;
+			nod.transform.position.y = node.t;*/
+			if(node.parent != null){
+				DrawLine(node.parent, node, parent);
+			}
+		}
+
+		private void DrawLine(NodeGeo node1, NodeGeo node2, GameObject parent){
+			GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+			lin.transform.parent = parent.transform;
+			lin.transform.position = (node1.GetVector3() + node2.GetVector3()) / 2.0f;
+			Vector3 dists = (node2.GetVector3() - node1.GetVector3());
+
+			float rotationY =  90 - Mathf.Rad2Deg * Mathf.Atan(dists.z / dists.x);
+			float rotationZ = 90 - Mathf.Rad2Deg * Mathf.Atan (dists.y / dists.x);
+			Vector3 rot = new Vector3();
+			rot.y = rotationY;
+			rot.z = rotationZ;
+			Vector3 scale = Vector3.one;
+			scale.x = Vector3.Distance(node1.GetVector3(), node2.GetVector3());
+
+			lin.transform.localScale = scale;
+			lin.transform.eulerAngles = rot;
+			/*lin.transform.position.x = (node1.x + node2.x) / 2.0f;
+			lin.transform.position.z = (node1.y + node2.y) / 2.0f;
+			lin.transform.position.y = (node1.t + node2.t) / 2.0f;
+			lin.transform.localScale.x = Mathf.Abs (node2.x - node1.x);
+			lin.transform.localScale.z = Mathf.Abs (node2.y - node1.y);*/
+
+		}
 
 
 		#region oldcode

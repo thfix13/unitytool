@@ -84,6 +84,41 @@ namespace EditorArea {
 		}
 		
 		void OnGUI () {
+
+			if (GUILayout.Button ("Test VectorLine Stuff")) {
+				List<Vector3> pointList = new List<Vector3>();
+				pointList.Add(new Vector3(-15, 0, -15));
+				pointList.Add(new Vector3(15, 0, 15));
+				float linewidth = 5.0f;
+				Color c = Color.red;
+
+				VectorLine line = new VectorLine("Line",pointList, linewidth);
+				line.color = c;
+				line.Draw3D ();
+				VectorLine line2 = new VectorLine("Line2", new List<Vector3>(pointList), 50f);
+				line2.Draw3D ();
+				//line2.Draw ();
+				//line2.Draw3DAuto();
+
+				//line = new VectorObject3D();
+
+				//line.drawTransform = new GameObject().transform;
+				//Debug.Log (line.drawTransform);
+				//Debug.Log (line.drawTransform.parent);
+				//Debug.Log(parent);
+				//Debug.Log (parent.transform);
+				
+				//line.drawTransform.parent = parent.transform;
+			}
+
+
+
+
+
+
+
+
+
 			#region Pre-Init
 			
 			// Wait for the floor to be set and initialize the drawer and the mapper

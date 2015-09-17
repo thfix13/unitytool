@@ -85,9 +85,10 @@ public class Line
 		Color c = costColor;
 		
 
-		VectorLine line = new VectorLine(name,vertex,c,null,2.0f);
-		line.vectorObject.transform.parent = parent.transform;
-		line.vectorObject.name = name;
+		VectorLine line = new VectorLine(name,new List<Vector3>(vertex),2.0f);
+		line.color = c;
+		line.rectTransform.SetParent(parent.transform);
+		//line.rectTransform.name = name;
 		line.Draw3D();
 	}
 
@@ -97,30 +98,34 @@ public class Line
 		                           UnityEngine.Random.Range(0.0f,1.0f),
 		                           UnityEngine.Random.Range(0.0f,1.0f)) ;
 
-		VectorLine line = new VectorLine("Line",vertex,c,null,8.0f);
-		line.vectorObject.transform.parent = parent.transform;
-		line.vectorObject.name = name;
+		VectorLine line = new VectorLine("Line",new List<Vector3>(vertex),8.0f);
+		line.color = c;
+		line.rectTransform.SetParent(parent.transform);
+		//line.rectTransform.name = name;
 		line.Draw3D();
 	}
 
 	public void DrawVector(GameObject parent,Color c)
 	{
 	
-		VectorLine line = new VectorLine("Line",vertex,c,null,2.0f);
-		line.vectorObject.transform.parent = parent.transform;
+		VectorLine line = new VectorLine("Line",new List<Vector3>(vertex),2.0f);
+		line.color = c;
+		line.rectTransform.SetParent(parent.transform);
 		line.Draw3D();
 	}
 
 	public void DrawVector(GameObject parent,Color c, float linewidth)
 	{
 		
-		VectorLine line = new VectorLine("Line",vertex,c,null,linewidth);
-		line.vectorObject.transform.parent = parent.transform;
+		VectorLine line = new VectorLine("Line",new List<Vector3>(vertex),linewidth);
+		line.color = c;
+		line.rectTransform.SetParent(parent.transform);
 		line.Draw3D();
 	}
 	public void DrawArrow(GameObject parent, Color c, float linewidth){
-		VectorLine line = new VectorLine("Line", vertex, c, null, linewidth);
-		line.vectorObject.transform.parent = parent.transform;
+		VectorLine line = new VectorLine("Line",new List<Vector3>(vertex), linewidth);
+		line.color = c;
+		line.rectTransform.SetParent(parent.transform);
 		
 		line.endCap = "Arrow";
 		line.Draw3D ();
@@ -133,10 +138,16 @@ public class Line
 
 
 	public void DrawManArrow(GameObject parent, Color c, float linewidth){
-		VectorLine line = new VectorLine("Line", vertex, c, null, linewidth);
-		line.vectorObject.transform.parent = parent.transform;
+		VectorLine line = new VectorLine("Line",new List<Vector3>(vertex), linewidth);
+		line.color = c;
+		//line.rectTransform = new GameObject().transform;
 
-		line.Draw3D ();
+
+		line.rectTransform.SetParent(parent.transform);
+
+
+		line.Draw();
+		//line.Draw3D ();
 
 		Vector3 startPoint = vertex[0];
 		Vector3 endPoint = vertex[1];
@@ -156,24 +167,27 @@ public class Line
 		Vector3[] vertex1 = new Vector3[] {linePoint1, endPoint};
 		Vector3[] vertex2 = new Vector3[] {linePoint2, endPoint};
 
-		VectorLine line1 = new VectorLine("Line", vertex1, c, null, linewidth);
-		line1.vectorObject.transform.parent = parent.transform;
+		VectorLine line1 = new VectorLine("Line",new List<Vector3>(vertex1), linewidth);
+		line1.color = c;
+		//line1.rectTransform = new GameObject().transform;
+		line1.rectTransform.SetParent(parent.transform);
+		line1.Draw ();
+		//line1.Draw3D ();
 
-		line1.Draw3D ();
-
-		VectorLine line2 = new VectorLine("Line", vertex2, c, null, linewidth);
-		line2.vectorObject.transform.parent = parent.transform;
+		VectorLine line2 = new VectorLine("Line",new List<Vector3>(vertex2), linewidth);
+		line2.color = c;
+		//line2.rectTransform = new GameObject().transform;
+		line2.rectTransform.SetParent(parent.transform);
 	
-		line2.Draw3D ();
+		line2.Draw ();
+		//line2.Draw3D ();
 
 
 
 
 	}
 
-	public void setEndCap(){
-		VectorLine.SetEndCap ("Arrow", EndCap.Back, lineMaterial, backTex);
-	}
+
 
 	public bool ShareVertex(Line l)
 	{
