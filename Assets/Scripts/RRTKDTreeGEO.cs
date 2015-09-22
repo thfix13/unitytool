@@ -432,6 +432,12 @@ namespace Exploration {
 				Debug.Log ("NO SMOOTHING IMPLEMENTED CURRENTLY");
 			}
 
+			//TODO CHANGE WHEN VECTROSITY WORKS AGAIN!
+			GameObject treePic = new GameObject("pathDrawing");
+			foreach(NodeGeo node in points){
+				DrawNode(node, treePic, Color.red);
+			}
+
 			return points;
 		}
 
@@ -448,42 +454,84 @@ namespace Exploration {
 			NodeGeo node;
 			GameObject treePic = new GameObject("treePic");
 
+
 			foreach(object obj in tree.range (min, max)){
 				node = (NodeGeo)obj;
-				DrawNode(node, treePic);
+				DrawNode(node, treePic, Color.gray);
 			}
 			
 
 		}
 
-		private void DrawNode(NodeGeo node, GameObject parent){
+		private void DrawNode(NodeGeo node, GameObject parent, Color c){
 			GameObject nod = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+			nod.GetComponent<Renderer>().sharedMaterial.color = c;
 			nod.transform.parent = parent.transform;
 			nod.transform.position = node.GetVector3();
+			nod.transform.position = new Vector3(nod.transform.position.x, 0.05f * nod.transform.position.y, nod.transform.position.z);
+			nod.transform.localScale = new Vector3(0.3f, 0.3f,0.3f);
 			/*nod.transform.position.x = node.x;
 			nod.transform.position.z = node.y;
 			nod.transform.position.y = node.t;*/
 			if(node.parent != null){
-				DrawLine(node.parent, node, parent);
+				DrawLine(node.parent, node, parent, c);
 			}
 		}
 
-		private void DrawLine(NodeGeo node1, NodeGeo node2, GameObject parent){
+		private void DrawLine(NodeGeo node1, NodeGeo node2, GameObject parent, Color c){
+			//Debug.Log ("node1 : " + node1.x + " , " + node1.y + " , " + (0.05f * node1.t));
+			//Debug.Log ("node2 : " + node2.x + " , " + node2.y + " , " + (0.05f * node2.t));
+
+
+			//Have vector going towards (1, 0, 0)
+			//Want vector going towards node2 from position.
+
+
+
 			GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+			lin.GetComponent<Renderer>().sharedMaterial.color = c;
 			lin.transform.parent = parent.transform;
 			lin.transform.position = (node1.GetVector3() + node2.GetVector3()) / 2.0f;
+			lin.transform.position = new Vector3(lin.transform.position.x, 0.05f * lin.transform.position.y, lin.transform.position.z);
 			Vector3 dists = (node2.GetVector3() - node1.GetVector3());
+			dists.y = 0.05f * dists.y;
 
-			float rotationY =  90 - Mathf.Rad2Deg * Mathf.Atan(dists.z / dists.x);
-			float rotationZ = 90 - Mathf.Rad2Deg * Mathf.Atan (dists.y / dists.x);
-			Vector3 rot = new Vector3();
-			rot.y = rotationY;
-			rot.z = rotationZ;
+			/*
+			float rotationY = -1.0f * Mathf.Rad2Deg * Mathf.Atan(dists.z / dists.x);          
+			float rotationZ = Mathf.Rad2Deg * Mathf.Atan (dists.y / dists.x);
+			Vector3 rot = Vector3.zero;
+			if(!float.IsNaN (rotationY)){
+				rot.y = rotationY;
+			}*/
+			Vector3 from = Vector3.right;
+			Vector3 to = dists / dists.magnitude;
+
+			Vector3 axis = Vector3.Cross(from, to);
+			float angle = Mathf.Rad2Deg * Mathf.Acos(Vector3.Dot (from, to));
+			lin.transform.RotateAround (lin.transform.position, axis, angle);
+
+
 			Vector3 scale = Vector3.one;
-			scale.x = Vector3.Distance(node1.GetVector3(), node2.GetVector3());
+			//scale.x = Mathf.Sqrt (Mathf.Pow((node2.x - node1.x),2) + Mathf.Pow ((node2.y - node1.y), 2));
+			scale.x = Vector3.Magnitude(dists);
+			scale.z = 0.2f;
+			scale.y = 0.2f;
 
 			lin.transform.localScale = scale;
-			lin.transform.eulerAngles = rot;
+			//Debug.Log (rot);
+			/*lin.transform.eulerAngles = rot;
+			if(!float.IsNaN (rotationZ)){
+				lin.transform.RotateAround(lin.transform.position, new Vector3(0, 0, 1), rotationZ);
+			}*/
+
+
+			//Debug.Log ("Line");
+			//Debug.Log (lin.transform.position);
+			//Debug.Log (lin.transform.eulerAngles);
+			//Debug.Log (lin.transform.localScale);
+
+
+
 			/*lin.transform.position.x = (node1.x + node2.x) / 2.0f;
 			lin.transform.position.z = (node1.y + node2.y) / 2.0f;
 			lin.transform.position.y = (node1.t + node2.t) / 2.0f;

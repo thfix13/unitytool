@@ -142,12 +142,16 @@ public class Line
 		line.color = c;
 		//line.rectTransform = new GameObject().transform;
 
-
+		line.Draw3D ();
+		//Debug.Log (line);
+		//Debug.Log (line.rectTransform);
+		//Debug.Log (parent);
+		//Debug.Log (parent.transform);
 		line.rectTransform.SetParent(parent.transform);
 
 
-		line.Draw();
-		//line.Draw3D ();
+		//line.Draw();
+
 
 		Vector3 startPoint = vertex[0];
 		Vector3 endPoint = vertex[1];
@@ -171,16 +175,16 @@ public class Line
 		line1.color = c;
 		//line1.rectTransform = new GameObject().transform;
 		line1.rectTransform.SetParent(parent.transform);
-		line1.Draw ();
-		//line1.Draw3D ();
+		//line1.Draw ();
+		line1.Draw3D ();
 
 		VectorLine line2 = new VectorLine("Line",new List<Vector3>(vertex2), linewidth);
 		line2.color = c;
 		//line2.rectTransform = new GameObject().transform;
 		line2.rectTransform.SetParent(parent.transform);
 	
-		line2.Draw ();
-		//line2.Draw3D ();
+		//line2.Draw ();
+		line2.Draw3D ();
 
 
 

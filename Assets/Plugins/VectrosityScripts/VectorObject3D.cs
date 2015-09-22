@@ -34,6 +34,7 @@ public class VectorObject3D : MonoBehaviour, IVectorObject {
 	
 	public void SetTexture (Texture tex) {
 		GetComponent<MeshRenderer>().material.mainTexture = tex;
+		GetComponent<MeshRenderer>().sharedMaterial.mainTexture = tex;
 	}
 
 	public void SetMaterial (Material mat) {
