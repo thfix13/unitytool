@@ -27,7 +27,11 @@ namespace Exploration {
 
 		public preCast casts;
 
-		private bool debugging = true;
+		private bool debugging = false;
+		private bool preventDistractStacks = true;
+		//First attempt was 50% distractions.
+		private int distractables = 80;
+		private int numNears = 3;
 
 
 
@@ -101,7 +105,7 @@ namespace Exploration {
 				int distractNum = -1;
 			
 
-				if(Random.Range (0, 100) > 50) {
+				if(Random.Range (0, 100) > distractables) {
 					//TODO
 					if(Random.Range (0, 100) > 50){
 						rx = distractPos.x;
@@ -137,47 +141,160 @@ namespace Exploration {
 				}
 				
 				explored.Add (nodeVisiting);
-				
-				nodeTheClosestTo = (NodeGeo)tree.nearest (new double[] {rx, rt, ry});
-				
-				// cannot go back in time, so skip if t is decreasing
-				if (nodeTheClosestTo.t > nodeVisiting.t){
-					continue;
+
+
+				Vector3 p1 = new Vector3();
+				Vector3 p2 = new Vector3();
+				Vector3 pd = new Vector3();
+
+				if(preventDistractStacks){
+					try{
+						object[] closestNodes = tree.nearest(new double[] {rx, rt, ry}, numNears);					
+						bool viableFound = false;
+						for(int ind = 0; ind < numNears; ind++){
+							nodeTheClosestTo = (NodeGeo)closestNodes[ind];
+							
+							// cannot go back in time, so skip if t is decreasing
+							if (nodeTheClosestTo.t > nodeVisiting.t){
+								continue;
+							}
+							
+							
+							
+							// Only add if we are going in ANGLE degrees or higher.As there is a fixed max speed
+							p1 = nodeVisiting.GetVector3 ();
+							p2 = nodeTheClosestTo.GetVector3 ();
+							pd = p1 - p2;
+							if (Vector3.Angle (pd, new Vector3 (pd.x, 0f, pd.z)) < angle) {
+								continue;
+							}
+
+							if(distractPick){
+								if(Mathf.Approximately(p1.x, p2.x) && Mathf.Approximately(p1.z, p2.z)){
+									continue;
+								}
+							}
+							viableFound = true;
+
+							
+							//Experimental New distract
+							if(nodeTheClosestTo.distractTimes.Count == maxDist){
+								//Debug.Log ("maxDist");
+								nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
+								nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
+							}
+							else if(nodeTheClosestTo.distractTimes.Count > 0){
+								if(distractPick){
+									//Debug.Log ("distractPick");
+									nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
+									nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
+									nodeVisiting.distractTimes.Add (nodeVisiting.t);
+									nodeVisiting.distractNums.Add (distractNum);
+								}
+								else{
+									//Debug.Log ("Non-distractPick");
+									nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
+									nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
+								}
+							}
+							else if(distractPick){
+								nodeVisiting.distractTimes.Add (nodeVisiting.t);
+								nodeVisiting.distractNums.Add (distractNum);
+							}
+						}
+						if(!viableFound){
+							continue;
+						}
+					}
+					//DO SAME THING AS ELSE BRANCH
+					catch (System.ArgumentException e){
+						nodeTheClosestTo = (NodeGeo)tree.nearest (new double[] {rx, rt, ry});
+						
+						// cannot go back in time, so skip if t is decreasing
+						if (nodeTheClosestTo.t > nodeVisiting.t){
+							continue;
+						}
+						
+						
+						
+						// Only add if we are going in ANGLE degrees or higher.As there is a fixed max speed
+						p1 = nodeVisiting.GetVector3 ();
+						p2 = nodeTheClosestTo.GetVector3 ();
+						pd = p1 - p2;
+						if (Vector3.Angle (pd, new Vector3 (pd.x, 0f, pd.z)) < angle) {
+							continue;
+						}				
+						
+						//Experimental New distract
+						if(nodeTheClosestTo.distractTimes.Count == maxDist){
+							//Debug.Log ("maxDist");
+							nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
+							nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
+						}
+						else if(nodeTheClosestTo.distractTimes.Count > 0){
+							if(distractPick){
+								//Debug.Log ("distractPick");
+								nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
+								nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
+								nodeVisiting.distractTimes.Add (nodeVisiting.t);
+								nodeVisiting.distractNums.Add (distractNum);
+							}
+							else{
+								//Debug.Log ("Non-distractPick");
+								nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
+								nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
+							}
+						}
+						else if(distractPick){
+							nodeVisiting.distractTimes.Add (nodeVisiting.t);
+							nodeVisiting.distractNums.Add (distractNum);
+						}
+					}
+
 				}
+				else{
+
+					nodeTheClosestTo = (NodeGeo)tree.nearest (new double[] {rx, rt, ry});
+					
+					// cannot go back in time, so skip if t is decreasing
+					if (nodeTheClosestTo.t > nodeVisiting.t){
+						continue;
+					}
 
 
-				
-				// Only add if we are going in ANGLE degrees or higher.As there is a fixed max speed
-				Vector3 p1 = nodeVisiting.GetVector3 ();
-				Vector3 p2 = nodeTheClosestTo.GetVector3 ();
-				Vector3 pd = p1 - p2;
-				if (Vector3.Angle (pd, new Vector3 (pd.x, 0f, pd.z)) < angle) {
-					continue;
-				}				
+					
+					// Only add if we are going in ANGLE degrees or higher.As there is a fixed max speed
+					p1 = nodeVisiting.GetVector3 ();
+					p2 = nodeTheClosestTo.GetVector3 ();
+					pd = p1 - p2;
+					if (Vector3.Angle (pd, new Vector3 (pd.x, 0f, pd.z)) < angle) {
+						continue;
+					}				
 
-				//Experimental New distract
-				if(nodeTheClosestTo.distractTimes.Count == maxDist){
-					//Debug.Log ("maxDist");
-					nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
-					nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
-				}
-				else if(nodeTheClosestTo.distractTimes.Count > 0){
-					if(distractPick){
-						//Debug.Log ("distractPick");
+					//Experimental New distract
+					if(nodeTheClosestTo.distractTimes.Count == maxDist){
+						//Debug.Log ("maxDist");
 						nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
 						nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
+					}
+					else if(nodeTheClosestTo.distractTimes.Count > 0){
+						if(distractPick){
+							//Debug.Log ("distractPick");
+							nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
+							nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
+							nodeVisiting.distractTimes.Add (nodeVisiting.t);
+							nodeVisiting.distractNums.Add (distractNum);
+						}
+						else{
+							//Debug.Log ("Non-distractPick");
+							nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
+							nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
+						}
+					}
+					else if(distractPick){
 						nodeVisiting.distractTimes.Add (nodeVisiting.t);
 						nodeVisiting.distractNums.Add (distractNum);
 					}
-					else{
-						//Debug.Log ("Non-distractPick");
-						nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
-						nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
-					}
-				}
-				else if(distractPick){
-					nodeVisiting.distractTimes.Add (nodeVisiting.t);
-					nodeVisiting.distractNums.Add (distractNum);
 				}
 
 				//Old Backup Distract
