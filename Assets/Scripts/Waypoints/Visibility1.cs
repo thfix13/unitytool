@@ -89,6 +89,7 @@ public partial class Visibility1 : MonoBehaviour {
 	
 	Hashtable hTable;
 	Hashtable hVisiblePolyTable;
+	Hashtable hVisibleTrianglesTable;
 	Vector3 start_box,end_box;
 	Rect boundbox;
 	bool b_ShowBoundbox=false;
@@ -119,6 +120,8 @@ public partial class Visibility1 : MonoBehaviour {
 	bool bTestingMyScene1 = false;
 	bool bTestingMyCrash = false;
 	bool bJustTestCrashNow = false;
+	float playerScaleForCrash = 0.5f;
+	float playerScaleForMyCrash = 0.3f;
 	void Start () 
 	{
 		//testFunc();
@@ -142,8 +145,50 @@ public partial class Visibility1 : MonoBehaviour {
 			setUpMultiplePaths();
 			return;
 		}
-		float playerScaleForCrash = 2.5f;
-		if(currSceneName=="Crash.unity")
+		if(currSceneName=="myCrash.unity")
+		{
+			pathPoints = CommonCrash.definePath ();
+			m_stepDistance = CommonCrash.getStepDistance();
+			radius_enemy*=playerScaleForMyCrash;
+			m_step = 0.08f;
+			radius_enemy*=playerScaleForMyCrash;
+			if(bDebugNow)
+			{
+				setGlobalVars1();
+				CalculateVisibilityForPath();
+				int ptWhich = 200;
+				int ptWhichCOunter=0;
+				float standardMaxMovementTemp = speedEnemy*(m_stepDistance/speedPlayer);
+				Debug.Log("standardMaxMovementTemp = "+standardMaxMovementTemp);
+				foreach(Vector3 vect in h_mapPtToIndx.Keys)
+				{
+					if(ptWhichCOunter>=ptWhich && pointInShadow(vect,0))
+					{
+						showPosOfPointEnemySized(vect,Color.green);
+						foreach(Vector3 vectNeighbor in h_mapPtToIndx.Keys)
+						{
+							if(Vector3.Distance(vect,vectNeighbor)<=standardMaxMovementTemp)
+							{
+								showPosOfPointEnemySized(vectNeighbor,Color.red);
+								//showPosOfPointRectangle(vect,Color.green);
+							}
+						}
+						break;
+					}
+					ptWhichCOunter++;
+				}
+				foreach(Vector3 vect in pathPoints)
+				{
+					GameObject pathObj;
+					pathObj = Instantiate(pathSphere, 
+					                      vect, 
+					                      pathSphere.transform.rotation) as GameObject;
+				}
+				return;
+			}
+
+		}
+		else if(currSceneName=="Crash.unity")
 		{
 			//Debug.Log("Before changing radius = "+radius_enemy);
 			radius_enemy*=playerScaleForCrash;
@@ -151,7 +196,8 @@ public partial class Visibility1 : MonoBehaviour {
 
 			pathPoints = CommonCrash.definePath ();
 			m_stepDistance = CommonCrash.getStepDistance();
-			m_step = m_stepDistance;
+			m_step = 0.3f;//m_stepDistance*playerScaleForCrash;
+			Debug.Log("m_stepDistance = "+m_stepDistance);
 			//***********************************************************************
 			if(true)
 			{
@@ -190,8 +236,65 @@ public partial class Visibility1 : MonoBehaviour {
 
 				}
 			}
+				/*return;
+				foreach(Vector3 vect in pathPoints)
+				{
+					GameObject pathObj;
+					pathObj = Instantiate(pathSphere, 
+					                      vect, 
+					                      pathSphere.transform.rotation) as GameObject;
+				}
+
+				setGlobalVars1();
+				CalculateVisibilityForPath();
+				int ptWhich = 900;
+				int ptWhichCOunter=0;
+				float standardMaxMovementTemp = speedEnemy*(m_stepDistance/speedPlayer);
+				Debug.Log("standardMaxMovementTemp = "+standardMaxMovementTemp);
+				foreach(Vector3 vect in h_mapPtToIndx.Keys)
+				{
+					if(ptWhichCOunter>=ptWhich && pointInShadow(vect,0))
+					{
+						showPosOfPointEnemySized(vect,Color.green);
+						foreach(Vector3 vectNeighbor in h_mapPtToIndx.Keys)
+						{
+							if(Vector3.Distance(vect,vectNeighbor)<=standardMaxMovementTemp)
+							{
+								showPosOfPointEnemySized(vectNeighbor,Color.red);
+								//showPosOfPointRectangle(vect,Color.green);
+							}
+						}
+						break;
+					}
+					ptWhichCOunter++;
+				}*/
+
 				if(bJustTestCrashNow)
 				{
+					setGlobalVars1();
+					CalculateVisibilityForPath();
+					//
+					int j1=0;
+					for(float j=m_minX;j<m_maxX && j1<discretePtsX;j+=m_step)
+					{
+						int k1=0;
+						for(float k=m_minZ;k<m_maxZ && k1<discretePtsZ;k+=m_step)
+						{
+							Vector3 pt = new Vector3(j,1,k);
+							if(CheckIfInsidePolygon(pt) || !mapBG.PointInside(pt))
+							{
+								
+								
+								showPosOfPoint(pt,Color.green);
+								
+								
+							}
+							k1++;
+						}
+						j1++;
+					}
+					return;
+					//
 					foreach(Vector3 vect in pathPoints)
 					{
 						GameObject pathObj;
@@ -199,6 +302,18 @@ public partial class Visibility1 : MonoBehaviour {
 						                      vect, 
 						                      pathSphere.transform.rotation) as GameObject;
 					}
+
+					playerObj = Instantiate(playerPrefab) as GameObject;
+
+						Vector3 lscale= playerObj.transform.localScale;
+						lscale.x*=playerScaleForCrash;
+						lscale.y*=playerScaleForCrash;
+						lscale.z*=playerScaleForCrash;
+						Renderer rend = playerObj.GetComponent<Renderer>();
+						rend.transform.localScale = lscale;
+					
+					
+					playerObj.transform.position = pathPoints [0];
 					return;
 				}
 			}
@@ -314,48 +429,52 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		if(m_ShowTrueCase)
 		{
-
+			displayPredictedPaths3();
 			if(currSceneName=="Crash.unity")
 			{
 
-					int totalVertices = 0;
-					totalVertices+=mapBG.edges.Count;
-					int itr9=0;
-					while(itr9<totalVertices)
+				int totalVertices = 0;
+				totalVertices+=mapBG.edges.Count;
+				int itr9=0;
+				while(itr9<totalVertices)
+				{
+					GameObject allLineParentTemp = new GameObject();
+					LineRenderer line1 = allLineParentTemp.AddComponent<LineRenderer> ();
+					line1.material = mat;
+					line1.SetWidth (0.3f, 0.3f);
+					//line1.SetColors(Color.blue,Color.blue);
+					line1.SetVertexCount (2);
+					Vector3 vertexPt = new Vector3(mapBG.edges[itr9].vertex [0].x,2.0f,mapBG.edges[itr9].vertex [0].z);
+					line1.SetPosition (0,vertexPt);
+					vertexPt = new Vector3(mapBG.edges[itr9].vertex [1].x,2.0f,mapBG.edges[itr9].vertex [1].z);
+					line1.SetPosition (1, vertexPt);
+					itr9++;
+				}
+				totalVertices=0;
+				
+				for(int i=0;i<globalPolygon.Count;i++)
+				{
+					totalVertices+=globalPolygon[i].edges.Count;
+				}
+				for(int i=0;i<globalPolygon.Count;i++)
+				{
+					foreach(Line l in globalPolygon[i].edges)
 					{
 						GameObject allLineParentTemp = new GameObject();
 						LineRenderer line1 = allLineParentTemp.AddComponent<LineRenderer> ();
 						line1.material = mat;
 						line1.SetWidth (0.3f, 0.3f);
-						//line1.SetColors(Color.blue,Color.blue);
 						line1.SetVertexCount (2);
-						line1.SetPosition (0, mapBG.edges[itr9].vertex [0]);
-						line1.SetPosition (1, mapBG.edges[itr9].vertex [1]);
-						itr9++;
+						Vector3 vertexPt = new Vector3(l.vertex [0].x,2.0f,l.vertex [0].z);
+						line1.SetPosition (0, vertexPt);
+						vertexPt = new Vector3(l.vertex [1].x,2.0f,l.vertex [1].z);
+						line1.SetPosition (1, vertexPt);
+						
 					}
-					totalVertices=0;
-					
-					for(int i=0;i<globalPolygon.Count;i++)
-					{
-						totalVertices+=globalPolygon[i].edges.Count;
-					}
-					for(int i=0;i<globalPolygon.Count;i++)
-					{
-						foreach(Line l in globalPolygon[i].edges)
-						{
-							GameObject allLineParentTemp = new GameObject();
-							LineRenderer line1 = allLineParentTemp.AddComponent<LineRenderer> ();
-							line1.material = mat;
-							line1.SetWidth (0.3f, 0.3f);
-							line1.SetVertexCount (2);
-							line1.SetPosition (0, l.vertex [0]);
-							line1.SetPosition (1, l.vertex [1]);
-							
-						}
-					}
+				}
 				
 			}
-			displayPredictedPaths3();
+
 
 
 			/*foreach(Vector3 vect in pathPoints)
@@ -394,6 +513,15 @@ public partial class Visibility1 : MonoBehaviour {
 			lscale.x*=playerScaleForCrash;
 			lscale.y*=playerScaleForCrash;
 			lscale.z*=playerScaleForCrash;
+			Renderer rend = playerObj.GetComponent<Renderer>();
+			rend.transform.localScale = lscale;
+		}
+		else if(currSceneName=="myCrash.unity")
+		{
+			Vector3 lscale= playerObj.transform.localScale;
+			lscale.x*=playerScaleForMyCrash;
+			lscale.y*=playerScaleForMyCrash;
+			lscale.z*=playerScaleForMyCrash;
 			Renderer rend = playerObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
@@ -715,19 +843,39 @@ public partial class Visibility1 : MonoBehaviour {
 	int setTimerTemp = 0;
 	bool bShowJustVisibilityPoly = false;
 	int bShowJustVisibilityPolyForIndex = 53;
+
+	int nextPosIndx9=0;
+	List<GameObject> listShows = new List<GameObject>();
 	void Update () 
 	{
-		if(bJustTestCrashNow && currSceneName=="Crash.unity")
-		{
-			return;
-		}
-
 		if(bMultiplePaths)
 		{
 			UpdateMultiplePaths();
 			return;
 		}
-		//mapBG.DrawGeometry(allLineParent);
+		/*mapBG.DrawGeometry(allLineParent,mat);
+
+		foreach(Geometry geo in globalPolygon)
+		{
+			geo.DrawGeometry(allLineParent,matGreen);
+		}*/
+		if(bDebugNow)
+		{
+			mapBG.DrawGeometry(allLineParent,mat);
+			foreach(Geometry geo in globalPolygon)
+			{
+				geo.DrawGeometry(allLineParent,matGreen);
+			}
+			/*foreach(Vector3 key in h_mapPtToIndx.Keys)
+			{
+				if(pointInShadow(key,0))
+				{
+					showPosOfPoint(key,Color.red);
+				}
+			}*/
+			Debug.Break();
+			return;
+		}
 		if(bShowJustVisibilityPoly)
 		{
 			//mapBG.DrawGeometry(allLineParent);
@@ -839,35 +987,60 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		if(playerObj.transform.position == pathPoints[nextPlayerPath] && playerObj.transform.position != pathPoints[pathPoints.Count-1])
 		{
+			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			Debug.Log("Current player path point = "+nextPlayerPath);
+			if(bJustTestCrashNow && currSceneName=="Crash.unity")
+			{
+				foreach(GameObject go in listShows)
+				{
+					GameObject.DestroyImmediate(go);
+				}
+				/*foreach(Vector3 vect in h_mapPtToIndx.Keys)
+			{
+				if(pointInShadow(vect,nextPosIndx9))
+					showPosOfPointRectangle(vect,Color.green);
+			}*/
+				/*if(nextPosIndx9==pathPoints.Count)
+				{
+					Debug.Break();
+				}
+				foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[nextPosIndx9]]).edges)
+				{
+					//l.DrawVector(allLineParent);
+					GameObject allLineParentTemp = new GameObject();
+					LineRenderer line1 = allLineParentTemp.AddComponent<LineRenderer> ();
+					line1.material = mat;
+					line1.SetWidth (0.4f, 0.4f);
+					line1.SetColors(Color.magenta,Color.magenta);
+					line1.SetVertexCount (2);
+					line1.SetPosition (0, l.vertex[0]);
+					line1.SetPosition (1, l.vertex[1]);
+					listShows.Add(allLineParentTemp);
+				}
+				nextPosIndx9++;*/
+				//Debug.Break();
+				//return;
+			}
+			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			foreach(Transform child in allLineParent.transform)
 			{
 				GameObject.Destroy(child.gameObject);
 			}
 			//Debug.Log("For visibility polygon for "+nextPlayerPath+" , edges.count = "+((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges.Count);
-			foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges)
+			//((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).DrawGeometry(allLineParent,matGreen);
+
+			List<VisibleTriangles> listTriangles = (List<VisibleTriangles>)hVisibleTrianglesTable[pathPoints[nextPlayerPath]];
+			foreach(VisibleTriangles vt in listTriangles)
 			{
-				GameObject allLineParentChild = new GameObject();
-				LineRenderer lineR = allLineParentChild.AddComponent<LineRenderer>();
-				//lineR.material = matGreen;
-				lineR.SetWidth(0.15f,0.15f);
-				lineR.SetVertexCount(2);
-				lineR.SetPosition(0,l.vertex[0]);
-				lineR.SetPosition(1,l.vertex[1]);
-				Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
-				                    UnityEngine.Random.Range(0.0f,1.0f),
-				                    UnityEngine.Random.Range(0.0f,1.0f)) ;
-				lineR.SetColors (c, c);
-				allLineParentChild.transform.parent = allLineParent.transform;
-
-
-				//l.DrawVector(allLineParent);
+				vt.DrawTriangle();
 			}
+
 			{
 				/*foreach(Line lineBG in mapBG.edges)
 					{
 						lineBG.DrawVector(allLineParent);
 					}*/
-				Geometry visibleGeoTemp = (Geometry)hVisiblePolyTable[pathPoints [nextPlayerPath]];
+				/*Geometry visibleGeoTemp = (Geometry)hVisiblePolyTable[pathPoints [nextPlayerPath]];
 				foreach(Vector3 vectSafe in h_mapPtToIndx.Keys)
 				{
 					//Debug.Log(vectSafe);
@@ -879,7 +1052,7 @@ public partial class Visibility1 : MonoBehaviour {
 						
 					}
 				}
-				Debug.Break();
+				Debug.Break();*/
 			}
 			/*List<Geometry> shadowPolygonsTemp = (List<Geometry>)hTable [pathPoints [nextPlayerPath]];
 			foreach(Geometry geoTemp in shadowPolygonsTemp)
@@ -1533,9 +1706,18 @@ public partial class Visibility1 : MonoBehaviour {
 		if(currSceneName=="Crash.unity")
 		{
 			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=5f;
-			lscale.y*=5f;
-			lscale.z*=5f;
+			lscale.x*=playerScaleForCrash;
+			lscale.y*=playerScaleForCrash;
+			lscale.z*=playerScaleForCrash;
+			Renderer rend = enemyObj.GetComponent<Renderer>();
+			rend.transform.localScale = lscale;
+		}
+		else if(currSceneName=="myCrash.unity")
+		{
+			Vector3 lscale= enemyObj.transform.localScale;
+			lscale.x*=playerScaleForMyCrash;
+			lscale.y*=playerScaleForMyCrash;
+			lscale.z*=playerScaleForMyCrash;
 			Renderer rend = enemyObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
@@ -1554,9 +1736,18 @@ public partial class Visibility1 : MonoBehaviour {
 		if(currSceneName=="Crash.unity")
 		{
 			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=5f;
-			lscale.y*=5f;
-			lscale.z*=5f;
+			lscale.x*=playerScaleForCrash;
+			lscale.y*=playerScaleForCrash;
+			lscale.z*=playerScaleForCrash;
+			Renderer rend = enemyObj.GetComponent<Renderer>();
+			rend.transform.localScale = lscale;
+		}
+		else if(currSceneName=="myCrash.unity")
+		{
+			Vector3 lscale= enemyObj.transform.localScale;
+			lscale.x*=playerScaleForMyCrash;
+			lscale.y*=playerScaleForMyCrash;
+			lscale.z*=playerScaleForMyCrash;
 			Renderer rend = enemyObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
@@ -1575,9 +1766,18 @@ public partial class Visibility1 : MonoBehaviour {
 		if(currSceneName=="Crash.unity")
 		{
 			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=5f;
-			lscale.y*=5f;
-			lscale.z*=5f;
+			lscale.x*=playerScaleForCrash;
+			lscale.y*=playerScaleForCrash;
+			lscale.z*=playerScaleForCrash;
+			Renderer rend = enemyObj.GetComponent<Renderer>();
+			rend.transform.localScale = lscale;
+		}
+		else if(currSceneName=="myCrash.unity")
+		{
+			Vector3 lscale= enemyObj.transform.localScale;
+			lscale.x*=playerScaleForMyCrash;
+			lscale.y*=playerScaleForMyCrash;
+			lscale.z*=playerScaleForMyCrash;
 			Renderer rend = enemyObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
@@ -1596,9 +1796,18 @@ public partial class Visibility1 : MonoBehaviour {
 		if(currSceneName=="Crash.unity")
 		{
 			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=5f;
-			lscale.y*=5f;
-			lscale.z*=5f;
+			lscale.x*=playerScaleForCrash;
+			lscale.y*=playerScaleForCrash;
+			lscale.z*=playerScaleForCrash;
+			Renderer rend = enemyObj.GetComponent<Renderer>();
+			rend.transform.localScale = lscale;
+		}
+		else if(currSceneName=="myCrash.unity")
+		{
+			Vector3 lscale= enemyObj.transform.localScale;
+			lscale.x*=playerScaleForMyCrash;
+			lscale.y*=playerScaleForMyCrash;
+			lscale.z*=playerScaleForMyCrash;
 			Renderer rend = enemyObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
@@ -2654,15 +2863,21 @@ public partial class Visibility1 : MonoBehaviour {
 		Vector3 lscale= tempObj.transform.localScale;
 		if(currSceneName=="Crash.unity")
 		{
-			lscale.x*=5;
-			lscale.y*=5;
-			lscale.z*=5;
+			lscale.x*=playerScaleForCrash;
+			lscale.y*=playerScaleForCrash;
+			lscale.z*=playerScaleForCrash;
+		}
+		else if(currSceneName=="myCrash.unity")
+		{
+			lscale.x*=playerScaleForMyCrash;
+			lscale.y*=playerScaleForMyCrash;
+			lscale.z*=playerScaleForMyCrash;
 		}
 		else
 		{
-		lscale.x*=0.36f;
-		lscale.y*=0.36f;
-		lscale.z*=0.36f;
+			lscale.x*=0.36f;
+			lscale.y*=0.36f;
+			lscale.z*=0.36f;
 		}
 		
 		Renderer rend = tempObj.GetComponent<Renderer>();
@@ -2670,8 +2885,35 @@ public partial class Visibility1 : MonoBehaviour {
 		rend.transform.localScale = lscale;
 		tempObj.transform.position=pos;
 		tempObj.transform.parent = allLineParent.transform;
+		if(bJustTestCrashNow && currSceneName=="Crash.unity")
+		{
+			listShows.Add(tempObj);
+		}
 	}
-
+	void showPosOfPointEnemySized(Vector3 pos,Color c)
+	{
+		if (float.IsNaN (pos.x) || float.IsNaN (pos.z))
+			return;
+		//GameObject sp = (GameObject)GameObject.Find ("StartPoint");
+		//GameObject tempObj = (GameObject)GameObject.Instantiate (sp);
+		GameObject tempObj = Instantiate(enemyPrefab, pos, enemyPrefab.transform.rotation) as GameObject;
+		Vector3 lscale= tempObj.transform.localScale;
+		if(currSceneName=="myCrash.unity")
+		{
+			lscale.x*=playerScaleForMyCrash;
+			lscale.y*=playerScaleForMyCrash;
+			lscale.z*=playerScaleForMyCrash;
+		}
+		//lscale.x*=10f;
+		//lscale.y*=10f;
+		//lscale.z*=10f;
+		
+		Renderer rend = tempObj.GetComponent<Renderer>();
+		rend.material.color = c;
+		rend.transform.localScale = lscale;
+		tempObj.transform.position=pos;
+		tempObj.transform.parent = allLineParent.transform;
+	}
 	void showPosOfPoint(Vector3 pos,Color c)
 	{
 		if (float.IsNaN (pos.x) || float.IsNaN (pos.z))
@@ -2680,9 +2922,12 @@ public partial class Visibility1 : MonoBehaviour {
 		//GameObject tempObj = (GameObject)GameObject.Instantiate (sp);
 		GameObject tempObj = Instantiate(pathSphere, pos, pathSphere.transform.rotation) as GameObject;
 		Vector3 lscale= tempObj.transform.localScale;
-		//lscale.x*=10f;
-		//lscale.y*=10f;
-		//lscale.z*=10f;
+		if(currSceneName=="myCrash.unity")
+		{
+			lscale.x*=0.7f;
+			lscale.y*=0.7f;
+			lscale.z*=0.7f;
+		}
 
 		Renderer rend = tempObj.GetComponent<Renderer>();
 		rend.material.color = c;
@@ -2817,7 +3062,8 @@ public partial class Visibility1 : MonoBehaviour {
 			return false;
 		}
 		bool bTestAllPoints = true;
-		Geometry visibleGeoTemp = (Geometry)hVisiblePolyTable[pathPoints [Indx]];
+		//Geometry visibleGeoTemp = (Geometry)hVisiblePolyTable[pathPoints [Indx]];
+		List<VisibleTriangles> listVT = ((List<VisibleTriangles>)(hVisibleTrianglesTable[pathPoints[Indx]]));
 		List<Vector3> pointListToTest = new List<Vector3>();
 		//Debug.Log (radius_enemy + " radius_enemy");
 		if(bTestAllPoints)
@@ -2867,14 +3113,40 @@ public partial class Visibility1 : MonoBehaviour {
 					return false;
 				}
 			}
-			if(visibleGeoTemp.PointInside(pt1))
+			/*foreach(VisibleTriangles vt in listVT)
 			{
-				//Debug.Log("("+pt2Temp.x+" , "+pt2Temp.y+")"+"point not In Shadow. "+pt1+" is inside an visibility Polygon");
+				if(vt.PointInside(pt1))
+				{
+					return false;
+				}
+			}*/
+			bool res9 = AnotherCheckIfVisible(pathPoints[Indx],pt1,listVT);
+			if(res9)
+			{
 				return false;
 			}
+			/*if(visibleGeoTemp.PointInside(pt1))
+			{
+				return false;
+			}*/
 		}
 		/*foreach(Vector3 pt1 in pointListToTest)
 			showPosOfPoint(pt1,Color.yellow);*/
+		return true;
+	}
+	private bool AnotherCheckIfVisible(Vector3 pathPointCurr,Vector3 pt1,List<VisibleTriangles> listVT)
+	{
+		List<Line> listEdges = new List<Line> ();
+		foreach(VisibleTriangles vt in listVT)
+		{
+			listEdges.Add(new Line(vt.pt2,vt.pt3));
+		}
+		Line lineToTest = new Line (pathPointCurr, pt1);
+		foreach(Line l in listEdges)
+		{
+			if(lineToTest.LineIntersectMuntacEndPt(l)>0)
+				return false;
+		}
 		return true;
 	}
 	private bool pointInShadow_Old(Vector3 pt,int Indx)
@@ -3691,14 +3963,40 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		hiddenSphereList.RemoveAll(item=>item==null);
 	}
-	public bool floatCompare ( float a, float b ){
+	public bool floatCompare ( float a, float b )
+	{
+		if(currSceneName == "myCrash.unity")
+		{
+			return Mathf.Abs (a - b) < eps4;
+		}
 		return Mathf.Abs (a - b) < eps;
 	}
 	private float eps = 0.01f;
 	private float eps2 = 0.0001f;
+	private float eps4 = 0.0001f;
 	private float eps3 = 0.5f;
-	public bool VectorApprox ( Vector3 a, Vector3 b ){
+	public bool VectorApprox_Old ( Vector3 a, Vector3 b ){
 		if( Mathf.Abs (a.x - b.x) < eps && Mathf.Abs (a.z - b.z) < eps )
+		{
+			//Debug.Log(Mathf.Abs (a.x - b.x) +"<"+ eps);
+			//Debug.Log(Mathf.Abs (a.z - b.z) +"<"+ eps);
+			return true;
+		}
+		else
+			return false;
+	}
+	public bool VectorApprox ( Vector3 a, Vector3 b )
+	{
+		if(currSceneName == "myCrash.unity")
+		{
+			if( Mathf.Abs (a.x - b.x) < eps4 && Mathf.Abs (a.z - b.z) < eps4 )
+			{
+				return true;
+			}
+			else
+				return false;
+		}
+		if( Mathf.Abs (a.x - b.x) < eps2 && Mathf.Abs (a.z - b.z) < eps2 )
 		{
 			//Debug.Log(Mathf.Abs (a.x - b.x) +"<"+ eps);
 			//Debug.Log(Mathf.Abs (a.z - b.z) +"<"+ eps);
@@ -3718,6 +4016,15 @@ public partial class Visibility1 : MonoBehaviour {
 			else
 				return false;
 		}
+		else if(currSceneName == "myCrash.unity")
+		{
+			if( Mathf.Abs (a.x - b.x) < eps4 && Mathf.Abs (a.z - b.z) < eps4 )
+			{
+				return true;
+			}
+			else
+				return false;
+		}
 		else
 		{
 			if( Mathf.Abs (a.x - b.x) < eps2 && Mathf.Abs (a.z - b.z) < eps2 )
@@ -3730,6 +4037,292 @@ public partial class Visibility1 : MonoBehaviour {
 				return false;
 		}
 	}
+	public class VisibleTriangles
+	{
+		public Vector3 pt1;
+		public Vector3 pt2;
+		public Vector3 pt3;
+		public static Material matTriangle;
+		public static GameObject allChildParent;
+		public static GameObject enemyPrefab;
+		void showPosOfPointEnemySized(Vector3 pos,Color c)
+		{
+			if (float.IsNaN (pos.x) || float.IsNaN (pos.z))
+				return;
+			//GameObject sp = (GameObject)GameObject.Find ("StartPoint");
+			//GameObject tempObj = (GameObject)GameObject.Instantiate (sp);
+			GameObject tempObj = Instantiate(enemyPrefab, pos, enemyPrefab.transform.rotation) as GameObject;
+			Vector3 lscale= tempObj.transform.localScale;
+			//lscale.x*=10f;
+			//lscale.y*=10f;
+			//lscale.z*=10f;
+			
+			Renderer rend = tempObj.GetComponent<Renderer>();
+			rend.material.color = c;
+			rend.transform.localScale = lscale;
+			tempObj.transform.position=pos;
+			tempObj.transform.SetParent (allChildParent.transform);
+		}
+		public bool PointOnLine(Vector3 pt)
+		{
+			List<Line> edgesTriangle = new List<Line> ();
+			edgesTriangle.Add (new Line (pt1, pt2));
+			edgesTriangle.Add (new Line (pt2, pt3));
+			edgesTriangle.Add (new Line (pt3, pt1));
+			foreach(Line myLine in edgesTriangle)
+			{
+				if(myLine.PointOnLine_LessAccurate(pt))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+		public bool PointInside( Vector3 pt )
+		{
+			if (PointOnLine (pt))
+				return true;
+			int extreme = 500;
+			List<Line> lRayList = new List<Line> ();
+			List<Vector3> pointListToTest = new List<Vector3>();
+			List<int> listAngleVars = new List<int>();
+			/*for(int itr=10;itr<360;itr+=30)
+		{
+			listAngleVars.Add(itr);
+		}*/
+			listAngleVars.Add(45);
+			listAngleVars.Add(-45);
+			listAngleVars.Add(90);
+			listAngleVars.Add(-90);
+			listAngleVars.Add(135);
+			listAngleVars.Add(-135);
+			listAngleVars.Add(0);
+			listAngleVars.Add(180);
+			foreach(int angleVar in listAngleVars)
+			{
+				Vector3 vecSel = new Vector3();
+				vecSel.x = pt.x + extreme*Mathf.Cos(angleVar* Mathf.Deg2Rad);
+				vecSel.y = pt.y;
+				vecSel.z = pt.z + extreme*Mathf.Sin(angleVar* Mathf.Deg2Rad);
+				pointListToTest.Add(vecSel);
+			}
+			//Line lray = new Line(pt, new Vector3(-100,1,-100)); 
+			int count = 0;
+			foreach(Vector3 vectVar in pointListToTest)
+			{
+				lRayList.Add (new Line (pt, vectVar));
+			}
+			
+			//lRayList.Add (new Line (pt, new Vector3 (-extreme, 1,-extreme)));
+			//lRayList.Add (new Line (pt, new Vector3 (extreme, 1, -extreme)));
+			//lRayList.Add (new Line (pt, new Vector3 (extreme, 1, extreme)));
+			//lRayList.Add (new Line (pt, new Vector3 (-extreme, 1, extreme)));
+			List<Line> edgesTriangle = new List<Line> ();
+			edgesTriangle.Add (new Line (pt1, pt2));
+			edgesTriangle.Add (new Line (pt2, pt3));
+			edgesTriangle.Add (new Line (pt3, pt1));
+			int count1 = 0;
+			float epsPtInside = 0.0001f;
+			foreach(Line lray in lRayList)
+			{
+				count=0;
+				foreach(Line myLine in edgesTriangle)
+				{
+					if( myLine.LineIntersectMuntacEndPt(lray) > 0 )
+					{
+						count++;
+						//Check if the intersection point is on the polygon edge
+						//Note: other checks tried but precision error kept coming up in cases
+						Vector3 vtemp = myLine.GetIntersectionPoint(lray);
+						if( Mathf.Abs( vtemp.x - pt.x ) < epsPtInside && Mathf.Abs(vtemp.z - pt.z) < epsPtInside )
+							return false;
+					}
+				}
+				if(count%2 != 1)
+				{
+					count1++;
+					//return false;
+				}
+			}
+			if (count1 >= lRayList.Count/2)
+				return false;
+			//return count%2 == 1; 
+			return true;
+		}
+		private void DrawLine()
+		{
+			GameObject allLineParentChild = new GameObject();
+			LineRenderer lineR = allLineParentChild.AddComponent<LineRenderer>();
+			lineR.material = matTriangle;
+			lineR.SetWidth(0.05f,0.05f);
+			lineR.SetVertexCount(2);
+			lineR.SetColors (Color.cyan, Color.cyan);
+
+			Vector3 vertexPt = new Vector3(pt2.x,2.0f,pt2.z);
+			lineR.SetPosition (0,vertexPt);
+			vertexPt = new Vector3(pt3.x,2.0f,pt3.z);
+			lineR.SetPosition (1, vertexPt);
+
+			allLineParentChild.transform.SetParent (allChildParent.transform);
+
+			Renderer rend = allLineParentChild.GetComponent<Renderer>();
+			rend.material.color = Color.cyan;
+			lineR.material.color = Color.cyan;
+		}
+		public void DrawTriangle()
+		{
+			//DrawLine ();
+			/*GameObject GO_Triangle = new GameObject ();
+
+			GO_Triangle.AddComponent<MeshFilter>();
+			GO_Triangle.AddComponent<MeshRenderer>();
+			Mesh mesh = GO_Triangle.GetComponent<MeshFilter>().mesh;
+			mesh.Clear();
+			mesh.vertices = new Vector3[] {pt1,pt2,pt3};
+			mesh.uv = new Vector2[]
+			{
+				new Vector2(0f,0f),
+				new Vector2(1f,0f),
+				new Vector2(.5f, Mathf.Sin(Mathf.Deg2Rad * 45f) )
+			};
+			mesh.triangles = new int[] {0, 1, 2};
+			MeshRenderer meshRenderer = GO_Triangle.GetComponent<MeshRenderer>();
+			meshRenderer.material = matTriangle;
+			Vector3[] normals = new Vector3[3]{Vector3.forward,Vector3.forward,Vector3.forward};
+			mesh.normals = normals;
+			*/
+			/*Mesh mesh = new Mesh();
+			int[] tris = new int[3]{0,1,2};
+			Vector3[] verts = new Vector3[3];
+			Vector2[] uvs = new Vector2[3];
+			verts [0] = -Vector3.right + Vector3.up;
+			verts [1] = Vector3.right + Vector3.up;
+			verts [2] = -Vector3.right - Vector3.up;
+			uvs [0] = new Vector2 (0.0f,1.0f);
+			uvs [1] = new Vector2 (1.0f,1.0f);
+			uvs [2] = new Vector2 (0.0f,0.0f);
+			mesh.vertices = verts;
+			mesh.triangles = tris;
+			mesh.uv = uvs;
+			mesh.RecalculateNormals ();
+			GO_Triangle.AddComponent<MeshFilter> ().mesh = mesh;
+			GO_Triangle.AddComponent<MeshRenderer>();*/
+			{
+					GameObject GO_Triangle = new GameObject ();
+					GO_Triangle.AddComponent<MeshFilter> ();
+					GO_Triangle.AddComponent<MeshRenderer> ();
+					MeshRenderer meshRenderer = GO_Triangle.GetComponent<MeshRenderer> ();
+					meshRenderer.material = matTriangle;
+					MeshFilter filter = GO_Triangle.GetComponent<MeshFilter> ();
+					Mesh mesh = filter.sharedMesh;
+					if (mesh == null) {
+							mesh = new Mesh ();
+							filter.sharedMesh = mesh;
+					}
+					Vector2[] uvs = new Vector2[3];
+
+
+					int i2 = 0;
+					uvs [0] = new Vector2 (pt1.x, pt1.z);
+					uvs [1] = new Vector2 (pt2.x, pt2.z);
+					uvs [2] = new Vector2 (pt3.x, pt3.z);
+
+					Vector3[] normals = new Vector3[3];
+					normals [0] = Vector3.up;
+					normals [1] = Vector3.up;
+					normals [2] = Vector3.up;
+
+
+					mesh.vertices = new Vector3[]{pt1,pt2,pt3};
+					mesh.uv = uvs;
+					mesh.triangles = new int[]{1,0,2};
+					mesh.normals = normals;
+
+					filter.mesh = mesh;
+					mesh.RecalculateNormals ();
+					mesh.RecalculateBounds ();
+
+					GO_Triangle.transform.SetParent (allChildParent.transform);
+			}
+			{
+				GameObject GO_Triangle = new GameObject ();
+				GO_Triangle.AddComponent<MeshFilter> ();
+				GO_Triangle.AddComponent<MeshRenderer> ();
+				MeshRenderer meshRenderer = GO_Triangle.GetComponent<MeshRenderer> ();
+				meshRenderer.material = matTriangle;
+				MeshFilter filter = GO_Triangle.GetComponent<MeshFilter> ();
+				Mesh mesh = filter.sharedMesh;
+				if (mesh == null) {
+					mesh = new Mesh ();
+					filter.sharedMesh = mesh;
+				}
+				Vector2[] uvs = new Vector2[3];
+				
+				
+				int i2 = 0;
+				uvs [0] = new Vector2 (pt1.x, pt1.z);
+				uvs [1] = new Vector2 (pt2.x, pt2.z);
+				uvs [2] = new Vector2 (pt3.x, pt3.z);
+				
+				Vector3[] normals = new Vector3[3];
+				normals [0] = Vector3.up;
+				normals [1] = Vector3.up;
+				normals [2] = Vector3.up;
+				
+				
+				mesh.vertices = new Vector3[]{pt1,pt2,pt3};
+				mesh.uv = uvs;
+				mesh.triangles = new int[]{0,2,1};
+				mesh.normals = normals;
+				
+				filter.mesh = mesh;
+				mesh.RecalculateNormals ();
+				mesh.RecalculateBounds ();
+				
+				GO_Triangle.transform.SetParent (allChildParent.transform);
+			}
+			{
+				GameObject GO_Triangle = new GameObject ();
+				GO_Triangle.AddComponent<MeshFilter> ();
+				GO_Triangle.AddComponent<MeshRenderer> ();
+				MeshRenderer meshRenderer = GO_Triangle.GetComponent<MeshRenderer> ();
+				meshRenderer.material = matTriangle;
+				MeshFilter filter = GO_Triangle.GetComponent<MeshFilter> ();
+				Mesh mesh = filter.sharedMesh;
+				if (mesh == null) {
+					mesh = new Mesh ();
+					filter.sharedMesh = mesh;
+				}
+				Vector2[] uvs = new Vector2[3];
+				
+				
+				int i2 = 0;
+				uvs [0] = new Vector2 (pt1.x, pt1.z);
+				uvs [1] = new Vector2 (pt2.x, pt2.z);
+				uvs [2] = new Vector2 (pt3.x, pt3.z);
+				
+				Vector3[] normals = new Vector3[3];
+				normals [0] = Vector3.up;
+				normals [1] = Vector3.up;
+				normals [2] = Vector3.up;
+				
+				
+				mesh.vertices = new Vector3[]{pt1,pt2,pt3};
+				mesh.uv = uvs;
+				mesh.triangles = new int[]{2,0,1};
+				mesh.normals = normals;
+				
+				filter.mesh = mesh;
+				mesh.RecalculateNormals ();
+				mesh.RecalculateBounds ();
+				
+				GO_Triangle.transform.SetParent (allChildParent.transform);
+			}
+
+		}
+	}
+	int PointToDebug = 0;
+	bool bDebugNow = false;
 	public void CalculateVisibilityForPath()
 	{
 		//globalPolygon = getObstacleEdges ();
@@ -3737,6 +4330,10 @@ public partial class Visibility1 : MonoBehaviour {
 		List<Vector3> endPoints = new List<Vector3> ();
 		hTable = new Hashtable ();
 		hVisiblePolyTable = new Hashtable ();
+		hVisibleTrianglesTable = new Hashtable ();
+		VisibleTriangles.matTriangle = matGreen;
+		VisibleTriangles.allChildParent = allLineParent;
+		VisibleTriangles.enemyPrefab = enemyPrefab;
 		//Extract all end points
 
 		foreach(Line l in mapBG.edges)
@@ -3782,6 +4379,10 @@ public partial class Visibility1 : MonoBehaviour {
 		int pathIndexTemp = -1;
 		foreach(Vector3 pPoint in pathPoints)
 		{
+			if(bDebugNow && pPoint!=pathPoints[PointToDebug])
+			{
+				continue;
+			}
 			//Debug.Log(pPoint);
 			if(bShowJustVisibilityPoly)
 			{
@@ -3969,6 +4570,7 @@ public partial class Visibility1 : MonoBehaviour {
 					intersectionPointsPerV[tmpIndex]=null;
 					//Debug.Break();
 				}
+
 				//2nd approach
 				/*for(int itr1=0;itr1<intersectionPts.Count-1;itr1++)
 				{
@@ -3977,120 +4579,294 @@ public partial class Visibility1 : MonoBehaviour {
 				}*/
 			}
 			intersectionPointsPerV.RemoveAll(item=>item==null);
-			if(pPoint == pathPoints[20])
-			{
-				/*for(int itr1=0;itr1<arrangedPoints.Count;itr1++)
-				{
-					showPosOfPoint(arrangedPoints[itr1],Color.blue);
-				}
-				foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
-				{
-					
-					for(int itr1=0;itr1<intersectionPts.Count;itr1++)
-					{
-						showPosOfPoint(intersectionPts[itr1],Color.blue);
-					}
-				}*/
-			}
-			/*foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
-			{
-				foreach(Vector3 intsctPoint in intersectionPts)
-				{
-					(new Line(pPoint,intsctPoint)).DrawVector(allLineParent);
-				}
-			}*/
-			//Added new check 26th May,2015
-			/*foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
-			{
-				if(intersectionPts.Count<2)
-					continue;
-				int tmpIndex = intersectionPointsPerV.IndexOf(intersectionPts);
-				if(!mapBG.PointInside((intersectionPts[0]+intersectionPts[1])/2))
-				{
-					intersectionPointsPerV[tmpIndex]=null;//TODO: check if will be garbage collected
-				}
-			}
-			intersectionPointsPerV.RemoveAll(item=>item==null);*/
 
-
-			//Remove all hidden intersection points behind visible vertices
-			foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
+			//Eliminate points
+			for(int i=0;i<intersectionPointsPerV.Count;i++)
 			{
-				if(intersectionPts.Count<2)
-					continue;
-				//if second point is on same polygon, just keep the single vertex and remove all behind it
-				//if(existOnSamePolygon(intersectionPts[0],intersectionPts[1]))
-				for(int itr1=0;itr1<intersectionPts.Count-1;itr1++)
+				List<Vector3> listPts = intersectionPointsPerV[i];
+				for(int j=0;j<listPts.Count-1;j++)
 				{
-					/*if(existOnSameLineOfPolygon(intersectionPts[itr1],intersectionPts[itr1+1]))
+					Vector3 mdPt = Vector3.Lerp(listPts[j],listPts[j+1],0.5f);
+
+					/*Line l1 = new Line(pPoint,listPts[j]);
+					Line l2 = new Line();
+					float? slope1 = l1.getSlope();
+					float? slope2 = l2.getSlope();
+					if(slope1==null && slope2==null)
 					{
-						intersectionPts.RemoveAt(itr1);
-						itr1--;
 						continue;
-					}*/
-					Vector3 mdPt = Vector3.Lerp(intersectionPts[itr1],intersectionPts[itr1+1],0.5f);
-					if(isTheMidPtOfBoundary(mdPt) || existOnSameLineOfPolygon(intersectionPts[itr1],mdPt) 
-					   || existOnSameLineOfPolygon(intersectionPts[itr1],intersectionPts[itr1+1]) || existOnSameLineOfPolygon(intersectionPts[itr1+1],mdPt))
+					}
+					if(slope1!=null && slope2!=null)
 					{
-						//(new Line(pPoint,mdPt)).DrawVector(allLineParent);
+						if(floatCompare(slope1.Value,slope2.Value))
+							continue;
+					}*/
+					if(existOnSameLineOfPolygon(listPts[j],listPts[j+1]) || existOnSameLineOfPolygon(listPts[j],mdPt))
+					{
 						continue;
 					}
 					if(CheckIfInsidePolygon(mdPt) || !mapBG.PointInside(mdPt))
 					{
-
-
-						//showPosOfPoint(mdPt,Color.red);
-
-						intersectionPts.RemoveRange(itr1+1,intersectionPts.Count-1-itr1);
+						listPts.RemoveRange(j+1,listPts.Count-j-1);
 						break;
+					}
+				}
+			}
+			///////////////////////////////////////////////////////Start/////////////////////////////////////////////////////////////////
+
+			//New Elimination:
+			Geometry geoVisibleTemp = new Geometry();
+			List<VisibleTriangles> listTriangles = new List<VisibleTriangles>();
+			int savedSecondIndx=-1;
+			for(int i=0;i<=intersectionPointsPerV.Count;i++)
+			{
+
+				int currIndx =  i%intersectionPointsPerV.Count;
+				int nextIndex = (i+1)%intersectionPointsPerV.Count;
+				bool bTriangleAdded = false;
+
+				if(pPoint==pathPoints[PointToDebug] && bDebugNow)
+				{
+					for(int j=0;j<intersectionPointsPerV[currIndx].Count;j++)
+					{
+						showPosOfPoint(intersectionPointsPerV[currIndx][j],Color.green);
+
+						GameObject allLineParentChild = new GameObject();
+						LineRenderer lineR = allLineParentChild.AddComponent<LineRenderer>();
+						lineR.material = matGreen;
+						lineR.SetWidth(0.02f,0.02f);
+						lineR.SetVertexCount(2);
+						//lineR.SetPosition(0,l.vertex[0]);
+						//lineR.SetPosition(1,l.vertex[1]);
+						lineR.SetColors (Color.cyan, Color.cyan);
+
+						Vector3 vertexPt = pPoint;
+						lineR.SetPosition (0,vertexPt);
+						vertexPt = intersectionPointsPerV[currIndx][j];
+						lineR.SetPosition (1, vertexPt);
+
+						allLineParentChild.transform.parent = allLineParent.transform;
+						Renderer rend = allLineParentChild.GetComponent<Renderer>();
+						rend.material.color = Color.cyan;
+						lineR.material.color = Color.cyan;
+
+						/*for(int k=0;k<intersectionPointsPerV[nextIndex].Count;k++)
+						{		
+							if(existOnSameLineOfPolygon(intersectionPointsPerV[currIndx][j],intersectionPointsPerV[nextIndex][k]))
+							{
+								GameObject allLineParentChildTemp = new GameObject();
+								LineRenderer lineRTemp = allLineParentChildTemp.AddComponent<LineRenderer>();
+								lineRTemp.material = matGreen;
+								lineRTemp.SetWidth(0.1f,0.1f);
+								lineRTemp.SetVertexCount(2);
+								lineRTemp.SetColors (Color.cyan, Color.cyan);
+								
+								Vector3 vertexPtTemp = new Vector3(intersectionPointsPerV[currIndx][j].x,2.0f,intersectionPointsPerV[currIndx][j].z);
+								lineRTemp.SetPosition (0,vertexPtTemp);
+								vertexPtTemp = new Vector3(intersectionPointsPerV[nextIndex][k].x,2.0f,intersectionPointsPerV[nextIndex][k].z);
+								lineRTemp.SetPosition (1, vertexPtTemp);
+								
+								allLineParentChildTemp.transform.SetParent (allLineParent.transform);
+								
+								Renderer rendTemp = allLineParentChildTemp.GetComponent<Renderer>();
+								rendTemp.material.color = Color.cyan;
+								lineRTemp.material.color = Color.cyan;
+							}
+						}*/
+					}
+				}
+				/*for(int j=0;j<intersectionPointsPerV[i].Count-1;j++)
+				{
+					geoVisible.edges.Add(new Line(intersectionPointsPerV[i][j],intersectionPointsPerV[i][j+1]));
+					
+				}*/
+
+				if(intersectionPointsPerV[currIndx].Count==1 && intersectionPointsPerV[nextIndex].Count==1)
+				{
+					VisibleTriangles vt = new VisibleTriangles();
+					vt.pt1 = pPoint;
+					vt.pt2 = intersectionPointsPerV[currIndx][0];
+					vt.pt3 = intersectionPointsPerV[nextIndex][0];
+					listTriangles.Add(vt);
+					bTriangleAdded = true;
+					geoVisibleTemp.edges.Add(new Line(intersectionPointsPerV[currIndx][0],intersectionPointsPerV[nextIndex][0]));
+					continue;
+				}
+
+
+				float leastSumF = 10000f;
+				float sumIndxF = leastSumF;
+				int leastSum = 1000;
+				int sumIndx = leastSum;
+				int firstIndx=-1;
+				int secondIndx=-1;
+				for(int j=0;j<intersectionPointsPerV[currIndx].Count;j++)
+				{
+					for(int k=0;k<intersectionPointsPerV[nextIndex].Count;k++)
+					{
+						
+						if(existOnSameLineOfPolygon(intersectionPointsPerV[currIndx][j],intersectionPointsPerV[nextIndex][k]))
+						{
+							sumIndxF = Vector3.Distance(pPoint,intersectionPointsPerV[currIndx][j])+Vector3.Distance(pPoint,intersectionPointsPerV[nextIndex][k]);
+							if(sumIndxF<leastSumF)
+							{
+								leastSumF = sumIndxF;
+								firstIndx = j;
+								secondIndx = k;
+							}
+							/*Line l1 = new Line(intersectionPointsPerV[currIndx][j],intersectionPointsPerV[nextIndex][k]);
+							sumIndx = j+k;
+							if(sumIndx<leastSum)
+							{
+								leastSum = sumIndx;
+								firstIndx = j;
+								secondIndx = k;
+							}*/
+						}
+					}
+				}
+				if(firstIndx>=0 && secondIndx>=0)
+				{
+					VisibleTriangles vt = new VisibleTriangles();
+					vt.pt1 = pPoint;
+					vt.pt2 = intersectionPointsPerV[currIndx][firstIndx];
+					vt.pt3 = intersectionPointsPerV[nextIndex][secondIndx];
+					listTriangles.Add(vt);
+					bTriangleAdded = true;
+				}
+				if(firstIndx>=0 && savedSecondIndx>=0)
+				{
+					//Debug.Log("firstIndx = "+firstIndx);
+					//Debug.Log("savedSecondIndx = "+savedSecondIndx);
+					geoVisibleTemp.edges.Add(new Line(intersectionPointsPerV[currIndx][firstIndx],intersectionPointsPerV[currIndx][savedSecondIndx]));
+				}
+				else
+				{
+					/*Debug.Log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+					Debug.Log("firstIndx = "+firstIndx);
+					Debug.Log("secondIndx = "+secondIndx);
+					Debug.Log("savedSecondIndx = "+savedSecondIndx);
+					Debug.Log("############################");*/
+					//savedSecondIndx = secondIndx;
+					//continue;
+				}
+				savedSecondIndx = secondIndx;
+				//geoVisibleTemp.edges.Add(new Line(intersectionPointsPerV[i][0],intersectionPointsPerV[i][firstIndx]));
+				if(firstIndx>=0 && secondIndx>=0)
+				{
+					geoVisibleTemp.edges.Add(new Line(intersectionPointsPerV[currIndx][firstIndx],intersectionPointsPerV[nextIndex][secondIndx]));
+				}
+				if(!bTriangleAdded)
+				{
+					Debug.Log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Triangle not added at = "+pathPoints.IndexOf(pPoint));
+					if(bDebugNow)
+					{
+						GameObject allLineParentChildTemp = new GameObject();
+						LineRenderer lineRTemp = allLineParentChildTemp.AddComponent<LineRenderer>();
+						lineRTemp.material = matGreen;
+						lineRTemp.SetWidth(0.08f,0.08f);
+						lineRTemp.SetVertexCount(2);
+						lineRTemp.SetColors (Color.cyan, Color.cyan);
+						Vector3 vertexPtTemp = new Vector3(pPoint.x,2.0f,pPoint.z);
+						lineRTemp.SetPosition (0,vertexPtTemp);
+						vertexPtTemp = new Vector3(intersectionPointsPerV[currIndx][0].x,2.0f,intersectionPointsPerV[currIndx][0].z);//intersectionPointsPerV[nextIndex][k].z);
+						lineRTemp.SetPosition (1, vertexPtTemp);
+						allLineParentChildTemp.transform.SetParent (allLineParent.transform);
+						Renderer rendTemp = allLineParentChildTemp.GetComponent<Renderer>();
+						rendTemp.material.color = Color.cyan;
+						lineRTemp.material.color = Color.cyan;
+
+
+						GameObject allLineParentChildTemp2 = new GameObject();
+						LineRenderer lineRTemp2 = allLineParentChildTemp2.AddComponent<LineRenderer>();
+						lineRTemp2.material = matGreen;
+						lineRTemp2.SetWidth(0.08f,0.08f);
+						lineRTemp2.SetVertexCount(2);
+						lineRTemp2.SetColors (Color.cyan, Color.cyan);
+						Vector3 vertexPtTemp2 = new Vector3(pPoint.x,2.0f,pPoint.z);
+						lineRTemp2.SetPosition (0,vertexPtTemp2);
+						vertexPtTemp2 = new Vector3(intersectionPointsPerV[nextIndex][0].x,2.0f,intersectionPointsPerV[nextIndex][0].z);//intersectionPointsPerV[nextIndex][k].z);
+						lineRTemp2.SetPosition (1, vertexPtTemp);
+						allLineParentChildTemp2.transform.SetParent (allLineParent.transform);
+						Renderer rendTemp2 = allLineParentChildTemp2.GetComponent<Renderer>();
+						rendTemp2.material.color = Color.cyan;
+						lineRTemp2.material.color = Color.cyan;
+
+						showPosOfPointRectangle(intersectionPointsPerV[currIndx][0],Color.red);
+						showPosOfPointRectangle(intersectionPointsPerV[nextIndex][0],Color.red);
+					}
+				}
+			}
+			if(pPoint==pathPoints[PointToDebug] && bDebugNow)
+			{
+				showPosOfPoint(new Vector3(pPoint.x,2.0f,pPoint.z),Color.yellow);
+				foreach(VisibleTriangles vt in listTriangles)
+				{
+					vt.DrawTriangle();
+				}
+				hVisibleTrianglesTable.Add(pPoint,listTriangles);
+				break;
+			}
+			hVisibleTrianglesTable.Add(pPoint,listTriangles);
+			//Debug.Log("Before remove duplicate = "+geoVisibleTemp.edges.Count);
+			geoVisibleTemp.removeDuplicateEdges();
+
+			//geoVisibleTemp.CheckForValidity(pathPoints.IndexOf(pPoint));
+			//Debug.Log("After remove duplicate = "+geoVisibleTemp.edges.Count);
+			hVisiblePolyTable.Add(pPoint,geoVisibleTemp);
+
+			List<Geometry> shadowPoly = FindShadowPolygons(geoVisibleTemp);
+			hTable.Add(pPoint,shadowPoly);
+			arrangedPoints.Clear();
+			continue;
+			/*if(pPoint==pathPoints[9])
+			{
+				foreach(Line lTemp in geoVisibleTemp.edges)
+				{
+					lTemp.DrawVector(allLineParent);
+				}
+				break;
+			}*/
+			/////////////////////////////////////////////////////Stop///////////////////////////////////////////////////////////////////;
+			/*if(pPoint==pathPoints[9])
+			{
+				for(int i=0;i<intersectionPointsPerV.Count;i++)
+				{
+					if(intersectionPointsPerV[i].Count<=1)
+						continue;
+					foreach(Vector3 intersectionPt in intersectionPointsPerV[i])
+					{
+						//showPosOfPoint(intersectionPt,Color.magenta);
 
 					}
 				}
-				/*Vector3 mdPt = Vector3.Lerp(intersectionPts[0],intersectionPts[1],0.5);
-				if(CheckIfInsidePolygon(mdPt))
-				{
-					intersectionPts.RemoveRange(1,intersectionPts.Count-1);
-				}
-				//else keep the first two points
-				else
-				{
-					intersectionPts.RemoveRange(2,intersectionPts.Count-2);
-				}*/
-			}
-			if(pPoint==pathPoints[20])
-			{
-				/*foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
+				foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
 				{
 					foreach(Vector3 intsctPoint in intersectionPts)
 					{
 						(new Line(pPoint,intsctPoint)).DrawVector(allLineParent);
+						break;
 					}
-				}*/
-				/*foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
+				}
+				foreach(List<Vector3> intersectionPts in intersectionPointsPerV)
 				{
 					Line l1 = new Line(intersectionPts[0],intersectionPts[intersectionPts.Count-1]);
 					l1.DrawVector(allLineParent);
-				}*/
-			}
+				}
+				break;
+			}*/
 			//Build geometries
-			for(int i=0;i<intersectionPointsPerV.Count;i++)
+			/*for(int i=0;i<intersectionPointsPerV.Count;i++)
 			{
-				/*foreach(Vector3 intersectionPt in intersectionPointsPerV[i])
-				{
-					showPosOfPoint(intersectionPt,Color.magenta);
-
-				}*/
 				int nextIndex = (i+1)%intersectionPointsPerV.Count;
 				Geometry geoVisible = new Geometry();
 				for(int j=0;j<intersectionPointsPerV[i].Count-1;j++)
 				{
 					geoVisible.edges.Add(new Line(intersectionPointsPerV[i][j],intersectionPointsPerV[i][j+1]));
-					//(new Line(intersectionPointsPerV[i][j],intersectionPointsPerV[i][j+1])).DrawVector(allLineParent);
+
 				}
 				if(intersectionPointsPerV[i].Count==1 && intersectionPointsPerV[nextIndex].Count==1)
 				{
-					//geoVisible.edges.Add(new Line(pPoint,intersectionPointsPerV[i][0]));
-					//geoVisible.edges.Add(new Line(pPoint,intersectionPointsPerV[i+1][0]));
 					geoVisible.edges.Add(new Line(intersectionPointsPerV[i][0],intersectionPointsPerV[nextIndex][0]));
 				}
 				//All three cases, choose points on same polygon
@@ -4105,11 +4881,9 @@ public partial class Visibility1 : MonoBehaviour {
 						{
 							if(bOnlyOneEdgeAdded)
 								break;
-							//if(existOnSamePolygon(intersectionPointsPerV[i][j],intersectionPointsPerV[i+1][k]))
+
 							if(existOnSameLineOfPolygon(intersectionPointsPerV[i][j],intersectionPointsPerV[nextIndex][k]))
 							{
-								//geoVisible.edges.Add(new Line(pPoint,intersectionPointsPerV[i][j]));
-								//geoVisible.edges.Add(new Line(pPoint,intersectionPointsPerV[i+1][k]));
 								Line l1 = new Line(intersectionPointsPerV[i][j],intersectionPointsPerV[nextIndex][k]);
 
 								geoVisible.edges.Add(l1);
@@ -4118,18 +4892,9 @@ public partial class Visibility1 : MonoBehaviour {
 						}
 					}
 				}
-				/*else if(intersectionPointsPerV[i].Count==1 && intersectionPointsPerV[i+1].Count==2)
-				{
-				}
-				else if(intersectionPointsPerV[i].Count==2 && intersectionPointsPerV[i+1].Count==1)
-				{
-				}
-				else if(intersectionPointsPerV[i].Count==2 && intersectionPointsPerV[i+1].Count==2)
-				{
-				}*/
 				starPoly.Add(geoVisible);
-				//geoVisible.DrawGeometry(allLineParent);
-			}
+
+			}*/
 			//Combining all visible edges
 			Geometry visiblePoly = new Geometry();
 			foreach(Geometry geo in starPoly)
@@ -4137,31 +4902,16 @@ public partial class Visibility1 : MonoBehaviour {
 			//visiblePoly = verifyVisibilityPolygon(pPoint,visiblePoly);
 
 			hVisiblePolyTable.Add(pPoint,visiblePoly);
-			/*if(hVisiblePolyTable.ContainsKey(pathPoints[20]))
-			{
-				foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[20]]).edges)
-				{
-					GameObject allLineParentChild = new GameObject();
-					LineRenderer lineR = allLineParentChild.AddComponent<LineRenderer>();
-					lineR.material = matGreen;
-					lineR.SetWidth(0.25f,0.25f);
-					lineR.SetVertexCount(2);
-					lineR.SetPosition(0,l.vertex[0]);
-					lineR.SetPosition(1,l.vertex[1]);
-					allLineParentChild.transform.parent = allLineParent.transform;
 
-				}
-				break;
-			}*/
-			List<Geometry> shadowPoly = FindShadowPolygons(visiblePoly);
-			//ValidatePolygons(shadowPoly);
-			//globalTempArrangedPoints.AddRange(arrangedPoints);
-			//globalTempStarPoly = visiblePoly;
-			//globalTempShadowPoly = shadowPoly;
-			//globalTempintersectionPointsPerV.AddRange(intersectionPointsPerV);
-			//bArranged = true;
-			arrangedPoints.Clear();
-			hTable.Add(pPoint,shadowPoly);
+			//List<Geometry> shadowPoly = FindShadowPolygons(visiblePoly);
+				//ValidatePolygons(shadowPoly);
+				//globalTempArrangedPoints.AddRange(arrangedPoints);
+				//globalTempStarPoly = visiblePoly;
+				//globalTempShadowPoly = shadowPoly;
+				//globalTempintersectionPointsPerV.AddRange(intersectionPointsPerV);
+				//bArranged = true;
+			//arrangedPoints.Clear();
+			//hTable.Add(pPoint,shadowPoly);
 		}//End: Do for all path points
 	}
 
@@ -4514,6 +5264,59 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		return -1;
 	}
+	private bool SignedAngleBetweenNotZero(Vector3 pPoint,Vector3 intsctPt)
+	{
+		if(CheckIfEndPt(intsctPt))
+		{
+			return false;
+		}
+		Vector3 normalVect = new Vector3 (0, 1, 0);
+		Vector3 xVect = new Vector3 (1, 0, 0);
+		Vector3 alongX = new Vector3(pPoint.x+2,pPoint.y,pPoint.z);
+		Line edgeLine = null;
+
+		List<Geometry> allGeometries = new List<Geometry>();
+		allGeometries.Add (mapBG);
+		allGeometries.AddRange(globalPolygon);
+
+		foreach (Geometry g in allGeometries)
+		{
+			foreach (Line l in g.edges) 
+			{
+				if(l.PointOnLine(intsctPt))
+				{
+					edgeLine = l;
+					break;
+				}
+			}
+			if(edgeLine!=null)
+				break;
+		}
+		float sAngle = SignedAngleBetween2(intsctPt-pPoint,edgeLine.vertex[1]-edgeLine.vertex[0],normalVect);
+		if(sAngle<=0.1f)
+		{
+			return false;
+		}
+		return true;
+	}
+	private bool CheckIfEndPt(Vector3 pt1)
+	{
+		foreach (Geometry g in globalPolygon)
+		{
+			foreach(Line l in g.edges)
+			{
+				foreach(Vector3 pt in l.vertex)
+				{
+					if(VectorApprox2(pt,pt1))
+					{
+						//showPosOfPoint(pt,Color.green);
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
 	private bool CheckIfInsidePolygon(Vector3 pt)
 	{
 		bool result = false;
@@ -4550,6 +5353,14 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		return pt1Found;
 	}
+	public bool PointOnLineB( Line l,Vector3 pt )
+	{
+		Vector3 a = l.vertex [0];
+		Vector3 b = l.vertex [1];
+		Vector3 c = pt;
+		//Debug.Log ("IsLeft Value: " + ((b.x - a.x) * (pt.z - a.z) - (b.z - a.z) * (c.x - a.x)));
+		return floatCompare( ((b.x - a.x)*(pt.z - a.z) - (b.z - a.z)*(c.x - a.x)), 0 );
+	}
 	private bool existOnSameLineOfPolygon(Vector3 pt1,Vector3 pt2)
 	{
 		List<Geometry> allGeometries = new List<Geometry>();
@@ -4562,8 +5373,10 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			foreach (Line l in g.edges) 
 			{
-				pt1Found = l.PointOnLine(pt1);
-				pt2Found = l.PointOnLine(pt2);
+				//pt1Found = l.PointOnLine(pt1);
+				//pt2Found = l.PointOnLine(pt2);
+				pt1Found = PointOnLineB(l,pt1);
+				pt2Found = PointOnLineB(l,pt2);
 				
 				if(pt1Found && pt2Found)
 				{
@@ -4645,6 +5458,20 @@ public partial class Visibility1 : MonoBehaviour {
 		//return signed_angle;
 		return angle360;
 	}
+	float SignedAngleBetween2(Vector3 a, Vector3 b, Vector3 n){
+		// angle in [0,180]
+		float angle = Vector3.Angle(a,b);
+		float sign = Mathf.Sign(Vector3.Dot(n,Vector3.Cross(a,b)));
+		
+		// angle in [-179,180]
+		float signed_angle = angle * sign;
+		
+		// angle in [0,360] (not used but included here for completeness)
+		float angle360 =  (signed_angle + 180) % 360;
+		
+		//return signed_angle;
+		return angle;
+	}
 	Vector3 [] mapBoundary;
 	public List<Geometry> getObstacleEdges()
 	{
@@ -4698,6 +5525,12 @@ public partial class Visibility1 : MonoBehaviour {
 			drawingFromFile_LevelCrash();
 			return obsGeos;
 		}
+		/*if(currSceneName=="myCrash.unity")
+		{
+			mapBG = getBoundaryLevelMyCrash();
+			obsGeos = getObstaclesMyCrash();
+			return obsGeos;
+		}*/
 		
 		//Geometry mapBG = new Geometry (); 
 		for (int i = 0; i < 4; i++)

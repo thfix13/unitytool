@@ -887,10 +887,8 @@ public partial class Visibility1 : MonoBehaviour
 			float G = (255 * numLevelsReached) / numOfLevels;
 			float R = (255 * (numOfLevels - numLevelsReached)) / numOfLevels ;
 			float B = 0f;
-			//showPosOfPoint(keyObj,new Color(0.0f,greenNum,0.0f));
-			//showPosOfPoint(keyObj,new Color(R,G,B));
-			//showPosOfPointRectangle(keyObj,Color.Lerp(Color.white,Color.green,greenNum));
-			showPosOfPointRectangle(keyObj,Color.Lerp(Color.white,Color.grey,greenNum));
+			showPosOfPointRectangle(keyObj,Color.Lerp(Color.white,Color.green,greenNum));
+			//showPosOfPointRectangle(keyObj,Color.Lerp(Color.white,Color.grey,greenNum));
 			//showPosOfPoint(keyObj,getColorFromList(numLevelsReached,numOfLevels));
 			//showPosOfPointRectangle(keyObj,new Color(R,G,B));
 			//showPosOfPointRectangle(keyObj,new Color(0.0f,greenNum,0.0f));
@@ -1067,7 +1065,7 @@ public partial class Visibility1 : MonoBehaviour
 		//return;
 
 		float startTime = Time.realtimeSinceStartup;
-		List<NodeShadow> headNodes = readNodeStructureFor2 ();
+
 
 		/*
 		foreach(NodeShadow node in headNodes)
@@ -1083,6 +1081,9 @@ public partial class Visibility1 : MonoBehaviour
 		
 		string sourceDirName = EditorUtility.OpenFolderPanel("Please select results dir", Application.dataPath,"");
 		Debug.Log ("sourceDirName = "+sourceDirName);
+		if (sourceDirName == "")
+			return;
+		List<NodeShadow> headNodes = readNodeStructureFor2 ();
 		string resultFileName = sourceDirName+"\\Result.txt";
 		StreamWriter sw = new StreamWriter (resultFileName);
 		//////////////////Reading Info file for step distance

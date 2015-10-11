@@ -4,6 +4,7 @@ using UnityEngine;
 //using Common;
 //using Exploration;
 //using Objects;
+using System.Collections;
 
 public class Geometry
 {
@@ -14,21 +15,148 @@ public class Geometry
 	public List<Line> voisinsLine = new List<Line>();
 	public bool visited = false; 	
 
-	public void DrawGeometry(GameObject parent)
+	public void DrawGeometry(GameObject parent,Material matGreen)
 	{
 		Color c = new Color(UnityEngine.Random.Range(0.0f,1.0f),
                            UnityEngine.Random.Range(0.0f,1.0f),
                            UnityEngine.Random.Range(0.0f,1.0f)) ;
-
-		foreach (Line l in edges) {
-			l.DrawVector (parent, c);
+		int counter = 0;
+		foreach (Line l in edges) 
+		{
+			counter++;
+			if(counter%3==0)
+			{
+				c = Color.yellow;//new Color(1.0f,0.34f,0.34f) ;
+			}
+			else if(counter%3==1)
+			{
+				c = Color.cyan;//new Color(0.34f,0.34f,1.0f) ;
+			}
+			else if(counter%3==2)
+			{
+				c = Color.magenta;//new Color(0.1f,1.0f,0.34f) ;
+			}
+			//l.DrawVector (parent, c);
 			//l.DrawLine(c);
+			GameObject allLineParentChild = new GameObject();
+			LineRenderer lineR = allLineParentChild.AddComponent<LineRenderer>();
+			lineR.material = matGreen;
+			lineR.SetWidth(0.05f,0.05f);
+			lineR.SetVertexCount(2);
+			//lineR.SetPosition(0,l.vertex[0]);
+			//lineR.SetPosition(1,l.vertex[1]);
+			lineR.SetColors (c, c);
+
+
+
+
+			Vector3 vertexPt = new Vector3(l.vertex [0].x,2.0f,l.vertex [0].z);
+			lineR.SetPosition (0,vertexPt);
+			vertexPt = new Vector3(l.vertex [1].x,2.0f,l.vertex [1].z);
+			lineR.SetPosition (1, vertexPt);
+
+
+
+
+
+
+			allLineParentChild.transform.parent = parent.transform;
+			Renderer rend = allLineParentChild.GetComponent<Renderer>();
+			rend.material.color = c;
+			lineR.material.color = c;
+
+
+
+
+
+			HSBColor hsbCol1=new HSBColor(lineR.material.color);
+			// example 2
+			HSBColor hsbCol2=HSBColor.FromColor(lineR.material.color);
+			HSBColor hsbCol3=HSBColor.FromColor(rend.material.color);
+			// example: clamp saturation
+			if(hsbCol2.s>0.5f)
+				hsbCol2.s=0.5f;
+			if(hsbCol3.s>0.5f)
+				hsbCol3.s=0.5f;
+			
+			// convert back to Color, assign
+			lineR.material.color=hsbCol2.ToColor();
+			rend.material.color = hsbCol3.ToColor();
+
+
 		}
-		//DrawVertex (parent);
 	}
 
+	public void CheckForValidity(int pathIndx)
+	{
+		Hashtable ht = new Hashtable ();
+		for(int i=0;i<edges.Count;i++)
+		{
+			Vector3 vert1 = edges[i].vertex[0];
+			Vector3 vert2 = edges[i].vertex[1];
+			if(ht.ContainsKey(vert1))
+			{
 
+				if((int)ht[vert1]>=2)
+				{
+					edges.RemoveAt(i);
+					i--;
+					continue;
+				}
+				ht[vert1]=(int)ht[vert1]+1;
+			}
+			else
+			{
+				ht.Add(vert1,1);
+			}
+			if(ht.ContainsKey(vert2))
+			{
 
+				if((int)ht[vert2]>=2)
+				{
+					edges.RemoveAt(i);
+					i--;
+					continue;
+				}
+				ht[vert2]=(int)ht[vert2]+1;
+			}
+			else
+			{
+				ht.Add(vert2,1);
+			}
+		}
+		foreach(Vector3 key in ht.Keys)
+		{
+
+			if((int)ht[key]!=2)
+			{
+				//Debug.Log("(int)ht[key] = "+(int)ht[key]);
+				//Debug.Log("INVALID POLYGON AT "+pathIndx);
+
+				//break;
+			}
+		}
+	}
+	public void removeDuplicateEdges()
+	{
+		for(int i=0;i<edges.Count;i++)
+		{
+			Vector3 vert1 = edges[i].vertex[0];
+			Vector3 vert2 = edges[i].vertex[1];
+			for(int j=i+1;j<edges.Count;j++)
+			{
+				if(i==j)
+					continue;
+				Vector3 vert3 = edges[j].vertex[0];
+				Vector3 vert4 = edges[j].vertex[1];
+				if((vert1==vert3 && vert2==vert4) || (vert1==vert4 && vert2==vert3))
+				{
+					edges.RemoveAt(j);
+					j--;
+				}
+			}
+		}
+	}
 	public bool Collision(Geometry g)
 	{
 		foreach(Line l1 in edges)
@@ -93,6 +221,8 @@ public class Geometry
 		listAngleVars.Add(-90);
 		listAngleVars.Add(135);
 		listAngleVars.Add(-135);
+		listAngleVars.Add(0);
+		listAngleVars.Add(180);
 		foreach(int angleVar in listAngleVars)
 		{
 			Vector3 vecSel = new Vector3();
@@ -113,6 +243,7 @@ public class Geometry
 		//lRayList.Add (new Line (pt, new Vector3 (extreme, 1, extreme)));
 		//lRayList.Add (new Line (pt, new Vector3 (-extreme, 1, extreme)));
 		int count1 = 0;
+		float epsPtInside = 0.0001f;
 		foreach(Line lray in lRayList)
 		{
 			count=0;
@@ -124,7 +255,7 @@ public class Geometry
 					//Check if the intersection point is on the polygon edge
 					//Note: other checks tried but precision error kept coming up in cases
 					Vector3 vtemp = myLine.GetIntersectionPoint(lray);
-					if( Math.Abs( vtemp.x - pt.x ) < 0.01 && Math.Abs(vtemp.z - pt.z) < 0.01 )
+					if( Math.Abs( vtemp.x - pt.x ) < epsPtInside && Math.Abs(vtemp.z - pt.z) < epsPtInside )
 						return false;
 				}
 			}

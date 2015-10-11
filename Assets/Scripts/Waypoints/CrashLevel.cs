@@ -16,7 +16,7 @@ public void drawingFromFile_LevelCrash ()
 	
 	new GameObject ("Borders");
 	
-	float scalingFactor = 8f;
+	float scalingFactor = 12f;
 	
 		float displacementFactorX = 40f;
 	

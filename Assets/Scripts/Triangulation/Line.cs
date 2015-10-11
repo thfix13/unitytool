@@ -59,8 +59,14 @@ public class Line : IEquatable<Line>
 			return false;
 	}
 	
-	public bool floatCompare ( float a, float b ){
+	public bool floatCompare ( float a, float b )
+	{
 		return Math.Abs (a - b) < eps;
+	}
+	public float eps4 = 0.001f;
+	public bool floatCompareB( float a, float b )
+	{
+		return Math.Abs (a - b) < eps4;
 	}
 	public float? getSlope()
 	{
@@ -176,7 +182,16 @@ public class Line : IEquatable<Line>
 		}		
 		return 0;
 	}
-	public bool PointOnLineB( Vector3 pt ){
+	public bool PointOnLineB_LessAccurate( Vector3 pt )
+	{
+		Vector3 a = this.vertex [0];
+		Vector3 b = this.vertex [1];
+		Vector3 c = pt;
+		//Debug.Log ("IsLeft Value: " + ((b.x - a.x) * (pt.z - a.z) - (b.z - a.z) * (c.x - a.x)));
+		return floatCompareB( ((b.x - a.x)*(pt.z - a.z) - (b.z - a.z)*(c.x - a.x)), 0 );
+	}
+	public bool PointOnLineB( Vector3 pt )
+	{
 		Vector3 a = this.vertex [0];
 		Vector3 b = this.vertex [1];
 		Vector3 c = pt;
@@ -293,7 +308,7 @@ public class Line : IEquatable<Line>
 		GameObject allLineParentChild = new GameObject();
 		LineRenderer lineR = allLineParentChild.AddComponent<LineRenderer>();
 
-		lineR.SetWidth(0.75f,0.75f);
+		lineR.SetWidth(0.03f,0.03f);
 		lineR.SetVertexCount(2);
 		lineR.SetPosition(0,vertex[0]);
 		lineR.SetPosition(1,vertex[1]);
@@ -662,9 +677,10 @@ public class Line : IEquatable<Line>
 	}
 	public bool PointOnLine_LessAccurate( Vector3 pt )
 	{
-		float limit1 = 0.0001f;
-		float limit2 = 0.01f;
-		float limit3 = 0.01f;
+		float limit1 = 0.01f;
+		//float limit1 = 0.1f;
+		float limit2 = limit1;
+		
 		//Debug.Log ("In PointOnLine");
 		float minVal = Mathf.Min(Vector3.SqrMagnitude (vertex [0] - pt),Vector3.SqrMagnitude (vertex [1] - pt));
 		//Debug.Log (minVal);
@@ -672,26 +688,15 @@ public class Line : IEquatable<Line>
 			return true;
 		//if(pt.x==-4.049407f) //&& pt.z==-1.555273f)
 		//Debug.Log (pt.z+" >= "+Mathf.Min (vertex [0].z, vertex [1].z)+" && "+pt.z+" <= "+Mathf.Max (vertex [0].z, vertex [1].z));
-		if(Mathf.Min (vertex [0].z, vertex [1].z) ==  Mathf.Max (vertex [0].z, vertex [1].z))
+		
+		
+		if (pt.z >= Mathf.Min (vertex [0].z, vertex [1].z) && pt.z <= Mathf.Max (vertex [0].z, vertex [1].z)
+		    &&	pt.x >= Mathf.Min (vertex [0].x, vertex [1].x) && pt.x <= Mathf.Max (vertex [0].x, vertex [1].x))
 		{
-			if(Mathf.Abs(pt.z-vertex[0].z)>limit3)
-				return false;
-		}
-		else if(Mathf.Min (vertex [0].x, vertex [1].x) ==  Mathf.Max (vertex [0].x, vertex [1].x))
-		{
-			if(Mathf.Abs(pt.x-vertex[0].x)>limit3)
-				return false;
 		}
 		else
-		{
-			
-			if (pt.z >= Mathf.Min (vertex [0].z, vertex [1].z) && pt.z <= Mathf.Max (vertex [0].z, vertex [1].z)
-			    &&	pt.x >= Mathf.Min (vertex [0].x, vertex [1].x) && pt.x <= Mathf.Max (vertex [0].x, vertex [1].x))
-			{
-			}
-			else
-				return false;
-		}
+			return false;
+		
 		
 		float val = 0.0f;
 		float gradx = (vertex [1].x - vertex [0].x);
@@ -713,11 +718,31 @@ public class Line : IEquatable<Line>
 		//Debug.Log ("Line is " + vertex [1] + " to " + vertex [0]);
 		//Debug.Log ("Not on line = "+val+", Pt = "+pt);
 		return false;
+		Vector3 diff = vertex[1] - vertex[0];
+		
+		
+		
+		
+		if (pt.z >= Math.Min (vertex [0].z, vertex [1].z) && pt.z <= Math.Max (vertex [0].z, vertex [1].z)
+		    &&	pt.x >= Math.Min (vertex [0].x, vertex [1].x) && pt.x <= Math.Max (vertex [0].x, vertex [1].x))
+		{
+			float dist = Mathf.Abs(diff.z*pt.x-diff.x*pt.z -vertex[0].x*vertex[1].z+vertex[1].x*vertex[0].z);
+			dist=dist/Mathf.Sqrt(diff.x*diff.x+diff.z*diff.z);
+			//Debug.Log("Point on line checking. Dist = "+dist);
+			if(dist<limit2)
+			{
+				//Debug.Log("Point on line found");
+				return true;
+			}
+		}
+		
+		return false;
 	}
 	public bool PointOnLine( Vector3 pt )
 	{
 		float limit1 = 0.0001f;
-		float limit2 = 0.0001f;
+		//float limit1 = 0.1f;
+		float limit2 = limit1;
 
 		//Debug.Log ("In PointOnLine");
 		float minVal = Mathf.Min(Vector3.SqrMagnitude (vertex [0] - pt),Vector3.SqrMagnitude (vertex [1] - pt));
