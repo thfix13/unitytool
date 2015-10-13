@@ -7,7 +7,7 @@ public static class CommonCrash
 
 	//static float scale = 0.80f;
 	//static float stepPath = 1.0f*scale;
-	static float stepPathActual = stepPath;//*0.7f;
+	static float stepPathActual = stepPath*1.6f;
 	public static List<Vector3> definePathFromIndx(int pathIndx)
 	{
 		//List<Vector3> pathPts = new List<Vector3> ();

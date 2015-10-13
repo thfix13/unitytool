@@ -150,19 +150,19 @@ public partial class Visibility1 : MonoBehaviour {
 			pathPoints = CommonCrash.definePath ();
 			m_stepDistance = CommonCrash.getStepDistance();
 			radius_enemy*=playerScaleForMyCrash;
-			m_step = 0.08f;
+			m_step = 0.16f;
 			radius_enemy*=playerScaleForMyCrash;
 			if(bDebugNow)
 			{
 				setGlobalVars1();
 				CalculateVisibilityForPath();
-				int ptWhich = 200;
+				int ptWhich = 100;
 				int ptWhichCOunter=0;
 				float standardMaxMovementTemp = speedEnemy*(m_stepDistance/speedPlayer);
 				Debug.Log("standardMaxMovementTemp = "+standardMaxMovementTemp);
 				foreach(Vector3 vect in h_mapPtToIndx.Keys)
 				{
-					if(ptWhichCOunter>=ptWhich && pointInShadow(vect,0))
+					if(ptWhichCOunter>=ptWhich && pointInShadow(vect,PointToDebug))
 					{
 						showPosOfPointEnemySized(vect,Color.green);
 						foreach(Vector3 vectNeighbor in h_mapPtToIndx.Keys)
@@ -872,8 +872,8 @@ public partial class Visibility1 : MonoBehaviour {
 				{
 					showPosOfPoint(key,Color.red);
 				}
-			}*/
-			Debug.Break();
+			}
+			Debug.Break();*/
 			return;
 		}
 		if(bShowJustVisibilityPoly)
@@ -4321,7 +4321,7 @@ public partial class Visibility1 : MonoBehaviour {
 
 		}
 	}
-	int PointToDebug = 0;
+	int PointToDebug = 87;
 	bool bDebugNow = false;
 	public void CalculateVisibilityForPath()
 	{
