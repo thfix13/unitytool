@@ -156,7 +156,7 @@ namespace EditorArea {
 			// ----------------------------------
 			
 			scrollPos = EditorGUILayout.BeginScrollView (scrollPos);
-			
+			/*
 			#region 1. Map
 			
 			EditorGUILayout.LabelField ("1. Map");
@@ -209,12 +209,12 @@ namespace EditorArea {
 			#endregion
 			
 			// ----------------------------------
-			
+			*/
 			#region 4. Path
 
 			#region not mine
 
-			EditorGUILayout.LabelField ("4. Path");
+			//EditorGUILayout.LabelField ("4. Path");
 			
 			start = (GameObject)EditorGUILayout.ObjectField ("Start", start, typeof(GameObject), true);
 			end = (GameObject)EditorGUILayout.ObjectField ("End", end, typeof(GameObject), true);
@@ -222,7 +222,7 @@ namespace EditorArea {
 			attemps2 = EditorGUILayout.IntSlider ("Attempts2", attemps2, 1, 100);
 			iterations = EditorGUILayout.IntSlider ("Iterations", iterations, 1, 1500);
 			randomSeed = EditorGUILayout.IntSlider("Random Seed", randomSeed, -1, 10000);
-			smoothPath = EditorGUILayout.Toggle ("Smooth path", smoothPath);
+			/*smoothPath = EditorGUILayout.Toggle ("Smooth path", smoothPath);
 			simulateCombat = EditorGUILayout.Toggle ("Simulate combat", simulateCombat);
 
 			if (GUILayout.Button ("(WIP) Compute 3D A* Path")) {
@@ -387,7 +387,7 @@ namespace EditorArea {
 				// Debug.Log(summary);
 
 			}
-			
+			*/
 			#endregion not mine
 
 			#region experimental
@@ -932,9 +932,11 @@ namespace EditorArea {
 
 
 
-			#endregion experimental
+            #endregion experimental
 
+            #endregion 4. Path
 
+            /*
 			if (GUILayout.Button ("(DEBUG) Export Paths")) {
 				List<Path> all = new List<Path>();
 				all.AddRange(paths);
@@ -1110,7 +1112,7 @@ namespace EditorArea {
 			/*if (GUILayout.Button ("Batch computation")) {
 				BatchComputing ();
 			}*/
-			
+            /*
 			#endregion
 			
 			// ----------------------------------
@@ -1343,8 +1345,8 @@ namespace EditorArea {
 			}
 			
 			#endregion
-			
-			EditorGUILayout.EndScrollView ();
+			*/
+            EditorGUILayout.EndScrollView ();
 			
 			// ----------------------------------
 			

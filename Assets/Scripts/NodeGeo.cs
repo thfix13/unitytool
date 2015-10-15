@@ -64,8 +64,16 @@ namespace Common {
 		}
 		//TODO: Add distract time to this
 		public override string ToString () {
+
+            
 			if(distractTimes.Count > 0){
-				return t + "-" + x + "-" + y + "-" + distractTimes[0];
+                string toReturn = t + "-" + x + "-" + y;
+                foreach(int tim in distractTimes)
+                {
+                    toReturn = toReturn + "-" + tim;
+                }
+
+                return toReturn;
 			}
 			return t + "-" + x + "-" + y + "-" + distractTime;
 		}

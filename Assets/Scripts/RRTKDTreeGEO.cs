@@ -27,12 +27,14 @@ namespace Exploration {
 
 		public preCast casts;
 
-		private bool debugging = false;
+        private bool debugging = true;
 		private bool preventDistractStacks = true;
-		//First attempt was 50% distractions.
-		private int distractables = 80;
+        //First attempt was 50% distractions.
+        private int distractables = 80;
 		private int numNears = 3;
 
+        private float rangeDist = 5f;
+        private int rangeTime = 100;
 
 
 		//Geo version of GetNode
@@ -76,9 +78,9 @@ namespace Exploration {
 			angle = 90 - Mathf.Atan (tan) * Mathf.Rad2Deg;
 
 
-			
-			// WHAT IS THIS??
-			/*
+
+            // WHAT IS THIS??
+            /*
 			List<Distribution.Pair> pairs = new List<Distribution.Pair> ();
 			
 			for (int x = 0; x < matrix[0].Length; x++) 
@@ -90,12 +92,17 @@ namespace Exploration {
 			
 			//Distribution rd = new Distribution(matrix[0].Length, pairs.ToArray());
 			*/
-			
+
+            float curMaxX = Mathf.Min(startX + rangeDist, maxX);
+            float curMinX = Mathf.Max(startX - rangeDist, minX);
+            float curMaxY = Mathf.Min(startY + rangeDist, maxY);
+            float curMinY = Mathf.Max(startY - rangeDist, minY);
+            int curMaxT = Mathf.Min(rangeTime, maxT);
+
 			//RRT algo
 			for (int i = 0; i <= attemps; i++) {
-				
-				//Pick a random time
-				int rt = Random.Range (1,maxT);
+
+
 
 				//Then pick random x and y values
 				float rx;
@@ -121,18 +128,26 @@ namespace Exploration {
 					}
 				}
 				else{
-					rx = Random.Range (minX, maxX);
-					ry = Random.Range (minY, maxY);
+					rx = Random.Range (curMinX, curMaxX);
+					ry = Random.Range (curMinY, curMaxY);
 				}
 
+                Vector3 pdO = new Vector3(rx - startX, 0, ry - startY);
+                float pdd = pdO.magnitude;
+                float fminT = pdd * Mathf.Tan(angle * Mathf.Deg2Rad);
+            
+
+                int minT = Mathf.FloorToInt(fminT);
+
+                //Pick a random time
+                //int rt = Random.Range (1,maxT);
+                int rt = Random.Range(minT, curMaxT);
 
 
 
 
-
-
-				//int rx = p.x, ry = p.y;
-				nodeVisiting = GetNodeGeo (rt, rx, ry);
+                //int rx = p.x, ry = p.y;
+                nodeVisiting = GetNodeGeo (rt, rx, ry);
 				//if this node has already been visited continue
 				if (nodeVisiting.visited) {
 					i--;
@@ -151,50 +166,56 @@ namespace Exploration {
 					try{
 						object[] closestNodes = tree.nearest(new double[] {rx, rt, ry}, numNears);					
 						bool viableFound = false;
+
 						for(int ind = 0; ind < numNears; ind++){
 							nodeTheClosestTo = (NodeGeo)closestNodes[ind];
-							
-							// cannot go back in time, so skip if t is decreasing
-							if (nodeTheClosestTo.t > nodeVisiting.t){
-								continue;
-							}
-							
-							
-							
+
+                            // cannot go back in time, so skip if t is decreasing
+                            if (nodeTheClosestTo.t > nodeVisiting.t)
+                            {
+                                viableFound = false;
+                                continue;
+                            }
+
 							// Only add if we are going in ANGLE degrees or higher.As there is a fixed max speed
 							p1 = nodeVisiting.GetVector3 ();
 							p2 = nodeTheClosestTo.GetVector3 ();
 							pd = p1 - p2;
 							if (Vector3.Angle (pd, new Vector3 (pd.x, 0f, pd.z)) < angle) {
-								continue;
+                                viableFound = false;
+                                continue;
 							}
 
 							if(distractPick){
 								if(Mathf.Approximately(p1.x, p2.x) && Mathf.Approximately(p1.z, p2.z)){
-									continue;
+                                    viableFound = false;
+                                    continue;
 								}
 							}
 							viableFound = true;
 
-							
-							//Experimental New distract
+                            nodeVisiting.distractTimes = new List<int>();
+                            nodeVisiting.distractNums = new List<int>();
+                            
+                            
+                            //Experimental New distract
 							if(nodeTheClosestTo.distractTimes.Count == maxDist){
 								//Debug.Log ("maxDist");
-								nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
-								nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
+								nodeVisiting.distractTimes.AddRange(nodeTheClosestTo.distractTimes);
+								nodeVisiting.distractNums.AddRange(nodeTheClosestTo.distractNums);
 							}
 							else if(nodeTheClosestTo.distractTimes.Count > 0){
 								if(distractPick){
 									//Debug.Log ("distractPick");
-									nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
-									nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
+									nodeVisiting.distractTimes.AddRange(nodeTheClosestTo.distractTimes);
+									nodeVisiting.distractNums.AddRange(nodeTheClosestTo.distractNums);
 									nodeVisiting.distractTimes.Add (nodeVisiting.t);
 									nodeVisiting.distractNums.Add (distractNum);
 								}
 								else{
 									//Debug.Log ("Non-distractPick");
-									nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
-									nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
+									nodeVisiting.distractTimes.AddRange(nodeTheClosestTo.distractTimes);
+									nodeVisiting.distractNums.AddRange(nodeTheClosestTo.distractNums);
 								}
 							}
 							else if(distractPick){
@@ -208,7 +229,7 @@ namespace Exploration {
 					}
 					//DO SAME THING AS ELSE BRANCH
 					catch (System.ArgumentException e){
-						nodeTheClosestTo = (NodeGeo)tree.nearest (new double[] {rx, rt, ry});
+                        nodeTheClosestTo = (NodeGeo)tree.nearest (new double[] {rx, rt, ry});
 						
 						// cannot go back in time, so skip if t is decreasing
 						if (nodeTheClosestTo.t > nodeVisiting.t){
@@ -253,8 +274,7 @@ namespace Exploration {
 
 				}
 				else{
-
-					nodeTheClosestTo = (NodeGeo)tree.nearest (new double[] {rx, rt, ry});
+                    nodeTheClosestTo = (NodeGeo)tree.nearest (new double[] {rx, rt, ry});
 					
 					// cannot go back in time, so skip if t is decreasing
 					if (nodeTheClosestTo.t > nodeVisiting.t){
@@ -297,6 +317,9 @@ namespace Exploration {
 					}
 				}
 
+                //Debug.Log(nodeVisiting.ToString());
+                //Debug.Log(nodeTheClosestTo.ToString());
+
 				//Old Backup Distract
 				//if(nodeTheClosestTo.distractTime > 0){
 				//	nodeVisiting.distractTime = nodeTheClosestTo.distractTime;
@@ -318,7 +341,7 @@ namespace Exploration {
 				//}
 
 				if(checkCollEs(p2.x, p2.z, (int)p2.y, p1.x, p1.z, (int)p1.y, enemies, 1, depth, nodeVisiting.distractTimes, nodeVisiting.distractNums)){
-							continue;
+					continue;
 				}
 
 
@@ -328,15 +351,26 @@ namespace Exploration {
 					tree.insert (nodeVisiting.GetArray (), nodeVisiting);
 				} catch (KeyDuplicateException) {
 				}
-				
+
 				nodeVisiting.parent = nodeTheClosestTo;
 				nodeVisiting.visited = true;
 
+                curMaxX = Mathf.Max(Mathf.Min(nodeVisiting.x + rangeDist, maxX), curMaxX);
+                curMinX = Mathf.Min(Mathf.Max(nodeVisiting.x - rangeDist, minX), curMinX);
+                curMaxY = Mathf.Max(Mathf.Min(nodeVisiting.y + rangeDist, maxY), curMaxY);
+                curMinY = Mathf.Min(Mathf.Max(nodeVisiting.y - rangeDist, minY), curMinY);
+                curMaxT = Mathf.Max(Mathf.Min(nodeVisiting.t + rangeTime, maxT), curMaxT);
 
 
 
-				// Attempt to connect to the end node
-				if (Random.Range (0, 1000) > 0) {
+                if (nodeVisiting.t < nodeVisiting.parent.t)
+                {
+                    Debug.LogError("T-Failure Node Added");
+                }
+
+
+                // Attempt to connect to the end node
+                if (Random.Range (0, 1000) > 0) {
 					p1 = nodeVisiting.GetVector3 ();
 					p2 = end.GetVector3 ();
 					p2.y = p1.y;
@@ -357,6 +391,7 @@ namespace Exploration {
 						endNode.distractNums = nodeVisiting.distractNums;
 						if(debugging){
 							DrawTree(start, minX, maxX, minY, maxY, maxT);
+                            DrawSamples();
 						}
 						return ReturnPathGeo (endNode, smooth);
 					}
@@ -367,6 +402,7 @@ namespace Exploration {
 					//Debug.Log ("Done2");
 					if(debugging){
 						DrawTree(start, minX, maxX, minY, maxY, maxT);
+                        DrawSamples();
 					}
 					return ReturnPathGeo (nodeVisiting, smooth);
 					
@@ -377,6 +413,7 @@ namespace Exploration {
 
 			if(debugging){
 				DrawTree(start, minX, maxX, minY, maxY, maxT);
+                DrawSamples();
 			}
 
 			return new List<NodeGeo> ();
@@ -580,7 +617,19 @@ namespace Exploration {
 
 		}
 
-		private void DrawNode(NodeGeo node, GameObject parent, Color c){
+        private void DrawSamples()
+        {
+
+            GameObject sampsPic = new GameObject("treePic");
+
+            foreach(NodeGeo nd in explored)
+            {
+                DrawNode(nd, sampsPic, Color.gray, false);
+            }
+
+        }
+
+        private void DrawNode(NodeGeo node, GameObject parent, Color c, bool lines = true){
 			GameObject nod = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 			nod.GetComponent<Renderer>().sharedMaterial.color = c;
 			nod.transform.parent = parent.transform;
@@ -590,7 +639,7 @@ namespace Exploration {
 			/*nod.transform.position.x = node.x;
 			nod.transform.position.z = node.y;
 			nod.transform.position.y = node.t;*/
-			if(node.parent != null){
+			if(node.parent != null && lines){
 				DrawLine(node.parent, node, parent, c);
 			}
 		}
