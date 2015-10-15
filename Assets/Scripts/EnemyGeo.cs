@@ -93,8 +93,11 @@ namespace Objects {
 		}
 
 		public Vector3 getPositionDistsN(int t, List<int> ts, List<int> ns){
+            //Debug.Log(t);
+           
 			int t2 = ts[0];
-			if(t2 > t){
+            //Debug.Log(t2);
+            if (t2 > t){
 				computeAtTime(t);
 			}
 			else{
@@ -208,19 +211,32 @@ namespace Objects {
 
 		private void computeAtTimesDistsN(int t, List<int> ts, List<int> ns){
 			if(t == curT){
+                //Debug.Log("Returned");
 				return;
 			}
 			int ti = ts[0];
 			int ni = ns[0];
 			computeAtTime(ti);
+            //Debug.Log("AFTER COMPUTE TI:" + posT);
 			int tj = ts[ts.Count-1];
 			int nj = ns[ns.Count-1];
 			for(int j = 1; j < ts.Count; j++){
 				tj = ts[j];
 				nj = ns[j];
 				if(tj != curT){
-					curT = tj;
-					timeLeft = tj-ti;
+
+                    if(tj > t)
+                    {
+                        curT = t;
+                        timeLeft = t - ti;
+                    }
+                    else
+                    {
+                        curT = tj;
+                        timeLeft = tj - ti;
+                    }
+
+					
 					WaypointGeo distWay = nextWay.distractPoints[ni];
 					ni = nj;
 					nextWay = distWay.next;
@@ -559,6 +575,8 @@ namespace Objects {
 			
 			Vector3 tmp2 = getForwardDistsN(t, ts, ns);
 			transform.forward = tmp2;
+
+            //Debug.Log("Pos:" + transform.position + "--- For:" + transform.forward);
 		}
 
 

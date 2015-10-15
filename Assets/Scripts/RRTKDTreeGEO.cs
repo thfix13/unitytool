@@ -27,7 +27,7 @@ namespace Exploration {
 
 		public preCast casts;
 
-        private bool debugging = true;
+        private bool debugging = false;
 		private bool preventDistractStacks = true;
         //First attempt was 50% distractions.
         private int distractables = 80;
