@@ -568,7 +568,7 @@ namespace EditorArea {
 						// We have this try/catch block here to account for the issue that we don't solve when we find a path when t is near the limit
 						try {
 
-							nodes= rrtgeo.ComputeGeo (startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, playerSpeed, distractPos2, distract2Pos2);
+							nodes= rrtgeo.ComputeGeo (startX, startY, endX, endY, minX, maxX, minY, maxY, 10000, attemps, playerSpeed, distractPos2, distract2Pos2);
 
 							//nodes = rrt.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
 
