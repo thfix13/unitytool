@@ -52,7 +52,7 @@ namespace Exploration {
 
 
 
-		public List<NodeGeo> ComputeGeo (float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, float speed, Vector2 distractPos, Vector2 distractPos2,  bool smooth = false) {
+		public List<NodeGeo> ComputeGeo (float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> triangles,  bool smooth = false) {
 			//Debug.Log ("COMPUTEGEO");
 
 			// Initialization
@@ -98,6 +98,28 @@ namespace Exploration {
             float curMaxY = Mathf.Min(startY + rangeDist, maxY);
             float curMinY = Mathf.Max(startY - rangeDist, minY);
             int curMaxT = Mathf.Min(rangeTime, maxT);
+
+            //TRIANGLE ATTEMPTS SECTION
+            foreach(Triangle tri in triangles)
+            {
+                Debug.Log(tri);
+                Debug.Log(tri.vertex[0] + "," + tri.vertex[1] + "," + tri.vertex[2]);
+                Line[] lins = tri.getLines();
+                float l1 = lins[0].Magnitude();
+                float l2 = lins[1].Magnitude();
+                float l3 = lins[2].Magnitude();
+                float s = 0.5f * (l1 + l2 + l3);
+                float area = Mathf.Sqrt(s * (s - l1) * (s - l2) * (s - l3));
+                Debug.Log(area);
+            }
+
+            //TRIANGLE ATTEMPTS SECTION ENDS
+
+
+
+
+
+
 
 			//RRT algo
 			for (int i = 0; i <= attemps; i++) {

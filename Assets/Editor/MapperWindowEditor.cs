@@ -39,7 +39,7 @@ namespace EditorArea {
 		private static List<Path> arrangedByTime, arrangedByLength, arrangedByDanger, arrangedByLoS, arrangedByDanger3, arrangedByLoS3, arrangedByDanger3Norm, arrangedByLoS3Norm, arrangedByCrazy, arrangedByVelocity;
 
 		//GEONEW
-		//public static Triangulation triangles;
+		public static Triangulation triangles;
 		public static List<PathGeo> pathsgeo = new List<PathGeo> ();
 		public static bool drawPathGeo = true;
 		private static Dictionary<PathGeo, bool> toggleStatusGeo = new Dictionary<PathGeo, bool> ();
@@ -85,39 +85,65 @@ namespace EditorArea {
 		
 		void OnGUI () {
 
-			if (GUILayout.Button ("Test VectorLine Stuff")) {
-				//List<Vector3> pointList = new List<Vector3>();
-				//pointList.Add(new Vector3(-5, 0, -5));
-				//pointList.Add(new Vector3(5, 0, 5));
-				//float linewidth = 5.0f;
-				//Color c = Color.red;
+			if (GUILayout.Button ("Test Stuff")) {
+                Debug.Log("Button PRessed");
 
-				//VectorLine line = new VectorLine("Line",pointList, linewidth);
-				//line.color = c;
-				//line.Draw3D ();
-				//VectorLine line2 = new VectorLine("Line2", new List<Vector3>(pointList), 1.0f);
+                triangles = GameObject.Find("Triangulation").GetComponent<Triangulation>();
 
-				//line2.Draw3D ();
+                triangles.TriangulationSpace();
+                List<Triangle> tris = triangles.triangles;
 
-				List<Vector3> pointList = new List<Vector3>();
-				pointList.Add(new Vector3(-5, 0, 5));
-				pointList.Add(new Vector3(5, 0, 5));
-				float linewidth = 5.0f;
-				VectorLine line = new VectorLine("line", pointList, linewidth);
-				line.Draw3D();
-				//line2.Draw ();
-				//line2.Draw3DAuto();
+                foreach (Triangle tri in tris)
+                {
+                    Debug.Log(tri);
+                    Debug.Log(tri.vertex[0] + "," + tri.vertex[1] + "," + tri.vertex[2]);
+                    Line[] lins = tri.getLines();
+                    float l1 = lins[0].Magnitude();
+                    float l2 = lins[1].Magnitude();
+                    float l3 = lins[2].Magnitude();
+                    float s = 0.5f * (l1 + l2 + l3);
+                    float area = Mathf.Sqrt(s * (s - l1) * (s - l2) * (s - l3));
+                    Debug.Log(area);
+                }
 
-				//line = new VectorObject3D();
+                //List<Vector3> pointList = new List<Vector3>();
+                //pointList.Add(new Vector3(-5, 0, -5));
+                //pointList.Add(new Vector3(5, 0, 5));
+                //float linewidth = 5.0f;
+                //Color c = Color.red;
 
-				//line.drawTransform = new GameObject().transform;
-				//Debug.Log (line.drawTransform);
-				//Debug.Log (line.drawTransform.parent);
-				//Debug.Log(parent);
-				//Debug.Log (parent.transform);
-				
-				//line.drawTransform.parent = parent.transform;
-			}
+                //VectorLine line = new VectorLine("Line",pointList, linewidth);
+                //line.color = c;
+                //line.Draw3D ();
+                //VectorLine line2 = new VectorLine("Line2", new List<Vector3>(pointList), 1.0f);
+
+                //line2.Draw3D ();
+
+                //List<Vector3> pointList = new List<Vector3>();
+                //pointList.Add(new Vector3(-5, 0, 5));
+                //pointList.Add(new Vector3(5, 0, 5));
+                //float linewidth = 5.0f;
+                //VectorLine line = new VectorLine("line", pointList, linewidth);
+                //line.Draw3D();
+                //line2.Draw ();
+                //line2.Draw3DAuto();
+
+                //line = new VectorObject3D();
+
+                //line.drawTransform = new GameObject().transform;
+                //Debug.Log (line.drawTransform);
+                //Debug.Log (line.drawTransform.parent);
+                //Debug.Log(parent);
+                //Debug.Log (parent.transform);
+
+                //line.drawTransform.parent = parent.transform;
+
+
+
+
+
+
+            }
 
 
 
@@ -453,11 +479,13 @@ namespace EditorArea {
 
 
 				rrtgeo.casts = casts;
-				//triangles = GameObject.Find ("Triangulation").GetComponent<Triangulation>();
+				triangles = GameObject.Find ("Triangulation").GetComponent<Triangulation>();
 
 
-				//List<Geometry> obstacles = triangles.TriangulationSpace();
-				
+                //List<Geometry> obstacles = triangles.TriangulationSpace();
+                triangles.TriangulationSpace();
+                List<Triangle> tris = triangles.triangles;
+
 
 				float playerSpeed = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().speed;
 				float playerMaxHp = GameObject.FindGameObjectWithTag ("AI").GetComponent<Player> ().maxHp;
@@ -568,12 +596,12 @@ namespace EditorArea {
 						// We have this try/catch block here to account for the issue that we don't solve when we find a path when t is near the limit
 						try {
 
-							nodes= rrtgeo.ComputeGeo (startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, playerSpeed, distractPos2, distract2Pos2);
+                            //nodes= rrtgeo.ComputeGeo (startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, playerSpeed, distractPos2, distract2Pos2);
+                            nodes = rrtgeo.ComputeGeo(startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, playerSpeed, distractPos2, distract2Pos2, tris);
+                            //nodes = rrt.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
 
-							//nodes = rrt.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
-
-							//Debug.Log (nodes.Count);
-							if(nodes.Count <= 0){
+                            //Debug.Log (nodes.Count);
+                            if (nodes.Count <= 0){
 								Debug.Log ("RRT Search Failed");
 							}
 

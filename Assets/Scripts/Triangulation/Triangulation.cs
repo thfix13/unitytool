@@ -281,12 +281,49 @@ public class Triangulation : MonoBehaviour
 		GameObject temp = GameObject.Find("temp");
 		DestroyImmediate(temp);
 		temp = new GameObject("temp");
-		//CODESPACE
-		//Merging Polygons
-		for (int i = 0; i < obsGeos.Count; i++) {
+
+       /* GameObject parent1 = new GameObject("DebugParent1");
+        foreach (Geometry aki in obsGeos)
+        { 
+            foreach (Line l in aki.edges)
+            {
+                //Debug.Log(l.vertex[0] + "," + l.vertex[1]);
+
+                GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
+                lin.transform.parent = parent1.transform;
+                lin.transform.position = (l.vertex[0] + l.vertex[1]) / 2.0f;
+                lin.transform.position = new Vector3(lin.transform.position.x, 0.05f * lin.transform.position.y, lin.transform.position.z);
+                Vector3 dists = (l.vertex[1] - l.vertex[0]);
+                dists.y = 0.05f * dists.y;
+
+                Vector3 from = Vector3.right;
+                Vector3 to = dists / dists.magnitude;
+
+                Vector3 axis = Vector3.Cross(from, to);
+                float angle = Mathf.Rad2Deg * Mathf.Acos(Vector3.Dot(from, to));
+                lin.transform.RotateAround(lin.transform.position, axis, angle);
+
+
+                Vector3 scale = Vector3.one;
+                scale.x = Vector3.Magnitude(dists);
+                scale.z = 0.2f;
+                scale.y = 0.2f;
+
+                lin.transform.localScale = scale;
+            }
+        }
+        */
+
+
+
+        //CODESPACE
+        //Merging Polygons
+      /*  for (int i = 0; i < obsGeos.Count; i++) {
 			for (int j = i + 1; j < obsGeos.Count; j++) {
 				//check all line intersections
 				if( obsGeos[i].GeometryIntersect( obsGeos[j] ) ){
+                    Debug.Log(obsGeos.Count);
 					//Debug.Log("Geometries Intersect: " + i + " " + j);
 					Geometry tmpG = obsGeos[i].GeometryMerge( obsGeos[j] ); 
 					//remove item at position i, decrement i since it will be increment in the next step, break
@@ -294,11 +331,199 @@ public class Triangulation : MonoBehaviour
 					obsGeos.RemoveAt(i);
 					obsGeos.Add(tmpG);
 					i--;
+                    Debug.Log(obsGeos.Count);
 					break;
 				}
 			}
-		}
-		//mapBG.DrawGeometry (temp);
+		}*/
+
+
+        bool done = false;
+        bool difFound = false;
+        string preS = "1";
+        int preI = 1;
+        GameObject mergeys = new GameObject("Mergeys");
+
+        while (!done)
+        {
+           for(int i = 0; i < obsGeos.Count; i++) {
+                if (difFound)
+                {
+                    break;
+                }
+                for(int j = i+1; j < obsGeos.Count; j++) {
+                    if (obsGeos[i].GeometryIntersect(obsGeos[j]))
+                    {
+                        
+
+                        Geometry tmpG = obsGeos[i].GeometryMerge(obsGeos[j]);
+                        preS = preI.ToString();
+                        GameObject merger = new GameObject(preS);
+                        GameObject geo1 = new GameObject(preS + "geo1");
+                        GameObject geo2 = new GameObject(preS + "geo2");
+                        GameObject geoM = new GameObject(preS + "geoM");
+                        merger.transform.parent = mergeys.transform;
+                        geo1.transform.parent = merger.transform;
+                        geo2.transform.parent = merger.transform;
+                        geoM.transform.parent = merger.transform;
+                        preI++;
+                        
+
+                        foreach (Line l in obsGeos[i].edges)
+                        {
+                            GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                            lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
+                            lin.transform.parent = geo1.transform;
+                            lin.transform.position = (l.vertex[0] + l.vertex[1]) / 2.0f;
+                            lin.transform.position = new Vector3(lin.transform.position.x, 0.05f * lin.transform.position.y, lin.transform.position.z);
+                            Vector3 dists = (l.vertex[1] - l.vertex[0]);
+                            dists.y = 0.05f * dists.y;
+
+                            Vector3 from = Vector3.right;
+                            Vector3 to = dists / dists.magnitude;
+
+                            Vector3 axis = Vector3.Cross(from, to);
+                            float angle = Mathf.Rad2Deg * Mathf.Acos(Vector3.Dot(from, to));
+                            lin.transform.RotateAround(lin.transform.position, axis, angle);
+
+
+                            Vector3 scale = Vector3.one;
+                            scale.x = Vector3.Magnitude(dists);
+                            scale.z = 0.2f;
+                            scale.y = 0.2f;
+
+                            lin.transform.localScale = scale;
+                        }
+                        foreach (Line l in obsGeos[j].edges)
+                        {
+                            GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                            lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
+                            lin.transform.parent = geo2.transform;
+                            lin.transform.position = (l.vertex[0] + l.vertex[1]) / 2.0f;
+                            lin.transform.position = new Vector3(lin.transform.position.x, 0.05f * lin.transform.position.y, lin.transform.position.z);
+                            Vector3 dists = (l.vertex[1] - l.vertex[0]);
+                            dists.y = 0.05f * dists.y;
+
+                            Vector3 from = Vector3.right;
+                            Vector3 to = dists / dists.magnitude;
+
+                            Vector3 axis = Vector3.Cross(from, to);
+                            float angle = Mathf.Rad2Deg * Mathf.Acos(Vector3.Dot(from, to));
+                            lin.transform.RotateAround(lin.transform.position, axis, angle);
+
+
+                            Vector3 scale = Vector3.one;
+                            scale.x = Vector3.Magnitude(dists);
+                            scale.z = 0.2f;
+                            scale.y = 0.2f;
+
+                            lin.transform.localScale = scale;
+                        }
+                        foreach (Line l in tmpG.edges)
+                        {
+                            GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                            lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
+                            lin.transform.parent = geoM.transform;
+                            lin.transform.position = (l.vertex[0] + l.vertex[1]) / 2.0f;
+                            lin.transform.position = new Vector3(lin.transform.position.x, 0.05f * lin.transform.position.y, lin.transform.position.z);
+                            Vector3 dists = (l.vertex[1] - l.vertex[0]);
+                            dists.y = 0.05f * dists.y;
+
+                            Vector3 from = Vector3.right;
+                            Vector3 to = dists / dists.magnitude;
+
+                            Vector3 axis = Vector3.Cross(from, to);
+                            float angle = Mathf.Rad2Deg * Mathf.Acos(Vector3.Dot(from, to));
+                            lin.transform.RotateAround(lin.transform.position, axis, angle);
+
+
+                            Vector3 scale = Vector3.one;
+                            scale.x = Vector3.Magnitude(dists);
+                            scale.z = 0.2f;
+                            scale.y = 0.2f;
+
+                            lin.transform.localScale = scale;
+                        }
+
+
+                        obsGeos.RemoveAt(j);
+                        obsGeos.RemoveAt(i);
+                        obsGeos.Add(tmpG);
+                        difFound = true;
+                        break;
+                    }
+                }
+            }
+            if (difFound)
+            {
+                difFound = false;
+            }
+            else
+            {
+                done = true;
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        //mapBG.DrawGeometry (temp);
+        Debug.Log(obsGeos);
+        Debug.Log(obsGeos.Count);
+        //TODO REMOVE DEBUG
+        GameObject parent = new GameObject("DebugParent");
+        foreach (Line l in obsGeos[0].edges) {
+            //Debug.Log(l.vertex[0] + "," + l.vertex[1]);
+
+            GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
+            lin.transform.parent = parent.transform;
+            lin.transform.position = (l.vertex[0] + l.vertex[1]) / 2.0f;
+            lin.transform.position = new Vector3(lin.transform.position.x, 0.05f * lin.transform.position.y, lin.transform.position.z);
+            Vector3 dists = (l.vertex[1] - l.vertex[0]);
+            dists.y = 0.05f * dists.y;
+
+            Vector3 from = Vector3.right;
+            Vector3 to = dists / dists.magnitude;
+
+            Vector3 axis = Vector3.Cross(from, to);
+            float angle = Mathf.Rad2Deg * Mathf.Acos(Vector3.Dot(from, to));
+            lin.transform.RotateAround(lin.transform.position, axis, angle);
+
+
+            Vector3 scale = Vector3.one;
+            scale.x = Vector3.Magnitude(dists);
+            scale.z = 0.2f;
+            scale.y = 0.2f;
+
+            lin.transform.localScale = scale;
+
+
+
+
+
+
+
+
+
+
+        }
+        //TODO END OF DEBUG TO REMOVE
 
 		List<Geometry> finalPoly = new List<Geometry> ();//Contains all polygons that are fully insde the map
 		foreach ( Geometry g in obsGeos ) {
@@ -309,6 +534,7 @@ public class Triangulation : MonoBehaviour
 			else
 				finalPoly.Add(g);
 		}
+
 
 		foreach(Geometry g in finalPoly){
 			g.DrawGeometry( temp);
@@ -356,12 +582,18 @@ public class Triangulation : MonoBehaviour
 
 		//Possible redundancy here
 		Geometry start = mapBG.findClosestQuad (mapVertices[0], toCheck, new List<Geometry> ());
+
+
 		List<Line> linesLinking = new List<Line> ();
 		linesLinking.Add (mapBG.GetClosestLine (start, toCheck));
 		start.visited = true;
 
 		List<Geometry> toCheckNode = new List<Geometry> (); 
-		toCheckNode.Add (start); 
+		toCheckNode.Add (start);
+        Debug.Log(start);
+        Debug.Log(start.voisinsLine);
+        Debug.Log(start.voisinsLine.Count);
+
 		Line LinetoAdd = start.voisinsLine [0];
 
 

@@ -509,6 +509,11 @@ public class Line
 		}
 		return false;
 	}
+
+    public override string ToString()
+    {
+        return vertex[0] + "," + vertex[1];
+    }
 }
 
 class LineEqualityComparer : IEqualityComparer<Line>

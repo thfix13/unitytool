@@ -79,10 +79,12 @@ public class Geometry
 	//TODO: Fix for lines colinear
 	public bool PointInside( Vector3 pt )
 	{
-		Line lray = new Line(pt, new Vector3(-100,-100)); 
+        Debug.Log(pt);
+		Line lray = new Line(pt, new Vector3(-100,0,-100));
 		int count = 0; 
 		foreach(Line myLine in edges){
 			if( myLine.LineIntersectMuntacEndPt(lray) > 0 ){
+                Debug.Log("Intersection between" + myLine + " and " + lray);
 				count++;
 				//Check if the intersection point is on the polygon edge
 				//Note: other checks tried but precision error kept coming up in cases
@@ -91,6 +93,7 @@ public class Geometry
 					return false;
 			}
 		}
+        Debug.Log(count);
 		return count%2 == 1; 
 	}
 
@@ -219,6 +222,22 @@ public class Geometry
 			if(!G1.LineInside(l) && !G2.LineInside(l))
 				toReturn.edges.Add(l);
 		}
+
+        //I Added this to prevent stupid things
+
+        List<Line> newEdges = new List<Line>();
+        foreach(Line l in toReturn.edges)
+        {
+            Vector3 v1 = l.vertex[0];
+            Vector3 v2 = l.vertex[1];
+            if(Vector3.SqrMagnitude(v1 - v2) > 9.99999944E-11f)
+            {
+                newEdges.Add(l);
+            }
+        }
+
+        toReturn.edges = newEdges;
+
 		return toReturn;
 	}
 	//Used only for merging polygons with the map boundary
@@ -270,17 +289,32 @@ public class Geometry
 		return toReturn;
 	}
 
-	//Check if two geometries intersect
-	public bool GeometryIntersect( Geometry G2 ){
-		if (GeometryInside (G2))
-			return true;
-		else if (G2.GeometryInside (this))
-			return true;
+    //Check if two geometries intersect
+    public bool GeometryIntersect(Geometry G2) {
+        Debug.Log("INTERSECT");
+        Debug.Log(this);
+        Debug.Log(G2);
+
+        if (GeometryInside(G2))
+        {
+            Debug.Log("G2 inside G1");
+            return true;
+        }
+        else if (G2.GeometryInside(this)) {
+            Debug.Log("G1 inside G2");
+            return true;
+        }
 
 		foreach( Line La in this.edges ){
-			foreach( Line Lb in G2.edges ){
-				if( La.LineIntersectMuntac( Lb ) > 0 )
-					return true;
+            foreach (Line Lb in G2.edges)
+            {
+                if (La.LineIntersectMuntac(Lb) > 0) { 
+                    Debug.Log("Line Intersection");
+                    Debug.Log(La.vertex[0] + "," + La.vertex[1]);
+                    Debug.Log(Lb.vertex[0] + "," + Lb.vertex[1]);
+
+                    return true;
+                }
 			}
 		}
 		return false;
@@ -290,6 +324,11 @@ public class Geometry
 		return (a.x * b.y) - (a.y * b.x);
 	}
 
+
+    //Weird shape . geometryInside (square)
+    //foreach line in square
+    // if for each point, the point is inside shape
+    // then return true.
 	public bool GeometryInside( Geometry G2 ){
 		foreach (Line L in G2.edges) {
 			if( !PointInside( L.vertex[0] ) )
@@ -415,4 +454,18 @@ public class Geometry
 		return toReturn; 
 		
 	}
+    
+
+
+    public override string ToString()
+    {
+        string toReturn = "";
+
+        foreach(Line l in edges)
+        {
+            toReturn = toReturn + "-" + l.vertex[0] + "," + l.vertex[1];
+        }
+        return toReturn;
+
+    }
 }
