@@ -122,6 +122,7 @@ public partial class Visibility1 : MonoBehaviour {
 	bool bJustTestCrashNow = false;
 	float playerScaleForCrash = 0.5f;
 	float playerScaleForMyCrash = 0.3f;
+	float playerScaleForWastleLands2 = 0.5f;
 	void Start () 
 	{
 		//testFunc();
@@ -145,13 +146,54 @@ public partial class Visibility1 : MonoBehaviour {
 			setUpMultiplePaths();
 			return;
 		}
-		if(currSceneName=="myCrash.unity")
+		if(currSceneName=="wastleLands2.unity")
+		{
+			pathPoints = CommonWasteLands2.definePath ();
+			m_stepDistance = CommonWasteLands2.getStepDistance();
+			radius_enemy*=playerScaleForWastleLands2;
+			m_step = 0.12f;
+			if(bDebugNow)
+			{
+				setGlobalVars1();
+				CalculateVisibilityForPath();
+				int ptWhich = 50;
+				int ptWhichCOunter=0;
+				float standardMaxMovementTemp = speedEnemy*(m_stepDistance/speedPlayer);
+				Debug.Log("standardMaxMovementTemp = "+standardMaxMovementTemp);
+				foreach(Vector3 vect in h_mapPtToIndx.Keys)
+				{
+					if(ptWhichCOunter>=ptWhich && pointInShadow(vect,PointToDebug))
+					{
+						showPosOfPointEnemySized(vect,Color.green);
+						foreach(Vector3 vectNeighbor in h_mapPtToIndx.Keys)
+						{
+							if(Vector3.Distance(vect,vectNeighbor)<=standardMaxMovementTemp)
+							{
+								showPosOfPointEnemySized(vectNeighbor,Color.red);
+								//showPosOfPointRectangle(vect,Color.green);
+							}
+						}
+						break;
+					}
+					ptWhichCOunter++;
+				}
+				foreach(Vector3 vect in pathPoints)
+				{
+					GameObject pathObj;
+					pathObj = Instantiate(pathSphere, 
+					                      vect, 
+					                      pathSphere.transform.rotation) as GameObject;
+				}
+				return;
+			}
+			
+		}
+		else if(currSceneName=="myCrash.unity")
 		{
 			pathPoints = CommonCrash.definePath ();
 			m_stepDistance = CommonCrash.getStepDistance();
 			radius_enemy*=playerScaleForMyCrash;
 			m_step = 0.16f;
-			radius_enemy*=playerScaleForMyCrash;
 			if(bDebugNow)
 			{
 				setGlobalVars1();
@@ -522,6 +564,15 @@ public partial class Visibility1 : MonoBehaviour {
 			lscale.x*=playerScaleForMyCrash;
 			lscale.y*=playerScaleForMyCrash;
 			lscale.z*=playerScaleForMyCrash;
+			Renderer rend = playerObj.GetComponent<Renderer>();
+			rend.transform.localScale = lscale;
+		}
+		else if(currSceneName=="wastleLands2.unity")
+		{
+			Vector3 lscale= playerObj.transform.localScale;
+			lscale.x*=playerScaleForWastleLands2;
+			lscale.y*=playerScaleForWastleLands2;
+			lscale.z*=playerScaleForWastleLands2;
 			Renderer rend = playerObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
@@ -1721,6 +1772,15 @@ public partial class Visibility1 : MonoBehaviour {
 			Renderer rend = enemyObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
+		else if(currSceneName=="wastleLands2.unity")
+		{
+			Vector3 lscale= enemyObj.transform.localScale;
+			lscale.x*=playerScaleForWastleLands2;
+			lscale.y*=playerScaleForWastleLands2;
+			lscale.z*=playerScaleForWastleLands2;
+			Renderer rend = enemyObj.GetComponent<Renderer>();
+			rend.transform.localScale = lscale;
+		}
 		Component.Destroy (enemyObj.GetComponent("Enemy"));
 		enemyObj.transform.position = sel;
 		EnemyMovement centroidObj = new EnemyMovement();
@@ -1748,6 +1808,15 @@ public partial class Visibility1 : MonoBehaviour {
 			lscale.x*=playerScaleForMyCrash;
 			lscale.y*=playerScaleForMyCrash;
 			lscale.z*=playerScaleForMyCrash;
+			Renderer rend = enemyObj.GetComponent<Renderer>();
+			rend.transform.localScale = lscale;
+		}
+		else if(currSceneName=="wastleLands2.unity")
+		{
+			Vector3 lscale= enemyObj.transform.localScale;
+			lscale.x*=playerScaleForWastleLands2;
+			lscale.y*=playerScaleForWastleLands2;
+			lscale.z*=playerScaleForWastleLands2;
 			Renderer rend = enemyObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
@@ -1781,6 +1850,15 @@ public partial class Visibility1 : MonoBehaviour {
 			Renderer rend = enemyObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
+		else if(currSceneName=="wastleLands2.unity")
+		{
+			Vector3 lscale= enemyObj.transform.localScale;
+			lscale.x*=playerScaleForWastleLands2;
+			lscale.y*=playerScaleForWastleLands2;
+			lscale.z*=playerScaleForWastleLands2;
+			Renderer rend = enemyObj.GetComponent<Renderer>();
+			rend.transform.localScale = lscale;
+		}
 		Component.Destroy (enemyObj.GetComponent("Enemy"));
 		enemyObj.transform.position = sel;
 		EnemyMovement nearMissObj = new EnemyMovement();
@@ -1808,6 +1886,15 @@ public partial class Visibility1 : MonoBehaviour {
 			lscale.x*=playerScaleForMyCrash;
 			lscale.y*=playerScaleForMyCrash;
 			lscale.z*=playerScaleForMyCrash;
+			Renderer rend = enemyObj.GetComponent<Renderer>();
+			rend.transform.localScale = lscale;
+		}
+		else if(currSceneName=="wastleLands2.unity")
+		{
+			Vector3 lscale= enemyObj.transform.localScale;
+			lscale.x*=playerScaleForWastleLands2;
+			lscale.y*=playerScaleForWastleLands2;
+			lscale.z*=playerScaleForWastleLands2;
 			Renderer rend = enemyObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
@@ -2873,6 +2960,12 @@ public partial class Visibility1 : MonoBehaviour {
 			lscale.y*=playerScaleForMyCrash;
 			lscale.z*=playerScaleForMyCrash;
 		}
+		else if(currSceneName=="wastleLands2.unity")
+		{
+			lscale.x*=playerScaleForWastleLands2;
+			lscale.y*=playerScaleForWastleLands2;
+			lscale.z*=playerScaleForWastleLands2;
+		}
 		else
 		{
 			lscale.x*=0.36f;
@@ -2903,6 +2996,12 @@ public partial class Visibility1 : MonoBehaviour {
 			lscale.x*=playerScaleForMyCrash;
 			lscale.y*=playerScaleForMyCrash;
 			lscale.z*=playerScaleForMyCrash;
+		}
+		else if(currSceneName=="wastleLands2.unity")
+		{
+			lscale.x*=playerScaleForWastleLands2;
+			lscale.y*=playerScaleForWastleLands2;
+			lscale.z*=playerScaleForWastleLands2;
 		}
 		//lscale.x*=10f;
 		//lscale.y*=10f;
@@ -4321,7 +4420,7 @@ public partial class Visibility1 : MonoBehaviour {
 
 		}
 	}
-	int PointToDebug = 87;
+	int PointToDebug = 65;
 	bool bDebugNow = false;
 	public void CalculateVisibilityForPath()
 	{
