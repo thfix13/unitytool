@@ -123,6 +123,8 @@ public partial class Visibility1 : MonoBehaviour {
 	float playerScaleForCrash = 0.5f;
 	float playerScaleForMyCrash = 0.3f;
 	float playerScaleForWastleLands2 = 0.5f;
+	int PointToDebug = 0;
+	public bool bDebugNow = false;
 	void Start () 
 	{
 		//testFunc();
@@ -193,9 +195,10 @@ public partial class Visibility1 : MonoBehaviour {
 			pathPoints = CommonCrash.definePath ();
 			m_stepDistance = CommonCrash.getStepDistance();
 			radius_enemy*=playerScaleForMyCrash;
-			m_step = 0.16f;
+			m_step = 0.05f;
 			if(bDebugNow)
 			{
+				Debug.Log("pathPoints = "+pathPoints.Count);
 				setGlobalVars1();
 				CalculateVisibilityForPath();
 				int ptWhich = 100;
@@ -460,7 +463,9 @@ public partial class Visibility1 : MonoBehaviour {
 			CalculateVisibilityForPath ();
 			//executeTrueCase2();
 			//executeTrueCase3();
-			executeTrueCase4();
+			//executeTrueCase4();
+			//executeTrueCase5();
+			executeTrueCase6();
 			return;
 		}
 		if(m_CalculateTrueCase)
@@ -912,18 +917,22 @@ public partial class Visibility1 : MonoBehaviour {
 		}*/
 		if(bDebugNow)
 		{
-			mapBG.DrawGeometry(allLineParent,mat);
+			/*mapBG.DrawGeometry(allLineParent,mat);
 			foreach(Geometry geo in globalPolygon)
 			{
 				geo.DrawGeometry(allLineParent,matGreen);
-			}
-			/*foreach(Vector3 key in h_mapPtToIndx.Keys)
+			}*/
+			/*int howManySafe=0;
+			foreach(Vector3 key in h_mapPtToIndx.Keys)
 			{
-				if(pointInShadow(key,0))
+				if(pointInShadow(key,PointToDebug))
 				{
-					showPosOfPoint(key,Color.red);
+					howManySafe++;
+					//showPosOfPointRectangle(key,Color.green);
+					//showPosOfPoint(key,Color.red);
 				}
 			}
+			Debug.Log("howManySafe="+howManySafe);
 			Debug.Break();*/
 			return;
 		}
@@ -943,8 +952,6 @@ public partial class Visibility1 : MonoBehaviour {
 			Debug.Break();
 			return;
 		}
-		if (bSlowShadowsDown && setTimerTemp-- > 0)
-				return;
 		if (bAgentBasedAssignment|| bDisplayAreas || m_ExecuteTrueCase || m_ShowTrueCase || m_CalculateTrueCase)
 		{
 			//Debug.Break();
@@ -2956,9 +2963,10 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		else if(currSceneName=="myCrash.unity")
 		{
-			lscale.x*=playerScaleForMyCrash;
-			lscale.y*=playerScaleForMyCrash;
-			lscale.z*=playerScaleForMyCrash;
+			float scalingTemp = 0.5f;
+			lscale.x*=playerScaleForMyCrash*scalingTemp;
+			lscale.y*=playerScaleForMyCrash*scalingTemp;
+			lscale.z*=playerScaleForMyCrash*scalingTemp;
 		}
 		else if(currSceneName=="wastleLands2.unity")
 		{
@@ -4420,8 +4428,6 @@ public partial class Visibility1 : MonoBehaviour {
 
 		}
 	}
-	int PointToDebug = 65;
-	bool bDebugNow = false;
 	public void CalculateVisibilityForPath()
 	{
 		//globalPolygon = getObstacleEdges ();

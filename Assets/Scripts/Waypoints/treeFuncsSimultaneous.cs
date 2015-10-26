@@ -49,6 +49,274 @@ public partial class Visibility1 : MonoBehaviour
 			//showPosOfPoint(pt,Color.blue);
 		}
 	}
+	Hashtable h_discreteShadows5 = new Hashtable();
+	private void createDiscreteMap5()
+	{
+		int Indx = 0;
+		while(Indx<pathPoints.Count)
+		{
+			int[,] shadowArray = new int[discretePtsX,discretePtsZ];
+			
+			float radius_hiddenSphere = radius_enemy;
+			int j1=0;	
+			for(float j=m_minX;j<m_maxX && j1<discretePtsX;j+=m_step)
+			{
+				int k1=0;
+				for(float k=m_minZ;k<m_maxZ && k1<discretePtsZ;k+=m_step)
+				{
+					Vector3 pt = new Vector3(j,1,k);
+					
+					if(pointInShadow(pt,Indx) && !Physics.CheckSphere(pt,radius_hiddenSphere))
+					{
+						shadowArray[j1,k1]=Indx;
+					}
+					/*else if(CheckIfInsidePolygon(pt))
+					{
+						shadowArray[j1,k1]=2;
+					}*/
+					else
+					{
+						shadowArray[j1,k1]=-1;
+					}
+					k1++;
+				}
+				j1++;
+			}
+			h_discreteShadows5.Add(Indx,shadowArray);
+			Indx++;
+		}
+	}
+	private void setNeighborValues5(int[,] shadowArrayPrev,int[,] shadowArrayNext,int i,int j,int k,Hashtable relationMap)
+	{
+		int rowJ = j;
+		int colK = k;
+		Vector3 currPos = ((Vector3)h_mapIndxToPt[new Vector2(j,k)]);
+		//List<Vector2> listOfAvailablePos = new List<Vector2> ();
+		
+		
+		bool runAgain = true;
+		
+		if(shadowArrayNext[j,k]>0 && shadowArrayPrev[j,k]<shadowArrayNext[j,k])
+		{
+			shadowArrayPrev[j,k] = shadowArrayNext[j,k];
+		}
+		
+		while(runAgain)
+		{
+			runAgain = false;
+			rowJ--;
+			colK--;
+			int rowLen = (j - rowJ)*2 +1;
+			if(rowJ<0 || colK<0 || rowJ+rowLen>discretePtsX || colK+rowLen>discretePtsZ)
+				break;
+			for(int i1=rowJ;i1<rowJ+rowLen;i1++)
+			{
+				Vector3 vectPos = (Vector3)h_mapIndxToPt[new Vector2(i1,colK)];
+				if(shadowArrayPrev[i1,colK]>=0 && shadowArrayPrev[i1,colK]<shadowArrayNext[j,k] && CheckIfNeighbor(currPos,vectPos,relationMap))
+				{
+					runAgain = true;
+					shadowArrayPrev[i1,colK] = shadowArrayNext[j,k];
+					//listOfAvailablePos.Add(new Vector2(i1,colK));
+				}
+				vectPos = (Vector3)h_mapIndxToPt[new Vector2(i1,colK+rowLen-1)];
+				if(shadowArrayPrev[i1,colK+rowLen-1]>=0 && shadowArrayPrev[i1,colK+rowLen-1]<shadowArrayNext[j,k] && CheckIfNeighbor(currPos,vectPos,relationMap))
+				{
+					runAgain = true;
+					shadowArrayPrev[i1,colK+rowLen-1] = shadowArrayNext[j,k];
+					//listOfAvailablePos.Add(new Vector2(i1,colK+rowLen-1));
+				}
+			}
+			for(int i2=colK+1;i2<colK+rowLen-1;i2++)
+			{
+				Vector3 vectPos = (Vector3)h_mapIndxToPt[new Vector2(rowJ,i2)];
+				if(shadowArrayPrev[rowJ,i2]>=0 && shadowArrayPrev[rowJ,i2]<shadowArrayNext[j,k] && CheckIfNeighbor(currPos,vectPos,relationMap))
+				{
+					runAgain = true;
+					shadowArrayPrev[rowJ,i2] = shadowArrayNext[j,k];
+					//listOfAvailablePos.Add(new Vector2(rowJ,i2));
+				}
+				vectPos = (Vector3)h_mapIndxToPt[new Vector2(rowJ+rowLen-1,i2)];
+				if(shadowArrayPrev[rowJ+rowLen-1,i2]>=0 && shadowArrayPrev[rowJ+rowLen-1,i2]<shadowArrayNext[j,k] && CheckIfNeighbor(currPos,vectPos,relationMap))
+				{
+					runAgain = true;
+					shadowArrayPrev[rowJ+rowLen-1,i2] = shadowArrayNext[j,k];
+					//listOfAvailablePos.Add(new Vector2(rowJ+rowLen-1,i2));
+				}
+			}
+		}
+		/*List<AgentNode> nodelist = new List<AgentNode> ();
+		foreach(Vector2 vect in listOfAvailablePos)
+		{
+			if(!nodeTable.ContainsKey(vect))
+			{
+				nodeTable.Add(vect,new AgentNode(vect));
+			}
+			nodelist.Add ((AgentNode)nodeTable[vect]);
+		}
+		parentTable.Add (new Vector2 (j, k), nodelist);*/
+	}
+	private void executeTrueCase5()
+	{
+		float startTimeCalc = Time.realtimeSinceStartup;
+		setGlobalVars1();
+		createDiscreteMap5 ();
+
+		standardMaxMovement = speedEnemy*(m_stepDistance/speedPlayer);
+		Hashtable relationMap = createRelationships ();
+		int j1=0;
+		int k1=0;
+		/*for (int i=pathPoints.Count-1; i>0; i--) 
+		{
+			int[,] shadowArray1 = (int[,])h_discreteShadows5[i];
+			int[,] shadowArray2 = (int[,])h_discreteShadows5[i-1];
+			j1=0;	
+			for(float j=m_minX;j<m_maxX && j1<discretePtsX;j+=m_step)
+			{
+				k1=0;
+				for(float k=m_minZ;k<m_maxZ && k1<discretePtsZ;k+=m_step)
+				{
+					Vector3 pt = new Vector3(j,1,k);
+					if(shadowArray1[j1,k1]>=0)
+					{
+						setNeighborValues(shadowArray1,shadowArray2,i,j1,k1,relationMap);
+					}
+					k1++;
+				}
+				j1++;
+			}
+		}*/
+		for (int i=0; i<pathPoints.Count-1; i++) 
+		{
+			int[,] shadowArray1 = (int[,])h_discreteShadows5[i];
+			int[,] shadowArray2 = (int[,])h_discreteShadows5[i+1];
+			j1=0;	
+			for(float j=m_minX;j<m_maxX && j1<discretePtsX;j+=m_step)
+			{
+				k1=0;
+				for(float k=m_minZ;k<m_maxZ && k1<discretePtsZ;k+=m_step)
+				{
+					Vector3 pt = new Vector3(j,1,k);
+					if(shadowArray1[j1,k1]>=0)
+					{
+						setNeighborValues5(shadowArray1,shadowArray2,i,j1,k1,relationMap);
+					}
+					k1++;
+				}
+				j1++;
+			}
+		}
+
+		float totalTimeCalc = (Time.realtimeSinceStartup - startTimeCalc)/60;
+
+		//Dumping file
+		string dirName = createSaveDataDir(Application.dataPath);
+		string resultFileName = dirName+"\\Result.txt";
+		StreamWriter sw = new StreamWriter (resultFileName);
+
+
+		//int[,] shadowArrayHead = (int[,])h_discreteShadows5[0];
+		int[,] shadowArrayHead = (int[,])h_discreteShadows5[pathPoints.Count-1];
+		j1=0;	
+		for(float j=m_minX;j<m_maxX && j1<discretePtsX;j+=m_step)
+		{
+			k1=0;
+			for(float k=m_minZ;k<m_maxZ && k1<discretePtsZ;k+=m_step)
+			{
+				Vector3 pt = new Vector3(j,1,k);
+				int numLevelsReached = shadowArrayHead[j1,k1];
+				if(numLevelsReached>0)
+				{
+					sw.Write("("+pt.x+","+pt.y+","+pt.z+")"+";"+numLevelsReached);
+					sw.WriteLine("");
+				}
+				k1++;
+			}
+			j1++;
+		}
+		sw.Close ();
+
+		DumpInfoFile (dirName,totalTimeCalc);
+
+	}
+	//Newest
+	private bool CheckIfNeighbor(Vector3 currPos,Vector3 vectPos,Hashtable relationMap)
+	{
+		List<Vector3> ptList = (List<Vector3>)relationMap [currPos];
+		if (ptList.Contains (vectPos))
+		{
+			return true;
+		}
+		return false;
+	}
+	private void setNeighborValues(int[,] shadowArrayNext,int[,] shadowArrayPrev,int i,int j,int k,Hashtable relationMap)
+	{
+		int rowJ = j;
+		int colK = k;
+		Vector3 currPos = ((Vector3)h_mapIndxToPt[new Vector2(j,k)]);
+		//List<Vector2> listOfAvailablePos = new List<Vector2> ();
+		
+		
+		bool runAgain = true;
+
+		if(shadowArrayPrev[j,k]>=0 && shadowArrayPrev[j,k]<shadowArrayNext[j,k])
+		{
+			shadowArrayPrev[j,k] = shadowArrayNext[j,k];
+		}
+
+		while(runAgain)
+		{
+			runAgain = false;
+			rowJ--;
+			colK--;
+			int rowLen = (j - rowJ)*2 +1;
+			if(rowJ<0 || colK<0 || rowJ+rowLen>discretePtsX || colK+rowLen>discretePtsZ)
+				break;
+			for(int i1=rowJ;i1<rowJ+rowLen;i1++)
+			{
+				Vector3 vectPos = (Vector3)h_mapIndxToPt[new Vector2(i1,colK)];
+				if(shadowArrayPrev[i1,colK]>=0 && shadowArrayPrev[i1,colK]<shadowArrayNext[j,k] && CheckIfNeighbor(currPos,vectPos,relationMap))
+				{
+					runAgain = true;
+					shadowArrayPrev[i1,colK] = shadowArrayNext[j,k];
+					//listOfAvailablePos.Add(new Vector2(i1,colK));
+				}
+				vectPos = (Vector3)h_mapIndxToPt[new Vector2(i1,colK+rowLen-1)];
+				if(shadowArrayPrev[i1,colK+rowLen-1]>=0 && shadowArrayPrev[i1,colK+rowLen-1]<shadowArrayNext[j,k] && CheckIfNeighbor(currPos,vectPos,relationMap))
+				{
+					runAgain = true;
+					shadowArrayPrev[i1,colK+rowLen-1] = shadowArrayNext[j,k];
+					//listOfAvailablePos.Add(new Vector2(i1,colK+rowLen-1));
+				}
+			}
+			for(int i2=colK+1;i2<colK+rowLen-1;i2++)
+			{
+				Vector3 vectPos = (Vector3)h_mapIndxToPt[new Vector2(rowJ,i2)];
+				if(shadowArrayPrev[rowJ,i2]>=0 && shadowArrayPrev[rowJ,i2]<shadowArrayNext[j,k] && CheckIfNeighbor(currPos,vectPos,relationMap))
+				{
+					runAgain = true;
+					shadowArrayPrev[rowJ,i2] = shadowArrayNext[j,k];
+					//listOfAvailablePos.Add(new Vector2(rowJ,i2));
+				}
+				vectPos = (Vector3)h_mapIndxToPt[new Vector2(rowJ+rowLen-1,i2)];
+				if(shadowArrayPrev[rowJ+rowLen-1,i2]>=0 && shadowArrayPrev[rowJ+rowLen-1,i2]<shadowArrayNext[j,k] && CheckIfNeighbor(currPos,vectPos,relationMap))
+				{
+					runAgain = true;
+					shadowArrayPrev[rowJ+rowLen-1,i2] = shadowArrayNext[j,k];
+					//listOfAvailablePos.Add(new Vector2(rowJ+rowLen-1,i2));
+				}
+			}
+		}
+		/*List<AgentNode> nodelist = new List<AgentNode> ();
+		foreach(Vector2 vect in listOfAvailablePos)
+		{
+			if(!nodeTable.ContainsKey(vect))
+			{
+				nodeTable.Add(vect,new AgentNode(vect));
+			}
+			nodelist.Add ((AgentNode)nodeTable[vect]);
+		}
+		parentTable.Add (new Vector2 (j, k), nodelist);*/
+	}
 	private void executeTrueCase4()
 	{
 		setGlobalVars1();
@@ -66,6 +334,7 @@ public partial class Visibility1 : MonoBehaviour
 		
 		while(true)
 		{
+			float startTimeCalc = Time.realtimeSinceStartup;
 			Hashtable h_mapChild_Parent = new Hashtable();
 			if(levelOfAccess>pathPoints.Count-1)
 				break;
@@ -106,6 +375,11 @@ public partial class Visibility1 : MonoBehaviour
 
 				fillMapWithChildren4(pt,keyTemp,levelOfAccess,h_mapChild_Parent,relationMap);
 			}
+			float totalTimeCalc = (Time.realtimeSinceStartup - startTimeCalc)/60;
+			string sourceFileNameCalc = dirName+"\\TimeForCalc"+levelOfAccess+".txt";
+			StreamWriter sw = new StreamWriter(sourceFileNameCalc);
+			sw.WriteLine("TotalTimeCalc = "+totalTimeCalc);
+			sw.Close();
 			DumpEdgesForLevel3(h_mapChild_Parent,levelOfAccess,dirName);
 
 			levelOfAccess++;
@@ -250,6 +524,7 @@ public partial class Visibility1 : MonoBehaviour
 
 		while(true)
 		{
+			float startTimeCalc = Time.realtimeSinceStartup;
 			Hashtable h_mapChild_Parent = new Hashtable();
 			if(levelOfAccess>pathPoints.Count-1)
 				break;
@@ -279,6 +554,14 @@ public partial class Visibility1 : MonoBehaviour
 				
 				j1++;
 			}
+			float totalTimeCalc = (Time.realtimeSinceStartup - startTimeCalc)/60;
+			string sourceFileNameCalc = dirName+"\\TimeForCalc"+levelOfAccess+".txt";
+			StreamWriter sw = new StreamWriter(sourceFileNameCalc);
+			sw.WriteLine("TotalTimeCalc = "+totalTimeCalc);
+			sw.Close();
+			//Debug.Log("executeTrueCase Finished. Time taken is = "+totalTimeCalc+" mins");
+
+
 			DumpEdgesForLevel3(h_mapChild_Parent,levelOfAccess,dirName);
 			levelOfAccess++;
 		}
@@ -288,6 +571,8 @@ public partial class Visibility1 : MonoBehaviour
 	}
 	private void DumpEdgesForLevel3(Hashtable h_mapChild_Parent,int levelOfAccess,string dirName)
 	{
+		float startTimeDumping = Time.realtimeSinceStartup;
+
 		string sourceFileName = dirName+"\\Edges"+levelOfAccess+".txt";
 		StreamWriter sw = new StreamWriter(sourceFileName);
 
@@ -303,6 +588,12 @@ public partial class Visibility1 : MonoBehaviour
 		}
 
 		sw.Close ();
+
+		float totalTimeDumping = (Time.realtimeSinceStartup - startTimeDumping)/60;
+		string sourceFileNameDumping = dirName+"\\TimeForDumping"+levelOfAccess+".txt";
+		StreamWriter swDump = new StreamWriter(sourceFileNameDumping);
+		swDump.WriteLine("totalTimeDumping = "+totalTimeDumping);
+		swDump.Close();
 	}
 	private void fillMapWithChildren(Vector3 pt,Vector2 keyTemp,int levelOfAccess,Hashtable h_mapChild_Parent)
 	{
@@ -437,7 +728,7 @@ public partial class Visibility1 : MonoBehaviour
 			j1++;
 		}
 		int numOfLevels = lastPathIndex ();//pathPoints.Count-1;//m_lastPathIndex;
-		while(levelOfAccess<numOfLevels)//TODO:think other exit cases
+		while(levelOfAccess<numOfLevels)//:think other exit cases
 		{
 			levelOfAccess++;
 			
@@ -728,7 +1019,7 @@ public partial class Visibility1 : MonoBehaviour
 
 		h_mapPtToNode.Clear ();
 		//h_mapPtToNode = new Hashtable();
-		while(levelOfAccess<numOfLevels)//TODO:think other exit cases
+		while(levelOfAccess<numOfLevels)//:think other exit cases
 		{
 			levelOfAccess++;
 			
@@ -850,7 +1141,13 @@ public partial class Visibility1 : MonoBehaviour
 	private void displayPredictedPaths3()
 	{
 		//////////////////////////////////////////////////////////////////////////////////////////////////
+		/*setGlobalVars1 ();
+		foreach(Vector3 vect in h_mapPtToIndx.Keys)
+		{
 
+			showPosOfPointRectangle(vect,Color.Lerp(Color.white,Color.green,0.9f));
+		}
+		return;*/
 		/// //////////////////////////////////////////////////////////////////////////////////////////////
 		float startTime = Time.realtimeSinceStartup;
 		int numOfLevels = lastPathIndex();//m_lastPathIndex;
