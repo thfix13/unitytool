@@ -2,12 +2,12 @@ using UnityEngine;
 using System.Collections.Generic;
 public static class CommonCrash
 {
-	static float scale = 0.8f;
+	static float scale = 1.0f;
 	static float stepPath = 0.2f*scale;
 
 	//static float scale = 0.80f;
 	//static float stepPath = 1.0f*scale;
-	static float stepPathActual = stepPath*1.6f;
+	static float stepPathActual = stepPath*1.0f;
 	public static List<Vector3> definePathFromIndx(int pathIndx)
 	{
 		//List<Vector3> pathPts = new List<Vector3> ();
@@ -78,7 +78,7 @@ public static class CommonCrash
 		float zVar = -1.0f;
 		//Vector3 pt1 = new Vector3 (startPt.x+xVar, startPt.y, startPt.z+zVar);
 		
-		int n = 22;
+		int n = 17;
 		step = n * stepPath;
 		step = step * step;
 		zVar = 1.0f*scalingLocal;
@@ -86,16 +86,16 @@ public static class CommonCrash
 		Vector3 pt2 = new Vector3 (startPt.x+xVar, startPt.y, startPt.z+zVar);
 		
 		
-		step = 34 * stepPath;
-		step = step * step;
-		xVar = 2.0f*scalingLocal;
-		zVar = Mathf.Sqrt(step - xVar * xVar)*scalingLocal;
-		Vector3 pt3 = new Vector3 (pt2.x+xVar, pt2.y, pt2.z+zVar);
-		
-		step = 16 * stepPath;
+		step = 10 * stepPath;
 		step = step * step;
 		xVar = 1.5f*scalingLocal;
-		zVar = Mathf.Sqrt(step - xVar * xVar)*scalingLocal;
+		zVar = Mathf.Sqrt(step - xVar * xVar);
+		Vector3 pt3 = new Vector3 (pt2.x+xVar, pt2.y, pt2.z+zVar);
+		
+		step = 10 * stepPath;
+		step = step * step;
+		xVar = 2.5f*scalingLocal;
+		zVar = Mathf.Sqrt(step - xVar * xVar);
 		Vector3 pt4 = new Vector3 (pt3.x+xVar, pt3.y, pt3.z+zVar);
 		
 		//step = 65 * stepPath;
@@ -111,21 +111,21 @@ public static class CommonCrash
 		//Vector3 pt5 = new Vector3 (pt4.x, pt4.y, pt4.z+step);
 		
 		
-		step = 8 * stepPath;
-		step = step * step;
-		xVar = 2.5f*scalingLocal;
-		zVar = Mathf.Sqrt(step - xVar * xVar);
+		step = 7 * stepPath;
+		//step = step * step;
+		xVar = step;//2.5f*scalingLocal;
+		//zVar = Mathf.Sqrt(step - xVar * xVar);
 		Vector3 pt6 = new Vector3 (pt5.x+xVar, pt5.y, pt5.z);
 		
-		step = 62 * stepPath;
+		step = 25 * stepPath;
 		step = step * step;
-		xVar = 5.0f*scalingLocal;
-		zVar = Mathf.Sqrt(step - xVar * xVar)*scalingLocal;
+		xVar = 3.2f*scalingLocal;
+		zVar = Mathf.Sqrt(step - xVar * xVar);
 		Vector3 pt7 = new Vector3 (pt6.x+xVar, pt6.y, pt6.z-zVar);
 		
 
 
-		xVar = 3.5f*scalingLocal;
+		xVar = 7 * stepPath;//3.5f*scalingLocal;
 
 		Vector3 pt8 = new Vector3 (pt7.x+xVar, pt7.y, pt7.z);
 
@@ -135,34 +135,34 @@ public static class CommonCrash
 		//step = 8 * stepPath*scalingLocal;
 		//Vector3 pt9 = new Vector3 (pt8.x, pt8.y, pt8.z+step);
 
-		step = 14 * stepPath;
+		step = 5 * stepPath;
 		step = step * step;
-		xVar = 2.0f*scalingLocal;
-		zVar = Mathf.Sqrt(step - xVar * xVar)*scalingLocal;
+		xVar = 0.25f*scalingLocal;
+		zVar = Mathf.Sqrt(step - xVar * xVar);
 		Vector3 pt9 = new Vector3 (pt8.x+xVar, pt8.y, pt8.z-zVar);
 		
-		step = 28 * stepPath;
+		step = 29 * stepPath;
 		step = step * step;
-		xVar = 8.0f*scalingLocal;
-		zVar = Mathf.Sqrt(step - xVar * xVar)*scalingLocal;
+		zVar = 1.4f*scalingLocal;
+		xVar = Mathf.Sqrt(Mathf.Abs (step - zVar * zVar));
 		Vector3 pt10 = new Vector3 (pt9.x+xVar, pt9.y, pt9.z+zVar);
 		
-		step = 60 * stepPath*scalingLocal;
+		step = 24 * stepPath;
 		Vector3 pt11 = new Vector3 (pt10.x, pt10.y, pt10.z+step);
 		
-		step = 64 * stepPath;
+		step = 23 * stepPath;
 		step = step * step;
-		zVar = 0.9f*scalingLocal;
-		xVar = Mathf.Sqrt(step - zVar * zVar)*scalingLocal;
+		zVar = 1.0f*scalingLocal;
+		xVar = Mathf.Sqrt(step - zVar * zVar);
 		Vector3 pt12 = new Vector3 (pt11.x-xVar, pt11.y, pt11.z+zVar);
 		
-		step = 24 * stepPath*scalingLocal;
+		step = 8 * stepPath;
 		Vector3 pt13 = new Vector3 (pt12.x, pt12.y, pt12.z-step);
 		
-		step = 36 * stepPath*scalingLocal;
+		step = 12 * stepPath;
 		Vector3 pt14 = new Vector3 (pt13.x+step, pt13.y, pt13.z);
 		
-		step = 20 * stepPath*scalingLocal;
+		step = 7 * stepPath;
 		Vector3 pt15 = new Vector3 (pt14.x, pt14.y, pt14.z-step);
 		
 		Vector3 pt16 = new Vector3 (pt14.x, pt14.y, pt14.z);
