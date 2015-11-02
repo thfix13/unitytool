@@ -69,75 +69,6 @@ public partial class Visibility1 : MonoBehaviour
 		}
 		HT3 = DeepCopy (HT2);
 	}
-	private void setNeighborValues6(sbyte[,] shadowArrayPrev,sbyte[,] shadowArrayNext,int i,int j,int k,Hashtable relationMap)
-	{
-		int rowJ = j;
-		int colK = k;
-		Vector3 currPos = ((Vector3)h_mapIndxToPt[new Vector2(j,k)]);
-		//List<Vector2> listOfAvailablePos = new List<Vector2> ();
-		
-		
-		bool runAgain = true;
-		
-		if(shadowArrayNext[j,k]>0 && shadowArrayPrev[j,k]<shadowArrayNext[j,k])
-		{
-			shadowArrayPrev[j,k] = shadowArrayNext[j,k];
-		}
-		
-		while(runAgain)
-		{
-			runAgain = false;
-			rowJ--;
-			colK--;
-			int rowLen = (j - rowJ)*2 +1;
-			if(rowJ<0 || colK<0 || rowJ+rowLen>discretePtsX || colK+rowLen>discretePtsZ)
-				break;
-			for(int i1=rowJ;i1<rowJ+rowLen;i1++)
-			{
-				Vector3 vectPos = (Vector3)h_mapIndxToPt[new Vector2(i1,colK)];
-				if(shadowArrayPrev[i1,colK]>=0 && shadowArrayPrev[i1,colK]<shadowArrayNext[j,k] && CheckIfNeighbor(currPos,vectPos,relationMap))
-				{
-					runAgain = true;
-					shadowArrayPrev[i1,colK] = shadowArrayNext[j,k];
-					//listOfAvailablePos.Add(new Vector2(i1,colK));
-				}
-				vectPos = (Vector3)h_mapIndxToPt[new Vector2(i1,colK+rowLen-1)];
-				if(shadowArrayPrev[i1,colK+rowLen-1]>=0 && shadowArrayPrev[i1,colK+rowLen-1]<shadowArrayNext[j,k] && CheckIfNeighbor(currPos,vectPos,relationMap))
-				{
-					runAgain = true;
-					shadowArrayPrev[i1,colK+rowLen-1] = shadowArrayNext[j,k];
-					//listOfAvailablePos.Add(new Vector2(i1,colK+rowLen-1));
-				}
-			}
-			for(int i2=colK+1;i2<colK+rowLen-1;i2++)
-			{
-				Vector3 vectPos = (Vector3)h_mapIndxToPt[new Vector2(rowJ,i2)];
-				if(shadowArrayPrev[rowJ,i2]>=0 && shadowArrayPrev[rowJ,i2]<shadowArrayNext[j,k] && CheckIfNeighbor(currPos,vectPos,relationMap))
-				{
-					runAgain = true;
-					shadowArrayPrev[rowJ,i2] = shadowArrayNext[j,k];
-					//listOfAvailablePos.Add(new Vector2(rowJ,i2));
-				}
-				vectPos = (Vector3)h_mapIndxToPt[new Vector2(rowJ+rowLen-1,i2)];
-				if(shadowArrayPrev[rowJ+rowLen-1,i2]>=0 && shadowArrayPrev[rowJ+rowLen-1,i2]<shadowArrayNext[j,k] && CheckIfNeighbor(currPos,vectPos,relationMap))
-				{
-					runAgain = true;
-					shadowArrayPrev[rowJ+rowLen-1,i2] = shadowArrayNext[j,k];
-					//listOfAvailablePos.Add(new Vector2(rowJ+rowLen-1,i2));
-				}
-			}
-		}
-		/*List<AgentNode> nodelist = new List<AgentNode> ();
-		foreach(Vector2 vect in listOfAvailablePos)
-		{
-			if(!nodeTable.ContainsKey(vect))
-			{
-				nodeTable.Add(vect,new AgentNode(vect));
-			}
-			nodelist.Add ((AgentNode)nodeTable[vect]);
-		}
-		parentTable.Add (new Vector2 (j, k), nodelist);*/
-	}
 	private bool pointInShadowDiscrete(Vector2 pt, int Indx)
 	{
 		int j = (int)pt.x;
@@ -165,8 +96,96 @@ public partial class Visibility1 : MonoBehaviour
 		}
 		HT4.Add (Indx, listHT4);
 	}
+	private Hashtable createRelationshipMap2()
+	{
+		Hashtable relationMap = new Hashtable ();
+		foreach(Vector3 pt in h_mapPtToIndx.Keys)
+		{
+			Vector2 indx = (Vector2)h_mapPtToIndx[pt];
+			findNeighbors2(pt,indx,(int)indx.x,(int)indx.y,relationMap);
+		}
+		return relationMap;		
+		
+	}
+	private void findNeighbors2(Vector3 pt,Vector2 ptVect2,int j1,int k1,Hashtable relationMap)
+	{
+		int rowJ = j1;
+		int colK = k1;
+		Vector3 currPos = pt;//((Vector3)h_mapIndxToPt[keyTemp]);
+		List<Vector2> listOfAvailablePos = new List<Vector2> ();
+		
+		listOfAvailablePos.Add(ptVect2);
+		
+		
+		bool runAgain = true;
+		Vector3 vectPos = new Vector3 ();
+		while(runAgain)
+		{
+			runAgain = false;
+			rowJ--;
+			colK--;
+			int rowLen = (j1 - rowJ)*2 +1;
+			//if(rowJ<0 || colK<0 || rowJ+rowLen>discretePtsX || colK+rowLen>discretePtsZ)
+			//	break;
+			for(int i1=rowJ;i1<rowJ+rowLen;i1++)
+			{
+				Vector2 vect2Pos = new Vector2(i1,colK);
+				if(h_mapIndxToPt.ContainsKey(vect2Pos))
+				{
+					
+					vectPos = (Vector3)h_mapIndxToPt[vect2Pos];
+					
+					if(Vector3.Distance(currPos,vectPos)<=standardMaxMovement && CheckStraightLineVisibility(currPos,vectPos) && !CheckIfInsidePolygon(vectPos))
+					{
+						runAgain = true;
+						listOfAvailablePos.Add(vect2Pos);
+						
+					}
+				}
+				vect2Pos = new Vector2(i1,colK+rowLen-1);
+				if(h_mapIndxToPt.ContainsKey(vect2Pos))
+				{
+					vectPos = (Vector3)h_mapIndxToPt[vect2Pos];
+					
+					if(Vector3.Distance(currPos,vectPos)<=standardMaxMovement && CheckStraightLineVisibility(currPos,vectPos) && !CheckIfInsidePolygon(vectPos))
+					{
+						runAgain = true;
+						listOfAvailablePos.Add(vect2Pos);
+						
+					}
+				}
+			}
+			for(int i2=colK+1;i2<colK+rowLen-1;i2++)
+			{
+				Vector2 vect2Pos = new Vector2(rowJ,i2);
+				if(h_mapIndxToPt.ContainsKey(vect2Pos))
+				{
+					vectPos = (Vector3)h_mapIndxToPt[vect2Pos];
+					if(Vector3.Distance(currPos,vectPos)<=standardMaxMovement && CheckStraightLineVisibility(currPos,vectPos) && !CheckIfInsidePolygon(vectPos))
+					{
+						runAgain = true;
+						listOfAvailablePos.Add(vect2Pos);
+						
+					}
+				}
+				vect2Pos = new Vector2(rowJ+rowLen-1,i2);
+				if(h_mapIndxToPt.ContainsKey(vect2Pos))
+				{
+					vectPos = (Vector3)h_mapIndxToPt[vect2Pos];
+					if(Vector3.Distance(currPos,vectPos)<=standardMaxMovement && CheckStraightLineVisibility(currPos,vectPos) && !CheckIfInsidePolygon(vectPos))
+					{
+						runAgain = true;
+						listOfAvailablePos.Add(vect2Pos);
+						
+					}
+				}
+			}
+		}
+		relationMap.Add(ptVect2,listOfAvailablePos);
+		//return relationMap;
+	}
 	//Updates HT3
-	private void spreadEssence(Vector2 pt,int Indx,List<int> listHT2,Hashtable relationMap)
+	private void spreadEssence(Vector2 pt,int Indx,List<int> listHT2,Hashtable relationMapVect2)
 	{
 		int j = (int)pt.x;
 		int k = (int)pt.y;
@@ -179,7 +198,7 @@ public partial class Visibility1 : MonoBehaviour
 		
 		bool runAgain = true;
 		
-		if(shadowArrayHT3[j,k]>0)
+		/*if(shadowArrayHT3[j,k]>0)
 		{
 			List<int> listHT3 = (List<int>)HT3[pt];
 			foreach(int numID_HT2 in listHT2)
@@ -189,9 +208,26 @@ public partial class Visibility1 : MonoBehaviour
 					listHT3.Add(numID_HT2);
 				}
 			}
+		}*/
+		List<Vector2> listNeighbors = (List<Vector2>)relationMapVect2[new Vector2(j,k)];
+		foreach(Vector2 vect2 in listNeighbors)
+		{
+			int jTemp = (int)vect2.x;
+			int kTemp = (int)vect2.y;
+			if(shadowArrayHT3[jTemp,kTemp]>0)
+			{
+				List<int> listHT3 = (List<int>)HT3[vect2];
+				foreach(int numID_HT2 in listHT2)
+				{
+					if(!listHT3.Contains(numID_HT2))
+					{
+						listHT3.Add(numID_HT2);
+					}
+				}
+			}
 		}
-		
-		while(runAgain)
+		return;
+		/*while(runAgain)
 		{
 			runAgain = false;
 			rowJ--;
@@ -257,7 +293,7 @@ public partial class Visibility1 : MonoBehaviour
 					}
 				}
 			}
-		}
+		}*/
 	}
 	private void executeTrueCase6()
 	{
@@ -266,7 +302,8 @@ public partial class Visibility1 : MonoBehaviour
 		createDiscreteMap6 ();
 		
 		standardMaxMovement = speedEnemy*(m_stepDistance/speedPlayer);
-		Hashtable relationMap = createRelationships ();
+		//Hashtable relationMap = createRelationships ();
+		Hashtable relationMapVect2 = createRelationshipMap2 ();
 		int j1=0;
 		int k1=0;
 		int lastIndx = pathPoints.Count;
@@ -276,7 +313,8 @@ public partial class Visibility1 : MonoBehaviour
 			{
 				if(pointInShadowDiscrete(pt,Indx))
 				{
-					spreadEssence(pt,Indx,(List<int>)HT2[pt],relationMap);
+					spreadEssence(pt,Indx,(List<int>)HT2[pt],relationMapVect2);
+
 				}
 				else
 				{
@@ -284,10 +322,24 @@ public partial class Visibility1 : MonoBehaviour
 					listHT3.RemoveRange(0,listHT3.Count);
 				}
 			}
+			//float totalTimeCalcSpreadEssence = (Time.realtimeSinceStartup - startTimeCalc)/60;
+			//Debug.Log("totalTimeCalcSpreadEssence = "+totalTimeCalcSpreadEssence);
+			//float startTimeCalcDeepCopy = Time.realtimeSinceStartup;
 			HT2 = DeepCopy(HT3);
+			//float totalTimeCalcDeepCopy = (Time.realtimeSinceStartup - startTimeCalcDeepCopy)/60;
+			//Debug.Log("totalTimeCalcDeepCopy = "+totalTimeCalcDeepCopy);
+			//float startTimeCalcAddToHT4 = Time.realtimeSinceStartup;
 			AddToHT4(Indx);
+			//float totalTimeCalcAddToHT4 = (Time.realtimeSinceStartup - startTimeCalcAddToHT4)/60;
+			//Debug.Log("totalTimeCalcAddToHT4 = "+totalTimeCalcAddToHT4);
+			/*if(Indx==3)
+			{
+				break;
+			}*/
 		}
-
+		float totalTimeCalcHT4 = (Time.realtimeSinceStartup - startTimeCalc)/60;
+		Debug.Log ("totalTimeCalcHT4 = " + totalTimeCalcHT4);
+		//return;
 		//TODO
 		int IndxPtr = lastIndx-1;
 		Hashtable HT5 = new Hashtable ();
@@ -307,7 +359,7 @@ public partial class Visibility1 : MonoBehaviour
 		}
 		
 		float totalTimeCalc = (Time.realtimeSinceStartup - startTimeCalc)/60;
-		
+		Debug.Log ("totalTimeCalc = " + totalTimeCalc);
 		//Dumping file
 		string dirName = createSaveDataDir(Application.dataPath);
 		string resultFileName = dirName+"\\Result.txt";

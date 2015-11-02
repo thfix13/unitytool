@@ -153,9 +153,10 @@ public partial class Visibility1 : MonoBehaviour {
 			pathPoints = CommonWasteLands2.definePath ();
 			m_stepDistance = CommonWasteLands2.getStepDistance();
 			radius_enemy*=playerScaleForWastleLands2;
-			m_step = 0.12f;
+			m_step = 0.1f;
 			if(bDebugNow)
 			{
+				Debug.Log("pathPoints = "+pathPoints.Count);
 				setGlobalVars1();
 				CalculateVisibilityForPath();
 				int ptWhich = 50;
