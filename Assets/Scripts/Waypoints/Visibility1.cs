@@ -123,7 +123,7 @@ public partial class Visibility1 : MonoBehaviour {
 	float playerScaleForCrash = 0.5f;
 	float playerScaleForMyCrash = 0.3f;
 	float playerScaleForWastleLands2 = 0.5f;
-	int PointToDebug = 0;
+	int PointToDebug = 61;
 	public bool bDebugNow = false;
 	void Start () 
 	{
@@ -154,6 +154,49 @@ public partial class Visibility1 : MonoBehaviour {
 			m_stepDistance = CommonWasteLands2.getStepDistance();
 			radius_enemy*=playerScaleForWastleLands2;
 			m_step = 0.1f;
+			if(bDebugNow)
+			{
+				Debug.Log("pathPoints = "+pathPoints.Count);
+				setGlobalVars1();
+				CalculateVisibilityForPath();
+				int ptWhich = 50;
+				int ptWhichCOunter=0;
+				float standardMaxMovementTemp = speedEnemy*(m_stepDistance/speedPlayer);
+				Debug.Log("standardMaxMovementTemp = "+standardMaxMovementTemp);
+				foreach(Vector3 vect in h_mapPtToIndx.Keys)
+				{
+					if(ptWhichCOunter>=ptWhich && pointInShadow(vect,PointToDebug))
+					{
+						showPosOfPointEnemySized(vect,Color.green);
+						foreach(Vector3 vectNeighbor in h_mapPtToIndx.Keys)
+						{
+							if(Vector3.Distance(vect,vectNeighbor)<=standardMaxMovementTemp)
+							{
+								showPosOfPointEnemySized(vectNeighbor,Color.red);
+								//showPosOfPointRectangle(vect,Color.green);
+							}
+						}
+						break;
+					}
+					ptWhichCOunter++;
+				}
+				foreach(Vector3 vect in pathPoints)
+				{
+					GameObject pathObj;
+					pathObj = Instantiate(pathSphere, 
+					                      vect, 
+					                      pathSphere.transform.rotation) as GameObject;
+				}
+				return;
+			}
+			
+		}
+		else if(currSceneName=="myCrash_Shorter.unity")
+		{
+			pathPoints = CommonCrashShorter.definePath ();
+			m_stepDistance = CommonCrashShorter.getStepDistance();
+			radius_enemy*=playerScaleForMyCrash;
+			m_step = 0.07f;
 			if(bDebugNow)
 			{
 				Debug.Log("pathPoints = "+pathPoints.Count);
@@ -464,9 +507,9 @@ public partial class Visibility1 : MonoBehaviour {
 			CalculateVisibilityForPath ();
 			//executeTrueCase2();
 			//executeTrueCase3();
-			//executeTrueCase4();
+			executeTrueCase4();
 			//executeTrueCase5();
-			executeTrueCase6();
+			//executeTrueCase6();
 			return;
 		}
 		if(m_CalculateTrueCase)
@@ -564,7 +607,7 @@ public partial class Visibility1 : MonoBehaviour {
 			Renderer rend = playerObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
-		else if(currSceneName=="myCrash.unity")
+		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
 		{
 			Vector3 lscale= playerObj.transform.localScale;
 			lscale.x*=playerScaleForMyCrash;
@@ -918,11 +961,11 @@ public partial class Visibility1 : MonoBehaviour {
 		}*/
 		if(bDebugNow)
 		{
-			/*mapBG.DrawGeometry(allLineParent,mat);
+			mapBG.DrawGeometry(allLineParent,mat);
 			foreach(Geometry geo in globalPolygon)
 			{
 				geo.DrawGeometry(allLineParent,matGreen);
-			}*/
+			}
 			/*int howManySafe=0;
 			foreach(Vector3 key in h_mapPtToIndx.Keys)
 			{
@@ -1771,7 +1814,7 @@ public partial class Visibility1 : MonoBehaviour {
 			Renderer rend = enemyObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
-		else if(currSceneName=="myCrash.unity")
+		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
 		{
 			Vector3 lscale= enemyObj.transform.localScale;
 			lscale.x*=playerScaleForMyCrash;
@@ -1810,7 +1853,7 @@ public partial class Visibility1 : MonoBehaviour {
 			Renderer rend = enemyObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
-		else if(currSceneName=="myCrash.unity")
+		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
 		{
 			Vector3 lscale= enemyObj.transform.localScale;
 			lscale.x*=playerScaleForMyCrash;
@@ -1849,7 +1892,7 @@ public partial class Visibility1 : MonoBehaviour {
 			Renderer rend = enemyObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
-		else if(currSceneName=="myCrash.unity")
+		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
 		{
 			Vector3 lscale= enemyObj.transform.localScale;
 			lscale.x*=playerScaleForMyCrash;
@@ -1888,7 +1931,7 @@ public partial class Visibility1 : MonoBehaviour {
 			Renderer rend = enemyObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
-		else if(currSceneName=="myCrash.unity")
+		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
 		{
 			Vector3 lscale= enemyObj.transform.localScale;
 			lscale.x*=playerScaleForMyCrash;
@@ -2962,7 +3005,7 @@ public partial class Visibility1 : MonoBehaviour {
 			lscale.y*=playerScaleForCrash;
 			lscale.z*=playerScaleForCrash;
 		}
-		else if(currSceneName=="myCrash.unity")
+		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
 		{
 			float scalingTemp = 0.5f;
 			lscale.x*=playerScaleForMyCrash*scalingTemp;
@@ -3000,7 +3043,7 @@ public partial class Visibility1 : MonoBehaviour {
 		//GameObject tempObj = (GameObject)GameObject.Instantiate (sp);
 		GameObject tempObj = Instantiate(enemyPrefab, pos, enemyPrefab.transform.rotation) as GameObject;
 		Vector3 lscale= tempObj.transform.localScale;
-		if(currSceneName=="myCrash.unity")
+		if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
 		{
 			lscale.x*=playerScaleForMyCrash;
 			lscale.y*=playerScaleForMyCrash;
@@ -3030,7 +3073,7 @@ public partial class Visibility1 : MonoBehaviour {
 		//GameObject tempObj = (GameObject)GameObject.Instantiate (sp);
 		GameObject tempObj = Instantiate(pathSphere, pos, pathSphere.transform.rotation) as GameObject;
 		Vector3 lscale= tempObj.transform.localScale;
-		if(currSceneName=="myCrash.unity")
+		if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
 		{
 			lscale.x*=0.7f;
 			lscale.y*=0.7f;
@@ -4073,7 +4116,7 @@ public partial class Visibility1 : MonoBehaviour {
 	}
 	public bool floatCompare ( float a, float b )
 	{
-		if(currSceneName == "myCrash.unity")
+		if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
 		{
 			return Mathf.Abs (a - b) < eps4;
 		}
@@ -4095,7 +4138,7 @@ public partial class Visibility1 : MonoBehaviour {
 	}
 	public bool VectorApprox ( Vector3 a, Vector3 b )
 	{
-		if(currSceneName == "myCrash.unity")
+		if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
 		{
 			if( Mathf.Abs (a.x - b.x) < eps4 && Mathf.Abs (a.z - b.z) < eps4 )
 			{
@@ -4124,7 +4167,7 @@ public partial class Visibility1 : MonoBehaviour {
 			else
 				return false;
 		}
-		else if(currSceneName == "myCrash.unity")
+		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
 		{
 			if( Mathf.Abs (a.x - b.x) < eps4 && Mathf.Abs (a.z - b.z) < eps4 )
 			{

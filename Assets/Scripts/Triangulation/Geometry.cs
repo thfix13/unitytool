@@ -39,13 +39,13 @@ public class Geometry
 			//l.DrawVector (parent, c);
 			//l.DrawLine(c);
 			GameObject allLineParentChild = new GameObject();
+			//allLineParentChild.AddComponent<Renderer>();
 			LineRenderer lineR = allLineParentChild.AddComponent<LineRenderer>();
-			lineR.material = matGreen;
+			//lineR.material = matGreen;
+
 			lineR.SetWidth(0.05f,0.05f);
 			lineR.SetVertexCount(2);
-			//lineR.SetPosition(0,l.vertex[0]);
-			//lineR.SetPosition(1,l.vertex[1]);
-			lineR.SetColors (c, c);
+			//lineR.SetColors (c, c);
 
 
 
@@ -61,27 +61,12 @@ public class Geometry
 
 
 			allLineParentChild.transform.parent = parent.transform;
-			Renderer rend = allLineParentChild.GetComponent<Renderer>();
-			rend.material.color = c;
-			lineR.material.color = c;
+			//Renderer rend = allLineParentChild.GetComponent<Renderer>();
+			//rend.material = matGreen;
 
+			//rend.material.color = c;
+			//lineR.material.color = c;
 
-
-
-
-			HSBColor hsbCol1=new HSBColor(lineR.material.color);
-			// example 2
-			HSBColor hsbCol2=HSBColor.FromColor(lineR.material.color);
-			HSBColor hsbCol3=HSBColor.FromColor(rend.material.color);
-			// example: clamp saturation
-			if(hsbCol2.s>0.5f)
-				hsbCol2.s=0.5f;
-			if(hsbCol3.s>0.5f)
-				hsbCol3.s=0.5f;
-			
-			// convert back to Color, assign
-			lineR.material.color=hsbCol2.ToColor();
-			rend.material.color = hsbCol3.ToColor();
 
 
 		}
