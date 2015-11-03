@@ -12,7 +12,10 @@ using Vectrosity;
 public class Line 
 {
 
-	public Vector3[] vertex = new Vector3[2];
+    public bool debuggery = false;
+    public bool debuggery2 = false;
+
+    public Vector3[] vertex = new Vector3[2];
 	public Color[] colours = new Color[2]; 
 	public string name = "Vector Line";
 
@@ -20,8 +23,8 @@ public class Line
 	public List<int> valueGrid = new List<int>();
 	public Color costColor = Color.black;
 
-	Material lineMaterial = Resources.Load ("Arrow", typeof(Material)) as Material;
-	Texture2D backTex = Resources.Load ("arrowStart", typeof(Texture2D)) as Texture2D;
+	//Material lineMaterial = Resources.Load ("Arrow", typeof(Material)) as Material;
+	//Texture2D backTex = Resources.Load ("arrowStart", typeof(Texture2D)) as Texture2D;
 
 	public Line(Vector3 v1, Vector3 v2)
 	{
@@ -155,8 +158,8 @@ public class Line
 
 		Vector3 startPoint = vertex[0];
 		Vector3 endPoint = vertex[1];
-		float dist = Vector2.Distance(startPoint, endPoint);
-		float size = fractionSizeArrow * dist;
+		//float dist = Vector2.Distance(startPoint, endPoint);
+		//float size = fractionSizeArrow * dist;
 
 
 		Vector3 linePoint1 = endPoint + ((startPoint-endPoint) * fractionSizeArrow);
@@ -249,20 +252,22 @@ public class Line
 		//Debug.Log(c); 
 		//Debug.Log(d); 
 		
-		Vector2 u = new Vector2(b.x,b.z) - new Vector2(a.x,a.z);
-		Vector2 p0 = new Vector2(a.x,a.z); Vector2 p1 = new Vector2(b.x,b.z); 
+		Vector2 p0 = new Vector2(a.x,a.z);
+        Vector2 p1 = new Vector2(b.x,b.z);
+        Vector2 u = p1 - p0;
 		
-		Vector2 v = new Vector2(d.x,d.z) - new Vector2(c.x,c.z);
-		Vector2 q0 = new Vector2(c.x,c.z); Vector2 q1 = new Vector2(d.x,d.z);
-		
-		Vector2 w = new Vector2(a.x,a.z) - new Vector2(d.x,d.z);
+		Vector2 q0 = new Vector2(c.x,c.z);
+        Vector2 q1 = new Vector2(d.x,d.z);
+        Vector2 v = q1 - q0;
+
+        Vector2 w = new Vector2(a.x,a.z) - new Vector2(d.x,d.z);
 		
 		
 		//if (u.x * v.y - u.y*v.y == 0)
 		//	return true;
 		
-		double s = (v.y* w.x - v.x*w.y) / (v.x*u.y - v.y*u.x);
-		double t = (u.x*w.y-u.y*w.x) / (u.x*v.y- u.y*v.x); 
+		float s = (v.y* w.x - v.x*w.y) / (v.x*u.y - v.y*u.x);
+		float t = (u.x*w.y-u.y*w.x) / (u.x*v.y- u.y*v.x); 
 		//Debug.Log(s); 
 		//Debug.Log(t); 
 		
@@ -287,13 +292,14 @@ public class Line
 		//Debug.Log(c); 
 		//Debug.Log(d); 
 		
-		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
-		Vector2 p0 = new Vector2 (a.x, a.z);
-		Vector2 p1 = new Vector2 (b.x, b.z); 
 		
-		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
+		Vector2 p0 = new Vector2 (a.x, a.z);
+		Vector2 p1 = new Vector2 (b.x, b.z);
+        Vector2 u = p1 - p0;
+		
 		Vector2 q0 = new Vector2 (c.x, c.z);
 		Vector2 q1 = new Vector2 (d.x, d.z);
+        Vector2 v = q1 - q0;
 		
 		Vector2 w = new Vector2 (a.x, a.z) - new Vector2 (d.x, d.z);
 		
@@ -301,9 +307,11 @@ public class Line
 		//if (u.x * v.y - u.y*v.y == 0)
 		//	return true;
 		
-		double s = (v.y * w.x - v.x * w.y) / (v.x * u.y - v.y * u.x);
-		double t = (u.x * w.y - u.y * w.x) / (u.x * v.y - u.y * v.x); 
-		//Debug.Log(s); 
+		float s = (v.y * w.x - v.x * w.y) / (v.x * u.y - v.y * u.x);
+		//float t = (u.x * w.y - u.y * w.x) / (u.x * v.y - u.y * v.x); 
+		
+        
+        //Debug.Log(s); 
 		//Debug.Log(t); 
 		
 
@@ -349,45 +357,169 @@ public class Line
 			return false;
 	}
 
-	//Detects Intersection when endpoints are not overlapping. Returns 1 if true.
-	//Returns 2 if lines are colinear and overlapping (excludes endpoints) TODO: Understand colinearity and implement properly
-	//Returns 0 if no overlapping
-	public int LineIntersectMuntac (Line param){
-		Vector3 a = this.vertex [0];
-		Vector3 b = this.vertex[1];
-		Vector3 c = param.vertex [0];
-		Vector3 d = param.vertex [1];
+    //Detects Intersection when endpoints are not overlapping. Returns 1 if true.
+    //Returns 2 if lines are colinear and overlapping (excludes endpoints) TODO: Understand colinearity and implement properly
+    //Returns 0 if no overlapping
+    public int LineIntersectMuntac(Line param) {
+        Vector3 a = this.vertex[0];
+        Vector3 b = this.vertex[1];
+        Vector3 c = param.vertex[0];
+        Vector3 d = param.vertex[1];
 
-		Vector2 u = new Vector2 (b.x, b.z) - new Vector2 (a.x, a.z);
-		Vector2 p0 = new Vector2 (a.x, a.z);
-		
-		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
-		Vector2 q0 = new Vector2 (c.x, c.z);
-		
-		double numerator1 = CrossProduct ((q0 - p0), v);
-		double numerator2 = CrossProduct ((q0 - p0), u);
-		double denom = CrossProduct (u, v);
-		
-		//Case 1 - Colinear
-		if ( denom == 0 && numerator2 == 0 ) {
-			//Case 2 - Colinear and Overlapping
-			if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
-				return 2;
-			if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
-				return 2;
-			return 0;
-		}
-		//Case 3 - Parallel
-		if (denom == 0 && numerator2 != 0)
-			return 0;
-		
-		//Case 4 - Intersects
-		double s = numerator1 / denom;
-		double t = numerator2 / denom;
-		
-		if ((s > 0 && s < 1) && (t > 0 && t < 1))
-			return 1;
-		
+        
+        Vector2 p0 = new Vector2(a.x, a.z);
+        Vector2 p1 = new Vector2(b.x, b.z);
+        Vector2 u = p1 - p0;
+
+        Vector2 q0 = new Vector2(c.x, c.z);
+        Vector2 q1 = new Vector2(d.x, d.z);
+        Vector2 v = q1 - q0;
+
+        float numerator1 = CrossProduct((q0 - p0), v);
+        float numerator2 = CrossProduct((q0 - p0), u);
+        float denom = CrossProduct(u, v);
+
+        float posNum1 = numerator1;
+        float posNum2 = numerator2;
+        float posDenom = denom;
+        if(numerator1 < 0)
+        {
+            posNum1 = -numerator1;
+        }
+        if(numerator2 < 0)
+        {
+            posNum2 = -numerator2;
+        }
+        if(denom < 0)
+        {
+            posDenom = -denom;
+        }
+
+        if (debuggery2) {
+            Debug.Log(p0 + "," + p1 + "," + q0 + "," + q1);
+            Debug.Log((p0 - q1).magnitude < 0.00005);
+            Debug.Log((p0 - q1).magnitude);
+            Debug.Log(p0);
+            Debug.Log(q1);
+            Debug.Log(p0 - q1);
+            Debug.Log(Vector2.Dot((p0 - q1), (p0 - q1)));
+            Debug.Log((p0 - q1).x);
+            Debug.Log((p0 - q1).y);
+
+        }
+       // if (debuggery)
+        //{
+            //if (Mathf.Approximately(a.z, 7.5f) && Mathf.Approximately(c.z, 7.5f) && Mathf.Approximately(b.z, 7.5f) && Mathf.Approximately(d.z, 7.5f))
+         /*if((Mathf.Abs(a.z+7.5f) < 0.5) && (Mathf.Abs(b.z + 7.5f) < 0.5) && (Mathf.Abs(c.z + 7.5f) < 0.5) && (Mathf.Abs(d.z + 7.5f) < 0.5))
+            {
+            if(posDenom > 0.00005 || posNum1 > 0.00005) { 
+            Debug.Log(a + "," + b + "," + c + "," + d);
+            Debug.Log(u + "," + p0 + "," + v + "," + q0);
+            Debug.Log(numerator1 + "," + numerator2 + "," + denom);
+            //Debug.Log(Mathf.Approximately(numerator1, 0) + "," + Mathf.Approximately(numerator2, 0) + "," + Mathf.Approximately(denom, 0));
+            Debug.Log(posDenom + "," + posNum1 + "," + posNum2);
+            Debug.Log(Vector2.Dot((q0 - p0), u) + "," + Vector2.Dot(u, u));
+            Debug.Log(Vector2.Dot((p0 - q0), v) + "," + Vector2.Dot(v, v));
+            Debug.Log((p0 - q0).magnitude);
+            Debug.Log(p0 + "," + q0);
+            }
+
+
+        }*/
+       // }
+
+
+        //Case 1 - Colinear
+
+        if((posDenom < 0.00005) && (posNum1 < 0.00005)) {
+            //Debug.Log("CASE2");
+            //Debug.Log(p0 + "," + p1 + "," + q0 + "," + q1);
+            //if (Mathf.Approximately(denom, 0) && Mathf.Approximately(numerator1, 0)) {
+            //if(denom == 0 && numerator1 == 0) { 
+            //Case 2 - Colinear and Overlapping
+            /*if (debuggery)
+            {*/
+            /*
+            if ((Mathf.Abs(a.x + 7.5f) < 0.5) && (Mathf.Abs(b.x + 7.5f) < 0.5) && (Mathf.Abs(c.x + 7.5f) < 0.5) && (Mathf.Abs(d.x + 7.5f) < 0.5)) {
+                Debug.Log("CASE2");
+                Debug.Log(p0 + "," + p1 + "," + q0 + "," + q1);
+
+                Debug.Log(Vector2.Dot((q0 - p0), u) + "," + Vector2.Dot(u, u));
+                Debug.Log(Vector2.Dot((p0 - q0), v) + "," + Vector2.Dot(v, v));
+                Debug.Log((p0 - q0).magnitude);
+                Debug.Log((p1 - q0).magnitude);
+                Debug.Log((p1 - q0).magnitude < 0.00005);
+                Debug.Log(p0 + "," + q0);
+            }*/
+            /*}*/
+
+            if (Vector2.Dot((q0 - p0), u) > 0.00005 && Vector2.Dot((q0 - p0), u) < Vector2.Dot(u, u))
+            {
+                //Debug.Log(Vector2.Dot((q0 - p0), u));
+                //Debug.Log(Vector2.Dot(u, u));
+                //Debug.Log("Returning 2");
+                if (Vector2.Dot((p0 - q0), v) > 0.00005 && Vector2.Dot((p0 - q0), v) < Vector2.Dot(v, v)) {
+                    return 4;
+                }
+                else {
+                    return 2;
+                }
+            }
+            if (Vector2.Dot((p0 - q0), v) > 0.00005 && Vector2.Dot((p0 - q0), v) < Vector2.Dot(v, v))
+            {
+                //Debug.Log("Returning 3");
+                if (((p0 - q0).magnitude + u.magnitude) > v.magnitude) {
+                    return 3;
+                }
+                else {
+                    return 6;
+                }
+            }
+            if((p0- q0).magnitude < 0.00005) { 
+            //if (Mathf.Approximately((p0 - q0).magnitude, 0)){
+                //Debug.Log("Returning 4");
+                if(Vector2.Dot(u, v)> 0) {
+                    if(u.magnitude > v.magnitude) {
+                        return 5;
+                    }
+                    else {
+                        return 6;
+                    }
+                }
+                else {
+                    return 4;
+                }
+            }
+            if ((p1 - q0).magnitude < 0.00005) {
+                if(Vector2.Dot(u, v) > 0) {
+                    return 2;
+                }
+                else {
+                    return 5;
+                }                
+            }
+            return 0;
+        }
+        //Debug.Log("CASE NOT 2");
+
+        //Case 3 - Parallel
+        //if (Mathf.Approximately(denom, 0) && !Mathf.Approximately(numerator2, 0)){
+        if(denom == 0 && numerator2 == 0) { 
+            return 0;
+        }
+
+
+        //Case 4 - Intersects
+        float s = numerator1 / denom;
+        float t = numerator2 / denom;
+
+        if(((p1 - q0).magnitude < 0.00005) || ((p1 - q1).magnitude < 0.00005) || ((p0 - q0).magnitude < 0.00005) || ((p0 - q1).magnitude < 0.00005)){
+            return 0;
+        }
+
+        if ((s > 0 && s < 1) && (t > 0 && t < 1)) {
+            return 1;
+        }
 		return 0; 
 	}
 
@@ -403,17 +535,38 @@ public class Line
 		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
 		Vector2 q0 = new Vector2 (c.x, c.z);
 		
-		double numerator1 = CrossProduct ((q0 - p0), v);
-		double numerator2 = CrossProduct ((q0 - p0), u);
-		double denom = CrossProduct (u, v);
-		
-		//Case 1 - Colinear
-		if ( denom == 0 && numerator2 == 0 ) {
-			//Case 2 - Colinear and Overlapping
-			if( Vector2.Dot( (q0 - p0), u ) >= 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
+		float numerator1 = CrossProduct ((q0 - p0), v);
+		float numerator2 = CrossProduct ((q0 - p0), u);
+		float denom = CrossProduct (u, v);
+
+        float posNum1 = numerator1;
+        float posNum2 = numerator2;
+        float posDenom = denom;
+        if (numerator1 < 0)
+        {
+            posNum1 = -numerator1;
+        }
+        if (numerator2 < 0)
+        {
+            posNum2 = -numerator2;
+        }
+        if (denom < 0)
+        {
+            posDenom = -denom;
+        }
+
+        //Case 1 - Colinear
+        if ((posDenom < 0.00001) && (posNum1 < 0.00001)){
+       // 
+            //if ( Mathf.Approximately(denom, 0) && Mathf.Approximately(numerator1, 0)) {
+       // if (denom == 0 && numerator1 == 0){
+            //Case 2 - Colinear and Overlapping
+            //ACBD
+            if ( Vector2.Dot( (q0 - p0), u ) > 0 && Vector2.Dot( (q0 - p0), u ) <= Vector2.Dot( u, u ) )
 				return 2;
-			if( Vector2.Dot( (p0 - q0), v ) >= 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
-				return 2;
+            //CABD
+            if ( Vector2.Dot( (p0 - q0), v ) > 0 && Vector2.Dot( (p0 - q0), v ) <= Vector2.Dot( v, v ) )
+				return 3;
 			return 0;
 		}
 		//Case 3 - Parallel
@@ -421,8 +574,8 @@ public class Line
 			return 0;
 		
 		//Case 4 - Intersects
-		double s = numerator1 / denom;
-		double t = numerator2 / denom;
+		float s = numerator1 / denom;
+		float t = numerator2 / denom;
 		
 //		if ((s >= 0 && s <= 1) && (t >= 0 && t <= 1))
 		if ((s >= -0.0001f && s <= 1.0001f) && (t >= -0.0001f && t <= 1.0001f)){
@@ -448,23 +601,24 @@ public class Line
 		Vector2 v = new Vector2 (d.x, d.z) - new Vector2 (c.x, c.z);
 		Vector2 q0 = new Vector2 (c.x, c.z);
 		
-		double numerator1 = CrossProduct ((q0 - p0), v);
-		double numerator2 = CrossProduct ((q0 - p0), u);
-		double denom = CrossProduct (u, v);
-		
-		double s = numerator1 / denom;
-		double t = numerator2 / denom;
+		float numerator1 = CrossProduct ((q0 - p0), v);
+		//float numerator2 = CrossProduct ((q0 - p0), u);
+		float denom = CrossProduct (u, v);
+
+
+        float s = numerator1 / denom;
+		//float t = numerator2 / denom;
 		
 		Vector3 r = a + (b-a)*(float)s; 
 		return r;
 	}
 
-	private double CrossProduct( Vector2 a, Vector2 b ){
+	private float CrossProduct( Vector2 a, Vector2 b ){
 		return (a.x * b.y) - (a.y * b.x);
 	}
 
 	int EndPointIntersecion( Vector3 pt, Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4 ){
-			Vector3 pt2;
+	    Vector3 pt2;
 		//Find common endpoint
 		if (v1 == v3)
 			pt2 = v1;
@@ -486,7 +640,9 @@ public class Line
 
 	public bool PointOnLine( Vector3 pt ){
 		Vector3 diff = vertex[1] - vertex[0];
-		float grad = 0, cx, cz;
+		//float grad = 0, cx, cz;
+        //No idea what cx and cz were supposed to be.
+        float grad = 0;
 		float pa, pb;
 		if (diff.x != 0 && diff.y != 0) {
 			grad = diff.z / diff.x;

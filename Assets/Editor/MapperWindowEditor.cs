@@ -79,7 +79,8 @@ namespace EditorArea {
 		[MenuItem("Window/Mapper")]
 		static void Init () {
 			MapperWindowEditor window = (MapperWindowEditor)EditorWindow.GetWindow (typeof(MapperWindowEditor));
-			window.title = "Mapper";
+			//window.title = "Mapper";
+            window.titleContent.text = "Mapper";
 			window.ShowTab ();
 		}
 		
@@ -92,18 +93,54 @@ namespace EditorArea {
 
                 triangles.TriangulationSpace();
                 List<Triangle> tris = triangles.triangles;
+                GameObject trianglesDraw = new GameObject("Triangles");
+                int triIndI = 1;
+                string triIndS = triIndI.ToString();
 
                 foreach (Triangle tri in tris)
                 {
-                    Debug.Log(tri);
-                    Debug.Log(tri.vertex[0] + "," + tri.vertex[1] + "," + tri.vertex[2]);
+                    GameObject triangle = new GameObject("triangle" + triIndS);
+                    triIndI++;
+                    triIndS = triIndI.ToString();
+                    triangle.transform.parent = trianglesDraw.transform;
+                    //Debug.Log(tri);
+                    //Debug.Log(tri.vertex[0] + "," + tri.vertex[1] + "," + tri.vertex[2]);
                     Line[] lins = tri.getLines();
+                    foreach (Line l in lins)
+                    {
+                        //Debug.Log(l.vertex[0] + "," + l.vertex[1]);
+
+                        GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                        lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
+                        lin.transform.parent = triangle.transform;
+                        lin.transform.position = (l.vertex[0] + l.vertex[1]) / 2.0f;
+                        lin.transform.position = new Vector3(lin.transform.position.x, 0.05f * lin.transform.position.y, lin.transform.position.z);
+                        Vector3 dists = (l.vertex[1] - l.vertex[0]);
+                        dists.y = 0.05f * dists.y;
+
+                        Vector3 from = Vector3.right;
+                        Vector3 to = dists / dists.magnitude;
+
+                        Vector3 axis = Vector3.Cross(from, to);
+                        float angle = Mathf.Rad2Deg * Mathf.Acos(Vector3.Dot(from, to));
+                        lin.transform.RotateAround(lin.transform.position, axis, angle);
+
+
+                        Vector3 scale = Vector3.one;
+                        scale.x = Vector3.Magnitude(dists);
+                        scale.z = 0.2f;
+                        scale.y = 0.2f;
+
+                        lin.transform.localScale = scale;
+
+
+                    }
                     float l1 = lins[0].Magnitude();
                     float l2 = lins[1].Magnitude();
                     float l3 = lins[2].Magnitude();
                     float s = 0.5f * (l1 + l2 + l3);
                     float area = Mathf.Sqrt(s * (s - l1) * (s - l2) * (s - l3));
-                    Debug.Log(area);
+                    //Debug.Log(area);
                 }
 
                 //List<Vector3> pointList = new List<Vector3>();

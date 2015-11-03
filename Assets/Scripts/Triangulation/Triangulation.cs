@@ -78,7 +78,7 @@ public class Triangulation : MonoBehaviour
 		//return; 
 		//Debug.Log(colours.Count);
 		//Debug.Log(points.Count);
-		var i = 0;
+		//var i = 0;
 		foreach(Vector3 v in points)
 		{
 
@@ -96,7 +96,7 @@ public class Triangulation : MonoBehaviour
 		//TODO: move to vectrocity for the drawing. 
 		return;
 
-
+        /*
 		//return; 
 		//points.Clear(); 
 		//colours.Clear();  
@@ -163,7 +163,7 @@ public class Triangulation : MonoBehaviour
 					}
 				}
 			}
-		}
+		}*/
 
 	}
 
@@ -178,6 +178,9 @@ public class Triangulation : MonoBehaviour
 		points.Add(v); 
 		colours.Add(c); 
 	}
+
+    private int infiniLoopStop = 1000;
+
 
 	public List<Geometry> TriangulationSpace ()
 	{
@@ -199,7 +202,7 @@ public class Triangulation : MonoBehaviour
 		//VectorLine.SetCamera3D(Camera.current); 
 
 		//Floor
-		Vector3[] f = new Vector3[4];
+		//Vector3[] f = new Vector3[4];
 		MeshFilter mesh = (MeshFilter)(floor.GetComponent ("MeshFilter"));
 		Vector3[] t = mesh.sharedMesh.vertices; 
 		
@@ -343,7 +346,8 @@ public class Triangulation : MonoBehaviour
         string preS = "1";
         int preI = 1;
         GameObject mergeys = new GameObject("Mergeys");
-
+        int whileIndex = 1;
+        int numMerge = 0;
         while (!done)
         {
            for(int i = 0; i < obsGeos.Count; i++) {
@@ -354,9 +358,17 @@ public class Triangulation : MonoBehaviour
                 for(int j = i+1; j < obsGeos.Count; j++) {
                     if (obsGeos[i].GeometryIntersect(obsGeos[j]))
                     {
-                        
-
+                        //if(preI == 33) { 
+                        if (true) { 
+                        obsGeos[i].debuggery = true;
+                        obsGeos[j].debuggery = true;
+                        }
+                        numMerge++;
+                        //Debug.Log("NEW MERGE NUMBER:" + numMerge);
                         Geometry tmpG = obsGeos[i].GeometryMerge(obsGeos[j]);
+                        //Debug.Log("MERGE COMPLETE OF NUMBER:" + numMerge);
+                        obsGeos[i].debuggery = false;
+                        obsGeos[j].debuggery = false;
                         preS = preI.ToString();
                         GameObject merger = new GameObject(preS);
                         GameObject geo1 = new GameObject(preS + "geo1");
@@ -368,7 +380,7 @@ public class Triangulation : MonoBehaviour
                         geoM.transform.parent = merger.transform;
                         preI++;
                         
-
+                        /*
                         foreach (Line l in obsGeos[i].edges)
                         {
                             GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -444,7 +456,7 @@ public class Triangulation : MonoBehaviour
 
                             lin.transform.localScale = scale;
                         }
-
+                        */
 
                         obsGeos.RemoveAt(j);
                         obsGeos.RemoveAt(i);
@@ -462,7 +474,14 @@ public class Triangulation : MonoBehaviour
             {
                 done = true;
             }
-        }
+            whileIndex++;
+            if (whileIndex > infiniLoopStop)
+            {
+                Debug.Log("INFINILOOP1");
+                break;
+            }
+
+       }
 
 
 
@@ -483,10 +502,10 @@ public class Triangulation : MonoBehaviour
 
 
         //mapBG.DrawGeometry (temp);
-        Debug.Log(obsGeos);
-        Debug.Log(obsGeos.Count);
+        //Debug.Log(obsGeos);
+        //Debug.Log(obsGeos.Count);
         //TODO REMOVE DEBUG
-        GameObject parent = new GameObject("DebugParent");
+       /* GameObject parent = new GameObject("DebugParent");
         foreach (Line l in obsGeos[0].edges) {
             //Debug.Log(l.vertex[0] + "," + l.vertex[1]);
 
@@ -522,22 +541,27 @@ public class Triangulation : MonoBehaviour
 
 
 
-        }
+        }*/
         //TODO END OF DEBUG TO REMOVE
 
 		List<Geometry> finalPoly = new List<Geometry> ();//Contains all polygons that are fully insde the map
 		foreach ( Geometry g in obsGeos ) {
 			if( mapBG.GeometryIntersect( g ) && !mapBG.GeometryInside( g ) ){
+                mapBG.debuggery = true;
+                g.debuggery = true;
 				mapBG = mapBG.GeometryMergeInner( g );
+                mapBG.debuggery = false;
+                g.debuggery = false;
 				mapBG.BoundGeometry( mapBoundary );
 			}
 			else
 				finalPoly.Add(g);
 		}
-
+       // Debug.Log(finalPoly.Count);
 
 		foreach(Geometry g in finalPoly){
-			g.DrawGeometry( temp);
+            //DRAWING GEOMETRY NO LONGER WORKS CUZ VECTROSITY
+			//g.DrawGeometry( temp);
 			toReturn.Add (g);
 		}
 
@@ -585,72 +609,152 @@ public class Triangulation : MonoBehaviour
 
 
 		List<Line> linesLinking = new List<Line> ();
-		linesLinking.Add (mapBG.GetClosestLine (start, toCheck));
-		start.visited = true;
+        if (start != null)
+        {
+            linesLinking.Add(mapBG.GetClosestLine(start, toCheck));
+        	start.visited = true;
+        
+            List<Geometry> toCheckNode = new List<Geometry> (); 
+		    toCheckNode.Add (start);
+            //Debug.Log(start);
+            //Debug.Log(start.voisinsLine);
+            //Debug.Log(start.voisinsLine.Count);
+            Line LinetoAdd = null;
+            if (start.voisinsLine.Count > 0) { 
+		        LinetoAdd= start.voisinsLine [0];
 
-		List<Geometry> toCheckNode = new List<Geometry> (); 
-		toCheckNode.Add (start);
-        Debug.Log(start);
-        Debug.Log(start.voisinsLine);
-        Debug.Log(start.voisinsLine.Count);
+            }
+        
+            //DRAW GEOMETRY NEEDS VECTROSITY WHICH DOES NOT WORK RIGHT NOW
+            //mapBG.DrawGeometry (temp);
+		    toReturn.Add (mapBG);
 
-		Line LinetoAdd = start.voisinsLine [0];
-
-
-		mapBG.DrawGeometry (temp);
-		toReturn.Add (mapBG);
-
-		//Straight Porting//
-		while (LinetoAdd != null) {
-			LinetoAdd = null; 
-			Geometry qToAdd = null; 
+            //Straight Porting//
+            int whileIndex2 = 1;
+		    while (LinetoAdd != null) {
+			    LinetoAdd = null; 
+			    Geometry qToAdd = null; 
 			
-			//Check all 
-			foreach (Geometry q in toCheckNode) {
+			    //Check all 
+			    foreach (Geometry q in toCheckNode) {
 				
-				for (int i = 0; i<q.voisins.Count; i++) {
-					if (! q.voisins [i].visited) {
-						if (LinetoAdd != null) {
-							//get the shortest line
-							if (LinetoAdd.Magnitude () >= q.voisinsLine [i].Magnitude ()) {
-								LinetoAdd = q.voisinsLine [i];
-								qToAdd = q.voisins [i]; 
+				    for (int i = 0; i<q.voisins.Count; i++) {
+					    if (! q.voisins [i].visited) {
+						    if (LinetoAdd != null) {
+							    //get the shortest line
+							    if (LinetoAdd.Magnitude () >= q.voisinsLine [i].Magnitude ()) {
+								    LinetoAdd = q.voisinsLine [i];
+								    qToAdd = q.voisins [i]; 
 								
-							}
-						} else {
-							qToAdd = q.voisins [i]; 
-							LinetoAdd = q.voisinsLine [i];
-						}
-					} else {
-						continue; 
-					}
-				}
-			}
-			if (LinetoAdd != null) {
-				linesLinking.Add (LinetoAdd); 
-				qToAdd.visited = true; 
-				toCheckNode.Add (qToAdd); 
-			}
-		}
-		
-		
-		
-		foreach (Line l in linesLinking) {
+							    }
+						    } else {
+							    qToAdd = q.voisins [i]; 
+							    LinetoAdd = q.voisinsLine [i];
+						    }
+					    } else {
+						    continue; 
+					    }
+				    }
+			    }
+			    if (LinetoAdd != null) {
+				    linesLinking.Add (LinetoAdd); 
+				    qToAdd.visited = true; 
+				    toCheckNode.Add (qToAdd); 
+			    }
+
+                whileIndex2++;
+                if(whileIndex2 > infiniLoopStop)
+                {
+                    Debug.Log("INFINILOOP2");
+                    break;
+                }
+		    }
+
+        }
+
+        foreach (Line l in linesLinking) {
 			triangulation.linesMinSpanTree.Add (l); 
 		}
-		//END porting
+        //END porting
 
-		//-----------END MST CODE--------------------//
+        //-----------END MST CODE--------------------//
+        /*
+        //DEBUG SECTION -- OBSTACLES
+        GameObject parentO = new GameObject("DebugParentObstacles");
+        foreach (Geometry G in toReturn)
+        {
+            foreach (Line l in G.edges)
+            {
+                GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
+                lin.transform.parent = parentO.transform;
+                lin.transform.position = (l.vertex[0] + l.vertex[1]) / 2.0f;
+                lin.transform.position = new Vector3(lin.transform.position.x, 0.05f * lin.transform.position.y, lin.transform.position.z);
+                Vector3 dists = (l.vertex[1] - l.vertex[0]);
+                dists.y = 0.05f * dists.y;
+
+                Vector3 from = Vector3.right;
+                Vector3 to = dists / dists.magnitude;
+
+                Vector3 axis = Vector3.Cross(from, to);
+                float angle = Mathf.Rad2Deg * Mathf.Acos(Vector3.Dot(from, to));
+                lin.transform.RotateAround(lin.transform.position, axis, angle);
 
 
-		int vlcnt = 0;
+                Vector3 scale = Vector3.one;
+                scale.x = Vector3.Magnitude(dists);
+                scale.z = 0.2f;
+                scale.y = 0.2f;
+
+                lin.transform.localScale = scale;
+            }
+        }
+
+
+
+
+        //DEBUG SECTION -- MST
+        GameObject parent = new GameObject("DebugParentMinSpanTree");
+        foreach (Line l in linesMinSpanTree)
+        {
+            GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
+            lin.transform.parent = parent.transform;
+            lin.transform.position = (l.vertex[0] + l.vertex[1]) / 2.0f;
+            lin.transform.position = new Vector3(lin.transform.position.x, 0.05f * lin.transform.position.y, lin.transform.position.z);
+            Vector3 dists = (l.vertex[1] - l.vertex[0]);
+            dists.y = 0.05f * dists.y;
+
+            Vector3 from = Vector3.right;
+            Vector3 to = dists / dists.magnitude;
+
+            Vector3 axis = Vector3.Cross(from, to);
+            float angle = Mathf.Rad2Deg * Mathf.Acos(Vector3.Dot(from, to));
+            lin.transform.RotateAround(lin.transform.position, axis, angle);
+
+
+            Vector3 scale = Vector3.one;
+            scale.x = Vector3.Magnitude(dists);
+            scale.z = 0.2f;
+            scale.y = 0.2f;
+
+            lin.transform.localScale = scale;
+        }
+
+        //
+        */
+
+
+
+		//int vlcnt = 0;
 		lines.Clear ();
-		//Constructing "lines" for triangulation
-		//First add lines that are in MST
+        //Constructing "lines" for triangulation
+        //First add lines that are in MST
 
 
-		foreach (Line l in linesMinSpanTree)
-			lines.Add (l);
+        foreach (Line l in linesMinSpanTree){
+            lines.Add(l);
+        }
 //		Debug.Log (allVertex.Count);
 //		int iv = -1, jv;
 //		vlcnt = 0;
@@ -660,7 +764,8 @@ public class Triangulation : MonoBehaviour
 			foreach(Vector3 Vb in allVertex){
 //				++jv;
 				if( Va != Vb ){
-					bool collides = false, essential = false;
+                    bool collides = false;
+                    //bool essential = false;
 					Line tempLine = new Line(Va, Vb);
 					//A-Collision with final polygon
 					foreach( Line l in totalGeo.edges ){

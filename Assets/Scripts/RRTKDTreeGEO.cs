@@ -27,7 +27,7 @@ namespace Exploration {
 
 		public preCast casts;
 
-        private bool debugging = false;
+        private bool debugging = true;
 		private bool preventDistractStacks = true;
         //First attempt was 50% distractions.
         private int distractables = 80;
@@ -98,7 +98,7 @@ namespace Exploration {
             float curMaxY = Mathf.Min(startY + rangeDist, maxY);
             float curMinY = Mathf.Max(startY - rangeDist, minY);
             int curMaxT = Mathf.Min(rangeTime, maxT);
-
+            /*
             //TRIANGLE ATTEMPTS SECTION
             foreach(Triangle tri in triangles)
             {
@@ -115,7 +115,7 @@ namespace Exploration {
 
             //TRIANGLE ATTEMPTS SECTION ENDS
 
-
+            */
 
 
 
