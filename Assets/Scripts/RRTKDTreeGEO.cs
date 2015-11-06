@@ -52,7 +52,7 @@ namespace Exploration {
 
 
 
-		public List<NodeGeo> ComputeGeo (float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> triangles,  bool smooth = false) {
+		public List<NodeGeo> ComputeGeo (float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> tris,  bool smooth = false) {
 			//Debug.Log ("COMPUTEGEO");
 
 			// Initialization
@@ -98,37 +98,39 @@ namespace Exploration {
             float curMaxY = Mathf.Min(startY + rangeDist, maxY);
             float curMinY = Mathf.Max(startY - rangeDist, minY);
             int curMaxT = Mathf.Min(rangeTime, maxT);
-            /*
-            //TRIANGLE ATTEMPTS SECTION
-            foreach(Triangle tri in triangles)
-            {
-                Debug.Log(tri);
-                Debug.Log(tri.vertex[0] + "," + tri.vertex[1] + "," + tri.vertex[2]);
+
+            List<float> areas = new List<float>();
+            float areaSum = 0;
+            for (int i = 0; i < tris.Count; i++) {
+                Triangle tri = tris[i];
                 Line[] lins = tri.getLines();
                 float l1 = lins[0].Magnitude();
                 float l2 = lins[1].Magnitude();
                 float l3 = lins[2].Magnitude();
                 float s = 0.5f * (l1 + l2 + l3);
                 float area = Mathf.Sqrt(s * (s - l1) * (s - l2) * (s - l3));
-                Debug.Log(area);
+                areas.Add(area);
+                areaSum = areaSum + area;
+            }
+            List<float> standardizedAreas = new List<float>();
+            float sumSoFar = 0;
+            foreach (float a in areas) {
+                standardizedAreas.Add((a + sumSoFar) / areaSum);
+                sumSoFar = sumSoFar + a;
             }
 
-            //TRIANGLE ATTEMPTS SECTION ENDS
-
-            */
-
-
-
-
-
-			//RRT algo
-			for (int i = 0; i <= attemps; i++) {
+            //RRT algo
+            for (int i = 0; i <= attemps; i++) {
 
 
 
 				//Then pick random x and y values
 				float rx;
 				float ry;
+                float trisInd;
+                int k = 0;
+                float rl1;
+                float rl2;
 
 				bool distractPick = false;
 				int distractNum = -1;
@@ -150,8 +152,22 @@ namespace Exploration {
 					}
 				}
 				else{
+                    /*
 					rx = Random.Range (curMinX, curMaxX);
 					ry = Random.Range (curMinY, curMaxY);
+                    */
+                    trisInd = Random.Range(0f, 1f);
+                    for (k = 0; k < standardizedAreas.Count; k++) {
+                        if(trisInd <= standardizedAreas[k]) {
+                            break;
+                        }
+                    }
+                    Triangle tri = tris[k];
+                    rl1 = Random.Range(0f, 1f);
+                    rl2 = Random.Range(0f, rl1);
+                    Vector3 point = tri.vertex[0] + rl1 * (tri.vertex[1] - tri.vertex[0]) + rl2 * (tri.vertex[2] - tri.vertex[1]);
+                    rx = point.x;
+                    ry = point.z;
 				}
 
                 Vector3 pdO = new Vector3(rx - startX, 0, ry - startY);

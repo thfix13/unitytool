@@ -103,16 +103,34 @@ public class Geometry
         //Debug.Log(pt);
         Line lray = new Line(pt, new Vector3(-100, 1, -100));
         int count = 0;
-       // if (debuggery) { 
-        //    Debug.Log("LRAY:" + lray);
-       // }
+        /*if (debuggery) { 
+            Debug.Log("LRAY:" + lray);
+        }*/
+        List<Vector3> intersectPoints = new List<Vector3>();
+        Vector3 newPoint;
+        bool alreadyThere = false;
         foreach (Line myLine in edges) {
-            if (myLine.LineIntersectMuntacEndPt(lray) > 0) {
-               // if (debuggery){
-                //    Debug.Log(myLine);
-               // }
-               // Debug.Log("Intersection between" + myLine + " and " + lray);
-                count++;
+            if (myLine.LineIntersectMuntacEndPt(lray) == 1) {
+                newPoint = myLine.GetIntersectionPoint(lray);
+                foreach(Vector3 point in intersectPoints) {
+                    if((point- newPoint).magnitude < 0.001) {
+                        alreadyThere = true;
+                        break;
+                    }
+                }
+                if (!alreadyThere) {
+                    intersectPoints.Add(newPoint);
+                    count++;
+                }
+                else {
+                    alreadyThere = false;
+                }
+                //count++;
+                /*if (debuggery){
+                    Debug.Log(myLine);
+
+                    Debug.Log("Intersection between" + myLine + " and " + lray);
+                }*/
                 //Check if the intersection point is on the polygon edge
                 //Note: other checks tried but precision error kept coming up in cases
                 Vector3 vtemp = myLine.GetIntersectionPoint(lray);
@@ -239,7 +257,7 @@ public class Geometry
         {
             Vector3 v1 = l.vertex[0];
             Vector3 v2 = l.vertex[1];
-            if (Vector3.SqrMagnitude(v1 - v2) > 9.99999944E-11f)
+            if (Vector3.SqrMagnitude(v1 - v2) > 0.000001f)
             {
                 G4.edges.Add(l);
             }
@@ -273,12 +291,12 @@ public class Geometry
                     Line LB = G4.edges[j];
                     if (debuggery)
                     {
-                        LA.debuggery = true;
-                        LB.debuggery = true;
+                        LA.debuggery2 = true;
+                        LB.debuggery2 = true;
                     }
                     int caseType = LA.LineIntersectMuntac(LB);
-                    LA.debuggery = false;
-                    LB.debuggery = false;
+                    LA.debuggery2 = false;
+                    LB.debuggery2 = false;
                     if (caseType == 1)
                     {//Regular intersections
                         /*if (debuggery)
@@ -306,7 +324,7 @@ public class Geometry
                         G4.edges.RemoveAt(j);
                         G4.edges.RemoveAt(i);
                         Line l;
-                        if (Vector3.SqrMagnitude(pt - LA.vertex[0]) > 9.99999944E-11f) {
+                        if (Vector3.SqrMagnitude(pt - LA.vertex[0]) > 0.000001f) {
                             l = new Line(pt, LA.vertex[0]);
                             //if (!G2.LineInside(l) && !G1.LineInside(l)) {
                                 G4.edges.Add(l);
@@ -315,7 +333,7 @@ public class Geometry
                                 Debug.Log(l);
                             }*/
                         }
-                        if (Vector3.SqrMagnitude(pt - LA.vertex[1]) > 9.99999944E-11f) {
+                        if (Vector3.SqrMagnitude(pt - LA.vertex[1]) > 0.000001f) {
                             l = new Line(pt, LA.vertex[1]);
                             //if (!G2.LineInside(l) && !G1.LineInside(l)) {
                                 G4.edges.Add(l);
@@ -324,7 +342,7 @@ public class Geometry
                                 Debug.Log(l);
                             }*/
                         }
-                        if (Vector3.SqrMagnitude(pt - LB.vertex[0]) > 9.99999944E-11f) {
+                        if (Vector3.SqrMagnitude(pt - LB.vertex[0]) > 0.000001f) {
                             l = new Line(pt, LB.vertex[0]);
                             //if (!G2.LineInside(l) && !G1.LineInside(l)) {
                                 G4.edges.Add(l);
@@ -333,7 +351,7 @@ public class Geometry
                                 Debug.Log(l);
                             }*/
                         }
-                        if (Vector3.SqrMagnitude(pt - LB.vertex[1]) > 9.99999944E-11f) {
+                        if (Vector3.SqrMagnitude(pt - LB.vertex[1]) > 0.000001f) {
                             l = new Line(pt, LB.vertex[1]);
                             //if (!G2.LineInside(l) && !G1.LineInside(l)) {
                                 G4.edges.Add(l);
@@ -388,19 +406,18 @@ public class Geometry
                         for (int j = i + 1; j < G4.edges.Count; j++) {
                             Line LA = G4.edges[i];
                             Line LB = G4.edges[j];
-                   // Debug.Log("PAIR OF LINES");
-                   // Debug.Log(LA);
-                   // Debug.Log(LB);
+                    // Debug.Log("PAIR OF LINES");
+                    // Debug.Log(LA);
+                    // Debug.Log(LB);
 
-                            if (debuggery) {
-                                LA.debuggery = true;
-                                LB.debuggery = true;
-                            }
-                            int caseType = LA.LineIntersectMuntac(LB);
-                   // Debug.Log(caseType);
-                            LA.debuggery = false;
-                            LB.debuggery = false;
-                            if (caseType == 1) {//Regular intersections
+                    if (debuggery) {
+                        LA.debuggery2 = true;
+                        LB.debuggery2 = true;
+                    }
+                    int caseType = LA.LineIntersectMuntac(LB);
+                    LA.debuggery2 = false;
+                    LB.debuggery2 = false;
+                    if (caseType == 1) {//Regular intersections
                                                 /*if (debuggery)
                                                 {
                                                     Debug.Log("CASETYPE 1");
@@ -422,7 +439,7 @@ public class Geometry
                                 G4.edges.RemoveAt(j);
                                 G4.edges.RemoveAt(i);
                                 Line l;
-                                if (Vector3.SqrMagnitude(pt - LA.vertex[0]) > 9.99999944E-11f) {
+                                if (Vector3.SqrMagnitude(pt - LA.vertex[0]) > 0.000001f) {
                                     l = new Line(pt, LA.vertex[0]);
                                     if (!G2.LineInside(l) && !G1.LineInside(l)) {
                                         G4.edges.Add(l);
@@ -431,7 +448,7 @@ public class Geometry
                                         Debug.Log(l);
                                     }*/
                                 }
-                                if (Vector3.SqrMagnitude(pt - LA.vertex[1]) > 9.99999944E-11f) {
+                                if (Vector3.SqrMagnitude(pt - LA.vertex[1]) > 0.000001f) {
                                     l = new Line(pt, LA.vertex[1]);
                                     if (!G2.LineInside(l) && !G1.LineInside(l)) {
                                         G4.edges.Add(l);
@@ -440,7 +457,7 @@ public class Geometry
                                         Debug.Log(l);
                                     }*/
                                 }
-                                if (Vector3.SqrMagnitude(pt - LB.vertex[0]) > 9.99999944E-11f) {
+                                if (Vector3.SqrMagnitude(pt - LB.vertex[0]) > 0.000001f) {
                                     l = new Line(pt, LB.vertex[0]);
                                     if (!G2.LineInside(l) && !G1.LineInside(l)) {
                                         G4.edges.Add(l);
@@ -449,7 +466,7 @@ public class Geometry
                                         Debug.Log(l);
                                     }*/
                                 }
-                                if (Vector3.SqrMagnitude(pt - LB.vertex[1]) > 9.99999944E-11f) {
+                                if (Vector3.SqrMagnitude(pt - LB.vertex[1]) > 0.000001f) {
                                     l = new Line(pt, LB.vertex[1]);
                                     if (!G2.LineInside(l) && !G1.LineInside(l)) {
                                         G4.edges.Add(l);
@@ -482,7 +499,7 @@ public class Geometry
                                 //ACBD
                                 G4.edges.RemoveAt(j);
                                 G4.edges.RemoveAt(i);
-                                if (Vector3.SqrMagnitude(LN.vertex[0] - LN.vertex[1]) > 9.99999944E-11f) {
+                                if (Vector3.SqrMagnitude(LN.vertex[0] - LN.vertex[1]) > 0.000001f) {
                                     G4.edges.Add(LN);
                                 }
                                 difFound = true;
@@ -508,7 +525,7 @@ public class Geometry
                                 //CADB
                                 G4.edges.RemoveAt(j);
                                 G4.edges.RemoveAt(i);
-                                if (Vector3.SqrMagnitude(LN.vertex[0] - LN.vertex[1]) > 9.99999944E-11f) {
+                                if (Vector3.SqrMagnitude(LN.vertex[0] - LN.vertex[1]) > 0.000001f) {
                                     G4.edges.Add(LN);
                                 }
                                 difFound = true;
@@ -526,7 +543,7 @@ public class Geometry
                                 }
                                 G4.edges.RemoveAt(j);
                                 G4.edges.RemoveAt(i);
-                                if (Vector3.SqrMagnitude(LN.vertex[0] - LN.vertex[1]) > 9.99999944E-11f) {
+                                if (Vector3.SqrMagnitude(LN.vertex[0] - LN.vertex[1]) > 0.000001f) {
                                     G4.edges.Add(LN);
                                 }
                                 difFound = true;
@@ -559,6 +576,15 @@ public class Geometry
                         difFound = true;
                         break;
                     }
+                   /*else if(caseType == 0) {
+                        if((Mathf.Abs((LA.MidPoint().x + 26)) < 0.05) && (Mathf.Abs((LB.MidPoint().x + 26)) < 0.05)) {
+                            LA.debuggery2 = true;
+                            LB.debuggery2 = true;
+                            LA.LineIntersectMuntac(LB);
+                            LA.debuggery2 = false;
+                            LB.debuggery2 = false;
+                        }
+                    }*/
                         }
              }
                 if (difFound) {
@@ -631,7 +657,7 @@ public class Geometry
         {
             Vector3 v1 = l.vertex[0];
             Vector3 v2 = l.vertex[1];
-            if(Vector3.SqrMagnitude(v1 - v2) > 9.99999944E-11f)
+            if(Vector3.SqrMagnitude(v1 - v2) > 0.000001f)
             {
                 newEdges.Add(l);
             }
@@ -660,7 +686,7 @@ public class Geometry
         {
             Vector3 v1 = l.vertex[0];
             Vector3 v2 = l.vertex[1];
-            if (Vector3.SqrMagnitude(v1 - v2) > 9.99999944E-11f)
+            if (Vector3.SqrMagnitude(v1 - v2) > 0.000001f)
             {
                 G4.edges.Add(l);
             }
@@ -691,23 +717,17 @@ public class Geometry
                     Line LB = G4.edges[j];
                     if (debuggery)
                     {
-                        LA.debuggery = true;
-                        LB.debuggery = true;
+                        //Debug.Log("DEBUGGERY IS ACTIVATED");
+                        //LA.debuggery2 = true;
+                        //LB.debuggery2 = true;
                     }
                     int caseType = LA.LineIntersectMuntac(LB);
-                    LA.debuggery = false;
-                    LB.debuggery = false;
+                    LA.debuggery2 = false;
+                    LB.debuggery2 = false;
                     if (caseType == 1)
-                    {//Regular intersections
-                        /*if (debuggery)
-                        {
-                            Debug.Log("CASETYPE 1");
-                            Debug.Log(LA);
-                            Debug.Log(LB);
-                        }*/
-
+                    {
                         Vector3 pt = LA.GetIntersectionPoint(LB);
-                        if (whileIndex2 > 9950)
+                        if (debuggery)
                         {
                             Debug.Log("CASE1");
                             Debug.Log(pt);
@@ -720,42 +740,42 @@ public class Geometry
                         G4.edges.RemoveAt(j);
                         G4.edges.RemoveAt(i);
                         Line l;
-                        if (Vector3.SqrMagnitude(pt - LA.vertex[0]) > 9.99999944E-11f)
+                        if (Vector3.SqrMagnitude(pt - LA.vertex[0]) > 0.000001f)
                         {
                             l = new Line(pt, LA.vertex[0]);
-                            if (!G2.LineInside(l)){
+                            //if (!G2.LineInside(l)){
                                 G4.edges.Add(l);
-                            }
+                            //}
                             /*else {
                                 Debug.Log(l);
                             }*/
                         }
-                        if (Vector3.SqrMagnitude(pt - LA.vertex[1]) > 9.99999944E-11f)
+                        if (Vector3.SqrMagnitude(pt - LA.vertex[1]) > 0.000001f)
                         {
                             l = new Line(pt, LA.vertex[1]);
-                            if (!G2.LineInside(l)) {
+                            //if (!G2.LineInside(l)) {
                                 G4.edges.Add(l);
-                            }
+                            //}
                             /*else {
                                 Debug.Log(l);
                             }*/
                         }
-                        if (Vector3.SqrMagnitude(pt - LB.vertex[0]) > 9.99999944E-11f)
+                        if (Vector3.SqrMagnitude(pt - LB.vertex[0]) > 0.000001f)
                         {
                             l = new Line(pt, LB.vertex[0]);
-                            if (!G2.LineInside(l)) {
+                            //if (!G2.LineInside(l)) {
                                 G4.edges.Add(l);
-                            }
+                            //}
                             /*else {
                                 Debug.Log(l);
                             }*/
                         }
-                        if (Vector3.SqrMagnitude(pt - LB.vertex[1]) > 9.99999944E-11f)
+                        if (Vector3.SqrMagnitude(pt - LB.vertex[1]) > 0.000001f)
                         {
                             l = new Line(pt, LB.vertex[1]);
-                            if (!G2.LineInside(l)) {
+                            //if (!G2.LineInside(l)) {
                                 G4.edges.Add(l);
-                            }
+                           // }
                             /*else {
                                 Debug.Log(l);
                             }*/
@@ -822,7 +842,7 @@ public class Geometry
         {
             Vector3 v1 = l.vertex[0];
             Vector3 v2 = l.vertex[1];
-            if (Vector3.SqrMagnitude(v1 - v2) > 9.99999944E-11f)
+            if (Vector3.SqrMagnitude(v1 - v2) > 0.000001f)
             {
                 newEdges.Add(l);
             }

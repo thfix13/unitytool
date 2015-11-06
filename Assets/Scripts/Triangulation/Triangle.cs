@@ -19,7 +19,9 @@ public class Triangle
 	                           UnityEngine.Random.Range(0.0f,1.0f),
 	                           UnityEngine.Random.Range(0.0f,1.0f)) ;
 
-	public Triangle(Vector3 v1, Vector3 v2,Vector3 v3)
+    private float threshold = 0.00001f;
+
+    public Triangle(Vector3 v1, Vector3 v2,Vector3 v3)
 	{
 		vertex[0]=v1; 
 		vertex[1]=v2; 
@@ -236,7 +238,7 @@ public class Triangle
 
 	public bool Equals(Triangle t)
 	{
-		return GetCenterTriangle().Equals(t.GetCenterTriangle());
+		return (GetCenterTriangle() - t.GetCenterTriangle()).magnitude < threshold;
 	}
 	public Line[] GetSharedLines()
 	{

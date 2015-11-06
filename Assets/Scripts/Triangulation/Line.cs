@@ -22,6 +22,7 @@ public class Line
 	public List<Vector2> listGrid;
 	public List<int> valueGrid = new List<int>();
 	public Color costColor = Color.black;
+    private float threshold = 0.00025f;
 
 	//Material lineMaterial = Resources.Load ("Arrow", typeof(Material)) as Material;
 	//Texture2D backTex = Resources.Load ("arrowStart", typeof(Texture2D)) as Texture2D;
@@ -38,7 +39,29 @@ public class Line
 
 	public  bool Equals(Line l)
 	{
-		return this.MidPoint().Equals(l.MidPoint());
+
+        if( (vertex[0] - l.vertex[0]).magnitude < threshold) {
+            if((vertex[1] - l.vertex[1]).magnitude < threshold) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        else if( (vertex[0] - l.vertex[1]).magnitude < threshold) {
+            if((vertex[1] - l.vertex[0]).magnitude < threshold){
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        else {
+            return false;
+        }
+
+        //Comparing midpoints using equals is just dumb.
+		//return this.MidPoint().Equals(l.MidPoint());
 		//return vertex[0].Equals(l.vertex[0]) && vertex[1].Equals(l.vertex[1]); 
 		
 	}
@@ -357,9 +380,15 @@ public class Line
 			return false;
 	}
 
-    //Detects Intersection when endpoints are not overlapping. Returns 1 if true.
-    //Returns 2 if lines are colinear and overlapping (excludes endpoints) TODO: Understand colinearity and implement properly
-    //Returns 0 if no overlapping
+    //Intersection Detection
+    // 0 -- two distinct lines
+    // 1 -- normal intersection
+    // 2-6 = lines are colinear and overlapping -> line1 = p0-p1, line2 = q0-q1
+    //2 - > p0 q1
+    //3 -> q0 p1
+    //4 -> q1 p1
+    //5 -> p0 p1
+    //6 -> q0 q1
     public int LineIntersectMuntac(Line param) {
         Vector3 a = this.vertex[0];
         Vector3 b = this.vertex[1];
@@ -397,14 +426,23 @@ public class Line
 
         if (debuggery2) {
             Debug.Log(p0 + "," + p1 + "," + q0 + "," + q1);
-            Debug.Log((p0 - q1).magnitude < 0.00005);
+            Debug.Log(u + "," + p0 + "," + v + "," + q0);
+            Debug.Log(numerator1 + "," + numerator2 + "," + denom);
+            //Debug.Log(Mathf.Approximately(numerator1, 0) + "," + Mathf.Approximately(numerator2, 0) + "," + Mathf.Approximately(denom, 0));
+            Debug.Log(posDenom + "," + posNum1 + "," + posNum2);
+            Debug.Log(Vector2.Dot((q0 - p0), u) + "," + Vector2.Dot(u, u));
+            Debug.Log(Vector2.Dot((p0 - q0), v) + "," + Vector2.Dot(v, v));
+            Debug.Log((p0 - q0).magnitude);
+            Debug.Log(p0 + "," + q0);
+            /*
+            Debug.Log((p0 - q1).magnitude < threshold);
             Debug.Log((p0 - q1).magnitude);
             Debug.Log(p0);
             Debug.Log(q1);
             Debug.Log(p0 - q1);
             Debug.Log(Vector2.Dot((p0 - q1), (p0 - q1)));
             Debug.Log((p0 - q1).x);
-            Debug.Log((p0 - q1).y);
+            Debug.Log((p0 - q1).y);*/
 
         }
        // if (debuggery)
@@ -412,7 +450,7 @@ public class Line
             //if (Mathf.Approximately(a.z, 7.5f) && Mathf.Approximately(c.z, 7.5f) && Mathf.Approximately(b.z, 7.5f) && Mathf.Approximately(d.z, 7.5f))
          /*if((Mathf.Abs(a.z+7.5f) < 0.5) && (Mathf.Abs(b.z + 7.5f) < 0.5) && (Mathf.Abs(c.z + 7.5f) < 0.5) && (Mathf.Abs(d.z + 7.5f) < 0.5))
             {
-            if(posDenom > 0.00005 || posNum1 > 0.00005) { 
+            if(posDenom > threshold || posNum1 > threshold) { 
             Debug.Log(a + "," + b + "," + c + "," + d);
             Debug.Log(u + "," + p0 + "," + v + "," + q0);
             Debug.Log(numerator1 + "," + numerator2 + "," + denom);
@@ -431,7 +469,7 @@ public class Line
 
         //Case 1 - Colinear
 
-        if((posDenom < 0.00005) && (posNum1 < 0.00005)) {
+        if((posDenom < threshold) && (posNum1 < threshold)) {
             //Debug.Log("CASE2");
             //Debug.Log(p0 + "," + p1 + "," + q0 + "," + q1);
             //if (Mathf.Approximately(denom, 0) && Mathf.Approximately(numerator1, 0)) {
@@ -448,24 +486,24 @@ public class Line
                 Debug.Log(Vector2.Dot((p0 - q0), v) + "," + Vector2.Dot(v, v));
                 Debug.Log((p0 - q0).magnitude);
                 Debug.Log((p1 - q0).magnitude);
-                Debug.Log((p1 - q0).magnitude < 0.00005);
+                Debug.Log((p1 - q0).magnitude < threshold);
                 Debug.Log(p0 + "," + q0);
             }*/
             /*}*/
 
-            if (Vector2.Dot((q0 - p0), u) > 0.00005 && Vector2.Dot((q0 - p0), u) < Vector2.Dot(u, u))
+            if (Vector2.Dot((q0 - p0), u) > threshold && Vector2.Dot((q0 - p0), u) < Vector2.Dot(u, u))
             {
                 //Debug.Log(Vector2.Dot((q0 - p0), u));
                 //Debug.Log(Vector2.Dot(u, u));
                 //Debug.Log("Returning 2");
-                if (Vector2.Dot((p0 - q0), v) > 0.00005 && Vector2.Dot((p0 - q0), v) < Vector2.Dot(v, v)) {
+                if (Vector2.Dot((p0 - q0), v) > threshold && Vector2.Dot((p0 - q0), v) < Vector2.Dot(v, v)) {
                     return 4;
                 }
                 else {
                     return 2;
                 }
             }
-            if (Vector2.Dot((p0 - q0), v) > 0.00005 && Vector2.Dot((p0 - q0), v) < Vector2.Dot(v, v))
+            if (Vector2.Dot((p0 - q0), v) > threshold && Vector2.Dot((p0 - q0), v) < Vector2.Dot(v, v))
             {
                 //Debug.Log("Returning 3");
                 if (((p0 - q0).magnitude + u.magnitude) > v.magnitude) {
@@ -475,7 +513,7 @@ public class Line
                     return 6;
                 }
             }
-            if((p0- q0).magnitude < 0.00005) { 
+            if((p0- q0).magnitude < threshold) { 
             //if (Mathf.Approximately((p0 - q0).magnitude, 0)){
                 //Debug.Log("Returning 4");
                 if(Vector2.Dot(u, v)> 0) {
@@ -490,7 +528,7 @@ public class Line
                     return 4;
                 }
             }
-            if ((p1 - q0).magnitude < 0.00005) {
+            if ((p1 - q0).magnitude < threshold) {
                 if(Vector2.Dot(u, v) > 0) {
                     return 2;
                 }
@@ -513,7 +551,7 @@ public class Line
         float s = numerator1 / denom;
         float t = numerator2 / denom;
 
-        if(((p1 - q0).magnitude < 0.00005) || ((p1 - q1).magnitude < 0.00005) || ((p0 - q0).magnitude < 0.00005) || ((p0 - q1).magnitude < 0.00005)){
+        if(((p1 - q0).magnitude < threshold) || ((p1 - q1).magnitude < threshold) || ((p0 - q0).magnitude < threshold) || ((p0 - q1).magnitude < threshold)){
             return 0;
         }
 

@@ -143,6 +143,25 @@ namespace EditorArea {
                     //Debug.Log(area);
                 }
 
+
+                List<float> areas = new List<float>();
+                float areaSum = 0;
+                for(int i =0; i < tris.Count; i++) {
+                    Triangle tri = tris[i];
+                    Line[] lins = tri.getLines();
+                    float l1 = lins[0].Magnitude();
+                    float l2 = lins[1].Magnitude();
+                    float l3 = lins[2].Magnitude();
+                    float s = 0.5f * (l1 + l2 + l3);
+                    float area = Mathf.Sqrt(s * (s - l1) * (s - l2) * (s - l3));
+                    areas.Add(area);
+                    areaSum = areaSum + area;
+                }
+                List<float> standardizedAreas = new List<float>();
+                foreach(float a in areas) {
+                    standardizedAreas.Add(a / areaSum);
+                }
+
                 //List<Vector3> pointList = new List<Vector3>();
                 //pointList.Add(new Vector3(-5, 0, -5));
                 //pointList.Add(new Vector3(5, 0, 5));
