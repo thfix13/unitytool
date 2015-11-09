@@ -375,11 +375,11 @@ public partial class Visibility1 : MonoBehaviour
 
 				fillMapWithChildren4(pt,keyTemp,levelOfAccess,h_mapChild_Parent,relationMap);
 			}
-			float totalTimeCalc = (Time.realtimeSinceStartup - startTimeCalc)/60;
-			string sourceFileNameCalc = dirName+"\\TimeForCalc"+levelOfAccess+".txt";
-			StreamWriter sw = new StreamWriter(sourceFileNameCalc);
-			sw.WriteLine("TotalTimeCalc = "+totalTimeCalc);
-			sw.Close();
+			//float totalTimeCalc = (Time.realtimeSinceStartup - startTimeCalc)/60;
+			//string sourceFileNameCalc = dirName+"\\TimeForCalc"+levelOfAccess+".txt";
+			//StreamWriter sw = new StreamWriter(sourceFileNameCalc);
+			//sw.WriteLine("TotalTimeCalc = "+totalTimeCalc);
+			//sw.Close();
 			DumpEdgesForLevel3(h_mapChild_Parent,levelOfAccess,dirName);
 
 			levelOfAccess++;
@@ -589,11 +589,11 @@ public partial class Visibility1 : MonoBehaviour
 
 		sw.Close ();
 
-		float totalTimeDumping = (Time.realtimeSinceStartup - startTimeDumping)/60;
-		string sourceFileNameDumping = dirName+"\\TimeForDumping"+levelOfAccess+".txt";
-		StreamWriter swDump = new StreamWriter(sourceFileNameDumping);
-		swDump.WriteLine("totalTimeDumping = "+totalTimeDumping);
-		swDump.Close();
+		//float totalTimeDumping = (Time.realtimeSinceStartup - startTimeDumping)/60;
+		//string sourceFileNameDumping = dirName+"\\TimeForDumping"+levelOfAccess+".txt";
+		//StreamWriter swDump = new StreamWriter(sourceFileNameDumping);
+		//swDump.WriteLine("totalTimeDumping = "+totalTimeDumping);
+		//swDump.Close();
 	}
 	private void fillMapWithChildren(Vector3 pt,Vector2 keyTemp,int levelOfAccess,Hashtable h_mapChild_Parent)
 	{
@@ -1184,10 +1184,10 @@ public partial class Visibility1 : MonoBehaviour
 			float G = (255 * numLevelsReached) / numOfLevels;
 			float R = (255 * (numOfLevels - numLevelsReached)) / numOfLevels ;
 			float B = 0f;
-			showPosOfPointRectangle(keyObj,Color.Lerp(Color.white,Color.green,greenNum));
+			//showPosOfPointRectangle(keyObj,Color.Lerp(Color.white,Color.green,greenNum));
 			//showPosOfPointRectangle(keyObj,Color.Lerp(Color.white,Color.grey,greenNum));
 			//showPosOfPoint(keyObj,getColorFromList(numLevelsReached,numOfLevels));
-			//showPosOfPointRectangle(keyObj,new Color(R,G,B));
+			showPosOfPointRectangle(keyObj,new Color(R,G,B));
 			//showPosOfPointRectangle(keyObj,new Color(0.0f,greenNum,0.0f));
 			//showPosOfPointRectangle(keyObj,getColorFromList(numLevelsReached,numOfLevels));
 		}

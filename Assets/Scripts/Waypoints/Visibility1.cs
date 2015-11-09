@@ -3014,9 +3014,10 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		else if(currSceneName=="wastleLands2.unity")
 		{
-			lscale.x*=playerScaleForWastleLands2;
-			lscale.y*=playerScaleForWastleLands2;
-			lscale.z*=playerScaleForWastleLands2;
+			float scalingTemp = 0.6f;
+			lscale.x*=playerScaleForWastleLands2*scalingTemp;
+			lscale.y*=playerScaleForWastleLands2*scalingTemp;
+			lscale.z*=playerScaleForWastleLands2*scalingTemp;
 		}
 		else
 		{
