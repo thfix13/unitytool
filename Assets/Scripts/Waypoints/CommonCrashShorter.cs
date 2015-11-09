@@ -33,14 +33,34 @@ public static class CommonCrashShorter
 	public static List<Vector3> definePath()
 	{
 		
-		GameObject sp = (GameObject)GameObject.Find ("StartPoint");
-		GameObject ep = (GameObject)GameObject.Find ("EndPoint");
+		GameObject sp = (GameObject)GameObject.Find ("StartPoint1");
+		GameObject ep = (GameObject)GameObject.Find ("EndPoint1");
 		
 		
 		
 		List<Vector3> wayPoints = createWayPoints (sp.transform.position,ep.transform.position);
 		
 		List<Vector3>  pathPts = selectPath1(wayPoints);
+		createPathPoints (pathPts);
+		
+		///////////////////////////////
+		//pathPts.Clear ();
+		//pathPts.Add(sp.transform.position);
+		//pathPts.Add(ep.transform.position);
+		////////////////////////////////
+		return pathPts;
+	}
+	public static List<Vector3> definePath2()
+	{
+		
+		GameObject sp = (GameObject)GameObject.Find ("StartPoint2");
+		GameObject ep = (GameObject)GameObject.Find ("EndPoint2");
+		
+		
+		
+		List<Vector3> wayPoints = createWayPoints2 (sp.transform.position,ep.transform.position);
+		
+		List<Vector3>  pathPts = selectPath2(wayPoints);
 		createPathPoints (pathPts);
 		
 		///////////////////////////////
@@ -67,6 +87,67 @@ public static class CommonCrashShorter
 			pathPts.Insert(i+1, pos);
 			i++;
 		}
+	}
+	private static List<Vector3> createWayPoints2 (Vector3 startPt,Vector3 endPt)
+	{
+		float scalingLocal = 0.5f;
+		List<Vector3> wayPoints = new List<Vector3> ();
+		float step = 1 * stepPath;
+		step = step * step;
+		float xVar = -1.0f;
+		float zVar = -1.0f;
+
+		int n = 19;
+		step = n * stepPath;
+		zVar = step;
+		Vector3 pt2 = new Vector3 (startPt.x, startPt.y, startPt.z-zVar);
+
+		step = 10 * stepPath;
+		step = step * step;
+		xVar = 2.3f*scalingLocal;
+		zVar = Mathf.Sqrt(step - xVar * xVar);
+		Vector3 pt3 = new Vector3 (pt2.x-xVar, pt2.y, pt2.z-zVar);
+
+		n = 10;
+		step = n * stepPath;
+		xVar = step;
+		Vector3 pt4 = new Vector3 (pt3.x+xVar, pt3.y, pt3.z);
+
+		
+		
+		n = 5;
+		step = n * stepPath;
+		zVar = step;
+		Vector3 pt5 = new Vector3 (pt4.x, pt4.y, pt4.z-zVar);
+		
+		n = 18;
+		step = n * stepPath;
+		xVar = step;
+		Vector3 pt6 = new Vector3 (pt5.x-xVar, pt5.y, pt5.z);
+		
+
+		wayPoints.Add (startPt);//0
+		wayPoints.Add (pt2);
+		wayPoints.Add (pt3);
+		wayPoints.Add (pt4);
+		wayPoints.Add (pt5);
+		wayPoints.Add (pt6);
+		/*wayPoints.Add (pt7);
+		wayPoints.Add (pt8);
+		wayPoints.Add (pt9);
+		wayPoints.Add (pt10);
+		wayPoints.Add (pt11);
+		wayPoints.Add (pt12);
+		wayPoints.Add (pt13);
+		wayPoints.Add (pt14);
+		wayPoints.Add (pt15);
+		wayPoints.Add (pt16);
+		wayPoints.Add (pt17);
+		wayPoints.Add (pt18);
+		wayPoints.Add (pt19);
+		wayPoints.Add (pt20);*/
+		wayPoints.Add (endPt);//16
+		return wayPoints;
 	}
 	private static List<Vector3> createWayPoints (Vector3 startPt,Vector3 endPt)
 	{
@@ -216,6 +297,33 @@ public static class CommonCrashShorter
 		wayPoints.Add (pt20);*/
 		wayPoints.Add (endPt);//16
 		return wayPoints;
+	}
+	private static List<Vector3> selectPath2 (List<Vector3> wayPoints)
+	{
+		List<Vector3> path1 = new List<Vector3> ();
+		path1.Add (wayPoints [0]);
+		path1.Add (wayPoints [1]);
+		path1.Add (wayPoints [2]);
+		path1.Add (wayPoints [3]);
+		path1.Add (wayPoints [4]);
+		path1.Add (wayPoints [5]);
+		path1.Add (wayPoints [6]);
+		/*path1.Add (wayPoints [7]);
+		path1.Add (wayPoints [8]);
+		path1.Add (wayPoints [9]);
+		path1.Add (wayPoints [10]);
+		path1.Add (wayPoints [11]);
+		path1.Add (wayPoints [12]);
+		path1.Add (wayPoints [13]);
+		path1.Add (wayPoints [14]);
+		path1.Add (wayPoints [15]);
+		path1.Add (wayPoints [16]);
+		path1.Add (wayPoints [17]);
+		path1.Add (wayPoints [18]);
+		path1.Add (wayPoints [19]);
+		path1.Add (wayPoints [20]);*/
+		//path1.Add (wayPoints [21]);
+		return path1;
 	}
 	private static List<Vector3> selectPath1 (List<Vector3> wayPoints)
 	{

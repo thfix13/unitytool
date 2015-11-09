@@ -123,7 +123,7 @@ public partial class Visibility1 : MonoBehaviour {
 	float playerScaleForCrash = 0.5f;
 	float playerScaleForMyCrash = 0.3f;
 	float playerScaleForWastleLands2 = 0.5f;
-	int PointToDebug = 61;
+	int PointToDebug = 18;
 	public bool bDebugNow = false;
 	void Start () 
 	{
@@ -191,12 +191,28 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 			
 		}
-		else if(currSceneName=="myCrash_Shorter.unity")
+		else if(currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
 		{
-			pathPoints = CommonCrashShorter.definePath ();
+			//pathPoints = CommonCrashShorter.definePath ();
+			int selectPathIndx = 2;
+			if(selectPathIndx==1)
+			{
+				GameObject sp2 = (GameObject)GameObject.Find ("StartPoint2");
+				GameObject ep2 = (GameObject)GameObject.Find ("EndPoint2");
+				(sp2.GetComponent<MeshRenderer>()).enabled = false;
+				(ep2.GetComponent<MeshRenderer>()).enabled = false;
+			}
+			else if(selectPathIndx==2)
+			{
+				GameObject sp1 = (GameObject)GameObject.Find ("StartPoint1");
+				GameObject ep1 = (GameObject)GameObject.Find ("EndPoint1");
+				(sp1.GetComponent<MeshRenderer>()).enabled = false;
+				(ep1.GetComponent<MeshRenderer>()).enabled = false;
+			}
+			pathPoints = CommonCrashShorter.definePath2 ();
 			m_stepDistance = CommonCrashShorter.getStepDistance();
 			radius_enemy*=playerScaleForMyCrash;
-			m_step = 0.07f;
+			m_step = 0.055f;
 			if(bDebugNow)
 			{
 				Debug.Log("pathPoints = "+pathPoints.Count);
@@ -607,7 +623,7 @@ public partial class Visibility1 : MonoBehaviour {
 			Renderer rend = playerObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
-		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
+		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" ||  currSceneName=="myCrash_Shorter2.unity")
 		{
 			Vector3 lscale= playerObj.transform.localScale;
 			lscale.x*=playerScaleForMyCrash;
@@ -1814,7 +1830,7 @@ public partial class Visibility1 : MonoBehaviour {
 			Renderer rend = enemyObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
-		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
+		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
 		{
 			Vector3 lscale= enemyObj.transform.localScale;
 			lscale.x*=playerScaleForMyCrash;
@@ -1853,7 +1869,7 @@ public partial class Visibility1 : MonoBehaviour {
 			Renderer rend = enemyObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
-		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
+		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
 		{
 			Vector3 lscale= enemyObj.transform.localScale;
 			lscale.x*=playerScaleForMyCrash;
@@ -1892,7 +1908,7 @@ public partial class Visibility1 : MonoBehaviour {
 			Renderer rend = enemyObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
-		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
+		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
 		{
 			Vector3 lscale= enemyObj.transform.localScale;
 			lscale.x*=playerScaleForMyCrash;
@@ -1931,7 +1947,7 @@ public partial class Visibility1 : MonoBehaviour {
 			Renderer rend = enemyObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
-		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
+		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
 		{
 			Vector3 lscale= enemyObj.transform.localScale;
 			lscale.x*=playerScaleForMyCrash;
@@ -3005,9 +3021,9 @@ public partial class Visibility1 : MonoBehaviour {
 			lscale.y*=playerScaleForCrash;
 			lscale.z*=playerScaleForCrash;
 		}
-		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
+		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
 		{
-			float scalingTemp = 0.5f;
+			float scalingTemp = 0.778f;//0.775f;
 			lscale.x*=playerScaleForMyCrash*scalingTemp;
 			lscale.y*=playerScaleForMyCrash*scalingTemp;
 			lscale.z*=playerScaleForMyCrash*scalingTemp;
@@ -3043,7 +3059,7 @@ public partial class Visibility1 : MonoBehaviour {
 		//GameObject tempObj = (GameObject)GameObject.Instantiate (sp);
 		GameObject tempObj = Instantiate(enemyPrefab, pos, enemyPrefab.transform.rotation) as GameObject;
 		Vector3 lscale= tempObj.transform.localScale;
-		if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
+		if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
 		{
 			lscale.x*=playerScaleForMyCrash;
 			lscale.y*=playerScaleForMyCrash;
@@ -3073,7 +3089,7 @@ public partial class Visibility1 : MonoBehaviour {
 		//GameObject tempObj = (GameObject)GameObject.Instantiate (sp);
 		GameObject tempObj = Instantiate(pathSphere, pos, pathSphere.transform.rotation) as GameObject;
 		Vector3 lscale= tempObj.transform.localScale;
-		if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
+		if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
 		{
 			lscale.x*=0.7f;
 			lscale.y*=0.7f;
@@ -4116,7 +4132,7 @@ public partial class Visibility1 : MonoBehaviour {
 	}
 	public bool floatCompare ( float a, float b )
 	{
-		if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
+		if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
 		{
 			return Mathf.Abs (a - b) < eps4;
 		}
@@ -4138,7 +4154,7 @@ public partial class Visibility1 : MonoBehaviour {
 	}
 	public bool VectorApprox ( Vector3 a, Vector3 b )
 	{
-		if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
+		if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
 		{
 			if( Mathf.Abs (a.x - b.x) < eps4 && Mathf.Abs (a.z - b.z) < eps4 )
 			{
@@ -4167,7 +4183,7 @@ public partial class Visibility1 : MonoBehaviour {
 			else
 				return false;
 		}
-		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity")
+		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
 		{
 			if( Mathf.Abs (a.x - b.x) < eps4 && Mathf.Abs (a.z - b.z) < eps4 )
 			{
