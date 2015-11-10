@@ -1219,6 +1219,149 @@ public partial class Visibility1 : MonoBehaviour
 			line = sr.ReadLine ();
 		}
 	}
+	List<GameObject> displayPathList = new List<GameObject>();
+	Vector3 displayOptimizedPt;
+	private void displayOptimizedPaths()
+	{
+		int endIndxTemp = m_EndIndx;
+		
+		int numOfLevels = lastPathIndex ();//pathPoints.Count-1;//m_lastPathIndex;
+		
+		string sourceDirName = EditorUtility.OpenFolderPanel ("Please select Info dir", Application.dataPath, "");
+
+		if (sourceDirName == "")
+			return;
+		List<NodeShadow> headNodes = readNodeStructureFor2 ();
+
+		//////////////////Reading Info file for step distance
+		string infoFileName = sourceDirName + "\\Info.txt";
+		StreamReader sr = new StreamReader (infoFileName);
+		string line = sr.ReadLine ();
+		while (true) {
+			if (line.Contains ("Last Path Index")) {
+				int indx = line.IndexOf (" = ");
+				string numberStr = line.Substring (indx + 3);
+				
+				m_EndIndx = int.Parse (numberStr);
+				endIndxTemp = m_EndIndx;
+				line = sr.ReadLine ();
+			}
+			if (line.Contains ("Distance covered by the player")) {
+				int indx = line.IndexOf (" = ");
+				string numberStr = line.Substring (indx + 3);
+				
+				m_stepDistance = float.Parse (numberStr);
+				
+				sr.Close ();
+				break;
+			}
+			line = sr.ReadLine ();
+		}
+		float timePlayer = m_stepDistance / speedPlayer;
+		float radiusMovement = speedEnemy * timePlayer;
+		while (endIndxTemp>0) 
+		{
+			List<NodeShadow> nodeList1 = getNodesWithIndex (endIndxTemp);
+			setCanReachLimit (nodeList1, endIndxTemp);
+			List<NodeShadow> nodeParentList = getParentList (nodeList1, radiusMovement);
+			while (nodeParentList.Count!=0) 
+			{
+				setCanReachLimit (nodeParentList, endIndxTemp);
+				nodeParentList = getParentList (nodeParentList, radiusMovement);
+			}
+			endIndxTemp--;
+		}
+		displayCanReachLimits (headNodes,m_EndIndx);
+		///////////////////
+		headNodesForOptimal = headNodes;
+		radiusMovementForOptimal = radiusMovement;
+
+	}
+	void displayCanReachLimits(List<NodeShadow> headNodes,int numOfLevels)
+	{
+		Debug.Log("Total Path Points = "+numOfLevels);
+		foreach(NodeShadow headNode in headNodes)
+		{
+			int numLevelsReached = headNode.getCanReachLimit();
+
+			float greenNum = (float)numLevelsReached/(float)numOfLevels;
+			float G = (255 * numLevelsReached) / numOfLevels;
+			float R = (255 * (numOfLevels - numLevelsReached)) / numOfLevels ;
+			float B = 0f;
+			//showPosOfPointRectangle(keyObj,Color.Lerp(Color.white,Color.green,greenNum));
+			//showPosOfPointRectangle(keyObj,Color.Lerp(Color.white,Color.grey,greenNum));
+			//showPosOfPoint(keyObj,getColorFromList(numLevelsReached,numOfLevels));
+			showPosOfPointRectangle(headNode.getPos(),new Color(R,G,B));
+			//showPosOfPointRectangle(keyObj,new Color(0.0f,greenNum,0.0f));
+			//showPosOfPointRectangle(keyObj,getColorFromList(numLevelsReached,numOfLevels));
+		}
+	}
+	List<NodeShadow> headNodesForOptimal;
+	float radiusMovementForOptimal;
+	void displayOptimalPathNow()
+	{
+
+		NodeShadow nearestHeadNode = null;
+		float nearestDist = 1000f;
+		foreach(NodeShadow headNode in headNodesForOptimal)
+		{
+			if(Vector3.Distance(displayOptimizedPt,headNode.getPos())<nearestDist)
+			{
+				nearestDist = Vector3.Distance(displayOptimizedPt,headNode.getPos());
+				nearestHeadNode = headNode;
+			}
+		}
+		Debug.Log("nearestHeadNode = "+nearestHeadNode.getPos());
+
+		//
+		int lenArrayOptimal = nearestHeadNode.getCanReachLimit () + 1;
+		NodeShadow[] OptimalPathArray = new NodeShadow[lenArrayOptimal];
+		Debug.Log ("Can reach = " + nearestHeadNode.getCanReachLimit ());
+		//
+		OptimalPathArray [nearestHeadNode.getSafetyLevel()] = nearestHeadNode;
+		//
+		Hashtable duplicatesHT = new Hashtable ();
+		//
+		int endIndxTemp = nearestHeadNode.getCanReachLimit ();
+		List<NodeShadow> nodeList = getChildrenList (nearestHeadNode, radiusMovementForOptimal);
+		while(nodeList.Count>0) 
+		{
+			//
+			
+			int lastIndxNodeList = nodeList.Count-1;
+			NodeShadow childNode = nodeList[lastIndxNodeList];
+			nodeList.RemoveAt(lastIndxNodeList);
+			if(duplicatesHT.ContainsKey(childNode))
+			{
+				continue;
+			}
+			duplicatesHT.Add(childNode,1);
+			
+			List<NodeShadow> nodeChildrenList = getChildrenList (childNode, radiusMovementForOptimal);
+			nodeList.AddRange(nodeChildrenList);
+			OptimalPathArray [childNode.getSafetyLevel ()] = childNode;
+			//Debug.Log("childNode.getSafetyLevel() = "+childNode.getSafetyLevel());
+			if(childNode.getSafetyLevel() == endIndxTemp)
+			{
+				Debug.Log("FOUND !!!!!!! the  PATH !!!!!!!!!");
+				break;
+			}
+		}
+		//
+		duplicatesHT.Clear ();
+		//
+		for(int i=0;i<lenArrayOptimal;i++)
+		{
+			GameObject gbOptimalPt = Instantiate (enemyPrefab) as GameObject;
+			gbOptimalPt = scaleCharacter(gbOptimalPt);
+			gbOptimalPt.transform.position = OptimalPathArray[i].getPos ();
+			//Debug.Log("Path safety level = "+OptimalPathArray[i].getSafetyLevel());
+			displayPathList.Add (gbOptimalPt);
+		}
+	}
+
+	
+
 	private void calculatePredictedPaths()
 	{
 		float startTime = Time.realtimeSinceStartup;
@@ -1279,6 +1422,20 @@ public partial class Visibility1 : MonoBehaviour
 		{
 			node.setCanReachLimit(endIndxTemp);
 		}
+	}
+	List<NodeShadow> getChildrenList (NodeShadow node,float radiusMovement)
+	{
+		List<NodeShadow> nodeChildrenList = new List<NodeShadow> ();
+
+
+		List<NodeShadow> childrenList = node.getChildren();
+		foreach (NodeShadow childNode in childrenList) 
+		{
+			if(Vector3.Distance(childNode.getPos(),node.getPos())<=radiusMovement)
+				nodeChildrenList.Add(childNode);
+		}
+		
+		return nodeChildrenList;
 	}
 	List<NodeShadow> getParentList(List<NodeShadow> nodeList,float radiusMovement)
 	{

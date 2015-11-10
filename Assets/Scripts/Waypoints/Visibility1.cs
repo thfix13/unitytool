@@ -100,6 +100,7 @@ public partial class Visibility1 : MonoBehaviour {
 	public bool m_ExecuteTrueCase = false;
 
 	public bool m_CalculateTrueCase = false;
+	public bool m_DisplayOptimizedPaths  = false;
 	public bool m_ShowTrueCase = false;
 	private string currSceneName;
 	//Distance b/w consecutive path points
@@ -532,6 +533,11 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			//calculatePredictedPaths();
 			calculatePredictedPathsNew();
+			return;
+		}
+		if(m_DisplayOptimizedPaths)
+		{
+			displayOptimizedPaths();
 			return;
 		}
 		if(m_ShowTrueCase)
@@ -1017,6 +1023,30 @@ public partial class Visibility1 : MonoBehaviour {
 			//Debug.Break();
 			return;
 		}
+		if(m_DisplayOptimizedPaths)
+		{
+			if (Input.GetMouseButtonDown (0)) 
+			{
+				foreach(GameObject gb in displayPathList)
+				{
+					GameObject.Destroy (gb);
+				}
+				//start_box = Input.mousePosition;
+			}
+			
+			if (Input.GetMouseButtonUp (0)) 
+			{
+				displayOptimizedPt = Input.mousePosition;
+				//start_box = camObj.ScreenToWorldPoint (start_box);
+				//start_box.y = 1;
+				displayOptimizedPt = camObj.ScreenToWorldPoint (displayOptimizedPt);
+				displayOptimizedPt.y = 1.0f;
+				Debug.Log("displayOptimizedPt = "+displayOptimizedPt);
+				displayOptimalPathNow();
+
+			}
+			return;
+		}
 		/*if (bCallComplete) 
 		{
 			bCallComplete = false;
@@ -1196,21 +1226,6 @@ public partial class Visibility1 : MonoBehaviour {
 		//Debug.Log ("distBtwPlayerMovements = " + distBtwPlayerMovements);
 		doPlayerMovements ();
 
-
-		/*if (Input.GetMouseButtonDown (0)) {
-			GameObject.Destroy (selectedBox);
-			start_box = Input.mousePosition;
-		}
-		
-		if (Input.GetMouseButtonUp (0)) {
-			end_box = Input.mousePosition;
-			start_box = camObj.ScreenToWorldPoint (start_box);
-			start_box.y = 1;
-			end_box = camObj.ScreenToWorldPoint (end_box);
-			end_box.y = 1;
-			Debug.Log (start_box + "," + end_box);
-			makeBox();
-		}*/
 	}
 	private void doPlayerMovements()
 	{
@@ -1817,6 +1832,37 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		
 		return vecSel;
+	}
+	GameObject scaleCharacter(GameObject enemyObj)
+	{
+		if(currSceneName=="Crash.unity")
+		{
+			Vector3 lscale= enemyObj.transform.localScale;
+			lscale.x*=playerScaleForCrash;
+			lscale.y*=playerScaleForCrash;
+			lscale.z*=playerScaleForCrash;
+			Renderer rend = enemyObj.GetComponent<Renderer>();
+			rend.transform.localScale = lscale;
+		}
+		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
+		{
+			Vector3 lscale= enemyObj.transform.localScale;
+			lscale.x*=playerScaleForMyCrash;
+			lscale.y*=playerScaleForMyCrash;
+			lscale.z*=playerScaleForMyCrash;
+			Renderer rend = enemyObj.GetComponent<Renderer>();
+			rend.transform.localScale = lscale;
+		}
+		else if(currSceneName=="wastleLands2.unity")
+		{
+			Vector3 lscale= enemyObj.transform.localScale;
+			lscale.x*=playerScaleForWastleLands2;
+			lscale.y*=playerScaleForWastleLands2;
+			lscale.z*=playerScaleForWastleLands2;
+			Renderer rend = enemyObj.GetComponent<Renderer>();
+			rend.transform.localScale = lscale;
+		}
+		return enemyObj;
 	}
 	private void placeEnemyCentroidAt(Vector3 sel)
 	{
