@@ -1324,6 +1324,12 @@ public partial class Visibility1 : MonoBehaviour
 		//
 		int endIndxTemp = nearestHeadNode.getCanReachLimit ();
 		List<NodeShadow> nodeList = getChildrenList (nearestHeadNode, radiusMovementForOptimal);
+		//
+		bool bLongestPath = true;
+		float distBtwStartToEnd = 0.0f;
+		NodeShadow[] OptimalPathArrayLongestPath = new NodeShadow[lenArrayOptimal];
+		OptimalPathArrayLongestPath [nearestHeadNode.getSafetyLevel()] = nearestHeadNode;
+		//
 		while(nodeList.Count>0) 
 		{
 			//
@@ -1343,20 +1349,49 @@ public partial class Visibility1 : MonoBehaviour
 			//Debug.Log("childNode.getSafetyLevel() = "+childNode.getSafetyLevel());
 			if(childNode.getSafetyLevel() == endIndxTemp)
 			{
-				Debug.Log("FOUND !!!!!!! the  PATH !!!!!!!!!");
-				break;
+				if(bLongestPath)
+				{
+					if(Vector3.Distance(OptimalPathArray[lenArrayOptimal-1].getPos(),OptimalPathArray[0].getPos())>distBtwStartToEnd)
+					{
+						distBtwStartToEnd = Vector3.Distance(OptimalPathArray[lenArrayOptimal-1].getPos(),OptimalPathArray[0].getPos());
+						for(int i=0;i<lenArrayOptimal;i++)
+						{
+							OptimalPathArrayLongestPath[i] = OptimalPathArray[i];
+						}
+					}
+
+				}
+				else
+				{
+					Debug.Log("FOUND !!!!!!! the  PATH !!!!!!!!!");
+					break;
+				}
 			}
 		}
 		//
 		duplicatesHT.Clear ();
 		//
-		for(int i=0;i<lenArrayOptimal;i++)
+		if(bLongestPath)
 		{
-			GameObject gbOptimalPt = Instantiate (enemyPrefab) as GameObject;
-			gbOptimalPt = scaleCharacter(gbOptimalPt);
-			gbOptimalPt.transform.position = OptimalPathArray[i].getPos ();
-			//Debug.Log("Path safety level = "+OptimalPathArray[i].getSafetyLevel());
-			displayPathList.Add (gbOptimalPt);
+			for(int i=0;i<lenArrayOptimal;i++)
+			{
+				GameObject gbOptimalPt = Instantiate (enemyPrefab) as GameObject;
+				gbOptimalPt = scaleCharacter(gbOptimalPt);
+				gbOptimalPt.transform.position = OptimalPathArrayLongestPath[i].getPos ();
+				//Debug.Log("Path safety level = "+OptimalPathArray[i].getSafetyLevel());
+				displayPathList.Add (gbOptimalPt);
+			}
+		}
+		else
+		{
+			for(int i=0;i<lenArrayOptimal;i++)
+			{
+				GameObject gbOptimalPt = Instantiate (enemyPrefab) as GameObject;
+				gbOptimalPt = scaleCharacter(gbOptimalPt);
+				gbOptimalPt.transform.position = OptimalPathArray[i].getPos ();
+				//Debug.Log("Path safety level = "+OptimalPathArray[i].getSafetyLevel());
+				displayPathList.Add (gbOptimalPt);
+			}
 		}
 	}
 

@@ -1846,10 +1846,11 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
 		{
+			float scalingTemp = 0.57f;
 			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=playerScaleForMyCrash;
-			lscale.y*=playerScaleForMyCrash;
-			lscale.z*=playerScaleForMyCrash;
+			lscale.x*=playerScaleForMyCrash*scalingTemp;
+			lscale.y*=playerScaleForMyCrash*scalingTemp;
+			lscale.z*=playerScaleForMyCrash*scalingTemp;
 			Renderer rend = enemyObj.GetComponent<Renderer>();
 			rend.transform.localScale = lscale;
 		}
@@ -3069,7 +3070,7 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
 		{
-			float scalingTemp = 0.778f;//0.775f;
+			float scalingTemp = 0.57f;//0.778f;
 			lscale.x*=playerScaleForMyCrash*scalingTemp;
 			lscale.y*=playerScaleForMyCrash*scalingTemp;
 			lscale.z*=playerScaleForMyCrash*scalingTemp;
