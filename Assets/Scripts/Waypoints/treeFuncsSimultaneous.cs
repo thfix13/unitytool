@@ -1326,6 +1326,7 @@ public partial class Visibility1 : MonoBehaviour
 		List<NodeShadow> nodeList = getChildrenList (nearestHeadNode, radiusMovementForOptimal);
 		//
 		bool bLongestPath = true;
+		bool bAllPaths = false;
 		float distBtwStartToEnd = 0.0f;
 		NodeShadow[] OptimalPathArrayLongestPath = new NodeShadow[lenArrayOptimal];
 		OptimalPathArrayLongestPath [nearestHeadNode.getSafetyLevel()] = nearestHeadNode;
@@ -1361,6 +1362,17 @@ public partial class Visibility1 : MonoBehaviour
 					}
 
 				}
+				else if(bAllPaths)
+				{
+					for(int i=0;i<lenArrayOptimal;i++)
+					{
+						GameObject gbOptimalPt = Instantiate (enemyPrefab) as GameObject;
+						gbOptimalPt = scaleCharacter(gbOptimalPt);
+						gbOptimalPt.transform.position = OptimalPathArray[i].getPos ();
+						//Debug.Log("Path safety level = "+OptimalPathArray[i].getSafetyLevel());
+						displayPathList.Add (gbOptimalPt);
+					}
+				}
 				else
 				{
 					Debug.Log("FOUND !!!!!!! the  PATH !!!!!!!!!");
@@ -1381,6 +1393,9 @@ public partial class Visibility1 : MonoBehaviour
 				//Debug.Log("Path safety level = "+OptimalPathArray[i].getSafetyLevel());
 				displayPathList.Add (gbOptimalPt);
 			}
+		}
+		else if(bAllPaths)
+		{
 		}
 		else
 		{
