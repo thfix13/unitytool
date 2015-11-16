@@ -64,6 +64,7 @@ public partial class Visibility1 : MonoBehaviour {
 	{
 		public GameObject enemyObj;
 		public bool bCaught;
+		public Vector2 startPosIndx;
 		public List<Vector3> vNextPos;
 		public EnemyMovement()
 		{
@@ -115,15 +116,24 @@ public partial class Visibility1 : MonoBehaviour {
 
 	public bool bAgentBasedAssignment = false;
 
+	float playerScaleForCrash = 0.5f;
+
 	bool bTestingMGS = false;
 	bool bTestingMGS2 = false;
 	bool bTestingChung = false;
 	bool bTestingMyScene1 = false;
 	bool bTestingMyCrash = false;
 	bool bJustTestCrashNow = false;
-	float playerScaleForCrash = 0.5f;
+
+	float playerScaleForMyScene1 = 0.3f;
+	float playerScaleForTestCase1 = 0.5f;
+	float playerScaleForMGS2 = 0.5f;
+	float playerScaleForChung = 0.5f;
 	float playerScaleForMyCrash = 0.3f;
 	float playerScaleForWastleLands2 = 0.5f;
+	float playerScaleForCurrent;
+
+
 	int PointToDebug = 18;
 	public bool bDebugNow = false;
 	void Start () 
@@ -143,6 +153,45 @@ public partial class Visibility1 : MonoBehaviour {
 		fileLastCaseExecutedFor = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop)+"\\lastCaseExecutedFor1.txt";
 		fileTimings = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop)+"\\timingScene1.txt";
 		filePoints = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop)+"\\pointsScene1.txt";
+		
+
+		if(currSceneName=="wastleLands2.unity") //USED
+		{
+			playerScaleForCurrent = playerScaleForWastleLands2;
+		}
+		else if(currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")//USED
+		{
+			playerScaleForCurrent = playerScaleForMyCrash;
+		}
+		else if(currSceneName=="myCrash.unity")
+		{
+			playerScaleForCurrent = playerScaleForMyCrash;
+		}
+		else if(currSceneName=="Crash.unity")
+		{
+			playerScaleForCurrent = playerScaleForMyCrash;
+		}
+		else if(currSceneName=="myScene1.unity")//USED
+		{
+			playerScaleForCurrent = playerScaleForMyScene1;
+			m_step = 0.06f;
+		}
+		else if(currSceneName=="scene1.unity")
+		{
+			playerScaleForCurrent = playerScaleForMyScene1;
+		}
+		else if(currSceneName=="testCase1.unity")//USED
+		{
+			playerScaleForCurrent = playerScaleForTestCase1;
+		}
+		else if(currSceneName=="MGS2.unity")//USED
+		{
+			playerScaleForCurrent = playerScaleForMGS2;
+		}
+		else if(currSceneName=="chung.unity")//USED
+		{
+			playerScaleForCurrent = playerScaleForChung;
+		}
 
 		if(bMultiplePaths)
 		{
@@ -153,9 +202,9 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			pathPoints = CommonWasteLands2.definePath ();
 			m_stepDistance = CommonWasteLands2.getStepDistance();
-			radius_enemy*=playerScaleForWastleLands2;
+			radius_enemy*=playerScaleForCurrent;
 			m_step = 0.1f;
-			if(bDebugNow)
+			/*if(bDebugNow)
 			{
 				Debug.Log("pathPoints = "+pathPoints.Count);
 				setGlobalVars1();
@@ -189,7 +238,7 @@ public partial class Visibility1 : MonoBehaviour {
 					                      pathSphere.transform.rotation) as GameObject;
 				}
 				return;
-			}
+			}*/
 			
 		}
 		else if(currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
@@ -212,9 +261,9 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 			pathPoints = CommonCrashShorter.definePath2 ();
 			m_stepDistance = CommonCrashShorter.getStepDistance();
-			radius_enemy*=playerScaleForMyCrash;
+			radius_enemy*=playerScaleForCurrent;
 			m_step = 0.055f;
-			if(bDebugNow)
+			/*if(bDebugNow)
 			{
 				Debug.Log("pathPoints = "+pathPoints.Count);
 				setGlobalVars1();
@@ -248,16 +297,16 @@ public partial class Visibility1 : MonoBehaviour {
 					                      pathSphere.transform.rotation) as GameObject;
 				}
 				return;
-			}
+			}*/
 			
 		}
 		else if(currSceneName=="myCrash.unity")
 		{
 			pathPoints = CommonCrash.definePath ();
 			m_stepDistance = CommonCrash.getStepDistance();
-			radius_enemy*=playerScaleForMyCrash;
+			radius_enemy*=playerScaleForCurrent;
 			m_step = 0.05f;
-			if(bDebugNow)
+			/*if(bDebugNow)
 			{
 				Debug.Log("pathPoints = "+pathPoints.Count);
 				setGlobalVars1();
@@ -291,13 +340,13 @@ public partial class Visibility1 : MonoBehaviour {
 					                      pathSphere.transform.rotation) as GameObject;
 				}
 				return;
-			}
+			}*/
 
 		}
 		else if(currSceneName=="Crash.unity")
 		{
 			//Debug.Log("Before changing radius = "+radius_enemy);
-			radius_enemy*=playerScaleForCrash;
+			radius_enemy*=playerScaleForCurrent;
 			//Debug.Log("After changing radius = "+radius_enemy);
 
 			pathPoints = CommonCrash.definePath ();
@@ -411,12 +460,12 @@ public partial class Visibility1 : MonoBehaviour {
 
 					playerObj = Instantiate(playerPrefab) as GameObject;
 
-						Vector3 lscale= playerObj.transform.localScale;
-						lscale.x*=playerScaleForCrash;
-						lscale.y*=playerScaleForCrash;
-						lscale.z*=playerScaleForCrash;
+						Vector3 lscale1= playerObj.transform.localScale;
+					lscale1.x*=playerScaleForCurrent;
+					lscale1.y*=playerScaleForCurrent;
+					lscale1.z*=playerScaleForCurrent;
 						Renderer rend = playerObj.GetComponent<Renderer>();
-						rend.transform.localScale = lscale;
+						rend.transform.localScale = lscale1;
 					
 					
 					playerObj.transform.position = pathPoints [0];
@@ -428,6 +477,7 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			pathPoints = CommonMyScene1.definePath ();
 			m_stepDistance = CommonMyScene1.getStepDistance();
+			radius_enemy*=playerScaleForCurrent;
 			if(bTestingMyScene1)
 			{
 				setGlobalVars1();
@@ -509,6 +559,41 @@ public partial class Visibility1 : MonoBehaviour {
 				}
 				return;
 			}
+		}
+		if(bDebugNow)
+		{
+			Debug.Log("pathPoints = "+pathPoints.Count);
+			setGlobalVars1();
+			CalculateVisibilityForPath();
+			int ptWhich = 50;
+			int ptWhichCOunter=0;
+			float standardMaxMovementTemp = speedEnemy*(m_stepDistance/speedPlayer);
+			Debug.Log("standardMaxMovementTemp = "+standardMaxMovementTemp);
+			foreach(Vector3 vect in h_mapPtToIndx.Keys)
+			{
+				if(ptWhichCOunter>=ptWhich && pointInShadow(vect,PointToDebug))
+				{
+					showPosOfPointEnemySized(vect,Color.green);
+					foreach(Vector3 vectNeighbor in h_mapPtToIndx.Keys)
+					{
+						if(Vector3.Distance(vect,vectNeighbor)<=standardMaxMovementTemp)
+						{
+							showPosOfPointEnemySized(vectNeighbor,Color.red);
+							//showPosOfPointRectangle(vect,Color.green);
+						}
+					}
+					break;
+				}
+				ptWhichCOunter++;
+			}
+			foreach(Vector3 vect in pathPoints)
+			{
+				GameObject pathObj;
+				pathObj = Instantiate(pathSphere, 
+				                      vect, 
+				                      pathSphere.transform.rotation) as GameObject;
+			}
+			return;
 		}
 		if(bAgentBasedAssignment)
 		{
@@ -620,33 +705,16 @@ public partial class Visibility1 : MonoBehaviour {
 		shadowMeshes = new List<GameObject>();
 		playerObj = Instantiate(playerPrefab) as GameObject;
 
-		if(currSceneName=="Crash.unity")
-		{
-			Vector3 lscale= playerObj.transform.localScale;
-			lscale.x*=playerScaleForCrash;
-			lscale.y*=playerScaleForCrash;
-			lscale.z*=playerScaleForCrash;
-			Renderer rend = playerObj.GetComponent<Renderer>();
-			rend.transform.localScale = lscale;
-		}
-		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" ||  currSceneName=="myCrash_Shorter2.unity")
-		{
-			Vector3 lscale= playerObj.transform.localScale;
-			lscale.x*=playerScaleForMyCrash;
-			lscale.y*=playerScaleForMyCrash;
-			lscale.z*=playerScaleForMyCrash;
-			Renderer rend = playerObj.GetComponent<Renderer>();
-			rend.transform.localScale = lscale;
-		}
-		else if(currSceneName=="wastleLands2.unity")
-		{
-			Vector3 lscale= playerObj.transform.localScale;
-			lscale.x*=playerScaleForWastleLands2;
-			lscale.y*=playerScaleForWastleLands2;
-			lscale.z*=playerScaleForWastleLands2;
-			Renderer rend = playerObj.GetComponent<Renderer>();
-			rend.transform.localScale = lscale;
-		}
+
+
+		Vector3 lscale= playerObj.transform.localScale;
+		lscale.x*=playerScaleForCurrent;
+		lscale.y*=playerScaleForCurrent;
+		lscale.z*=playerScaleForCurrent;
+		Renderer rend1 = playerObj.GetComponent<Renderer>();
+		rend1.transform.localScale = lscale;
+		
+
 
 		playerObj.transform.position = pathPoints [0];
 		/*foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[0]]).edges)
@@ -712,7 +780,6 @@ public partial class Visibility1 : MonoBehaviour {
 		setUpEnemyInitialPos ();
 	}
 
-
 	private string createSaveDataDir (string dataPath)
 	{
 		string dirName = Path.Combine(dataPath ,System.DateTime.Now.Day
@@ -726,167 +793,6 @@ public partial class Visibility1 : MonoBehaviour {
 		return dirName;
 	}
 
-	private void displayTimingAreas()
-	{
-		for(int i=0;i<discretePtsX;i++)
-		{
-			for(int j=0;j<discretePtsZ;j++)
-			{
-				//float greenNum = timingArray[i,j]/maxTimeEvaded;
-				float greenNum = pointsArray[i,j]/(pathPoints.Count-1);
-				//greenNum = greenNum*255;
-				//float redNum = 1-greenNum;
-				//showPosOfPoint((Vector3)h_mapIndxToPt[new Vector2(i,j)],new Color(redNum,greenNum,0));
-				showPosOfPoint((Vector3)h_mapIndxToPt[new Vector2(i,j)],new Color(0.0f,greenNum,0.0f));
-			}
-		}
-	}
-
-	private void initializeForGreedyCase()
-	{
-		setGlobalVars1 ();
-		timingArray = new float[discretePtsX,discretePtsZ];
-		pointsArray = new int[discretePtsX,discretePtsZ];
-		Vector3 tempVec = (Vector3)h_mapIndxToPt[new Vector2(m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ)];
-
-		//m_nCurrDiscretePtIndxX = 27;
-		//m_nCurrDiscretePtIndxZ = 15;
-		//tempVec = (Vector3)h_mapIndxToPt[new Vector2(m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ)];
-		placeEnemyGreedyAt(tempVec);
-		resetCase ();
-	}
-	private void initializeForNearMissCase()
-	{
-		setGlobalVars1 ();
-		timingArray = new float[discretePtsX,discretePtsZ];
-		pointsArray = new int[discretePtsX,discretePtsZ];
-		Vector3 tempVec = (Vector3)h_mapIndxToPt[new Vector2(m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ)];
-		//Vector3 tempVec = new Vector3 (m_nCurrDiscretePtIndxX, 1, m_nCurrDiscretePtIndxZ);
-		placeEnemyNearMissAt(tempVec);
-		resetCase ();
-	}
-	private void initializeShadowEdgeAssisted()
-	{
-		setGlobalVars1 ();
-		timingArray = new float[discretePtsX,discretePtsZ];
-		pointsArray = new int[discretePtsX,discretePtsZ];
-		Vector3 tempVec = (Vector3)h_mapIndxToPt[new Vector2(m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ)];
-		//Vector3 tempVec = new Vector3 (m_nCurrDiscretePtIndxX, 1, m_nCurrDiscretePtIndxZ);
-		placeEnemyShadowAssistedAt(tempVec);
-		resetCase ();
-	}
-	private void initializeForCentroidCase()
-	{
-		setGlobalVars1 ();
-		timingArray = new float[discretePtsX,discretePtsZ];
-		pointsArray = new int[discretePtsX,discretePtsZ];
-		Vector3 tempVec = (Vector3)h_mapIndxToPt[new Vector2(m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ)];
-		//Vector3 tempVec = new Vector3 (m_nCurrDiscretePtIndxX, 1, m_nCurrDiscretePtIndxZ);
-		placeEnemyCentroidAt(tempVec);
-		resetCase ();
-	}
-	private void readTimings()
-	{
-		setGlobalVars1 ();
-		timingArray = new float[discretePtsX,discretePtsZ];
-		pointsArray = new int[discretePtsX,discretePtsZ];
-		StreamReader sr = new StreamReader(fileTimings);
-		StreamReader sr1 = new StreamReader(filePoints);
-
-		int j = 0;
-		int k = 0;
-		maxTimeEvaded = float.Parse(sr.ReadLine());
-		int maxPathPoints = int.Parse(sr1.ReadLine());
-		Debug.Log ("maxTimeEvaded read = " + maxTimeEvaded);
-		List<char> sep = new List<char>();
-		sep.Add(',');
-		while(!sr.EndOfStream)
-		{
-			string str = sr.ReadLine();
-			k=0;
-			foreach(string s in str.Split(sep.ToArray()))
-			{
-				//Debug.Log(s);
-				if(s.Length==0)
-					continue;
-				timingArray[j,k] = float.Parse(s);
-				k++;
-			}
-			j++;
-		}
-		sr.Close ();
-
-		j = 0;
-		k = 0;
-		while(!sr1.EndOfStream)
-		{
-			string str = sr1.ReadLine();
-			k=0;
-			foreach(string s in str.Split(sep.ToArray()))
-			{
-				//Debug.Log(s);
-				if(s.Length==0)
-					continue;
-				pointsArray[j,k] = int.Parse(s);
-				k++;
-			}
-			j++;
-		}
-		sr1.Close ();
-	}
-
-	private void writeTimings()
-	{
-		if (!System.IO.File.Exists(fileLastCaseExecutedFor))
-		{
-			//System.IO.File.WriteAllText(fileLastCaseExecutedFor, "This is text that goes into the text file fileLastCaseExecutedFor");
-			System.IO.File.CreateText(fileLastCaseExecutedFor);
-		}
-		if (!System.IO.File.Exists(filePoints))
-		{
-			//System.IO.File.WriteAllText(filePoints, "This is text that goes into the text file filePoints");
-			System.IO.File.CreateText(filePoints);
-		}
-		if (!System.IO.File.Exists(fileTimings))
-		{
-			//System.IO.File.WriteAllText(fileTimings, "This is text that goes into the text file fileTimings");
-			System.IO.File.CreateText(fileTimings);
-		}
-
-		//string tempFile2 = fileLastCaseExecutedFor + "_Temp";
-		string tempFile2 = fileLastCaseExecutedFor;
-		StreamWriter sw2 = new StreamWriter(tempFile2);
-		sw2.WriteLine(m_nCurrDiscretePtIndxX+","+m_nCurrDiscretePtIndxZ+"");
-		sw2.Close ();
-		//File.Replace(tempFile2,fileLastCaseExecutedFor,fileLastCaseExecutedFor+"Backup");
-		//File.Delete (tempFile2);
-
-		string tempFile1 = filePoints + "_Temp";
-		StreamWriter sw1 = new StreamWriter(tempFile1);
-		sw1.WriteLine(pathPoints.Count-1+"");
-
-		string tempFile = fileTimings + "_Temp";
-		StreamWriter sw = new StreamWriter(tempFile);
-		sw.WriteLine(maxTimeEvaded+"");
-		for(int j=0;j<discretePtsX;j++)
-		{
-			for(int k=0;k<discretePtsZ;k++)
-			{
-				sw.Write(", " + timingArray[j,k]);
-				sw1.Write(", " + pointsArray[j,k]);
-			}
-			sw.WriteLine(""); 
-			sw1.WriteLine(""); 
-		}
-		sw.Close ();
-		sw1.Close ();
-		File.Replace(tempFile1,filePoints,filePoints+"Backup");
-		File.Delete (tempFile1);
-		File.Replace(tempFile,fileTimings,fileTimings+"Backup");
-		File.Delete (tempFile);
-		//FileUtil.ReplaceFile (tempFile,fileTimings);
-		//FileUtil.DeleteFileOrDirectory (tempFile);
-	}
 	void resetCase()
 	{
 		if (m_nCurrDiscretePtIndxZ >= discretePtsZ)
@@ -968,412 +874,6 @@ public partial class Visibility1 : MonoBehaviour {
 
 	int nextPosIndx9=0;
 	List<GameObject> listShows = new List<GameObject>();
-	void Update () 
-	{
-		if(bMultiplePaths)
-		{
-			UpdateMultiplePaths();
-			return;
-		}
-		/*mapBG.DrawGeometry(allLineParent,mat);
-
-		foreach(Geometry geo in globalPolygon)
-		{
-			geo.DrawGeometry(allLineParent,matGreen);
-		}*/
-		if(bDebugNow)
-		{
-			mapBG.DrawGeometry(allLineParent,mat);
-			foreach(Geometry geo in globalPolygon)
-			{
-				geo.DrawGeometry(allLineParent,matGreen);
-			}
-			/*int howManySafe=0;
-			foreach(Vector3 key in h_mapPtToIndx.Keys)
-			{
-				if(pointInShadow(key,PointToDebug))
-				{
-					howManySafe++;
-					//showPosOfPointRectangle(key,Color.green);
-					//showPosOfPoint(key,Color.red);
-				}
-			}
-			Debug.Log("howManySafe="+howManySafe);
-			Debug.Break();*/
-			return;
-		}
-		if(bShowJustVisibilityPoly)
-		{
-			//mapBG.DrawGeometry(allLineParent);
-			/*foreach(Geometry geo in globalPolygon)
-			{
-				geo.DrawGeometry(allLineParent);
-			}*/
-			showPosOfPoint(pathPoints[bShowJustVisibilityPolyForIndex],Color.cyan);
-			Debug.Log("For visibility polygon for "+bShowJustVisibilityPolyForIndex+" , edges.count = "+((Geometry)hVisiblePolyTable[pathPoints[bShowJustVisibilityPolyForIndex]]).edges.Count);
-			foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[bShowJustVisibilityPolyForIndex]]).edges)
-			{
-				l.DrawVector(allLineParent);
-			}
-			Debug.Break();
-			return;
-		}
-		if (bAgentBasedAssignment|| bDisplayAreas || m_ExecuteTrueCase || m_ShowTrueCase || m_CalculateTrueCase)
-		{
-			//Debug.Break();
-			return;
-		}
-		if(m_DisplayOptimizedPaths)
-		{
-			if (Input.GetMouseButtonDown (0)) 
-			{
-				foreach(GameObject gb in displayPathList)
-				{
-					GameObject.Destroy (gb);
-				}
-				//start_box = Input.mousePosition;
-			}
-			
-			if (Input.GetMouseButtonUp (0)) 
-			{
-				displayOptimizedPt = Input.mousePosition;
-				//start_box = camObj.ScreenToWorldPoint (start_box);
-				//start_box.y = 1;
-				displayOptimizedPt = camObj.ScreenToWorldPoint (displayOptimizedPt);
-				displayOptimizedPt.y = 1.0f;
-				Debug.Log("displayOptimizedPt = "+displayOptimizedPt);
-				displayOptimalPathNow();
-
-			}
-			return;
-		}
-		/*if (bCallComplete) 
-		{
-			bCallComplete = false;
-			bNearBy = AnalyzeNearestPathPoint ();
-			bCallComplete = true;
-		}
-		else 
-		{
-			return;
-		}*/
-		if(bTestingMGS2)
-		{
-			return;
-		}
-		if(bTestingMGS || bTestingChung || bTestingMyScene1 || bTestingMyCrash)
-		{
-			/*Vector3 pt4 = new Vector3(-9.9f,1.0f,-6.5f);
-			bool ptInShad = pointInShadow(pt4,nextPlayerPath);
-
-			if(ptInShad)
-				Debug.Log(pt4+" in shadow for "+nextPlayerPath+"rd player path");
-			nextPlayerPath++;*/
-			foreach(Transform child in allLineParent.transform)
-			{
-				GameObject.Destroy(child.gameObject);
-			}
-			//mapBG.DrawGeometry (allLineParent);
-			foreach(Line l in mapBG.edges)
-			{
-				l.DrawVector(allLineParent);
-			}
-			for(int i=0;i<globalPolygon.Count;i++)
-			{
-				foreach(Line l in globalPolygon[i].edges)
-				{
-					l.DrawVector(allLineParent);
-				}
-			}
-
-			return;
-		}
-		if(playerObj.transform.position == pathPoints[pathPoints.Count-1])
-		{
-			if(m_SetUpCase)
-			{
-				bool bNotCaught = false;
-				if(m_Greedy)
-				{
-					if(!m_enemyGreedyList[0].bCaught)
-					{
-						bNotCaught = true;
-					}
-				}
-				else if(m_NearMiss)
-				{
-					if(!m_enemyNearMissList[0].bCaught)
-					{
-						bNotCaught = true;
-					}
-				}
-				else if(m_ShadowEdgeAssisted)
-				{
-					if(!m_enemyShadowAssistedList[0].bCaught)
-					{
-						bNotCaught = true;
-					}
-				}
-
-				if(bNotCaught)
-				{
-					pointsArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = pathPoints.Count-1;
-					timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = Time.time - currRunTimeEnemny;
-					if(maxTimeEvaded<0.0)
-					{
-						maxTimeEvaded = Time.time - currRunTimeEnemny;
-					}
-					Debug.Log("Took "+timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]+" Always hidden");
-				}
-				resetCase();
-				return;
-			}
-			else
-			{
-				Debug.Break();
-			}
-		}
-		if(playerObj.transform.position == pathPoints[nextPlayerPath] && playerObj.transform.position != pathPoints[pathPoints.Count-1])
-		{
-			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			Debug.Log("Current player path point = "+nextPlayerPath);
-			if(bJustTestCrashNow && currSceneName=="Crash.unity")
-			{
-				foreach(GameObject go in listShows)
-				{
-					GameObject.DestroyImmediate(go);
-				}
-				/*foreach(Vector3 vect in h_mapPtToIndx.Keys)
-			{
-				if(pointInShadow(vect,nextPosIndx9))
-					showPosOfPointRectangle(vect,Color.green);
-			}*/
-				/*if(nextPosIndx9==pathPoints.Count)
-				{
-					Debug.Break();
-				}
-				foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[nextPosIndx9]]).edges)
-				{
-					//l.DrawVector(allLineParent);
-					GameObject allLineParentTemp = new GameObject();
-					LineRenderer line1 = allLineParentTemp.AddComponent<LineRenderer> ();
-					line1.material = mat;
-					line1.SetWidth (0.4f, 0.4f);
-					line1.SetColors(Color.magenta,Color.magenta);
-					line1.SetVertexCount (2);
-					line1.SetPosition (0, l.vertex[0]);
-					line1.SetPosition (1, l.vertex[1]);
-					listShows.Add(allLineParentTemp);
-				}
-				nextPosIndx9++;*/
-				//Debug.Break();
-				//return;
-			}
-			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			foreach(Transform child in allLineParent.transform)
-			{
-				GameObject.Destroy(child.gameObject);
-			}
-			//Debug.Log("For visibility polygon for "+nextPlayerPath+" , edges.count = "+((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges.Count);
-			//((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).DrawGeometry(allLineParent,matGreen);
-
-			List<VisibleTriangles> listTriangles = (List<VisibleTriangles>)hVisibleTrianglesTable[pathPoints[nextPlayerPath]];
-			foreach(VisibleTriangles vt in listTriangles)
-			{
-				vt.DrawTriangle();
-			}
-
-			{
-				/*foreach(Line lineBG in mapBG.edges)
-					{
-						lineBG.DrawVector(allLineParent);
-					}*/
-				/*Geometry visibleGeoTemp = (Geometry)hVisiblePolyTable[pathPoints [nextPlayerPath]];
-				foreach(Vector3 vectSafe in h_mapPtToIndx.Keys)
-				{
-					//Debug.Log(vectSafe);
-					if(visibleGeoTemp.PointInside(vectSafe))
-						//if(pointInShadow(vectSafe,nextPlayerPath))
-					{
-						
-						showPosOfPoint(vectSafe,Color.green);
-						
-					}
-				}
-				Debug.Break();*/
-			}
-			/*List<Geometry> shadowPolygonsTemp = (List<Geometry>)hTable [pathPoints [nextPlayerPath]];
-			foreach(Geometry geoTemp in shadowPolygonsTemp)
-			{
-				foreach(Line l in geoTemp.edges)
-				{
-					l.DrawVector(allLineParent);
-				}
-			}*/
-			if(bSlowShadowsDown)
-			{
-				setTimerTemp = 200;
-			}
-			nextPlayerPath++;
-
-
-			findNextEnemyPositions();
-
-		}
-		Vector3 prevPlayerPos = playerObj.transform.position;
-		playerObj.transform.position = Vector3.MoveTowards(playerObj.transform.position, pathPoints[nextPlayerPath], speedPlayer*Time.deltaTime);
-		distBtwPlayerMovements = Vector3.Distance (prevPlayerPos, playerObj.transform.position);
-		//Debug.Log ("distBtwPlayerMovements = " + distBtwPlayerMovements);
-		doPlayerMovements ();
-
-	}
-	private void doPlayerMovements()
-	{
-		for(int j=0;j<m_enemyGreedyList.Count;j++)
-		{
-			EnemyMovement greedyObj = m_enemyGreedyList[j];
-			if(greedyObj.bCaught)
-				continue;
-			greedyObj.enemyObj.transform.position = Vector3.MoveTowards(greedyObj.enemyObj.transform.position,greedyObj.vNextPos[0], speedEnemy*Time.deltaTime);
-		}
-		for(int j=0;j<m_enemyNearMissList.Count;j++)
-		{
-			EnemyMovement nearMissObj = m_enemyNearMissList[j];
-			if(nearMissObj.bCaught)
-				continue;
-			nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(nearMissObj.enemyObj.transform.position,nearMissObj.vNextPos[0], speedEnemy*Time.deltaTime);
-		}
-		for(int j=0;j<m_enemyShadowAssistedList.Count;j++)
-		{
-			EnemyMovement shadowAssistedObj = m_enemyShadowAssistedList[j];
-			if(shadowAssistedObj.bCaught)
-				continue;
-			////////////////////////////////
-
-
-			Vector3 currPosEnemy = shadowAssistedObj.enemyObj.transform.position;
-			
-			shadowAssistedObj.vNextPos.Add(findNextPosEnemyShadowAssisted(shadowAssistedObj.enemyObj));
-			//if(currPosEnemy == shadowAssistedObj.vNextPos[0])
-			shadowAssistedObj.vNextPos.RemoveAt(0);
-			if(enemyCaught(shadowAssistedObj.enemyObj.transform.position))
-			{
-				if(m_SetUpCase)
-				{
-					pointsArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = nextPlayerPath-1;
-					timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = Time.time - currRunTimeEnemny;
-					Debug.Log("Caught!!! Took "+timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]+" to catch");
-					resetCase();
-					return;
-				}
-				Renderer rend = shadowAssistedObj.enemyObj.GetComponent<Renderer>();
-				rend.material.shader = Shader.Find("Specular");
-				rend.material.SetColor("_SpecColor", Color.white);
-				shadowAssistedObj.bCaught=true;
-				Debug.Log("Shadow Assisted Caught");
-			}
-			
-			/// //////////////////////////////
-			shadowAssistedObj.enemyObj.transform.position = Vector3.MoveTowards(shadowAssistedObj.enemyObj.transform.position,shadowAssistedObj.vNextPos[0], speedEnemy*Time.deltaTime);
-		}
-		for(int j=0;j<m_enemyCentroidList.Count;j++)
-		{
-			EnemyMovement centroidObj = m_enemyCentroidList[j];
-			if(centroidObj.bCaught)
-				continue;
-			centroidObj.enemyObj.transform.position = Vector3.MoveTowards(centroidObj.enemyObj.transform.position,centroidObj.vNextPos[0], speedEnemy*Time.deltaTime);
-		}
-	}
-	private void findNextEnemyPositions()
-	{
-		for(int j=0;j<m_enemyNearMissList.Count;j++)
-		{
-			EnemyMovement nearMissObj = m_enemyNearMissList[j];
-			if(nearMissObj.bCaught)
-				continue;
-			Vector3 currPosEnemy = nearMissObj.enemyObj.transform.position;
-
-
-			nearMissObj.vNextPos.Add (findNextPosEnemyNearMiss2(nearMissObj.enemyObj));
-			if(currPosEnemy == nearMissObj.vNextPos[0])
-				nearMissObj.vNextPos.RemoveAt(0);
-			if(enemyCaught(nearMissObj.enemyObj.transform.position))
-			{
-				if(m_SetUpCase)
-				{
-					pointsArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = nextPlayerPath-1;
-					timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = Time.time - currRunTimeEnemny;
-					Debug.Log("Caught!!! Took "+timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]+" to catch");
-					resetCase();
-					return;
-				}
-				Renderer rend = nearMissObj.enemyObj.GetComponent<Renderer>();
-				rend.material.shader = Shader.Find("Specular");
-				rend.material.SetColor("_SpecColor", Color.white);
-				nearMissObj.bCaught=true;
-				Debug.Log("Near Miss Enemy Caught");
-			}
-			//nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,nearMissObj.vNextPos[0], speedEnemy*Time.deltaTime);
-		}
-
-		for(int j=0;j<m_enemyGreedyList.Count;j++)
-		{
-			EnemyMovement greedyObj = m_enemyGreedyList[j];
-			if(greedyObj.bCaught)
-				continue;
-			Vector3 currPosEnemy = greedyObj.enemyObj.transform.position;
-
-			greedyObj.vNextPos.Add(findNextPosEnemyGreedy(greedyObj.enemyObj));
-			if(currPosEnemy == greedyObj.vNextPos[0])
-				greedyObj.vNextPos.RemoveAt(0);
-			if(enemyCaught(greedyObj.enemyObj.transform.position))
-			{
-				if(m_SetUpCase)
-				{
-					pointsArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = nextPlayerPath-1;
-					timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = Time.time - currRunTimeEnemny;
-					Debug.Log("Caught!!! Took "+pointsArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]+" path points to catch");
-					resetCase();
-					return;
-				}
-				Renderer rend = greedyObj.enemyObj.GetComponent<Renderer>();
-				rend.material.shader = Shader.Find("Specular");
-				rend.material.SetColor("_SpecColor", Color.white);
-				greedyObj.bCaught=true;
-				Debug.Log("Greedy Enemy Caught");
-			}
-			//nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,nearMissObj.vNextPos[0], speedEnemy*Time.deltaTime);
-		}
-
-		/*for(int j=0;j<m_enemyShadowAssistedList.Count;j++)
-		{
-			EnemyMovement shadowAssistedObj = m_enemyShadowAssistedList[j];
-			if(shadowAssistedObj.bCaught)
-				continue;
-			Vector3 currPosEnemy = shadowAssistedObj.enemyObj.transform.position;
-			
-			shadowAssistedObj.vNextPos.Add(findNextPosEnemyShadowAssisted(shadowAssistedObj.enemyObj));
-			if(currPosEnemy == shadowAssistedObj.vNextPos[0])
-				shadowAssistedObj.vNextPos.RemoveAt(0);
-			if(enemyCaught(shadowAssistedObj.enemyObj.transform.position))
-			{
-				if(m_SetUpCase)
-				{
-					pointsArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = nextPlayerPath-1;
-					timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ] = Time.time - currRunTimeEnemny;
-					Debug.Log("Caught!!! Took "+timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]+" to catch");
-					resetCase();
-					return;
-				}
-				Renderer rend = shadowAssistedObj.enemyObj.GetComponent<Renderer>();
-				rend.material.shader = Shader.Find("Specular");
-				rend.material.SetColor("_SpecColor", Color.white);
-				shadowAssistedObj.bCaught=true;
-				Debug.Log("Greedy Enemy Caught");
-			}
-			//nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,nearMissObj.vNextPos[0], speedEnemy*Time.deltaTime);
-		}*/
-	}
 
 	private bool enemyCaught(Vector3 currPos)
 	{
@@ -1449,7 +949,7 @@ public partial class Visibility1 : MonoBehaviour {
 			vecSel.x = enemyObj.transform.position.x + radiusMovement*Mathf.Cos(angleVar* Mathf.Deg2Rad);
 			vecSel.y = enemyObj.transform.position.y;
 			vecSel.z = enemyObj.transform.position.z + radiusMovement*Mathf.Sin(angleVar* Mathf.Deg2Rad);
-			if(pointInShadow(vecSel,currPlayerPathPoint))
+			if(pointInShadow(vecSel,currPlayerPathPoint) && CheckStraightLineVisibility(vecSel,enemyObj.transform.position))
 			{
 				probablePointsInShadow.Add(vecSel);
 			}
@@ -1520,7 +1020,7 @@ public partial class Visibility1 : MonoBehaviour {
 				Vector3 vecSel = enemyObj.transform.position;
 				//vecSel.x+=radiiVar;
 				int angleVar=0;
-				while(!pointInShadow(vecSel,nextPlayerPath))
+				while(!pointInShadow(vecSel,nextPlayerPath) || !CheckStraightLineVisibility(vecSel,enemyObj.transform.position))
 				{
 
 					vecSel.x = enemyObj.transform.position.x + radiiVar*Mathf.Cos(angleVar* Mathf.Deg2Rad);
@@ -1530,7 +1030,7 @@ public partial class Visibility1 : MonoBehaviour {
 						break;
 
 				}
-				if(pointInShadow(vecSel,nextPlayerPath))
+				if(pointInShadow(vecSel,nextPlayerPath) && CheckStraightLineVisibility(vecSel,enemyObj.transform.position))
 				{
 					//Debug.Log("findNextPosEnemyGreedy. NextPos selected to move to is = "+vecSel);
 					return vecSel;
@@ -1559,7 +1059,7 @@ public partial class Visibility1 : MonoBehaviour {
 			{
 				vecSel.x = enemyObj.transform.position.x + radiusMovement*Mathf.Cos(angleVar* Mathf.Deg2Rad);
 				vecSel.z = enemyObj.transform.position.z + radiusMovement*Mathf.Sin(angleVar* Mathf.Deg2Rad);
-				if(pointInShadow(vecSel,nextPlayerPath))
+				if(pointInShadow(vecSel,nextPlayerPath) && CheckStraightLineVisibility(vecSel,enemyObj.transform.position))
 				{
 					if(!insideShadow)
 						listAngles.Add(angleVar);
@@ -1835,66 +1335,30 @@ public partial class Visibility1 : MonoBehaviour {
 	}
 	GameObject scaleCharacter(GameObject enemyObj)
 	{
-		if(currSceneName=="Crash.unity")
+		float scalingTemp = 1.0f;
+		if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
 		{
-			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=playerScaleForCrash;
-			lscale.y*=playerScaleForCrash;
-			lscale.z*=playerScaleForCrash;
-			Renderer rend = enemyObj.GetComponent<Renderer>();
-			rend.transform.localScale = lscale;
+			scalingTemp = 0.57f;
 		}
-		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
-		{
-			float scalingTemp = 0.57f;
-			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=playerScaleForMyCrash*scalingTemp;
-			lscale.y*=playerScaleForMyCrash*scalingTemp;
-			lscale.z*=playerScaleForMyCrash*scalingTemp;
-			Renderer rend = enemyObj.GetComponent<Renderer>();
-			rend.transform.localScale = lscale;
-		}
-		else if(currSceneName=="wastleLands2.unity")
-		{
-			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=playerScaleForWastleLands2;
-			lscale.y*=playerScaleForWastleLands2;
-			lscale.z*=playerScaleForWastleLands2;
-			Renderer rend = enemyObj.GetComponent<Renderer>();
-			rend.transform.localScale = lscale;
-		}
+		Vector3 lscale= enemyObj.transform.localScale;
+		lscale.x*=playerScaleForCurrent*scalingTemp;
+		lscale.y*=playerScaleForCurrent*scalingTemp;
+		lscale.z*=playerScaleForCurrent*scalingTemp;
+		Renderer rend = enemyObj.GetComponent<Renderer>();
+		rend.transform.localScale = lscale;
 		return enemyObj;
 	}
 	private void placeEnemyCentroidAt(Vector3 sel)
 	{
 		GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
-		if(currSceneName=="Crash.unity")
-		{
-			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=playerScaleForCrash;
-			lscale.y*=playerScaleForCrash;
-			lscale.z*=playerScaleForCrash;
-			Renderer rend = enemyObj.GetComponent<Renderer>();
-			rend.transform.localScale = lscale;
-		}
-		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
-		{
-			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=playerScaleForMyCrash;
-			lscale.y*=playerScaleForMyCrash;
-			lscale.z*=playerScaleForMyCrash;
-			Renderer rend = enemyObj.GetComponent<Renderer>();
-			rend.transform.localScale = lscale;
-		}
-		else if(currSceneName=="wastleLands2.unity")
-		{
-			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=playerScaleForWastleLands2;
-			lscale.y*=playerScaleForWastleLands2;
-			lscale.z*=playerScaleForWastleLands2;
-			Renderer rend = enemyObj.GetComponent<Renderer>();
-			rend.transform.localScale = lscale;
-		}
+
+		Vector3 lscale= enemyObj.transform.localScale;
+		lscale.x*=playerScaleForCurrent;
+		lscale.y*=playerScaleForCurrent;
+		lscale.z*=playerScaleForCurrent;
+		Renderer rend = enemyObj.GetComponent<Renderer>();
+		rend.transform.localScale = lscale;
+	
 		Component.Destroy (enemyObj.GetComponent("Enemy"));
 		enemyObj.transform.position = sel;
 		EnemyMovement centroidObj = new EnemyMovement();
@@ -1907,37 +1371,20 @@ public partial class Visibility1 : MonoBehaviour {
 	private void placeEnemyGreedyAt(Vector3 sel)
 	{
 		GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
-		if(currSceneName=="Crash.unity")
-		{
-			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=playerScaleForCrash;
-			lscale.y*=playerScaleForCrash;
-			lscale.z*=playerScaleForCrash;
-			Renderer rend = enemyObj.GetComponent<Renderer>();
-			rend.transform.localScale = lscale;
-		}
-		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
-		{
-			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=playerScaleForMyCrash;
-			lscale.y*=playerScaleForMyCrash;
-			lscale.z*=playerScaleForMyCrash;
-			Renderer rend = enemyObj.GetComponent<Renderer>();
-			rend.transform.localScale = lscale;
-		}
-		else if(currSceneName=="wastleLands2.unity")
-		{
-			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=playerScaleForWastleLands2;
-			lscale.y*=playerScaleForWastleLands2;
-			lscale.z*=playerScaleForWastleLands2;
-			Renderer rend = enemyObj.GetComponent<Renderer>();
-			rend.transform.localScale = lscale;
-		}
+
+		Vector3 lscale= enemyObj.transform.localScale;
+		lscale.x*=playerScaleForCurrent;
+		lscale.y*=playerScaleForCurrent;
+		lscale.z*=playerScaleForCurrent;
+		Renderer rend = enemyObj.GetComponent<Renderer>();
+		rend.transform.localScale = lscale;
+	
 		Component.Destroy (enemyObj.GetComponent("Enemy"));
 		enemyObj.transform.position = sel;
 		EnemyMovement greedyObj = new EnemyMovement();
 		greedyObj.bCaught = false;
+		greedyObj.startPosIndx = (Vector2)h_mapPtToIndx [sel];
+		//Debug.Log ("greedyObj.startPosIndx = "+greedyObj.startPosIndx);
 		greedyObj.enemyObj = enemyObj;
 		greedyObj.vNextPos.Add (findNextPosEnemyGreedy(enemyObj));
 		m_enemyGreedyList.Add(greedyObj);
@@ -1946,37 +1393,19 @@ public partial class Visibility1 : MonoBehaviour {
 	private void placeEnemyNearMissAt(Vector3 sel)
 	{
 		GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
-		if(currSceneName=="Crash.unity")
-		{
-			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=playerScaleForCrash;
-			lscale.y*=playerScaleForCrash;
-			lscale.z*=playerScaleForCrash;
-			Renderer rend = enemyObj.GetComponent<Renderer>();
-			rend.transform.localScale = lscale;
-		}
-		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
-		{
-			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=playerScaleForMyCrash;
-			lscale.y*=playerScaleForMyCrash;
-			lscale.z*=playerScaleForMyCrash;
-			Renderer rend = enemyObj.GetComponent<Renderer>();
-			rend.transform.localScale = lscale;
-		}
-		else if(currSceneName=="wastleLands2.unity")
-		{
-			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=playerScaleForWastleLands2;
-			lscale.y*=playerScaleForWastleLands2;
-			lscale.z*=playerScaleForWastleLands2;
-			Renderer rend = enemyObj.GetComponent<Renderer>();
-			rend.transform.localScale = lscale;
-		}
+
+		Vector3 lscale= enemyObj.transform.localScale;
+		lscale.x*=playerScaleForCurrent;
+		lscale.y*=playerScaleForCurrent;
+		lscale.z*=playerScaleForCurrent;
+		Renderer rend = enemyObj.GetComponent<Renderer>();
+		rend.transform.localScale = lscale;
+	
 		Component.Destroy (enemyObj.GetComponent("Enemy"));
 		enemyObj.transform.position = sel;
 		EnemyMovement nearMissObj = new EnemyMovement();
 		nearMissObj.bCaught = false;
+		nearMissObj.startPosIndx = (Vector2)h_mapPtToIndx [sel];
 		nearMissObj.enemyObj = enemyObj;
 		nearMissObj.vNextPos.Add (findNextPosEnemyNearMiss2(enemyObj));
 		m_enemyNearMissList.Add(nearMissObj);
@@ -1985,37 +1414,19 @@ public partial class Visibility1 : MonoBehaviour {
 	private void placeEnemyShadowAssistedAt(Vector3 sel)
 	{
 		GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
-		if(currSceneName=="Crash.unity")
-		{
-			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=playerScaleForCrash;
-			lscale.y*=playerScaleForCrash;
-			lscale.z*=playerScaleForCrash;
-			Renderer rend = enemyObj.GetComponent<Renderer>();
-			rend.transform.localScale = lscale;
-		}
-		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
-		{
-			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=playerScaleForMyCrash;
-			lscale.y*=playerScaleForMyCrash;
-			lscale.z*=playerScaleForMyCrash;
-			Renderer rend = enemyObj.GetComponent<Renderer>();
-			rend.transform.localScale = lscale;
-		}
-		else if(currSceneName=="wastleLands2.unity")
-		{
-			Vector3 lscale= enemyObj.transform.localScale;
-			lscale.x*=playerScaleForWastleLands2;
-			lscale.y*=playerScaleForWastleLands2;
-			lscale.z*=playerScaleForWastleLands2;
-			Renderer rend = enemyObj.GetComponent<Renderer>();
-			rend.transform.localScale = lscale;
-		}
+
+		Vector3 lscale= enemyObj.transform.localScale;
+		lscale.x*=playerScaleForCurrent;
+		lscale.y*=playerScaleForCurrent;
+		lscale.z*=playerScaleForCurrent;
+		Renderer rend = enemyObj.GetComponent<Renderer>();
+		rend.transform.localScale = lscale;
+	
 		Component.Destroy (enemyObj.GetComponent("Enemy"));
 		enemyObj.transform.position = sel;
 		EnemyMovement shadowAssistedObj = new EnemyMovement();
 		shadowAssistedObj.bCaught = false;
+		shadowAssistedObj.startPosIndx = (Vector2)h_mapPtToIndx [sel];
 		shadowAssistedObj.enemyObj = enemyObj;
 		shadowAssistedObj.vNextPos.Add (findNextPosEnemyShadowAssisted(enemyObj));
 		m_enemyShadowAssistedList.Add(shadowAssistedObj);
@@ -3062,33 +2473,25 @@ public partial class Visibility1 : MonoBehaviour {
 		//GameObject tempObj = (GameObject)GameObject.Instantiate (sp);
 		GameObject tempObj = Instantiate(rectangleShow, pos, rectangleShow.transform.rotation) as GameObject;
 		Vector3 lscale= tempObj.transform.localScale;
-		if(currSceneName=="Crash.unity")
+		float scalingTemp = 1.0f;
+
+		if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
 		{
-			lscale.x*=playerScaleForCrash;
-			lscale.y*=playerScaleForCrash;
-			lscale.z*=playerScaleForCrash;
-		}
-		else if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
-		{
-			float scalingTemp = 0.57f;//0.778f;
-			lscale.x*=playerScaleForMyCrash*scalingTemp;
-			lscale.y*=playerScaleForMyCrash*scalingTemp;
-			lscale.z*=playerScaleForMyCrash*scalingTemp;
+			scalingTemp = 0.57f;//0.778f;
 		}
 		else if(currSceneName=="wastleLands2.unity")
 		{
-			float scalingTemp = 0.6f;
-			lscale.x*=playerScaleForWastleLands2*scalingTemp;
-			lscale.y*=playerScaleForWastleLands2*scalingTemp;
-			lscale.z*=playerScaleForWastleLands2*scalingTemp;
+			scalingTemp = 0.6f;
 		}
 		else
 		{
-			lscale.x*=0.36f;
-			lscale.y*=0.36f;
-			lscale.z*=0.36f;
+			scalingTemp = 0.36f;
 		}
-		
+
+		lscale.x*=playerScaleForCurrent*scalingTemp;
+		lscale.y*=playerScaleForCurrent*scalingTemp;
+		lscale.z*=playerScaleForCurrent*scalingTemp;
+
 		Renderer rend = tempObj.GetComponent<Renderer>();
 		rend.material.color = c;
 		rend.transform.localScale = lscale;
@@ -3107,18 +2510,10 @@ public partial class Visibility1 : MonoBehaviour {
 		//GameObject tempObj = (GameObject)GameObject.Instantiate (sp);
 		GameObject tempObj = Instantiate(enemyPrefab, pos, enemyPrefab.transform.rotation) as GameObject;
 		Vector3 lscale= tempObj.transform.localScale;
-		if(currSceneName=="myCrash.unity" || currSceneName=="myCrash_Shorter.unity" || currSceneName=="myCrash_Shorter2.unity")
-		{
-			lscale.x*=playerScaleForMyCrash;
-			lscale.y*=playerScaleForMyCrash;
-			lscale.z*=playerScaleForMyCrash;
-		}
-		else if(currSceneName=="wastleLands2.unity")
-		{
-			lscale.x*=playerScaleForWastleLands2;
-			lscale.y*=playerScaleForWastleLands2;
-			lscale.z*=playerScaleForWastleLands2;
-		}
+
+		lscale.x*=playerScaleForCurrent;
+		lscale.y*=playerScaleForCurrent;
+		lscale.z*=playerScaleForCurrent;
 		//lscale.x*=10f;
 		//lscale.y*=10f;
 		//lscale.z*=10f;
