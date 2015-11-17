@@ -536,6 +536,7 @@ namespace Objects {
 					int steps = Mathf.CeilToInt(angleDif / trgt.rotSpeed);
 					if(steps > timeLeft){
 						forT = Vector3.Slerp(forT, trgt.transform.forward, ((float)timeLeft) / ((float)steps));
+                    forT = Vector3.Normalize(forT);
 						timeLeft = 0;
 					}
 					else{

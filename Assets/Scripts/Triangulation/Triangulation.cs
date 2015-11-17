@@ -553,11 +553,11 @@ public class Triangulation : MonoBehaviour
 		List<Geometry> finalPoly = new List<Geometry> ();//Contains all polygons that are fully insde the map
 		foreach ( Geometry g in obsGeos ) {
 			if( mapBG.GeometryIntersect( g ) && !mapBG.GeometryInside( g ) ){
-                mapBG.debuggery = true;
-                g.debuggery = true;
+                //mapBG.debuggery = true;
+                //g.debuggery = true;
 				mapBG = mapBG.GeometryMergeInner( g );
-                mapBG.debuggery = false;
-                g.debuggery = false;
+                //mapBG.debuggery = false;
+                //g.debuggery = false;
 				mapBG.BoundGeometry( mapBoundary );
 			}
 			else
@@ -684,9 +684,9 @@ public class Triangulation : MonoBehaviour
         //END porting
 
         //-----------END MST CODE--------------------//
-        
+
         //DEBUG SECTION -- OBSTACLES
-        GameObject parentO = new GameObject("DebugParentObstacles");
+        /*GameObject parentO = new GameObject("DebugParentObstacles");
         foreach (Geometry G in obsGeos){
             foreach (Line l in G.edges){
            //foreach( Line l in mapBG.edges){
@@ -738,7 +738,7 @@ public class Triangulation : MonoBehaviour
             scale.y = 0.2f;
 
             lin.transform.localScale = scale;
-        }
+        }*/
 
 
         /*
@@ -822,6 +822,20 @@ public class Triangulation : MonoBehaviour
                     }
                 }
                 if (!collision) {
+                    foreach (Geometry g in obsGeos) {
+                        if (collision) {
+                            break;
+                        }
+                        foreach (Line l2 in g.edges) {
+                            int intersect = l.LineIntersectMuntac(l2);
+                            if (intersect == 1) {
+                                collision = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                /*if (!collision) {
                     foreach (Line l2 in mapBG.edges) {
                         int intersect = l.LineIntersectMuntac(l2);
                         if (intersect == 1) {
@@ -843,7 +857,7 @@ public class Triangulation : MonoBehaviour
                             }
                         }
                     }
-                }
+                }*/ 
                 if (!collision) {
                     foreach(Line l2 in lines) {
                         int intersect = l.LineIntersectMuntac(l2);
@@ -931,7 +945,7 @@ public class Triangulation : MonoBehaviour
         bool foundLine2 = false;
 
         foreach (Line l in lines) {
-            //DEBUG PRINTING
+           //DEBUG PRINTING
                 GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
                 lin.transform.parent = linesPar.transform;
@@ -1083,8 +1097,8 @@ public class Triangulation : MonoBehaviour
             scale.y = 0.2f;
 
             lin.transform.localScale = scale;
-        }
-        */
+        }*/
+        
 	
 		return toReturn;
 	}
@@ -1109,6 +1123,35 @@ public class Triangulation : MonoBehaviour
         foreach(Triangle tt in t.voisins) {
             if (!visited.Contains(tt)) {
                 visited = addLines(tt, visited);
+            }
+        }
+        return visited;
+    }
+
+    //private static List<T>
+
+    public static void computeDistance(Triangle t) {
+        t.distance = 0;
+        List<Triangle> visited = new List<Triangle>();
+        computeCloseHelp(t, visited); 
+    }
+
+    private static List<Triangle> computeCloseHelp(Triangle t, List<Triangle> visited) {
+        visited.Add(t);
+        foreach(Triangle tt in t.voisins) {
+            if (tt.visited) {
+                tt.distance = 0;
+            }
+            else {
+                Vector3 midPoint = t.ShareEdged(tt).MidPoint();
+                Line l1 = new Line(t.GetCenterTriangle(), midPoint);
+                Line l2 = new Line(midPoint, tt.GetCenterTriangle());
+                tt.distance = Mathf.Min(l1.Magnitude() + l2.Magnitude() + t.distance, tt.distance);
+            }
+        }
+        foreach(Triangle tt in t.voisins) {
+            if (!visited.Contains(tt)) {
+                visited = computeCloseHelp(tt, visited);
             }
         }
         return visited;

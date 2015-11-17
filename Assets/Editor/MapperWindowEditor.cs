@@ -23,7 +23,7 @@ namespace EditorArea {
 		public static List<Path> paths = new List<Path> (), deaths = new List<Path>();
 
 		// Parameters with default values
-		public static int timeSamples = 2000, attemps = 25000, iterations = 1, gridSize = 60, ticksBehind = 0;
+		public static int timeSamples = 2000, attemps = 2500, iterations = 1, gridSize = 60, ticksBehind = 0;
 		private static bool drawMap = true, drawNeverSeen = false, drawHeatMap = false, drawHeatMap3d = false, drawDeathHeatMap = false, drawDeathHeatMap3d = false, drawCombatHeatMap = false, drawPath = true, smoothPath = false, drawFoVOnly = false, drawCombatLines = false, simulateCombat = false;
 		private static float stepSize = 1 / 10f, crazySeconds = 5f, playerDPS = 10;
 		private static int randomSeed = -1;
@@ -93,6 +93,19 @@ namespace EditorArea {
 
                 triangles.TriangulationSpace();
                 List<Triangle> tris = triangles.triangles;
+                float maxDistRM = 0;
+                foreach(Triangle t in tris) {
+                    foreach(Triangle tt in t.voisins) {
+                        Vector3 midPoint = t.ShareEdged(tt).MidPoint();
+                        Line l1 = new Line(t.GetCenterTriangle(), midPoint);
+                        Line l2 = new Line(midPoint, tt.GetCenterTriangle());
+
+                        maxDistRM = Mathf.Max(l1.Magnitude() + l2.Magnitude(), maxDistRM);
+                    }
+                }
+                Debug.Log(maxDistRM);
+
+                /*
                 GameObject trianglesDraw = new GameObject("Triangles");
                 int triIndI = 1;
                 string triIndS = triIndI.ToString();
@@ -161,7 +174,7 @@ namespace EditorArea {
                 foreach(float a in areas) {
                     standardizedAreas.Add(a / areaSum);
                 }
-
+                */
                 //List<Vector3> pointList = new List<Vector3>();
                 //pointList.Add(new Vector3(-5, 0, -5));
                 //pointList.Add(new Vector3(5, 0, 5));
@@ -685,10 +698,10 @@ namespace EditorArea {
 			                           UnityEngine.Random.Range(0.0f,1.0f),
 			                           UnityEngine.Random.Range(0.0f,1.0f)) ;
 
-								foreach(Line l in path)
+								/*foreach(Line l in path)
 								{
 									l.DrawVector(temp,c);
-								}
+								}*/
 
 								if(nodes.Count > 0){
 									Debug.Log ("Succeeded in " + it2 + " attempts");

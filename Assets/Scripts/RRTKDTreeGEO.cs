@@ -35,6 +35,7 @@ namespace Exploration {
 
         private float rangeDist = 5f;
         private int rangeTime = 100;
+        private float triRangeDist = 20f;
 
 
 		//Geo version of GetNode
@@ -93,35 +94,98 @@ namespace Exploration {
 			//Distribution rd = new Distribution(matrix[0].Length, pairs.ToArray());
 			*/
 
+
             float curMaxX = Mathf.Min(startX + rangeDist, maxX);
             float curMinX = Mathf.Max(startX - rangeDist, minX);
             float curMaxY = Mathf.Min(startY + rangeDist, maxY);
             float curMinY = Mathf.Max(startY - rangeDist, minY);
             int curMaxT = Mathf.Min(rangeTime, maxT);
 
+            int startTriIndex = -1;
+
             List<float> areas = new List<float>();
             float areaSum = 0;
             for (int i = 0; i < tris.Count; i++) {
                 Triangle tri = tris[i];
-                Line[] lins = tri.getLines();
+                /*Line[] lins = tri.getLines();
                 float l1 = lins[0].Magnitude();
                 float l2 = lins[1].Magnitude();
                 float l3 = lins[2].Magnitude();
                 float s = 0.5f * (l1 + l2 + l3);
                 float area = Mathf.Sqrt(s * (s - l1) * (s - l2) * (s - l3));
+                tri.area = area;
                 areas.Add(area);
-                areaSum = areaSum + area;
+                areaSum = areaSum + area;*/
+                if(tri.containsPoint(new Vector3(startX, 1, startY))) {
+                    if(startTriIndex >= 0) {
+                        Debug.Log("PROBLEMO 1");
+                    }
+                    tri.visited = true;
+                    startTriIndex = i;
+                }
             }
+            if(startTriIndex < 0) {
+                Debug.Log("PROBLEMO 2");
+            }
+            Triangulation.computeDistance(tris[startTriIndex]);
+            /*GameObject triDists = new GameObject("triDists");
+            foreach(Triangle tri in tris) {
+                Debug.Log(tri.GetCenterTriangle());
+                GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
+                lin.transform.parent = triDists.transform;
+                lin.transform.position = tri.GetCenterTriangle();
+                Debug.Log(tri.distance);
+            }*/
+
+
+
+
+
+
+
             List<float> standardizedAreas = new List<float>();
+            List<Triangle> reachable = new List<Triangle>();
             float sumSoFar = 0;
-            foreach (float a in areas) {
+            /*foreach (float a in areas) {
                 standardizedAreas.Add((a + sumSoFar) / areaSum);
                 sumSoFar = sumSoFar + a;
-            }
+            }*/
+
+            bool triAdded = true;
 
             //RRT algo
             for (int i = 0; i <= attemps; i++) {
+                if (triAdded) {
+                    Triangulation.computeDistance(tris[startTriIndex]);
+                    reachable = new List<Triangle>();
+                    foreach (Triangle tri in tris) {
+                        if (tri.distance < triRangeDist) {
+                            reachable.Add(tri);
+                        }
+                    }
+                    areas = new List<float>();
+                    areaSum = 0;
+                    for (int j = 0; j < reachable.Count; j++) {
+                        Triangle tri = reachable[j];
+                        Line[] lins = tri.getLines();
+                        float l1 = lins[0].Magnitude();
+                        float l2 = lins[1].Magnitude();
+                        float l3 = lins[2].Magnitude();
+                        float s = 0.5f * (l1 + l2 + l3);
+                        float area = Mathf.Sqrt(s * (s - l1) * (s - l2) * (s - l3));
+                        tri.area = area;
+                        areas.Add(area);
+                        areaSum = areaSum + area;
+                    }
+                    standardizedAreas = new List<float>();
+                    sumSoFar = 0;
+                    foreach (float a in areas) {
+                        standardizedAreas.Add((a + sumSoFar) / areaSum);
+                        sumSoFar = sumSoFar + a;
+                    }
 
+                }
 
 
 				//Then pick random x and y values
@@ -134,37 +198,42 @@ namespace Exploration {
 
 				bool distractPick = false;
 				int distractNum = -1;
-			
 
-				if(Random.Range (0, 100) > distractables) {
-					//TODO
-					if(Random.Range (0, 100) > 50){
-						rx = distractPos.x;
-						ry = distractPos.y;
-						distractPick = true;
-						distractNum = 0;
-					}
-					else{
-						rx = distractPos2.x;
-						ry = distractPos2.y;
-						distractPick = true;
-						distractNum = 1;
-					}
-				}
-				else{
+
+                if (Random.Range(0, 100) > distractables) {
+                    //TODO
+                    k = -1;
+                    if (Random.Range(0, 100) > 50) {
+                        rx = distractPos.x;
+                        ry = distractPos.y;
+                        distractPick = true;
+                        distractNum = 0;
+                    }
+                    else {
+                        rx = distractPos2.x;
+                        ry = distractPos2.y;
+                        distractPick = true;
+                        distractNum = 1;
+                    }
+                }
+                else {
                     /*
 					rx = Random.Range (curMinX, curMaxX);
 					ry = Random.Range (curMinY, curMaxY);
                     */
                     trisInd = Random.Range(0f, 1f);
                     for (k = 0; k < standardizedAreas.Count; k++) {
-                        if(trisInd <= standardizedAreas[k]) {
+                        if (trisInd <= standardizedAreas[k]) {
                             break;
                         }
                     }
-                    Triangle tri = tris[k];
-                    rl1 = Random.Range(0f, 1f);
-                    rl2 = Random.Range(0f, rl1);
+                    Triangle tri = reachable[k];
+                    rl1 = 1.0f;
+                    rl2 = 2.0f;
+                    while (rl2 > rl1) { 
+                        rl1 = Random.Range(0f, 1f);
+                        rl2 = Random.Range(0f, 1f);
+                    }
                     Vector3 point = tri.vertex[0] + rl1 * (tri.vertex[1] - tri.vertex[0]) + rl2 * (tri.vertex[2] - tri.vertex[1]);
                     rx = point.x;
                     ry = point.z;
@@ -398,7 +467,12 @@ namespace Exploration {
                 curMaxY = Mathf.Max(Mathf.Min(nodeVisiting.y + rangeDist, maxY), curMaxY);
                 curMinY = Mathf.Min(Mathf.Max(nodeVisiting.y - rangeDist, minY), curMinY);
                 curMaxT = Mathf.Max(Mathf.Min(nodeVisiting.t + rangeTime, maxT), curMaxT);
-
+                if (k >= 0) {
+                    if (!reachable[k].visited) {
+                        reachable[k].visited = true;
+                        triAdded = true;
+                    }
+                }
 
 
                 if (nodeVisiting.t < nodeVisiting.parent.t)

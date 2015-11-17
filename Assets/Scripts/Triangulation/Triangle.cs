@@ -7,6 +7,9 @@ public class Triangle
 {
 	public Vector3[] vertex = new Vector3[3];
 	public Color[] colourVertex = new Color[3];
+    public bool visited = false;
+    public float area = 0f;
+    public float distance = float.MaxValue;
 
 	//Reference to points in Triangulation gameobject data holder
 	public int[] refPoints = new int[3]; 
@@ -196,6 +199,38 @@ public class Triangle
 		return Line.Zero; 
 
 	}
+
+    public bool containsPoint(Vector3 pt) {
+        Line lray = new Line(pt, new Vector3(-100, 1, -100));
+        int count = 0;
+        List<Vector3> intersectPoints = new List<Vector3>();
+        Vector3 newPoint;
+        bool alreadyThere = false;
+        foreach (Line myLine in getLines()) {
+            if (myLine.LineIntersectMuntacEndPt(lray) == 1) {
+                newPoint = myLine.GetIntersectionPoint(lray);
+                foreach (Vector3 point in intersectPoints) {
+                    if ((point - newPoint).magnitude < 0.001) {
+                        alreadyThere = true;
+                        break;
+                    }
+                }
+                if (!alreadyThere) {
+                    intersectPoints.Add(newPoint);
+                    count++;
+                }
+                else {
+                    alreadyThere = false;
+                }
+                Vector3 vtemp = myLine.GetIntersectionPoint(lray);
+                if (Math.Abs(vtemp.x - pt.x) < 0.01 && Math.Abs(vtemp.z - pt.z) < 0.01)
+                    return false;
+            }
+
+        }
+        return count % 2 == 1;
+    }
+
 
 	public Line ShareEdged(Triangle t, List<Line> toSkip)
 	{
