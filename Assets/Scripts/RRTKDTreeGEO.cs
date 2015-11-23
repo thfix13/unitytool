@@ -27,7 +27,7 @@ namespace Exploration {
 
 		public preCast casts;
 
-        private bool debugging = true;
+        private bool debugging  = true;
 		private bool preventDistractStacks = true;
         //First attempt was 50% distractions.
         private int distractables = 80;
@@ -36,6 +36,8 @@ namespace Exploration {
         private float rangeDist = 5f;
         private int rangeTime = 100;
         private float triRangeDist = 20f;
+
+        private float triMaxRRTDist = 80f;
 
 
 		//Geo version of GetNode
@@ -51,9 +53,536 @@ namespace Exploration {
 			return (NodeGeo)o;
 		}
 
+        public NodeGeo ComputePartialGeo(NodeGeo start, float endX, float endY, float minX, float maxX, float minY, float maxY,int minT, int maxT, int attemps, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> tris, bool part2) {
+            //Debug.Log ("COMPUTEGEO");
+
+            // Initialization
+            tree = new KDTree(3);
+            explored = new List<NodeGeo>();
+
+            // Prepare start and end node
+            NodeGeo end = GetNodeGeo(0, endX, endY);
+            tree.insert(start.GetArray(), start);
+            explored.Add(start);
+            float startX = start.x;
+            float startY = start.y;
+
+            // Prepare the variables		
+            NodeGeo nodeVisiting = null;
+            NodeGeo nodeTheClosestTo = null;
+
+            float tan = speed / 1.0f;
+            angle = 90 - Mathf.Atan(tan) * Mathf.Rad2Deg;
+
+            float curMaxX = Mathf.Min(startX + rangeDist, maxX);
+            float curMinX = Mathf.Max(startX - rangeDist, minX);
+            float curMaxY = Mathf.Min(startY + rangeDist, maxY);
+            float curMinY = Mathf.Max(startY - rangeDist, minY);
+            int curMaxT = Mathf.Min(rangeTime + minT, maxT);
+
+            int startTriIndex = -1;
+
+            List<float> areas = new List<float>();
+            float areaSum = 0;
+            for (int i = 0; i < tris.Count; i++) {
+                Triangle tri = tris[i];
+                tri.visited = false;
+                /*Line[] lins = tri.getLines();
+                float l1 = lins[0].Magnitude();
+                float l2 = lins[1].Magnitude();
+                float l3 = lins[2].Magnitude();
+                float s = 0.5f * (l1 + l2 + l3);
+                float area = Mathf.Sqrt(s * (s - l1) * (s - l2) * (s - l3));
+                tri.area = area;
+                areas.Add(area);
+                areaSum = areaSum + area;*/
+                if (tri.containsPoint(new Vector3(startX, 1, startY))) {
+                    if (startTriIndex >= 0) {
+                        Debug.Log("PROBLEMO 1");
+                    }
+                    tri.visited = true;
+                    startTriIndex = i;
+                }
+            }
+            if (startTriIndex < 0) {
+                Debug.Log("PROBLEMO 2");
+            }
+            Triangulation.computeDistanceTree(tris[startTriIndex]);
+            /*GameObject triDists = new GameObject("triDists");
+            foreach(Triangle tri in tris) {
+                Debug.Log(tri.GetCenterTriangle());
+                GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
+                lin.transform.parent = triDists.transform;
+                lin.transform.position = tri.GetCenterTriangle();
+                Debug.Log(tri.distance);
+            }*/
 
 
-		public List<NodeGeo> ComputeGeo (float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> tris,  bool smooth = false) {
+
+
+
+
+
+            List<float> standardizedAreas = new List<float>();
+            List<Triangle> reachable = new List<Triangle>();
+            float sumSoFar = 0;
+            /*foreach (float a in areas) {
+                standardizedAreas.Add((a + sumSoFar) / areaSum);
+                sumSoFar = sumSoFar + a;
+            }*/
+
+            bool triAdded = true;
+
+            //RRT algo
+            for (int i = 0; i <= attemps; i++) {
+                if (triAdded) {
+                    Triangulation.computeDistanceTree(tris[startTriIndex]);
+                    reachable = new List<Triangle>();
+                    foreach (Triangle tri in tris) {
+                        if (tri.distance < triRangeDist) {
+                            reachable.Add(tri);
+                        }
+                    }
+                    areas = new List<float>();
+                    areaSum = 0;
+                    for (int j = 0; j < reachable.Count; j++) {
+                        Triangle tri = reachable[j];
+                        Line[] lins = tri.getLines();
+                        float l1 = lins[0].Magnitude();
+                        float l2 = lins[1].Magnitude();
+                        float l3 = lins[2].Magnitude();
+                        float s = 0.5f * (l1 + l2 + l3);
+                        float area = Mathf.Sqrt(s * (s - l1) * (s - l2) * (s - l3));
+                        tri.area = area;
+                        areas.Add(area);
+                        areaSum = areaSum + area;
+                    }
+                    standardizedAreas = new List<float>();
+                    sumSoFar = 0;
+                    foreach (float a in areas) {
+                        standardizedAreas.Add((a + sumSoFar) / areaSum);
+                        sumSoFar = sumSoFar + a;
+                    }
+
+                }
+
+
+                //Then pick random x and y values
+                float rx;
+                float ry;
+                float trisInd;
+                int k = 0;
+                float rl1;
+                float rl2;
+
+                bool distractPick = false;
+                int distractNum = -1;
+
+
+                if (Random.Range(0, 100) > distractables) {
+                    //TODO
+                    k = -1;
+                    if (Random.Range(0, 100) > 50) {
+                        rx = distractPos.x;
+                        ry = distractPos.y;
+                        distractPick = true;
+                        distractNum = 0;
+                    }
+                    else {
+                        rx = distractPos2.x;
+                        ry = distractPos2.y;
+                        distractPick = true;
+                        distractNum = 1;
+                    }
+                }
+                else {
+                    /*
+					rx = Random.Range (curMinX, curMaxX);
+					ry = Random.Range (curMinY, curMaxY);
+                    */
+                    trisInd = Random.Range(0f, 1f);
+                    for (k = 0; k < standardizedAreas.Count; k++) {
+                        if (trisInd <= standardizedAreas[k]) {
+                            break;
+                        }
+                    }
+                    Triangle tri = reachable[k];
+                    rl1 = 1.0f;
+                    rl2 = 2.0f;
+                    while (rl2 > rl1) {
+                        rl1 = Random.Range(0f, 1f);
+                        rl2 = Random.Range(0f, 1f);
+                    }
+                    Vector3 point = tri.vertex[0] + rl1 * (tri.vertex[1] - tri.vertex[0]) + rl2 * (tri.vertex[2] - tri.vertex[1]);
+                    rx = point.x;
+                    ry = point.z;
+                }
+
+                Vector3 pdO = new Vector3(rx - startX, 0, ry - startY);
+                float pdd = pdO.magnitude;
+                float fminT = pdd * Mathf.Tan(angle * Mathf.Deg2Rad);
+
+
+                int curMinT = Mathf.Max(minT,Mathf.FloorToInt(fminT));
+
+                //Pick a random time
+                //int rt = Random.Range (1,maxT);
+                int rt = Random.Range(minT, curMaxT);
+
+
+
+
+                //int rx = p.x, ry = p.y;
+                nodeVisiting = GetNodeGeo(rt, rx, ry);
+                //if this node has already been visited continue
+                if (nodeVisiting.visited) {
+                    i--;
+                    //Consider checking if point is valid earlier, for i--.
+                    continue;
+                }
+
+                explored.Add(nodeVisiting);
+
+
+                Vector3 p1 = new Vector3();
+                Vector3 p2 = new Vector3();
+                Vector3 pd = new Vector3();
+
+                if (preventDistractStacks) {
+                    try {
+                        object[] closestNodes = tree.nearest(new double[] { rx, rt, ry }, numNears);
+                        bool viableFound = false;
+
+                        for (int ind = 0; ind < numNears; ind++) {
+                            nodeTheClosestTo = (NodeGeo)closestNodes[ind];
+
+                            // cannot go back in time, so skip if t is decreasing
+                            if (nodeTheClosestTo.t > nodeVisiting.t) {
+                                viableFound = false;
+                                continue;
+                            }
+
+                            // Only add if we are going in ANGLE degrees or higher.As there is a fixed max speed
+                            p1 = nodeVisiting.GetVector3();
+                            p2 = nodeTheClosestTo.GetVector3();
+                            pd = p1 - p2;
+                            if (Vector3.Angle(pd, new Vector3(pd.x, 0f, pd.z)) < angle) {
+                                viableFound = false;
+                                continue;
+                            }
+
+                            if (distractPick) {
+                                if (Mathf.Approximately(p1.x, p2.x) && Mathf.Approximately(p1.z, p2.z)) {
+                                    viableFound = false;
+                                    continue;
+                                }
+                            }
+                            viableFound = true;
+
+                            nodeVisiting.distractTimes = new List<int>();
+                            nodeVisiting.distractNums = new List<int>();
+
+
+                            //Experimental New distract
+                            if (nodeTheClosestTo.distractTimes.Count == maxDist) {
+                                //Debug.Log ("maxDist");
+                                nodeVisiting.distractTimes.AddRange(nodeTheClosestTo.distractTimes);
+                                nodeVisiting.distractNums.AddRange(nodeTheClosestTo.distractNums);
+                            }
+                            else if (nodeTheClosestTo.distractTimes.Count > 0) {
+                                if (distractPick) {
+                                    //Debug.Log ("distractPick");
+                                    nodeVisiting.distractTimes.AddRange(nodeTheClosestTo.distractTimes);
+                                    nodeVisiting.distractNums.AddRange(nodeTheClosestTo.distractNums);
+                                    nodeVisiting.distractTimes.Add(nodeVisiting.t);
+                                    nodeVisiting.distractNums.Add(distractNum);
+                                }
+                                else {
+                                    //Debug.Log ("Non-distractPick");
+                                    nodeVisiting.distractTimes.AddRange(nodeTheClosestTo.distractTimes);
+                                    nodeVisiting.distractNums.AddRange(nodeTheClosestTo.distractNums);
+                                }
+                            }
+                            else if (distractPick) {
+                                nodeVisiting.distractTimes.Add(nodeVisiting.t);
+                                nodeVisiting.distractNums.Add(distractNum);
+                            }
+                        }
+                        if (!viableFound) {
+                            continue;
+                        }
+                    }
+                    //DO SAME THING AS ELSE BRANCH
+                    catch (System.ArgumentException e) {
+                        nodeTheClosestTo = (NodeGeo)tree.nearest(new double[] { rx, rt, ry });
+
+                        // cannot go back in time, so skip if t is decreasing
+                        if (nodeTheClosestTo.t > nodeVisiting.t) {
+                            continue;
+                        }
+
+
+
+                        // Only add if we are going in ANGLE degrees or higher.As there is a fixed max speed
+                        p1 = nodeVisiting.GetVector3();
+                        p2 = nodeTheClosestTo.GetVector3();
+                        pd = p1 - p2;
+                        if (Vector3.Angle(pd, new Vector3(pd.x, 0f, pd.z)) < angle) {
+                            continue;
+                        }
+
+                        //Experimental New distract
+                        if (nodeTheClosestTo.distractTimes.Count == maxDist) {
+                            //Debug.Log ("maxDist");
+                            nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
+                            nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
+                        }
+                        else if (nodeTheClosestTo.distractTimes.Count > 0) {
+                            if (distractPick) {
+                                //Debug.Log ("distractPick");
+                                nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
+                                nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
+                                nodeVisiting.distractTimes.Add(nodeVisiting.t);
+                                nodeVisiting.distractNums.Add(distractNum);
+                            }
+                            else {
+                                //Debug.Log ("Non-distractPick");
+                                nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
+                                nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
+                            }
+                        }
+                        else if (distractPick) {
+                            nodeVisiting.distractTimes.Add(nodeVisiting.t);
+                            nodeVisiting.distractNums.Add(distractNum);
+                        }
+                    }
+
+                }
+                else {
+                    nodeTheClosestTo = (NodeGeo)tree.nearest(new double[] { rx, rt, ry });
+
+                    // cannot go back in time, so skip if t is decreasing
+                    if (nodeTheClosestTo.t > nodeVisiting.t) {
+                        continue;
+                    }
+
+
+
+                    // Only add if we are going in ANGLE degrees or higher.As there is a fixed max speed
+                    p1 = nodeVisiting.GetVector3();
+                    p2 = nodeTheClosestTo.GetVector3();
+                    pd = p1 - p2;
+                    if (Vector3.Angle(pd, new Vector3(pd.x, 0f, pd.z)) < angle) {
+                        continue;
+                    }
+
+                    //Experimental New distract
+                    if (nodeTheClosestTo.distractTimes.Count == maxDist) {
+                        //Debug.Log ("maxDist");
+                        nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
+                        nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
+                    }
+                    else if (nodeTheClosestTo.distractTimes.Count > 0) {
+                        if (distractPick) {
+                            //Debug.Log ("distractPick");
+                            nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
+                            nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
+                            nodeVisiting.distractTimes.Add(nodeVisiting.t);
+                            nodeVisiting.distractNums.Add(distractNum);
+                        }
+                        else {
+                            //Debug.Log ("Non-distractPick");
+                            nodeVisiting.distractTimes = nodeTheClosestTo.distractTimes;
+                            nodeVisiting.distractNums = nodeTheClosestTo.distractNums;
+                        }
+                    }
+                    else if (distractPick) {
+                        nodeVisiting.distractTimes.Add(nodeVisiting.t);
+                        nodeVisiting.distractNums.Add(distractNum);
+                    }
+                }
+
+                //Debug.Log(nodeVisiting.ToString());
+                //Debug.Log(nodeTheClosestTo.ToString());
+
+                //Old Backup Distract
+                //if(nodeTheClosestTo.distractTime > 0){
+                //	nodeVisiting.distractTime = nodeTheClosestTo.distractTime;
+                //}
+                //else if(distractPick){
+                //	nodeVisiting.distractTime = nodeVisiting.t;
+                //}
+
+
+                //Check for collision with obstacles
+                if (checkCollObs(p2.x, p2.z, p1.x, p1.z)) {
+
+                    continue;
+                }
+
+                //Check for collision with guard line of sight -- OLD WAY
+                //if(checkCollEs(p2.x, p2.z, (int)p2.y, p1.x, p1.z, (int)p1.y, enemies, 1, depth, nodeVisiting.distractTime)){
+                //		continue;
+                //}
+
+                if (checkCollEs(p2.x, p2.z, (int)p2.y, p1.x, p1.z, (int)p1.y, enemies, 1, depth, nodeVisiting.distractTimes, nodeVisiting.distractNums)) {
+                    continue;
+                }
+
+
+
+
+                try {
+                    tree.insert(nodeVisiting.GetArray(), nodeVisiting);
+                }
+                catch (KeyDuplicateException) {
+                }
+
+                nodeVisiting.parent = nodeTheClosestTo;
+                nodeVisiting.visited = true;
+
+                curMaxX = Mathf.Max(Mathf.Min(nodeVisiting.x + rangeDist, maxX), curMaxX);
+                curMinX = Mathf.Min(Mathf.Max(nodeVisiting.x - rangeDist, minX), curMinX);
+                curMaxY = Mathf.Max(Mathf.Min(nodeVisiting.y + rangeDist, maxY), curMaxY);
+                curMinY = Mathf.Min(Mathf.Max(nodeVisiting.y - rangeDist, minY), curMinY);
+                curMaxT = Mathf.Max(Mathf.Min(nodeVisiting.t + rangeTime, maxT), curMaxT);
+                if (k >= 0) {
+                    if (!reachable[k].visited) {
+                        reachable[k].visited = true;
+                        triAdded = true;
+                    }
+                }
+
+
+                if (nodeVisiting.t < nodeVisiting.parent.t) {
+                    Debug.LogError("T-Failure Node Added");
+                }
+
+
+                // Attempt to connect to the end node
+                if (Random.Range(0, 1000) > 0) {
+                    p1 = nodeVisiting.GetVector3();
+                    p2 = end.GetVector3();
+                    p2.y = p1.y;
+                    float dist = Vector3.Distance(p1, p2);
+                    float t = dist * Mathf.Tan(angle * Mathf.Deg2Rad);
+                    pd = p2;
+                    pd.y += t;
+
+
+
+                    NodeGeo endNode = GetNodeGeo((int)pd.y, pd.x, pd.z);
+
+
+                    if (!checkCollObs(p1.x, p1.z, p2.x, p2.z) && !checkCollEs(p1.x, p1.z, (int)p1.y, pd.x, pd.z, (int)pd.y, enemies, 1, depth, nodeVisiting.distractTimes, nodeVisiting.distractNums)) {
+                        //Debug.Log ("Done3");
+                        endNode.parent = nodeVisiting;
+                        endNode.distractTimes = nodeVisiting.distractTimes;
+                        endNode.distractNums = nodeVisiting.distractNums;
+                        if (debugging) {
+                            DrawTree(start, minX, maxX, minY, maxY, maxT);
+                            DrawSamples();
+                        }
+                        return endNode;
+                    }
+                }
+
+                //Might be adding the neighboor as a the goal
+                if (Mathf.Approximately(nodeVisiting.x, end.x) & Mathf.Approximately(nodeVisiting.y, end.y)) {
+                    //Debug.Log ("Done2");
+                    if (debugging) {
+                        DrawTree(start, minX, maxX, minY, maxY, maxT);
+                        DrawSamples();
+                    }
+                    return nodeVisiting;
+
+                }
+            }
+
+            //End RRT algo
+
+            if (debugging) {
+                DrawTree(start, minX, maxX, minY, maxY, maxT);
+                DrawSamples();
+            }
+
+            return null;
+        }
+
+        public List<NodeGeo> ComputeGeoFromPartials(float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> tris) {
+            tree = new KDTree(3);
+            NodeGeo start = GetNodeGeo(0, startX, startY);
+            int startTriIndex = -1;
+            int endTriIndex = -1;
+
+            for (int i = 0; i < tris.Count; i++) {
+                Triangle tri = tris[i];
+                /*Line[] lins = tri.getLines();
+                float l1 = lins[0].Magnitude();
+                float l2 = lins[1].Magnitude();
+                float l3 = lins[2].Magnitude();
+                float s = 0.5f * (l1 + l2 + l3);
+                float area = Mathf.Sqrt(s * (s - l1) * (s - l2) * (s - l3));
+                tri.area = area;
+                areas.Add(area);
+                areaSum = areaSum + area;*/
+                if (tri.containsPoint(new Vector3(startX, 1, startY))) {
+                    if (startTriIndex >= 0) {
+                        Debug.Log("PROBLEMO 1");
+                    }
+                    tri.visited = true;
+                    startTriIndex = i;
+                }
+                if (tri.containsPoint(new Vector3(endX, 1, endY))) {
+                    endTriIndex = i;
+                }
+            }
+            tris[startTriIndex].visited = true;
+            Triangulation.computeDistanceTree(tris[startTriIndex]);
+            float distToEnd = tris[endTriIndex].distance;
+            GameObject bobo = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            bobo.transform.position = tris[endTriIndex].GetCenterTriangle();
+            bobo.name = "EndTri";
+
+
+            float halfDist = distToEnd / 2;
+            halfDist = halfDist - 5f;
+            Triangle halfway = tris[endTriIndex];
+            float distDiff = halfDist + 10f;
+            //Debug.Log(distToEnd);
+            if (distToEnd > triMaxRRTDist) {
+                foreach(Triangle t in tris) {
+                    if(Mathf.Abs(t.distance - halfDist) < distDiff) {
+                        halfway = t;
+                        distDiff = Mathf.Abs(t.distance - halfDist);
+                    }
+                }
+
+                //Debug.Log(distDiff);
+                //Debug.Log(halfway.distance);
+                GameObject bob = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                bob.transform.position = halfway.GetCenterTriangle();
+                bob.name = "HALFWAYPOINT";
+
+                float partEndX = halfway.GetCenterTriangle().x;
+                float partEndY = halfway.GetCenterTriangle().z;
+
+                NodeGeo partNode = ComputePartialGeo(start, partEndX, partEndY, minX, maxX, minY, maxY,0, maxT, attemps, speed, distractPos, distractPos2, tris, false);
+                if(partNode == null) {
+                    return new List<NodeGeo>();
+                }
+                Debug.Log("REACHED PARTWAY TO" + partNode);
+                NodeGeo endNode = ComputePartialGeo(partNode, endX, endY, minX, maxX, minY, maxY, partNode.t, maxT*2, attemps, speed, distractPos, distractPos2, tris, true);
+                return ReturnPathGeo(endNode, false);
+            }
+            else {
+                NodeGeo endNode = ComputePartialGeo(start, endX, endY, minX, maxX, minY, maxY,0, maxT, attemps, speed, distractPos, distractPos2, tris, false);
+                return ReturnPathGeo(endNode, false);
+            }
+        }
+
+        public List<NodeGeo> ComputeGeo (float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> tris,  bool smooth = false) {
 			//Debug.Log ("COMPUTEGEO");
 
 			// Initialization
@@ -127,7 +656,7 @@ namespace Exploration {
             if(startTriIndex < 0) {
                 Debug.Log("PROBLEMO 2");
             }
-            Triangulation.computeDistance(tris[startTriIndex]);
+            Triangulation.computeDistanceTree(tris[startTriIndex]);
             /*GameObject triDists = new GameObject("triDists");
             foreach(Triangle tri in tris) {
                 Debug.Log(tri.GetCenterTriangle());
@@ -157,7 +686,7 @@ namespace Exploration {
             //RRT algo
             for (int i = 0; i <= attemps; i++) {
                 if (triAdded) {
-                    Triangulation.computeDistance(tris[startTriIndex]);
+                    Triangulation.computeDistanceTree(tris[startTriIndex]);
                     reachable = new List<Triangle>();
                     foreach (Triangle tri in tris) {
                         if (tri.distance < triRangeDist) {
@@ -681,6 +1210,9 @@ namespace Exploration {
 
 		//Returns the computed geo path by the RRT
 		private List<NodeGeo> ReturnPathGeo(NodeGeo endNode, bool smooth) {
+            if(endNode == null) {
+                return new List<NodeGeo>();
+            }
 			NodeGeo n = endNode;
 			List<NodeGeo> points = new List<NodeGeo> ();
 			

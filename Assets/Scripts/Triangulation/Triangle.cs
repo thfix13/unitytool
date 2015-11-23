@@ -10,6 +10,10 @@ public class Triangle
     public bool visited = false;
     public float area = 0f;
     public float distance = float.MaxValue;
+    public bool changed = false;
+
+    public List<Triangle> treeKids = new List<Triangle>();
+    public int treeDepth = -1;
 
 	//Reference to points in Triangulation gameobject data holder
 	public int[] refPoints = new int[3]; 

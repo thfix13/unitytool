@@ -6,7 +6,7 @@ using Exploration;
 using Objects;
 
 // [Serializable]
-public class Geometry
+public class Geometry : IComparable<Geometry>
 {
 
     public bool debuggery = false;
@@ -17,6 +17,8 @@ public class Geometry
     public List<Geometry> voisins = new List<Geometry>();
     public List<Line> voisinsLine = new List<Line>();
     public bool visited = false;
+
+    private float bigThreshold = 0.001f;
 
     public void DrawGeometry(GameObject parent)
     {
@@ -143,6 +145,21 @@ public class Geometry
         }
         // Debug.Log(count);
         return count % 2 == 1;
+    }
+
+    public bool PointBelongsRough(Vector3 pt) {
+        bool sameFound = false;
+        foreach(Line l in edges) {
+            if((l.vertex[0] - pt).magnitude < bigThreshold) {
+                sameFound = true;
+                break;
+            }
+            else if((l.vertex[1] - pt).magnitude < bigThreshold) {
+                sameFound = true;
+                break;
+            }
+        }
+        return sameFound;
     }
 
     public List<Vector3> GetVertex()
@@ -888,6 +905,18 @@ public class Geometry
                 }
 			}
 		}
+        foreach(Vector3 v in this.GetVertex()) {
+            if (G2.PointInside(v)) {
+                return true;
+            }
+        }
+        foreach(Vector3 v in G2.GetVertex()) {
+            if (this.PointInside(v)) {
+                return true;
+            }
+        }
+
+
 		return false;
 	}
 	
@@ -907,6 +936,11 @@ public class Geometry
 			if( !PointInside( L.vertex[1] ) )
 				return false;
 		}
+        foreach(Vector3 v in this.GetVertex()) {
+            if (G2.PointInside(v)) {
+                return false;
+            }
+        }
 		return true;
 	}
 
@@ -1039,4 +1073,84 @@ public class Geometry
         return toReturn;
 
     }
+
+    public int CompareTo(Geometry other) {
+        List<Vector3> thisVerts = GetVertex();
+        List<Vector3> othVerts = other.GetVertex();
+        Vector2 dir = new Vector2(-1f, -1f);
+        dir.Normalize();
+
+        Vector2 tSum = Vector2.zero;
+
+        foreach (Vector3 v in thisVerts) {
+            Vector2 v2 = new Vector2(v.x, v.z);
+            tSum = tSum + v2;
+
+        }
+        tSum = tSum / thisVerts.Count;
+
+        Vector2 oSum = Vector2.zero;
+
+        foreach (Vector3 v in othVerts) {
+            Vector2 v2 = new Vector2(v.x, v.z);
+            oSum = oSum + v2;
+
+
+        }
+        oSum = oSum / othVerts.Count;
+
+        float magT = Vector2.Dot(tSum, dir);
+        float magO = Vector2.Dot(oSum, dir);
+
+
+
+
+
+
+
+        if (magT > magO) {
+            return -1;
+        }
+        else if (magT < magO) {
+            return 1;
+        }
+        else {
+            return 0;
+        }
+    }
+
+
+
+    //COMPARETO BY CORNER LOCATION
+    /*
+    public int CompareTo(Geometry other) {
+        List<Vector3> thisVerts = GetVertex();
+        List<Vector3> othVerts = other.GetVertex();
+        Vector2 dir = new Vector2(-1f, -1f);
+        dir.Normalize();
+
+
+        Vector2 t = new Vector2(float.MaxValue, float.MaxValue);
+        float magT = Vector2.Dot(t, dir);
+        float magO = magT;
+        foreach (Vector3 v in thisVerts) {
+            Vector2 v2 = new Vector2(v.x, v.z);
+            magT = Mathf.Max(Vector2.Dot(v2, dir), magT);
+        }
+
+        foreach (Vector3 v in othVerts) {
+            Vector2 v2 = new Vector2(v.x, v.z);
+            magO = Mathf.Max(Vector2.Dot(v2, dir), magO);
+        }
+        if (magT > magO) {
+            return -1;
+        }
+        else if(magT < magO) {
+            return 1;
+        }
+        else {
+            return 0;
+        }
+    }*/
+
 }

@@ -93,25 +93,34 @@ namespace EditorArea {
 
                 triangles.TriangulationSpace();
                 List<Triangle> tris = triangles.triangles;
-                float maxDistRM = 0;
+                Triangle startTri = null;
+                Vector3 startPoint = new Vector3(-45, 1, 45);
                 foreach(Triangle t in tris) {
-                    foreach(Triangle tt in t.voisins) {
-                        Vector3 midPoint = t.ShareEdged(tt).MidPoint();
-                        Line l1 = new Line(t.GetCenterTriangle(), midPoint);
-                        Line l2 = new Line(midPoint, tt.GetCenterTriangle());
-
-                        maxDistRM = Mathf.Max(l1.Magnitude() + l2.Magnitude(), maxDistRM);
+                    if (t.containsPoint(startPoint)) {
+                        startTri = t;
                     }
                 }
-                Debug.Log(maxDistRM);
 
-                /*
+                Triangulation.computeDistanceTree(startTri);
+                
                 GameObject trianglesDraw = new GameObject("Triangles");
+                GameObject visitedTris = new GameObject("VisitedTris");
                 int triIndI = 1;
                 string triIndS = triIndI.ToString();
 
                 foreach (Triangle tri in tris)
                 {
+                    //Debug.Log("NEW TRI");
+                    //Debug.Log(tri.GetCenterTriangle());
+                    //Debug.Log(tri.distance);
+                    if(tri.distance < float.MaxValue / 2) {
+                        GameObject triObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                        Vector3 pos = tri.GetCenterTriangle();
+                        pos.y = tri.distance;
+                        triObj.transform.position = pos;
+                        triObj.transform.parent = visitedTris.transform;
+                    }
+
                     GameObject triangle = new GameObject("triangle" + triIndS);
                     triIndI++;
                     triIndS = triIndI.ToString();
@@ -157,6 +166,8 @@ namespace EditorArea {
                 }
 
 
+
+                /*
                 List<float> areas = new List<float>();
                 float areaSum = 0;
                 for(int i =0; i < tris.Count; i++) {
@@ -214,6 +225,24 @@ namespace EditorArea {
 
             }
 
+            if (GUILayout.Button("Test Stuff2")) {
+                Debug.Log("Button PRessed");
+
+                triangles = GameObject.Find("Triangulation").GetComponent<Triangulation>();
+
+                triangles.TriangulationSpace();
+                List<Triangle> tris = triangles.triangles;
+                Triangle startTri = null;
+                Vector3 startPoint = new Vector3(-45, 1, 45);
+                //Vector3 startPoint = new Vector3(-20, 1, 20);
+                foreach (Triangle t in tris) {
+                    if (t.containsPoint(startPoint)) {
+                        startTri = t;
+                    }
+                }
+
+                Triangulation.genTreeStruct(startTri);
+                Triangulation.drawTreeStruct(startTri);
 
 
 
@@ -222,10 +251,23 @@ namespace EditorArea {
 
 
 
-			#region Pre-Init
-			
-			// Wait for the floor to be set and initialize the drawer and the mapper
-			if (floor != null) {
+
+                //Triangulation.computeDistanceTree(startTri);
+            }
+
+
+
+
+
+
+
+
+
+
+            #region Pre-Init
+
+            // Wait for the floor to be set and initialize the drawer and the mapper
+            if (floor != null) {
 				if (floor.GetComponent<Collider>() == null) {
 					Debug.LogWarning ("Floor has no valid collider, game object ignored.");
 					floor = null;
@@ -313,7 +355,7 @@ namespace EditorArea {
 			
 			start = (GameObject)EditorGUILayout.ObjectField ("Start", start, typeof(GameObject), true);
 			end = (GameObject)EditorGUILayout.ObjectField ("End", end, typeof(GameObject), true);
-			attemps = EditorGUILayout.IntSlider ("Attempts", attemps, 1000, 100000);
+			attemps = EditorGUILayout.IntSlider ("Attempts", attemps, 10, 100000);
 			attemps2 = EditorGUILayout.IntSlider ("Attempts2", attemps2, 1, 100);
 			iterations = EditorGUILayout.IntSlider ("Iterations", iterations, 1, 1500);
 			randomSeed = EditorGUILayout.IntSlider("Random Seed", randomSeed, -1, 10000);
@@ -768,6 +810,150 @@ namespace EditorArea {
 				
 			}
 			
+
+            if (GUILayout.Button ("Compute Path Multi-Part Geo")) {
+                if (enemygeoobjs == null) {
+                    enemygeoobjs = GameObject.FindGameObjectsWithTag("EnemyGeo");
+                    enemygeos = new List<EnemyGeo>();
+                    foreach (GameObject g in enemygeoobjs) {
+                        enemygeos.Add(g.GetComponent<EnemyGeo>());
+
+                    }
+
+                }
+                rrtgeo.enemies = enemygeos;
+
+
+                rrtgeo.casts = casts;
+                triangles = GameObject.Find("Triangulation").GetComponent<Triangulation>();
+
+                triangles.TriangulationSpace();
+                List<Triangle> tris = triangles.triangles;
+
+
+                float playerSpeed = GameObject.FindGameObjectWithTag("AI").GetComponent<Player>().speed;
+
+                //Check the start and the end and get them from the editor. 
+                if (start == null) {
+                    start = GameObject.Find("Start");
+                }
+                if (end == null) {
+                    end = GameObject.Find("End");
+                }
+
+                paths.Clear();
+
+                float startX = start.transform.position.x;
+                float startY = start.transform.position.z;
+                float endX = end.transform.position.x;
+                float endY = end.transform.position.z;
+
+                GameObject floora = GameObject.Find("Floor");
+
+                float minX = floora.GetComponent<Collider>().bounds.min.x;
+                float maxX = floora.GetComponent<Collider>().bounds.max.x;
+                float minY = floora.GetComponent<Collider>().bounds.min.z;
+                float maxY = floora.GetComponent<Collider>().bounds.max.z;
+
+
+
+
+                int seed = randomSeed;
+                if (randomSeed != -1)
+                    UnityEngine.Random.seed = randomSeed;
+                else {
+                    DateTime now = DateTime.Now;
+                    seed = now.Millisecond + now.Second + now.Minute + now.Hour + now.Day + now.Month + now.Year;
+                    UnityEngine.Random.seed = seed;
+                }
+
+                List<NodeGeo> nodes = null;
+
+                Vector3 distractPos = GameObject.Find("DistractPoint").transform.position;
+                Vector2 distractPos2 = new Vector2(distractPos.x, distractPos.z);
+
+                Vector3 distract2Pos = GameObject.Find("DistractPoint2").transform.position;
+                Vector2 distract2Pos2 = new Vector2(distract2Pos.x, distract2Pos.z);
+
+                for (int it = 0; it < iterations; it++) {
+
+                    for (int it2 = 0; it2 < attemps2; it2++) {
+
+
+                        // We have this try/catch block here to account for the issue that we don't solve when we find a path when t is near the limit
+                        try {
+
+                            //nodes= rrtgeo.ComputeGeo (startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, playerSpeed, distractPos2, distract2Pos2);
+                            nodes = rrtgeo.ComputeGeoFromPartials(startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, playerSpeed, distractPos2, distract2Pos2, tris);
+                            //nodes = rrt.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
+
+                            //Debug.Log (nodes.Count);
+                            if (nodes.Count <= 0) {
+                                Debug.Log("RRT Search Failed");
+                            }
+
+                            // Did we found a path?
+                            if (nodes.Count > 0) {
+                                pathsgeo.Add(new PathGeo(nodes));
+                                toggleStatusGeo.Add(pathsgeo.Last(), true);
+                                //Debug.Log ("Count1 is : " + toggleStatusGeo.Count);
+                                pathsgeo.Last().color = new Color(UnityEngine.Random.Range(0.0f, 1.0f), UnityEngine.Random.Range(0.0f, 1.0f), UnityEngine.Random.Range(0.0f, 1.0f));
+                                //paths.Add (new Path (nodes));
+                                //toggleStatus.Add (paths.Last (), true);
+                                //paths.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
+
+
+
+                                //Create path lines using the line objects 
+                                List<Line> path = new List<Line>();
+                                for (int i = 0; i < nodes.Count - 1; i++) {
+                                    path.Add(new Line(nodes[i].GetVector3Draw(), nodes[i + 1].GetVector3Draw()));
+                                }
+
+                                GameObject temp = GameObject.Find("temp");
+                                Color c = new Color(UnityEngine.Random.Range(0.0f, 1.0f),
+                                       UnityEngine.Random.Range(0.0f, 1.0f),
+                                       UnityEngine.Random.Range(0.0f, 1.0f));
+
+                                /*foreach(Line l in path)
+								{
+									l.DrawVector(temp,c);
+								}*/
+
+                                if (nodes.Count > 0) {
+                                    Debug.Log("Succeeded in " + it2 + " attempts");
+                                    break;
+                                }
+                            }
+
+
+
+
+                        }
+                        catch (Exception e) {
+                            Debug.LogWarning("Skip errored calculated path");
+                            Debug.LogException(e);
+                            // This can happen in two different cases:
+                            // In line 376 by having a duplicate node being picked (coincidence picking the EndNode as visiting but the check is later on)
+                            // We also cant just bring the check earlier since there's data to be copied (really really rare cases)
+                            // The other case is yet unkown, but it's a conicidence by trying to insert a node in the tree that already exists (really rare cases)
+                        }
+
+
+
+                    }
+                }
+
+                // Compute the summary about the paths and print it
+                String summary = "Summary:\n";
+                summary += "Seed used:" + seed;
+                summary += "\nSuccessful paths found: " + paths.Count;
+                summary += "\nDead paths: " + deaths.Count;
+
+
+                Debug.Log(summary);
+            }
+
 			EditorGUILayout.LabelField ("");
 
 
@@ -1472,6 +1658,32 @@ namespace EditorArea {
 			SceneView.RepaintAll ();
 
 			}
+
+
+        private void DebugDrawLineUsingObjects(GameObject parent, Vector3 l1, Vector3 l2) {
+            GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
+            lin.transform.parent = parent.transform;
+            lin.transform.position = (l1 + l2) / 2.0f;
+            lin.transform.position = new Vector3(lin.transform.position.x, 0.05f * lin.transform.position.y, lin.transform.position.z);
+            Vector3 dists = (l1 - l2);
+            dists.y = 0.05f * dists.y;
+
+            Vector3 from = Vector3.right;
+            Vector3 to = dists / dists.magnitude;
+
+            Vector3 axis = Vector3.Cross(from, to);
+            float angle = Mathf.Rad2Deg * Mathf.Acos(Vector3.Dot(from, to));
+            lin.transform.RotateAround(lin.transform.position, axis, angle);
+
+
+            Vector3 scale = Vector3.one;
+            scale.x = Vector3.Magnitude(dists);
+            scale.z = 0.2f;
+            scale.y = 0.2f;
+
+            lin.transform.localScale = scale;
+        }
 
 		private List<Line> returnUniqueLineSet(List<Line> lines){
 
