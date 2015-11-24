@@ -126,7 +126,7 @@ public partial class Visibility1 : MonoBehaviour {
 	bool bJustTestCrashNow = false;
 
 	float playerScaleForMyScene1 = 0.3f;
-	float playerScaleForTestCase1 = 0.5f;
+	float playerScaleForTestCase1 = 0.3f;
 	float playerScaleForMGS2 = 0.5f;
 	float playerScaleForChung = 0.5f;
 	float playerScaleForMyCrash = 0.3f;
@@ -183,6 +183,7 @@ public partial class Visibility1 : MonoBehaviour {
 		else if(currSceneName=="testCase1.unity")//USED
 		{
 			playerScaleForCurrent = playerScaleForTestCase1;
+			m_step = 0.06f;
 		}
 		else if(currSceneName=="MGS2.unity")//USED
 		{

@@ -1,4 +1,4 @@
-#define includeMultipleEnemies
+//#define includeMultipleEnemies
 
 using UnityEngine;
 using System.Collections;
@@ -190,7 +190,7 @@ public partial class Visibility1 : MonoBehaviour {
 	}
 	void Update () 
 	{
-		if(bDisplayAreas)
+		if(bDisplayAreas || bDebugNow)
 		{
 			return;
 		}
