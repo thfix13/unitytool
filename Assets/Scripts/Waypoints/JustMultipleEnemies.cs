@@ -190,7 +190,7 @@ public partial class Visibility1 : MonoBehaviour {
 	}
 	void Update () 
 	{
-		if(bDisplayAreas)
+		if(bDisplayAreas || bDebugNow)
 		{
 			return;
 		}
