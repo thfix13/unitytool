@@ -460,6 +460,7 @@ public partial class Visibility1 : MonoBehaviour {
 		}*/
 	}
 #else
+
 	void Update () 
 	{
 		if(bMultiplePaths)
@@ -473,12 +474,21 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			geo.DrawGeometry(allLineParent,matGreen);
 		}*/
+
 		if(bDebugNow)
 		{
-			mapBG.DrawGeometry(allLineParent,mat);
+			/*mapBG.DrawGeometry(allLineParent,mat);
 			foreach(Geometry geo in globalPolygon)
 			{
 				geo.DrawGeometry(allLineParent,matGreen);
+			}*/
+			if(bShowShadowEdges)
+			{
+				List<Geometry> shadowPolygonsTemp = (List<Geometry>)hTable [pathPoints [PointToDebug]];
+				foreach(Geometry geo in shadowPolygonsTemp)
+				{
+					geo.DrawGeometry(allLineParent,matGreen);
+				}
 			}
 			/*int howManySafe=0;
 			foreach(Vector3 key in h_mapPtToIndx.Keys)
@@ -674,7 +684,14 @@ public partial class Visibility1 : MonoBehaviour {
 			{
 				vt.DrawTriangle();
 			}
-			
+			if(bShowShadowEdges)
+			{
+				List<Geometry> shadowPolygonsTemp = (List<Geometry>)hTable [pathPoints [nextPlayerPath]];
+				foreach(Geometry geo in shadowPolygonsTemp)
+				{
+					geo.DrawGeometry(allLineParent,matGreen);
+				}
+			}
 			{
 				/*foreach(Line lineBG in mapBG.edges)
 					{

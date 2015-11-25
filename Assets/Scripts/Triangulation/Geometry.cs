@@ -43,7 +43,7 @@ public class Geometry
 			LineRenderer lineR = allLineParentChild.AddComponent<LineRenderer>();
 			//lineR.material = matGreen;
 
-			lineR.SetWidth(0.05f,0.05f);
+			lineR.SetWidth(0.1f,0.1f);
 			lineR.SetVertexCount(2);
 			//lineR.SetColors (c, c);
 

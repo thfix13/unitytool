@@ -134,8 +134,9 @@ public partial class Visibility1 : MonoBehaviour {
 	float playerScaleForCurrent;
 
 
-	int PointToDebug = 18;
+	int PointToDebug = 159;
 	public bool bDebugNow = false;
+	bool bShowShadowEdges = true;
 	void Start () 
 	{
 		//testFunc();
@@ -4414,6 +4415,8 @@ public partial class Visibility1 : MonoBehaviour {
 					vt.DrawTriangle();
 				}
 				hVisibleTrianglesTable.Add(pPoint,listTriangles);
+				List<Geometry> shadowPoly1 = FindShadowPolygons(pPoint,listTriangles);
+				hTable.Add(pPoint,shadowPoly1);
 				break;
 			}
 			hVisibleTrianglesTable.Add(pPoint,listTriangles);
@@ -4424,7 +4427,7 @@ public partial class Visibility1 : MonoBehaviour {
 			//Debug.Log("After remove duplicate = "+geoVisibleTemp.edges.Count);
 			hVisiblePolyTable.Add(pPoint,geoVisibleTemp);
 
-			List<Geometry> shadowPoly = FindShadowPolygons(geoVisibleTemp);
+			List<Geometry> shadowPoly = FindShadowPolygons(pPoint,listTriangles);//FindShadowPolygons(geoVisibleTemp);
 			hTable.Add(pPoint,shadowPoly);
 			arrangedPoints.Clear();
 			continue;
@@ -4601,7 +4604,7 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 	}
 	*/
-	private List<Geometry> FindShadowPolygons(Geometry starPoly)
+	private List<Geometry> FindShadowPolygons(Geometry starPoly,int Indx)
 	{
 		List<Vector3> verticesStar = new List<Vector3> ();
 		//foreach(Geometry gStar in starPoly)
@@ -4620,8 +4623,39 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 
 		List<Geometry> modObstacles = CreateModifiedObstacles(verticesStar);
-
 		Geometry mapModBoundary = CreateModifiedBoundary(verticesStar);
+		m_modBoundaryCount=mapModBoundary.edges.Count;
+		foreach(Geometry g1 in modObstacles)
+		{
+			m_modObstcleCount+=g1.edges.Count;
+		}
+
+
+
+		//Only Debug
+		/*bShowShadowEdges = false;
+		foreach(Geometry g1 in modObstacles)
+		{
+			g1.DrawGeometry(allLineParent,matGreen);
+			foreach(Line l1 in g1.edges)
+			{
+				showPosOfPointEnemySized(l1.vertex[0],Color.green);
+				showPosOfPointEnemySized(l1.vertex[1],Color.green);
+			}
+		}
+		mapModBoundary.DrawGeometry(allLineParent,matGreen);
+		foreach(Line l1 in mapModBoundary.edges)
+		{
+			showPosOfPointEnemySized(l1.vertex[0],Color.green);
+			showPosOfPointEnemySized(l1.vertex[1],Color.green);
+		}*/
+
+
+		List<VisibleTriangles> listVT = ((List<VisibleTriangles>)(hVisibleTrianglesTable[pathPoints[Indx]]));
+		//bool res9 = AnotherCheckIfVisible(pathPoints[Indx],pt1,listVT);
+
+
+
 		List<Geometry> allGeometries = new List<Geometry> ();
 		allGeometries.AddRange (modObstacles);
 		allGeometries.Add (mapModBoundary);
@@ -4632,13 +4666,14 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			foreach(Line l in geo.edges)
 			{
-				List<Vector3> pair = l.PointsOnEitherSide(0.02f);
+				List<Vector3> pair = l.PointsOnEitherSide(0.002f);
 				int ct_visible=0;
 				int ct_insideObstacle=0;
 				int ct_insideBoundary=0;
 				foreach(Vector3 pt in pair)
 				{
-					if(starPoly.PointInside(pt))
+					if(AnotherCheckIfVisible(pathPoints[Indx],pt,listVT))
+					//if(starPoly.PointInside(pt))
 					{
 						ct_visible++;
 					}
@@ -4725,11 +4760,12 @@ public partial class Visibility1 : MonoBehaviour {
 			shadowPoly.Add(shadow);
 		}
 		///////////////////////////////////
-		/*foreach(Line l in listEdges)
+
+		//shadowPoly = removeMisformedPolygons(shadowPoly);
+		foreach(Geometry g1 in shadowPoly)
 		{
-			Debug.Log(l);
-		}*/
-		shadowPoly = removeMisformedPolygons(shadowPoly);
+			m_ShadowPolygonCount+=g1.edges.Count;
+		}
 		return shadowPoly;
 	}
 

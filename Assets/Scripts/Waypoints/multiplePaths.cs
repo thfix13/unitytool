@@ -593,7 +593,7 @@ private void setUpMultiplePaths()
 				visiblePoly.edges.AddRange(geo.edges);
 			
 			hTableVisible.Add(pPoint,visiblePoly);
-			List<Geometry> shadowPoly = FindShadowPolygons(visiblePoly);
+			List<Geometry> shadowPoly = FindShadowPolygons(visiblePoly,pathPoints.IndexOf(pPoint));
 
 			arrangedPoints.Clear();
 			hTableShadow.Add(pPoint,shadowPoly);
