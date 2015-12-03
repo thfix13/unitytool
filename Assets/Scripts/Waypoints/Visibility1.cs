@@ -91,6 +91,7 @@ public partial class Visibility1 : MonoBehaviour {
 	Hashtable hTable;
 	Hashtable hVisiblePolyTable;
 	Hashtable hVisibleTrianglesTable;
+	Hashtable hVisibleNewPolygons;
 	Vector3 start_box,end_box;
 	Rect boundbox;
 	bool b_ShowBoundbox=false;
@@ -134,7 +135,7 @@ public partial class Visibility1 : MonoBehaviour {
 	float playerScaleForCurrent;
 
 
-	int PointToDebug = 159;
+	int PointToDebug = 8;
 	public bool bDebugNow = false;
 	bool bShowShadowEdges = true;
 	void Start () 
@@ -184,7 +185,7 @@ public partial class Visibility1 : MonoBehaviour {
 		else if(currSceneName=="testCase1.unity")//USED
 		{
 			playerScaleForCurrent = playerScaleForTestCase1;
-			m_step = 0.06f;
+			m_step = 0.08f;//0.06f;
 		}
 		else if(currSceneName=="MGS2.unity")//USED
 		{
@@ -699,7 +700,7 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		if (bDisplayAreas)
 		{
-			readTimings();
+			//readTimings();
 			displayTimingAreas();
 			return;
 		}
@@ -902,13 +903,36 @@ public partial class Visibility1 : MonoBehaviour {
 			validLine = true;
 
 		}
-		/*if((pt.x >=currEdge.vertex[0].x && pt.x <=currEdge.vertex[1].x) ||   (pt.x >=currEdge.vertex[1].x && pt.x <=currEdge.vertex[0].x) || (pt.x >=currEdge.vertex[1].z && pt.x <=currEdge.vertex[0].z) || (pt.x >=currEdge.vertex[0].z && pt.x <=currEdge.vertex[1].z))
+		/*if((pt.x >=currEdge.vertex[0].x && pt.x <=currEdge.vertex[1].x) ||   
+		   (pt.x >=currEdge.vertex[1].x && pt.x <=currEdge.vertex[0].x) || 
+		   (pt.z >=currEdge.vertex[1].z && pt.z <=currEdge.vertex[0].z) || 
+		   (pt.z >=currEdge.vertex[0].z && pt.z <=currEdge.vertex[1].z))
 		{
 			validLine = true;
 		}*/
+		/*if(currEdge.vertex[0].z == currEdge.vertex[1].z)
+		{
+			if((pt.x - currEdge.vertex[0].x)*(currEdge.vertex[1].x-pt.x)>0)
+			{
+				validLine = true;
+			}
+		}
+		else if(currEdge.vertex[0].x == currEdge.vertex[1].x)
+		{
+			if((pt.z - currEdge.vertex[0].z)*(currEdge.vertex[1].z-pt.z)>0)
+			{
+				validLine = true;
+			}
+		}
+		else if((pt.x - currEdge.vertex[0].x)*(currEdge.vertex[1].x-pt.x)>0 && (pt.z - currEdge.vertex[0].z)*(currEdge.vertex[1].z-pt.z)>0)
+		{
+			validLine = true;
+		}*/
+
 		//currEdge.DrawVector(allLineParent);
 		if(!validLine)
 		{
+			//return -1.0f;
 			if(Vector3.Distance(pt,currEdge.vertex[0])<Vector3.Distance(pt,currEdge.vertex[1]))
 			{
 				return Vector3.Distance(pt,currEdge.vertex[0]);
@@ -925,32 +949,361 @@ public partial class Visibility1 : MonoBehaviour {
 		minDist = minDist/Mathf.Sqrt(Mathf.Pow((y2-y1),2) + Mathf.Pow((x2-x1),2));
 		return minDist;
 	}
-	//UPDATE REQUIRED
+
+
+
+	private float distanceBwPtAndLine4(Vector3 pt,Line currEdge,List<Line> allShadowLines)
+	{
+		float radiusMax = 5000f;
+		float angleVar = 0f;
+		Vector3 vecSel = new Vector3 ();
+		vecSel.y = 1f;
+		Line shadowEdgeCurrent = currEdge;
+
+		angleVar = 0f;
+		float minProbableDist = 10000f;
+		while(angleVar<360)
+		{
+			vecSel.x = pt.x + radiusMax*Mathf.Cos(angleVar* Mathf.Deg2Rad);
+			vecSel.z = pt.z + radiusMax*Mathf.Sin(angleVar* Mathf.Deg2Rad);
+			Line l = new Line(pt,vecSel);
+			if(l.LineIntersectMuntacEndPt(shadowEdgeCurrent)!=0)
+			{
+				Vector3 intsctPoint = l.GetIntersectionPoint(shadowEdgeCurrent);
+				Line testLine = new Line(pt,intsctPoint);
+				//now check if testLine and any other shadow edge intersect; if not then valid edge and break;
+				bool bDidNotInteresct = true;
+				foreach(Line l2 in allShadowLines)
+				{
+					if(l2.Equals(shadowEdgeCurrent))
+						continue;
+					if(l2.LineIntersectMuntacEndPt(testLine)!=0)
+					{
+						bDidNotInteresct = false;
+						break;
+						//not valid
+					}
+					//Vector3 intsctPt = l2.GetIntersectionPoint(testLine);
+				}
+				//
+				if(bDidNotInteresct)
+				{
+					float probableDist = testLine.LengthOfLine();
+					if(minProbableDist>probableDist)
+					{
+						minProbableDist = probableDist;
+					}
+				}
+				//
+				
+			}
+			angleVar+=1f;
+		}
+		return minProbableDist;
+		
+	}
+
+
+	private float distanceBwPtAndLine3(Vector3 pt,Line currEdge)
+	{
+		bool validLine = false;
+		float y2 = currEdge.vertex[1].z;
+		float y1 = currEdge.vertex[0].z;
+		float x2 = currEdge.vertex[1].x;
+		float x1 = currEdge.vertex[0].x;
+		float x3 = pt.x;
+		float y3 = pt.z;
+		
+		float k = ((y2 - y1) * (x3 - x1) - (x2 - x1) * (y3 - y1)) / ((y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1));
+		float x4 = x3 - k * (y2-y1);
+		float y4 = y3 + k * (x2-x1);
+		Vector3 perpdicularPt = new Vector3 (x4, pt.y, y4);
+
+
+		//Commented out as testing just mid points of valid edge
+		if(!currEdge.PointOnLine(perpdicularPt))//
+		{
+			return Vector3.Distance(pt,currEdge.MidPoint());//should aim for a more central point
+		}
+		
+		
+		float minDist = Mathf.Abs((y2-y1)*pt.x - (x2-x1)*pt.z + x2*y1 - y2*x1);
+		minDist = minDist/Mathf.Sqrt(Mathf.Pow((y2-y1),2) + Mathf.Pow((x2-x1),2));
+		return minDist;
+	}
+
+	/// <summary>
+	/// </summary>
+	/// <returns>The without clamp.</returns>
+	/// <param name="A">A.</param>
+	/// <param name="B">B.</param>
+	/// <param name="t">T.</param>
+	private float distanceBwPtAndLine2(Vector3 pt,Line currEdge,List<Line> allShadowLines)
+	{
+		bool validLine = false;
+		float y2 = currEdge.vertex[1].z;
+		float y1 = currEdge.vertex[0].z;
+		float x2 = currEdge.vertex[1].x;
+		float x1 = currEdge.vertex[0].x;
+		float x3 = pt.x;
+		float y3 = pt.z;
+		
+		float k = ((y2 - y1) * (x3 - x1) - (x2 - x1) * (y3 - y1)) / ((y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1));
+		float x4 = x3 - k * (y2-y1);
+		float y4 = y3 + k * (x2-x1);
+		Vector3 perpdicularPt = new Vector3 (x4, pt.y, y4);
+		if(currEdge.PointOnLine(perpdicularPt))
+		{
+			validLine = true;	
+		}
+
+		if((x3>=x1 && x3<=x2) ||   
+		   (x3>=x2 && x3<=x1) || 
+		   (y3>=y2 && y3<=y1) || 
+		   (y3>=y1 && y3<=y2))
+		{
+			validLine = true;
+		}
+
+		if(!validLine)
+		{
+			return -1.0f;
+		}
+
+		//Another test. Do not cut another shadow edge.
+		Line testLine = new Line (pt, perpdicularPt);
+		foreach(Line l in allShadowLines)
+		{
+			if(l.Equals(currEdge))
+				continue;
+			if(l.LineIntersectMuntacEndPt(testLine)!=0)
+			{
+				validLine = false;
+				return -1.0f;
+			}
+			Vector3 intsctPt = l.GetIntersectionPoint(testLine);
+		}
+
+
+		//Commented out as testing just mid points of valid edge
+		if(!currEdge.PointOnLine(perpdicularPt))//
+		{
+			return Vector3.Distance(pt,currEdge.MidPoint());//should aim for a more central point
+			/*if(Vector3.Distance(pt,currEdge.vertex[0])<Vector3.Distance(pt,currEdge.vertex[1]))
+			{
+				return Vector3.Distance(pt,currEdge.vertex[0]);
+			}
+			else
+			{
+				return Vector3.Distance(pt,currEdge.vertex[1]);
+			}*/
+		}
+
+
+		float minDist = Mathf.Abs((y2-y1)*pt.x - (x2-x1)*pt.z + x2*y1 - y2*x1);
+		minDist = minDist/Mathf.Sqrt(Mathf.Pow((y2-y1),2) + Mathf.Pow((x2-x1),2));
+		return minDist;
+	}
+
+
+
+
+
+
+
+	Vector3 LerpWithoutClamp(Vector3 A, Vector3 B, float t)
+	{
+		return A + (B-A)*t;
+	}
+
+	Line findPositionFurthestToNearestEdge(Vector3 pt,List<Line> allShadowLines)
+	{
+		float perpendicularDist;
+		float radiusMax = 5000f;
+		float angleVar = 0f;
+		Vector3 vecSel = new Vector3 ();
+		vecSel.y = 1f;
+		Hashtable distanceLineTable = new Hashtable ();
+		foreach(Line shadowEdgeCurrent in allShadowLines)
+		{
+			angleVar = 0f;
+			float minProbableDist = 10000f;
+			while(angleVar<360)
+			{
+				vecSel.x = pt.x + radiusMax*Mathf.Cos(angleVar* Mathf.Deg2Rad);
+				vecSel.z = pt.z + radiusMax*Mathf.Sin(angleVar* Mathf.Deg2Rad);
+				Line l = new Line(pt,vecSel);
+				if(l.LineIntersectMuntacEndPt(shadowEdgeCurrent)!=0)
+				{
+					Vector3 intsctPoint = l.GetIntersectionPoint(shadowEdgeCurrent);
+					Line testLine = new Line(pt,intsctPoint);
+					//now check if testLine and any other shadow edge intersect; if not then valid edge and break;
+					bool bDidNotInteresct = true;
+					foreach(Line l2 in allShadowLines)
+					{
+						if(l2.Equals(shadowEdgeCurrent))
+							continue;
+						if(l2.LineIntersectMuntacEndPt(testLine)!=0)
+						{
+							bDidNotInteresct = false;
+							break;
+							//not valid
+						}
+						//Vector3 intsctPt = l2.GetIntersectionPoint(testLine);
+					}
+					//
+					if(bDidNotInteresct)
+					{
+						float probableDist = testLine.LengthOfLine();//distanceBwPtAndLine3(pt,shadowEdgeCurrent);
+						if(minProbableDist>probableDist)
+						{
+							minProbableDist = probableDist;
+							if(!distanceLineTable.ContainsKey(shadowEdgeCurrent))
+							{
+								distanceLineTable.Add(shadowEdgeCurrent,minProbableDist);
+							}
+							else
+							{
+								distanceLineTable[shadowEdgeCurrent] = minProbableDist;
+							}
+						}
+						//distanceLineTable.Add(shadowEdgeCurrent,probableDist);
+						//break;
+					}
+					//
+					
+				}
+				angleVar+=1f;
+			}
+		}
+		float minVal = 100000f;
+		Line selLine = null;
+		foreach(Line shadowEdgeKey in distanceLineTable.Keys)
+		{
+			float val = (float)distanceLineTable[shadowEdgeKey];
+			if(val<minVal)
+			{
+				minVal = val;
+				selLine = shadowEdgeKey;
+			}
+		}
+		return selLine;
+	}
+	/// <summary>
+	/// ///////////
+	/// </summary>
+	/// <returns>The position nearest to furthest edge.</returns>
+	/// <param name="pt">Point.</param>
+	/// <param name="allShadowLines">All shadow lines.</param>
+	Line findPositionNearestToFurthestEdge(Vector3 pt,List<Line> allShadowLines)
+	{
+		float perpendicularDist;
+		float radiusMax = 5000f;
+		float angleVar = 0f;
+		Vector3 vecSel = new Vector3 ();
+		vecSel.y = 1f;
+		Hashtable distanceLineTable = new Hashtable ();
+		foreach(Line shadowEdgeCurrent in allShadowLines)
+		{
+			angleVar = 0f;
+			float minProbableDist = 10000f;
+			while(angleVar<360)
+			{
+				vecSel.x = pt.x + radiusMax*Mathf.Cos(angleVar* Mathf.Deg2Rad);
+				vecSel.z = pt.z + radiusMax*Mathf.Sin(angleVar* Mathf.Deg2Rad);
+				Line l = new Line(pt,vecSel);
+				if(l.LineIntersectMuntacEndPt(shadowEdgeCurrent)!=0)
+				{
+					Vector3 intsctPoint = l.GetIntersectionPoint(shadowEdgeCurrent);
+					Line testLine = new Line(pt,intsctPoint);
+					//now check if testLine and any other shadow edge intersect; if not then valid edge and break;
+					bool bDidNotInteresct = true;
+					foreach(Line l2 in allShadowLines)
+					{
+						if(l2.Equals(shadowEdgeCurrent))
+							continue;
+						if(l2.LineIntersectMuntacEndPt(testLine)!=0)
+						{
+							bDidNotInteresct = false;
+							break;
+							//not valid
+						}
+						//Vector3 intsctPt = l2.GetIntersectionPoint(testLine);
+					}
+					//
+					if(bDidNotInteresct)
+					{
+						float probableDist = testLine.LengthOfLine();//distanceBwPtAndLine3(pt,shadowEdgeCurrent);
+						if(minProbableDist>probableDist)
+						{
+							minProbableDist = probableDist;
+							if(!distanceLineTable.ContainsKey(shadowEdgeCurrent))
+							{
+								distanceLineTable.Add(shadowEdgeCurrent,minProbableDist);
+							}
+							else
+							{
+								distanceLineTable[shadowEdgeCurrent] = minProbableDist;
+							}
+						}
+						//distanceLineTable.Add(shadowEdgeCurrent,probableDist);
+						//break;
+					}
+					//
+
+				}
+				angleVar+=1f;
+			}
+		}
+		float maxVal = -1000f;
+		Line selLine = null;
+		foreach(Line shadowEdgeKey in distanceLineTable.Keys)
+		{
+			float val = (float)distanceLineTable[shadowEdgeKey];
+			if(val>maxVal)
+			{
+				maxVal = val;
+				selLine = shadowEdgeKey;
+			}
+		}
+		return selLine;
+	}
+	/// <summary>
+	/// //////////////////////////////////////////////////////////////////
+	/// </summary>
+	/// <returns>The next position enemy shadow assisted old.</returns>
+	/// <param name="enemyObj">Enemy object.</param>
+	private static int nearestWeight = 3;
+	private static int furthestWeight = 1;
+	private static int nearestWeightCounter = nearestWeight;
+	private static int furthestWeightCounter = furthestWeight;
 	private Vector3 findNextPosEnemyShadowAssisted(GameObject enemyObj)
 	{
 		Vector3 vecSel = enemyObj.transform.position;
 		//float timePlayer = Vector3.Distance(pathPoints[nextPlayerPath],pathPoints[nextPlayerPath-1])/speedPlayer;
 		float timePlayer = distBtwPlayerMovements/speedPlayer;
-		float radiusMovement = speedEnemy*timePlayer;
+		float radiusMovement2 = speedEnemy*timePlayer;
 		int currPlayerPathPoint = nextPlayerPath-1;
 		if(!pointInShadow(vecSel,currPlayerPathPoint))
 		{
 			return enemyObj.transform.position;
 		}
-		Geometry currShadowPolygon = findCurrentShadowPolygon(vecSel,currPlayerPathPoint);
+		Geometry currShadowPolygon = null;
+		/*Geometry currShadowPolygon = findCurrentShadowPolygon(vecSel,currPlayerPathPoint);
 		if(currShadowPolygon==null)
 		{
+			Debug.Log("ERROR. Cannot find the current shadow polygon");
 			return enemyObj.transform.position;
-		}
+		}*/
 		List<Vector3> probablePointsInShadow = new List<Vector3> ();
 		int angleVar=0;
 		int angleVarStep=10;//1 or even
 		while(true)
 		{
 			vecSel = new Vector3();
-			vecSel.x = enemyObj.transform.position.x + radiusMovement*Mathf.Cos(angleVar* Mathf.Deg2Rad);
+			vecSel.x = enemyObj.transform.position.x + radiusMovement2*Mathf.Cos(angleVar* Mathf.Deg2Rad);
 			vecSel.y = enemyObj.transform.position.y;
-			vecSel.z = enemyObj.transform.position.z + radiusMovement*Mathf.Sin(angleVar* Mathf.Deg2Rad);
+			vecSel.z = enemyObj.transform.position.z + radiusMovement2*Mathf.Sin(angleVar* Mathf.Deg2Rad);
 			if(pointInShadow(vecSel,currPlayerPathPoint) && CheckStraightLineVisibility(vecSel,enemyObj.transform.position))
 			{
 				probablePointsInShadow.Add(vecSel);
@@ -961,12 +1314,247 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		if(probablePointsInShadow.Count==0)
 		{
+			Debug.Log("ERROR. probablePointsInShadow.Count==0");
 			return enemyObj.transform.position;
 		}
 		else if(probablePointsInShadow.Count==1)
 		{
 			return probablePointsInShadow[0];
 		}
+		//probablePointsInShadow.Add(enemyObj.transform.position);
+
+		//bool bNewAlgo = false;
+		//bool bGoToFurthestShadowEdge = false;
+		//bool bGoFromNearestShadowEdge = false;
+		//List of all vertices which are visible.
+		//List<Vector3> listAllVertices = new List<Vector3> ();
+		/*if(!bNewAlgo && !bGoToFurthestShadowEdge)
+		{
+
+			for(int i=0;i<currShadowPolygon.edges.Count;i++)
+			{
+				if(!listAllVertices.Contains(currShadowPolygon.edges[i].vertex[0]))
+				{
+					listAllVertices.Add(currShadowPolygon.edges[i].vertex[0]);
+				}
+				if(!listAllVertices.Contains(currShadowPolygon.edges[i].vertex[1]))
+				{
+					listAllVertices.Add(currShadowPolygon.edges[i].vertex[1]);
+				}
+				if(!listAllVertices.Contains(currShadowPolygon.edges[i].MidPoint()))
+				{
+					listAllVertices.Add(currShadowPolygon.edges[i].MidPoint());
+				}
+			}
+		}*/
+		/////////////////////////////////////////////////////////
+		if(true)
+		{
+
+			List<float> vals1 = new List<float>();
+			List<float> vals2 = new List<float>();
+			List<float> vals3 = new List<float>();
+			List<float> vals4 = new List<float>();
+
+			List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [currPlayerPathPoint]];
+			List<Line> allShadowLines = new List<Line>();
+			foreach(Geometry shadowCurr in shadowPolyTemp)
+			{
+				allShadowLines.AddRange(shadowCurr.edges);
+			}
+			Vector3 selectedPt = new Vector3();
+			//float minPerpendicularDist = 100000f;
+			Line furthestEdge = findPositionNearestToFurthestEdge(enemyObj.transform.position,allShadowLines);
+			
+			//
+			float minFurthestDistance = 0f;//distanceBwPtAndLine4(probablePointsInShadow[0],furthestEdge,allShadowLines);
+			//selectedPt = probablePointsInShadow[0];
+			for(int probPts=0;probPts<probablePointsInShadow.Count;probPts++)
+			{
+				float furthestDistance = distanceBwPtAndLine4(probablePointsInShadow[probPts],furthestEdge,allShadowLines);
+				vals1.Add(furthestDistance);
+			}
+			float vals1Temp = vals1[0];
+			for(int i=1;i<vals1.Count;i++)
+			{
+				if(vals1Temp<vals1[i])
+				{
+					vals1Temp = vals1[i];
+				}
+			}
+			for(int i=0;i<vals1.Count;i++)
+			{
+				vals1[i]=Mathf.Abs(vals1[i]-vals1Temp);
+			}
+
+
+
+
+
+			Line nearestEdge = findPositionFurthestToNearestEdge(enemyObj.transform.position,allShadowLines);
+			
+			//
+			float maxNearestDistance = 0f;//distanceBwPtAndLine4(probablePointsInShadow[0],nearestEdge,allShadowLines);
+			//selectedPt = probablePointsInShadow[0];
+			for(int probPts=0;probPts<probablePointsInShadow.Count;probPts++)
+			{
+				float nearestDistance = distanceBwPtAndLine4(probablePointsInShadow[probPts],nearestEdge,allShadowLines);
+				vals2.Add(nearestDistance);
+			}
+
+			///////////////////////////////
+			Vector3 nearestVertex = findNearestVertex(enemyObj.transform.position,allShadowLines);
+			maxNearestDistance = 0f;//distanceBwPtAndLine4(probablePointsInShadow[0],nearestEdge,allShadowLines);
+			//selectedPt = probablePointsInShadow[0];
+			for(int probPts=0;probPts<probablePointsInShadow.Count;probPts++)
+			{
+				float nearestDistance = Vector3.Distance(nearestVertex,probablePointsInShadow[probPts]);
+				vals4.Add(nearestDistance);
+			}
+			//////////////////////////////
+
+
+			for(int i=0;i<vals1.Count;i++)
+			{
+				vals3.Add (vals1[i]+vals2[i]+vals4[i]*0.2f);
+			}
+
+			//largest value
+			float maxValTemp = vals3[0];
+			int maxIndexTemp = 0;
+			for(int i=1;i<vals3.Count;i++)
+			{
+				if(maxValTemp<vals3[i])
+				{
+					maxValTemp = vals3[i];
+					maxIndexTemp = i;
+				}
+			}
+
+			return probablePointsInShadow[maxIndexTemp];
+		}
+		/// /////////////////////////////////////////////////////
+		//
+		/*if(nearestWeightCounter>0)
+		{
+			bGoFromNearestShadowEdge = true;
+			nearestWeightCounter--;
+		}
+		else if(furthestWeightCounter>0)
+		{
+			bGoToFurthestShadowEdge = true;
+			furthestWeightCounter--;
+		}
+		if(furthestWeightCounter==0 && nearestWeightCounter==0)
+		{
+			furthestWeightCounter = furthestWeight;
+			nearestWeightCounter = nearestWeight;
+		}
+		//
+		if(bGoToFurthestShadowEdge)
+		{
+			List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [currPlayerPathPoint]];
+			List<Line> allShadowLines = new List<Line>();
+			foreach(Geometry shadowCurr in shadowPolyTemp)
+			{
+				allShadowLines.AddRange(shadowCurr.edges);
+			}
+			Vector3 selectedPt = new Vector3();
+			//float minPerpendicularDist = 100000f;
+			Line furthestEdge = findPositionNearestToFurthestEdge(enemyObj.transform.position,allShadowLines);
+
+			//
+			float minFurthestDistance = distanceBwPtAndLine4(probablePointsInShadow[0],furthestEdge,allShadowLines);
+			selectedPt = probablePointsInShadow[0];
+			for(int probPts=1;probPts<probablePointsInShadow.Count;probPts++)
+			{
+				float furthestDistance = distanceBwPtAndLine4(probablePointsInShadow[probPts],furthestEdge,allShadowLines);
+				if(minFurthestDistance>furthestDistance)
+				{
+					minFurthestDistance = furthestDistance;
+					selectedPt = probablePointsInShadow[probPts];
+				}
+			}
+
+			return selectedPt;
+		}
+		else if(bGoFromNearestShadowEdge)
+		{
+			List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [currPlayerPathPoint]];
+			List<Line> allShadowLines = new List<Line>();
+			foreach(Geometry shadowCurr in shadowPolyTemp)
+			{
+				allShadowLines.AddRange(shadowCurr.edges);
+			}
+			Vector3 selectedPt = new Vector3();
+			//float minPerpendicularDist = 100000f;
+			Line nearestEdge = findPositionFurthestToNearestEdge(enemyObj.transform.position,allShadowLines);
+			
+			//
+			float maxNearestDistance = distanceBwPtAndLine4(probablePointsInShadow[0],nearestEdge,allShadowLines);
+			selectedPt = probablePointsInShadow[0];
+			for(int probPts=1;probPts<probablePointsInShadow.Count;probPts++)
+			{
+				float nearestDistance = distanceBwPtAndLine4(probablePointsInShadow[probPts],nearestEdge,allShadowLines);
+				if(maxNearestDistance<nearestDistance)
+				{
+					maxNearestDistance = nearestDistance;
+					selectedPt = probablePointsInShadow[probPts];
+				}
+			}
+			return selectedPt;
+		}
+		//
+		if(bNewAlgo)
+		{
+			List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [currPlayerPathPoint]];
+			List<Line> allShadowLines = new List<Line>();
+			foreach(Geometry shadowCurr in shadowPolyTemp)
+			{
+				allShadowLines.AddRange(shadowCurr.edges);
+			}
+			Vector3 selectedPt = new Vector3();
+			float minDiffDist = 100000.0f;
+			foreach(Vector3 pt in probablePointsInShadow)
+			{
+				List<float> perpendicularDistList = new List<float>();
+				for(int i=0;i<allShadowLines.Count;i++)
+				{
+					float perpendicularDist = distanceBwPtAndLine2(pt,allShadowLines[i],allShadowLines);
+					if(perpendicularDist>=0f)
+					{
+						perpendicularDistList.Add(perpendicularDist);
+					}
+				}
+
+				float numenator = 0f;
+				foreach(float f in perpendicularDistList)
+				{
+					numenator+=f;
+				}
+				float meanDistance = numenator/perpendicularDistList.Count;
+				float diffDist = 0.0f;
+				foreach(float f in perpendicularDistList)
+				{
+					diffDist+=Mathf.Abs(f-meanDistance);
+				}
+				diffDist = diffDist/perpendicularDistList.Count;
+				if(minDiffDist>diffDist)
+				{
+					minDiffDist = diffDist;
+					selectedPt = pt;
+				}
+
+			}
+			return selectedPt;
+		}
+
+
+
+
+
+
+		///////////Old Code/////////
 		float overallMaxDist = -1.0f;
 		int overallMaxDistIndex = -1;
 		//Min distance from edges of shadow polygon
@@ -990,6 +1578,23 @@ public partial class Visibility1 : MonoBehaviour {
 					minDist = dist;
 				}
 			}
+			//
+			if(!bNewAlgo)
+			{
+				//Also get away from all the vertices
+				for(int i=0;i<listAllVertices.Count;i++)
+				{
+					float dist = Vector3.Distance(pt,listAllVertices[0]);
+
+					if(dist<minDist)
+					{
+						minDist = dist;
+					}
+				}
+			}
+			//
+
+
 			if(minDist>overallMaxDist)
 			{
 				overallMaxDist = minDist;
@@ -997,8 +1602,46 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 			probablePointsMinDist.Add(minDist);
 		}
-		return probablePointsInShadow[overallMaxDistIndex];
+		return probablePointsInShadow[overallMaxDistIndex];*/
 	}
+
+
+
+
+
+	private Vector3 findNearestVertex(Vector3 pt,List<Line> allShadowLines)
+	{
+		List<Vector3> listAllVertices = new List<Vector3> ();
+		for(int i=0;i<allShadowLines.Count;i++)
+		{
+			if(!listAllVertices.Contains(allShadowLines[i].vertex[0]))
+			{
+				listAllVertices.Add(allShadowLines[i].vertex[0]);
+			}
+			if(!listAllVertices.Contains(allShadowLines[i].vertex[1]))
+			{
+				listAllVertices.Add(allShadowLines[i].vertex[1]);
+			}
+		}
+		float minDist = Vector3.Distance (pt, listAllVertices [0]);
+		Vector3 selVertex = listAllVertices [0];
+		for(int i=1;i<listAllVertices.Count;i++)
+		{
+			float dist = Vector3.Distance (pt, listAllVertices [i]);
+			if(dist<minDist)
+			{
+				minDist = dist;
+				selVertex = listAllVertices [i];
+			}
+		}
+		return selVertex;
+	}
+
+
+
+
+
+
 	//UPDATE REQUIRED
 	//Nearest safepoint. Least movement.
 	private Vector3 findNextPosEnemyGreedy(GameObject enemyObj)
@@ -2485,9 +3128,9 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			scalingTemp = 0.6f;
 		}
-		else
+		else if(currSceneName=="testCase1.unity")
 		{
-			scalingTemp = 0.36f;
+			scalingTemp = 0.65f;
 		}
 
 		lscale.x*=playerScaleForCurrent*scalingTemp;
@@ -3941,6 +4584,7 @@ public partial class Visibility1 : MonoBehaviour {
 		hTable = new Hashtable ();
 		hVisiblePolyTable = new Hashtable ();
 		hVisibleTrianglesTable = new Hashtable ();
+		hVisibleNewPolygons = new Hashtable ();
 		VisibleTriangles.matTriangle = matGreen;
 		VisibleTriangles.allChildParent = allLineParent;
 		VisibleTriangles.enemyPrefab = enemyPrefab;
@@ -4226,6 +4870,7 @@ public partial class Visibility1 : MonoBehaviour {
 
 			//New Elimination:
 			Geometry geoVisibleTemp = new Geometry();
+			Geometry geoVisibleNew = new Geometry();
 			List<VisibleTriangles> listTriangles = new List<VisibleTriangles>();
 			int savedSecondIndx=-1;
 			for(int i=0;i<=intersectionPointsPerV.Count;i++)
@@ -4235,7 +4880,7 @@ public partial class Visibility1 : MonoBehaviour {
 				int nextIndex = (i+1)%intersectionPointsPerV.Count;
 				bool bTriangleAdded = false;
 
-				if(pPoint==pathPoints[PointToDebug] && bDebugNow)
+				if(bDebugNow && pPoint==pathPoints[PointToDebug])
 				{
 					for(int j=0;j<intersectionPointsPerV[currIndx].Count;j++)
 					{
@@ -4300,6 +4945,7 @@ public partial class Visibility1 : MonoBehaviour {
 					listTriangles.Add(vt);
 					bTriangleAdded = true;
 					geoVisibleTemp.edges.Add(new Line(intersectionPointsPerV[currIndx][0],intersectionPointsPerV[nextIndex][0]));
+					geoVisibleNew.edges.Add(new Line(intersectionPointsPerV[currIndx][0],intersectionPointsPerV[nextIndex][0]));
 					continue;
 				}
 
@@ -4343,12 +4989,14 @@ public partial class Visibility1 : MonoBehaviour {
 					vt.pt3 = intersectionPointsPerV[nextIndex][secondIndx];
 					listTriangles.Add(vt);
 					bTriangleAdded = true;
+					geoVisibleNew.edges.Add(new Line(intersectionPointsPerV[currIndx][firstIndx],intersectionPointsPerV[nextIndex][secondIndx]));
 				}
 				if(firstIndx>=0 && savedSecondIndx>=0)
 				{
 					//Debug.Log("firstIndx = "+firstIndx);
 					//Debug.Log("savedSecondIndx = "+savedSecondIndx);
 					geoVisibleTemp.edges.Add(new Line(intersectionPointsPerV[currIndx][firstIndx],intersectionPointsPerV[currIndx][savedSecondIndx]));
+					geoVisibleNew.edges.Add(new Line(intersectionPointsPerV[currIndx][firstIndx],intersectionPointsPerV[currIndx][savedSecondIndx]));
 				}
 				else
 				{
@@ -4407,7 +5055,7 @@ public partial class Visibility1 : MonoBehaviour {
 					}
 				}
 			}
-			if(pPoint==pathPoints[PointToDebug] && bDebugNow)
+			if(bDebugNow && pPoint==pathPoints[PointToDebug])
 			{
 				showPosOfPoint(new Vector3(pPoint.x,2.0f,pPoint.z),Color.yellow);
 				foreach(VisibleTriangles vt in listTriangles)
@@ -4415,11 +5063,14 @@ public partial class Visibility1 : MonoBehaviour {
 					vt.DrawTriangle();
 				}
 				hVisibleTrianglesTable.Add(pPoint,listTriangles);
+				hVisibleNewPolygons.Add(pPoint,geoVisibleNew);
 				List<Geometry> shadowPoly1 = FindShadowPolygons(pPoint,listTriangles);
 				hTable.Add(pPoint,shadowPoly1);
+
 				break;
 			}
 			hVisibleTrianglesTable.Add(pPoint,listTriangles);
+			hVisibleNewPolygons.Add(pPoint,geoVisibleNew);
 			//Debug.Log("Before remove duplicate = "+geoVisibleTemp.edges.Count);
 			geoVisibleTemp.removeDuplicateEdges();
 

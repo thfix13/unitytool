@@ -1385,14 +1385,27 @@ public partial class Visibility1 : MonoBehaviour
 		//
 		if(bLongestPath)
 		{
-			for(int i=0;i<lenArrayOptimal;i++)
+			int skipPts = 4;
+			int totalPlaced = 1;
+			for(int i=0;i<lenArrayOptimal;i+=skipPts)
 			{
-				GameObject gbOptimalPt = Instantiate (enemyPrefab) as GameObject;
+				/*GameObject gbOptimalPt = Instantiate (enemyPrefab) as GameObject;
 				gbOptimalPt = scaleCharacter(gbOptimalPt);
 				gbOptimalPt.transform.position = OptimalPathArrayLongestPath[i].getPos ();
 				//Debug.Log("Path safety level = "+OptimalPathArray[i].getSafetyLevel());
-				displayPathList.Add (gbOptimalPt);
+				displayPathList.Add (gbOptimalPt);*/
+
+				GameObject go1 = placeNumberedGameObject(OptimalPathArrayLongestPath[i].getPos (),totalPlaced,true);
+				GameObject go3 = placeNumberedGameObject(pathPoints[i],totalPlaced,false);
+				displayPathList.Add (go1);
+				displayPathList.Add (go3);
+				totalPlaced++;
 			}
+			GameObject go2 = placeNumberedGameObject(OptimalPathArrayLongestPath[lenArrayOptimal-1].getPos (),totalPlaced,true);
+			GameObject go4 = placeNumberedGameObject(pathPoints[lenArrayOptimal-1],totalPlaced,false);
+			displayPathList.Add (go2);
+			displayPathList.Add (go4);
+			totalPlaced++;
 		}
 		else if(bAllPaths)
 		{
@@ -1409,7 +1422,55 @@ public partial class Visibility1 : MonoBehaviour
 			}
 		}
 	}
+	GameObject placeNumberedGameObject(Vector3 Pos,int totalPlaced,bool bEnemy)
+	{
+		GameObject gbOptimalPt;
+		if(bEnemy)
+		{
+			gbOptimalPt = Instantiate (enemyPrefab) as GameObject;
+		}
+		else
+		{
+			gbOptimalPt = Instantiate (playerPrefab) as GameObject;
+		}
+		//gbOptimalPt = scaleCharacter(gbOptimalPt);
+		gbOptimalPt.transform.position = Pos;
 
+
+
+		
+
+
+		GameObject textObject1 = new GameObject("Text");
+		displayPathList.Add (textObject1);
+		TextMesh text1 = textObject1.AddComponent<TextMesh>();
+		
+		text1.transform.Rotate(new Vector3(90.0f,0.0f,0.0f));
+		text1.transform.position = Pos;
+		text1.color = Color.white;
+		text1.fontSize = 52;
+		text1.anchor = TextAnchor.MiddleCenter;
+		text1.alignment = TextAlignment.Center;
+		//text1.fontStyle = FontStyle.Bold;
+		
+		float scalingTemp = 0.04f;
+		Vector3 lscale= text1.transform.localScale;
+		lscale.x*=scalingTemp;
+		lscale.y*=scalingTemp;
+		lscale.z*=scalingTemp;
+		Renderer rend = text1.GetComponent<Renderer>();
+		rend.transform.localScale = lscale;
+		
+		text1.text = "" + totalPlaced + "";
+
+
+
+
+
+
+
+		return gbOptimalPt;
+	}
 	
 
 	private void calculatePredictedPaths()

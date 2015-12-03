@@ -22,6 +22,7 @@ public partial class Visibility1 : MonoBehaviour
 		//Creating visible Polygon from triangles
 		for(int currIndx=0;currIndx<listTriangles.Count;currIndx++)
 		{
+			bool bAdded = false;
 			visiblePoly.edges.Add(new Line(listTriangles[currIndx].pt2,listTriangles[currIndx].pt3));
 
 			int nextIndx = (currIndx+1)%listTriangles.Count;
@@ -47,28 +48,63 @@ public partial class Visibility1 : MonoBehaviour
 			{
 				visiblePoly.edges.Add(new Line(listTriangles[currIndx].pt2,listTriangles[nextIndx].pt2));
 				m_CommonLinesCount++;
+				bAdded = true;
 			}
 			else if((m1==null && m4==null) || (m1.HasValue && m4.HasValue && slopeCompare(m1.Value,m4.Value)))
 			{
 				visiblePoly.edges.Add(new Line(listTriangles[currIndx].pt2,listTriangles[nextIndx].pt3));
 				m_CommonLinesCount++;
+				bAdded = true;
 			}
 			else if((m2==null && m3==null) || (m2.HasValue && m3.HasValue && slopeCompare(m2.Value,m3.Value)))
 			{
 				visiblePoly.edges.Add(new Line(listTriangles[currIndx].pt3,listTriangles[nextIndx].pt2));
 				m_CommonLinesCount++;
+				bAdded = true;
 			}
 			else if((m2==null && m4==null) || (m2.HasValue && m4.HasValue && slopeCompare(m2.Value,m4.Value)))
 			{
 				visiblePoly.edges.Add(new Line(listTriangles[currIndx].pt3,listTriangles[nextIndx].pt3));
 				m_CommonLinesCount++;
+				bAdded = true;
+			}
+			if(!bAdded)
+			{
+				//float minDistTemp = 10000f;
+				float dist1 = Vector3.Distance(listTriangles[currIndx].pt2,listTriangles[nextIndx].pt2);
+				float dist2 = Vector3.Distance(listTriangles[currIndx].pt2,listTriangles[nextIndx].pt3);
+				float dist3 = Vector3.Distance(listTriangles[currIndx].pt3,listTriangles[nextIndx].pt2);
+				float dist4 = Vector3.Distance(listTriangles[currIndx].pt3,listTriangles[nextIndx].pt3);
+				if(dist1<dist2 && dist1<dist3 && dist1<dist4)
+				{
+					visiblePoly.edges.Add(new Line(listTriangles[currIndx].pt2,listTriangles[nextIndx].pt2));
+				}
+				else if(dist2<dist1 && dist2<dist3 && dist2<dist4)
+				{
+					visiblePoly.edges.Add(new Line(listTriangles[currIndx].pt2,listTriangles[nextIndx].pt3));
+				}
+				else if(dist3<dist1 && dist3<dist2 && dist3<dist4)
+				{
+					visiblePoly.edges.Add(new Line(listTriangles[currIndx].pt3,listTriangles[nextIndx].pt2));
+				}
+				else if(dist4<dist1 && dist4<dist3 && dist4<dist2)
+				{
+					visiblePoly.edges.Add(new Line(listTriangles[currIndx].pt3,listTriangles[nextIndx].pt3));
+				}
 			}
 		}
-		//
-		//List<Geometry> tempListGeo = new List<Geometry> ();
-		//tempListGeo.Add (visiblePoly);
-		//return tempListGeo;
+		//Debug only
+		if(false)
+		{
+			List<Geometry> tempListGeo = new List<Geometry> ();
+			//Geometry visiblePolyNew1 = (Geometry)hVisibleNewPolygons[pPoint];
+			tempListGeo.Add (visiblePoly);
+			//tempListGeo.Add (visiblePolyNew1);
+			return tempListGeo;
+		}
+		//Geometry visiblePolyNew = (Geometry)hVisibleNewPolygons[pPoint];
 		List<Geometry> shadowListFinal = FindShadowPolygons(visiblePoly,pathPoints.IndexOf(pPoint));
+		//List<Geometry> shadowListFinal = FindShadowPolygons(visiblePolyNew,pathPoints.IndexOf(pPoint));
 
 		//Debug
 		m_VisibleTriangleCount=listTriangles.Count-1;//-1 because do not know why yet?

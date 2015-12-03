@@ -1,6 +1,7 @@
-//#define includeMultipleEnemies
+#define includeMultipleEnemies
 
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System.IO;
 using System.Collections.Generic;
@@ -30,6 +31,7 @@ public partial class Visibility1 : MonoBehaviour {
 				//showPosOfPoint((Vector3)h_mapIndxToPt[new Vector2(i,j)],new Color(R,G,B));
 				//showPosOfPointRectangle((Vector3)h_mapIndxToPt[new Vector2(i,j)],Color.Lerp(Color.white,Color.grey,greenNum));
 				showPosOfPointRectangle((Vector3)h_mapIndxToPt[new Vector2(i,j)],Color.Lerp(Color.white,Color.green,greenNum));
+				//showPosOfPointRectangle((Vector3)h_mapIndxToPt[new Vector2(i,j)],new Color(R,G,B));
 			}
 		}
 	}
@@ -190,7 +192,19 @@ public partial class Visibility1 : MonoBehaviour {
 	}
 	void Update () 
 	{
-		if(bDisplayAreas || bDebugNow)
+		if(bDebugNow)
+		{
+			if(bShowShadowEdges)
+			{
+				List<Geometry> shadowPolygonsTemp = (List<Geometry>)hTable [pathPoints [PointToDebug]];
+				foreach(Geometry geo in shadowPolygonsTemp)
+				{
+					geo.DrawGeometry(allLineParent,matGreen);
+				}
+			}
+			return;
+		}
+		if(bDisplayAreas)
 		{
 			return;
 		}
@@ -258,7 +272,7 @@ public partial class Visibility1 : MonoBehaviour {
 				GameObject.Destroy(child.gameObject);
 			}
 			//Debug.Log("For visibility polygon for "+nextPlayerPath+" , edges.count = "+((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges.Count);
-			foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges)
+			/*foreach(Line l in ((Geometry)hVisiblePolyTable[pathPoints[nextPlayerPath]]).edges)
 			{
 				GameObject allLineParentChild = new GameObject();
 				LineRenderer lineR = allLineParentChild.AddComponent<LineRenderer>();
@@ -270,6 +284,20 @@ public partial class Visibility1 : MonoBehaviour {
 				allLineParentChild.transform.parent = allLineParent.transform;
 				
 				//l.DrawVector(allLineParent);
+			}*/
+
+			List<VisibleTriangles> listTriangles = (List<VisibleTriangles>)hVisibleTrianglesTable[pathPoints[nextPlayerPath]];
+			foreach(VisibleTriangles vt in listTriangles)
+			{
+				vt.DrawTriangle();
+			}
+			if(bShowShadowEdges)
+			{
+				List<Geometry> shadowPolygonsTemp = (List<Geometry>)hTable [pathPoints [nextPlayerPath]];
+				foreach(Geometry geo in shadowPolygonsTemp)
+				{
+					geo.DrawGeometry(allLineParent,matGreen);
+				}
 			}
 			
 			/*List<Geometry> shadowPolygonsTemp = (List<Geometry>)hTable [pathPoints [nextPlayerPath]];
@@ -347,11 +375,11 @@ public partial class Visibility1 : MonoBehaviour {
 					continue;
 					//return;
 				}
-				Renderer rend = shadowAssistedObj.enemyObj.GetComponent<Renderer>();
-				rend.material.shader = Shader.Find("Specular");
-				rend.material.SetColor("_SpecColor", Color.white);
-				shadowAssistedObj.bCaught=true;
-				Debug.Log("Shadow Assisted Caught");
+				//Renderer rend = shadowAssistedObj.enemyObj.GetComponent<Renderer>();
+				//rend.material.shader = Shader.Find("Specular");
+				//rend.material.SetColor("_SpecColor", Color.white);
+				//shadowAssistedObj.bCaught=true;
+				//Debug.Log("Shadow Assisted Caught");
 			}
 			
 			/// //////////////////////////////
@@ -460,9 +488,17 @@ public partial class Visibility1 : MonoBehaviour {
 		}*/
 	}
 #else
+	//bool onlyOne = true;
+
 
 	void Update () 
 	{
+		/*if (onlyOne) 
+		{
+			placeNumberedGameObject (new Vector3 (7.0f, 1.0f, 2.0f), 4, false);
+
+		}*/
+
 		if(bMultiplePaths)
 		{
 			UpdateMultiplePaths();
