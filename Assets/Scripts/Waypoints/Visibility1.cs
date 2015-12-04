@@ -127,7 +127,7 @@ public partial class Visibility1 : MonoBehaviour {
 	bool bJustTestCrashNow = false;
 
 	float playerScaleForMyScene1 = 0.3f;
-	float playerScaleForTestCase1 = 0.3f;
+	float playerScaleForTestCase1 = 0.4f;
 	float playerScaleForMGS2 = 0.5f;
 	float playerScaleForChung = 0.5f;
 	float playerScaleForMyCrash = 0.3f;
@@ -185,7 +185,7 @@ public partial class Visibility1 : MonoBehaviour {
 		else if(currSceneName=="testCase1.unity")//USED
 		{
 			playerScaleForCurrent = playerScaleForTestCase1;
-			m_step = 0.08f;//0.06f;
+			m_step = 0.1f;//0.06f;
 		}
 		else if(currSceneName=="MGS2.unity")//USED
 		{
@@ -1416,7 +1416,7 @@ public partial class Visibility1 : MonoBehaviour {
 
 			for(int i=0;i<vals1.Count;i++)
 			{
-				vals3.Add (vals1[i]+vals2[i]+vals4[i]*0.2f);
+				vals3.Add (vals1[i]*0.5f+vals2[i]+vals4[i]*0.2f);
 			}
 
 			//largest value
