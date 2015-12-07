@@ -126,7 +126,7 @@ public partial class Visibility1 : MonoBehaviour {
 	bool bTestingMyCrash = false;
 	bool bJustTestCrashNow = false;
 
-	float playerScaleForMyScene1 = 0.3f;
+	float playerScaleForMyScene1 = 0.4f;
 	float playerScaleForTestCase1 = 0.4f;
 	float playerScaleForMGS2 = 0.5f;
 	float playerScaleForChung = 0.5f;
@@ -135,7 +135,7 @@ public partial class Visibility1 : MonoBehaviour {
 	float playerScaleForCurrent;
 
 
-	int PointToDebug = 8;
+	int PointToDebug = 147;
 	public bool bDebugNow = false;
 	bool bShowShadowEdges = true;
 	void Start () 
@@ -176,7 +176,7 @@ public partial class Visibility1 : MonoBehaviour {
 		else if(currSceneName=="myScene1.unity")//USED
 		{
 			playerScaleForCurrent = playerScaleForMyScene1;
-			m_step = 0.06f;
+			m_step = 0.1f;
 		}
 		else if(currSceneName=="scene1.unity")
 		{
@@ -481,19 +481,7 @@ public partial class Visibility1 : MonoBehaviour {
 			pathPoints = CommonMyScene1.definePath ();
 			m_stepDistance = CommonMyScene1.getStepDistance();
 			radius_enemy*=playerScaleForCurrent;
-			if(bTestingMyScene1)
-			{
-				setGlobalVars1();
-				CalculateVisibilityForPath();
-				foreach(Vector3 vect in pathPoints)
-				{
-					GameObject pathObj;
-					pathObj = Instantiate(pathSphere, 
-					                      vect, 
-					                      pathSphere.transform.rotation) as GameObject;
-				}
-				return;
-			}
+
 		}
 		else if(currSceneName=="scene1.unity")
 		{
@@ -836,7 +824,7 @@ public partial class Visibility1 : MonoBehaviour {
 				{
 					m_enemyShadowAssistedList[0].enemyObj.transform.position = tempVec;
 					m_enemyShadowAssistedList[0].vNextPos.RemoveRange(0,m_enemyShadowAssistedList[0].vNextPos.Count);
-					m_enemyShadowAssistedList[0].vNextPos.Add(findNextPosEnemyShadowAssisted(m_enemyShadowAssistedList[0].enemyObj));
+					m_enemyShadowAssistedList[0].vNextPos.Add(findNextPosEnemyShadowAssisted(m_enemyShadowAssistedList[0].enemyObj,m_enemyShadowAssistedList[0].enemyObj.transform.position));
 					m_enemyShadowAssistedList[0].bCaught = false;
 				}
 				Debug.Log("Selected At ("+m_nCurrDiscretePtIndxX+" , "+m_nCurrDiscretePtIndxZ+")"+"Vector3 = "+tempVec);
@@ -979,11 +967,15 @@ public partial class Visibility1 : MonoBehaviour {
 						continue;
 					if(l2.LineIntersectMuntacEndPt(testLine)!=0)
 					{
+						/*Vector3 intsctPt = l2.GetIntersectionPoint(testLine);
+						if(VectorApprox2(intsctPt,l2.vertex[0]) || VectorApprox2(intsctPt,l2.vertex[1]))
+						{
+							continue;
+						}*/
 						bDidNotInteresct = false;
 						break;
 						//not valid
 					}
-					//Vector3 intsctPt = l2.GetIntersectionPoint(testLine);
 				}
 				//
 				if(bDidNotInteresct)
@@ -999,6 +991,21 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 			angleVar+=1f;
 		}
+
+		//Adding vertices too
+		float probableDist1 = Vector3.Distance(shadowEdgeCurrent.vertex[0],pt);
+		if(minProbableDist>probableDist1)
+		{
+			minProbableDist = probableDist1;
+
+		}
+		probableDist1 = Vector3.Distance(shadowEdgeCurrent.vertex[1],pt);
+		if(minProbableDist>probableDist1)
+		{
+			minProbableDist = probableDist1;
+
+		}
+		
 		return minProbableDist;
 		
 	}
@@ -1189,6 +1196,156 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		return selLine;
 	}
+
+
+
+
+
+
+
+	List<Line> findBothLines(Vector3 pt,List<Line> allShadowLines)
+	{
+		float perpendicularDist;
+		float radiusMax = 5000f;
+		float angleVar = 0f;
+		Vector3 vecSel = new Vector3 ();
+		vecSel.y = 1f;
+		Hashtable distanceLineTable = new Hashtable ();
+		foreach(Line shadowEdgeCurrent in allShadowLines)
+		{
+			angleVar = 0f;
+			float minProbableDist = 10000f;
+			while(angleVar<360)
+			{
+				vecSel.x = pt.x + radiusMax*Mathf.Cos(angleVar* Mathf.Deg2Rad);
+				vecSel.z = pt.z + radiusMax*Mathf.Sin(angleVar* Mathf.Deg2Rad);
+				Line l = new Line(pt,vecSel);
+				if(l.LineIntersectMuntacEndPt(shadowEdgeCurrent)!=0)
+				{
+					Vector3 intsctPoint = l.GetIntersectionPoint(shadowEdgeCurrent);
+					Line testLine = new Line(pt,intsctPoint);
+					//now check if testLine and any other shadow edge intersect; if not then valid edge and break;
+					bool bDidNotInteresct = true;
+					foreach(Line l2 in allShadowLines)
+					{
+						if(l2.Equals(shadowEdgeCurrent))
+							continue;
+						if(l2.LineIntersectMuntacEndPt(testLine)!=0)
+						{
+							//if(intersects, checked if Not as Vertex point)
+							Vector3 intsctPt = l2.GetIntersectionPoint(testLine);
+							if(VectorApprox2(intsctPt,l2.vertex[0]) || VectorApprox2(intsctPt,l2.vertex[1]))
+							{
+								continue;
+							}
+							bDidNotInteresct = false;
+							break;
+							//not valid
+						}
+
+					}
+					//
+					if(bDidNotInteresct)
+					{
+						float probableDist = testLine.LengthOfLine();//distanceBwPtAndLine3(pt,shadowEdgeCurrent);
+						if(minProbableDist>probableDist)
+						{
+							minProbableDist = probableDist;
+							if(!distanceLineTable.ContainsKey(shadowEdgeCurrent))
+							{
+								distanceLineTable.Add(shadowEdgeCurrent,minProbableDist);
+							}
+							else
+							{
+								distanceLineTable[shadowEdgeCurrent] = minProbableDist;
+							}
+						}
+						//distanceLineTable.Add(shadowEdgeCurrent,probableDist);
+						//break;
+					}
+					//
+					
+				}
+				//angleVar+=10f;
+				angleVar+=1f;
+			}
+			//Adding vertices too; wrong as invalid vertices added too
+			/*float probableDist1 = Vector3.Distance(shadowEdgeCurrent.vertex[0],pt);
+			if(minProbableDist>probableDist1)
+			{
+				minProbableDist = probableDist1;
+				if(!distanceLineTable.ContainsKey(shadowEdgeCurrent))
+				{
+					distanceLineTable.Add(shadowEdgeCurrent,minProbableDist);
+				}
+				else
+				{
+					distanceLineTable[shadowEdgeCurrent] = minProbableDist;
+				}
+			}
+			probableDist1 = Vector3.Distance(shadowEdgeCurrent.vertex[1],pt);
+			if(minProbableDist>probableDist1)
+			{
+				minProbableDist = probableDist1;
+				if(!distanceLineTable.ContainsKey(shadowEdgeCurrent))
+				{
+					distanceLineTable.Add(shadowEdgeCurrent,minProbableDist);
+				}
+				else
+				{
+					distanceLineTable[shadowEdgeCurrent] = minProbableDist;
+				}
+			}*/
+		}
+
+
+
+		List<Line> bothLines = new List<Line> ();
+
+
+		float minVal = 100000f;
+		Line selLine1 = null;
+		foreach(Line shadowEdgeKey in distanceLineTable.Keys)
+		{
+			float val = (float)distanceLineTable[shadowEdgeKey];
+			if(val<minVal)
+			{
+				minVal = val;
+				selLine1 = shadowEdgeKey;
+			}
+		}
+		bothLines.Add(selLine1);
+
+
+
+
+		float maxVal = -1000f;
+		Line selLine2 = null;
+		foreach(Line shadowEdgeKey in distanceLineTable.Keys)
+		{
+			float val = (float)distanceLineTable[shadowEdgeKey];
+			if(val>maxVal)
+			{
+				maxVal = val;
+				selLine2 = shadowEdgeKey;
+			}
+		}
+		bothLines.Add(selLine2);
+		return bothLines;
+
+
+
+
+	}
+
+
+
+
+
+
+
+
+
 	/// <summary>
 	/// ///////////
 	/// </summary>
@@ -1277,16 +1434,17 @@ public partial class Visibility1 : MonoBehaviour {
 	private static int furthestWeight = 1;
 	private static int nearestWeightCounter = nearestWeight;
 	private static int furthestWeightCounter = furthestWeight;
-	private Vector3 findNextPosEnemyShadowAssisted(GameObject enemyObj)
+	private Vector3 findNextPosEnemyShadowAssisted(GameObject enemyObj,Vector3 currPosEnemy)
 	{
-		Vector3 vecSel = enemyObj.transform.position;
-		//float timePlayer = Vector3.Distance(pathPoints[nextPlayerPath],pathPoints[nextPlayerPath-1])/speedPlayer;
-		float timePlayer = distBtwPlayerMovements/speedPlayer;
+		//Debug.Log ("findNextPosEnemyShadowAssisted ");
+		Vector3 vecSel = currPosEnemy;//enemyObj.transform.position;
+		float timePlayer = Vector3.Distance(pathPoints[nextPlayerPath],pathPoints[nextPlayerPath-1])/speedPlayer;
+		//float timePlayer = distBtwPlayerMovements/speedPlayer;//commented out due to bigger jumps
 		float radiusMovement2 = speedEnemy*timePlayer;
 		int currPlayerPathPoint = nextPlayerPath-1;
 		if(!pointInShadow(vecSel,currPlayerPathPoint))
 		{
-			return enemyObj.transform.position;
+			return currPosEnemy;//enemyObj.transform.position;
 		}
 		Geometry currShadowPolygon = null;
 		/*Geometry currShadowPolygon = findCurrentShadowPolygon(vecSel,currPlayerPathPoint);
@@ -1297,14 +1455,14 @@ public partial class Visibility1 : MonoBehaviour {
 		}*/
 		List<Vector3> probablePointsInShadow = new List<Vector3> ();
 		int angleVar=0;
-		int angleVarStep=10;//1 or even
+		int angleVarStep = skipAngleShadowAssistedGlobal;
 		while(true)
 		{
 			vecSel = new Vector3();
-			vecSel.x = enemyObj.transform.position.x + radiusMovement2*Mathf.Cos(angleVar* Mathf.Deg2Rad);
-			vecSel.y = enemyObj.transform.position.y;
-			vecSel.z = enemyObj.transform.position.z + radiusMovement2*Mathf.Sin(angleVar* Mathf.Deg2Rad);
-			if(pointInShadow(vecSel,currPlayerPathPoint) && CheckStraightLineVisibility(vecSel,enemyObj.transform.position))
+			vecSel.x = currPosEnemy.x + radiusMovement2*Mathf.Cos(angleVar* Mathf.Deg2Rad);
+			vecSel.y = currPosEnemy.y;
+			vecSel.z = currPosEnemy.z + radiusMovement2*Mathf.Sin(angleVar* Mathf.Deg2Rad);
+			if(pointInShadow(vecSel,currPlayerPathPoint) && CheckStraightLineVisibility(vecSel,currPosEnemy))
 			{
 				probablePointsInShadow.Add(vecSel);
 			}
@@ -1315,7 +1473,7 @@ public partial class Visibility1 : MonoBehaviour {
 		if(probablePointsInShadow.Count==0)
 		{
 			Debug.Log("ERROR. probablePointsInShadow.Count==0");
-			return enemyObj.transform.position;
+			return currPosEnemy;//enemyObj.transform.position;
 		}
 		else if(probablePointsInShadow.Count==1)
 		{
@@ -1356,6 +1514,10 @@ public partial class Visibility1 : MonoBehaviour {
 			List<float> vals3 = new List<float>();
 			List<float> vals4 = new List<float>();
 
+
+
+
+
 			List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [currPlayerPathPoint]];
 			List<Line> allShadowLines = new List<Line>();
 			foreach(Geometry shadowCurr in shadowPolyTemp)
@@ -1363,8 +1525,18 @@ public partial class Visibility1 : MonoBehaviour {
 				allShadowLines.AddRange(shadowCurr.edges);
 			}
 			Vector3 selectedPt = new Vector3();
-			//float minPerpendicularDist = 100000f;
-			Line furthestEdge = findPositionNearestToFurthestEdge(enemyObj.transform.position,allShadowLines);
+
+
+
+			//float beforeTime = Time.realtimeSinceStartup;
+			List<Line> bothLines = findBothLines(currPosEnemy,allShadowLines);
+			//float afterTime = Time.realtimeSinceStartup;
+			//afterTime = afterTime - beforeTime;
+			//Debug.Log("Total time for findBothLines = "+afterTime);
+
+
+
+			Line furthestEdge = bothLines[1];//findPositionNearestToFurthestEdge(enemyObj.transform.position,allShadowLines);
 			
 			//
 			float minFurthestDistance = 0f;//distanceBwPtAndLine4(probablePointsInShadow[0],furthestEdge,allShadowLines);
@@ -1391,7 +1563,7 @@ public partial class Visibility1 : MonoBehaviour {
 
 
 
-			Line nearestEdge = findPositionFurthestToNearestEdge(enemyObj.transform.position,allShadowLines);
+			Line nearestEdge = bothLines[0];//findPositionFurthestToNearestEdge(enemyObj.transform.position,allShadowLines);
 			
 			//
 			float maxNearestDistance = 0f;//distanceBwPtAndLine4(probablePointsInShadow[0],nearestEdge,allShadowLines);
@@ -1403,9 +1575,8 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 
 			///////////////////////////////
-			Vector3 nearestVertex = findNearestVertex(enemyObj.transform.position,allShadowLines);
-			maxNearestDistance = 0f;//distanceBwPtAndLine4(probablePointsInShadow[0],nearestEdge,allShadowLines);
-			//selectedPt = probablePointsInShadow[0];
+			Vector3 nearestVertex = findNearestVertex(currPosEnemy,allShadowLines);
+			maxNearestDistance = 0f;
 			for(int probPts=0;probPts<probablePointsInShadow.Count;probPts++)
 			{
 				float nearestDistance = Vector3.Distance(nearestVertex,probablePointsInShadow[probPts]);
@@ -1416,6 +1587,8 @@ public partial class Visibility1 : MonoBehaviour {
 
 			for(int i=0;i<vals1.Count;i++)
 			{
+				//vals3.Add (vals1[i]*0.5f+vals2[i]+vals4[i]*0.2f);
+				//vals3.Add (vals1[i]*0.3f+vals2[i]+vals4[i]*1.0f);
 				vals3.Add (vals1[i]*0.5f+vals2[i]+vals4[i]*0.2f);
 			}
 
@@ -1640,7 +1813,9 @@ public partial class Visibility1 : MonoBehaviour {
 
 
 
-
+	int skipAngleGreedyGlobal = 10;
+	int skipAngleNearMissGlobal = 1;
+	int skipAngleShadowAssistedGlobal = 45;
 
 	//UPDATE REQUIRED
 	//Nearest safepoint. Least movement.
@@ -1658,7 +1833,7 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			float timePlayer = Vector3.Distance(pathPoints[nextPlayerPath],pathPoints[nextPlayerPath-1])/speedPlayer;
 			float radiusMovement = speedEnemy*timePlayer;
-			float radiiVar = radiusMovement/12;
+			float radiiVar = radiusMovement/10;
 			float radiiStep = radiiVar;
 			while(radiiVar<radiusMovement)
 			{
@@ -1670,7 +1845,7 @@ public partial class Visibility1 : MonoBehaviour {
 
 					vecSel.x = enemyObj.transform.position.x + radiiVar*Mathf.Cos(angleVar* Mathf.Deg2Rad);
 					vecSel.z = enemyObj.transform.position.z + radiiVar*Mathf.Sin(angleVar* Mathf.Deg2Rad);
-					angleVar++;
+					angleVar+=skipAngleGreedyGlobal;
 					if(angleVar==360)
 						break;
 
@@ -1694,7 +1869,7 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			float timePlayer = Vector3.Distance(pathPoints[nextPlayerPath],pathPoints[nextPlayerPath-1])/speedPlayer;
 			float radiusMovement = speedEnemy*timePlayer;
-			int skipAngle=1;
+			int skipAngle=skipAngleNearMissGlobal;
 			Vector3 vecSel = enemyObj.transform.position;
 			//vecSel.x+=radiusMovement;
 			int angleVar=0;
@@ -2060,6 +2235,9 @@ public partial class Visibility1 : MonoBehaviour {
 	{
 		GameObject enemyObj = Instantiate(enemyPrefab) as GameObject;
 
+		//navjot
+		//enemyObj.GetComponent<Renderer>().enabled = false;
+
 		Vector3 lscale= enemyObj.transform.localScale;
 		lscale.x*=playerScaleForCurrent;
 		lscale.y*=playerScaleForCurrent;
@@ -2073,7 +2251,7 @@ public partial class Visibility1 : MonoBehaviour {
 		shadowAssistedObj.bCaught = false;
 		shadowAssistedObj.startPosIndx = (Vector2)h_mapPtToIndx [sel];
 		shadowAssistedObj.enemyObj = enemyObj;
-		shadowAssistedObj.vNextPos.Add (findNextPosEnemyShadowAssisted(enemyObj));
+		shadowAssistedObj.vNextPos.Add (findNextPosEnemyShadowAssisted(enemyObj,enemyObj.transform.position));
 		m_enemyShadowAssistedList.Add(shadowAssistedObj);
 	}
 
@@ -3131,6 +3309,10 @@ public partial class Visibility1 : MonoBehaviour {
 		else if(currSceneName=="testCase1.unity")
 		{
 			scalingTemp = 0.65f;
+		}
+		else if(currSceneName=="myScene1.unity")
+		{
+			scalingTemp = 0.6f;
 		}
 
 		lscale.x*=playerScaleForCurrent*scalingTemp;

@@ -6,6 +6,8 @@ using System.Collections;
 using System.IO;
 using System.Collections.Generic;
 using UnityEditor;
+using System.Threading;
+using System.Threading.Tasks;
 //using System;
 public partial class Visibility1 : MonoBehaviour {
 
@@ -310,9 +312,12 @@ public partial class Visibility1 : MonoBehaviour {
 			}*/
 			nextPlayerPath++;
 			
-			
+			//navjot1
+			float beforeTime = Time.realtimeSinceStartup;;
 			findNextEnemyPositions();
-			
+			float afterTime = Time.realtimeSinceStartup;
+			afterTime = afterTime - beforeTime;
+			Debug.Log("Total time for findNextEnemyPositions = "+afterTime);
 		}
 		Vector3 prevPlayerPos = playerObj.transform.position;
 		playerObj.transform.position = Vector3.MoveTowards(playerObj.transform.position, pathPoints[nextPlayerPath], speedPlayer*Time.deltaTime);
@@ -357,41 +362,35 @@ public partial class Visibility1 : MonoBehaviour {
 			EnemyMovement shadowAssistedObj = m_enemyShadowAssistedList[j];
 			if(shadowAssistedObj.bCaught)
 				continue;
-			////////////////////////////////
-			
-			
+			shadowAssistedObj.enemyObj.transform.position = Vector3.MoveTowards(shadowAssistedObj.enemyObj.transform.position,shadowAssistedObj.vNextPos[0], speedEnemy*Time.deltaTime);
+		}
+		/*for(int j=0;j<m_enemyShadowAssistedList.Count;j++)
+		{
+			EnemyMovement shadowAssistedObj = m_enemyShadowAssistedList[j];
+			if(shadowAssistedObj.bCaught)
+				continue;
 			Vector3 currPosEnemy = shadowAssistedObj.enemyObj.transform.position;
 			
 			shadowAssistedObj.vNextPos.Add(findNextPosEnemyShadowAssisted(shadowAssistedObj.enemyObj));
-			//if(currPosEnemy == shadowAssistedObj.vNextPos[0])
 			shadowAssistedObj.vNextPos.RemoveAt(0);
 			if(enemyCaught(shadowAssistedObj.enemyObj.transform.position))
 			{
-				//GameObject.Destroy(shadowAssistedObj.enemyObj);
 				shadowAssistedObj.bCaught=true;
 				if(m_SetUpCase)
 				{
 					pointsArray[(int)shadowAssistedObj.startPosIndx.x,(int)shadowAssistedObj.startPosIndx.y] = nextPlayerPath-1;
 					continue;
-					//return;
 				}
-				//Renderer rend = shadowAssistedObj.enemyObj.GetComponent<Renderer>();
-				//rend.material.shader = Shader.Find("Specular");
-				//rend.material.SetColor("_SpecColor", Color.white);
-				//shadowAssistedObj.bCaught=true;
-				//Debug.Log("Shadow Assisted Caught");
 			}
-			
-			/// //////////////////////////////
 			shadowAssistedObj.enemyObj.transform.position = Vector3.MoveTowards(shadowAssistedObj.enemyObj.transform.position,shadowAssistedObj.vNextPos[0], speedEnemy*Time.deltaTime);
-		}
-		for(int j=0;j<m_enemyCentroidList.Count;j++)
+		}*/
+		/*for(int j=0;j<m_enemyCentroidList.Count;j++)
 		{
 			EnemyMovement centroidObj = m_enemyCentroidList[j];
 			if(centroidObj.bCaught)
 				continue;
 			centroidObj.enemyObj.transform.position = Vector3.MoveTowards(centroidObj.enemyObj.transform.position,centroidObj.vNextPos[0], speedEnemy*Time.deltaTime);
-		}
+		}*/
 	}
 	private void findNextEnemyPositions()
 	{
@@ -457,7 +456,96 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 			//nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,nearMissObj.vNextPos[0], speedEnemy*Time.deltaTime);
 		}
-		
+
+		//Navjot
+		List<Vector3> currPosEnemyList = new List<Vector3>();
+		for(int j=0;j<m_enemyShadowAssistedList.Count;j++)
+		{
+			currPosEnemyList.Add(m_enemyShadowAssistedList[j].enemyObj.transform.position);
+		}
+		List<Task> TaskList = new List<Task>();
+		//foreach(EnemyMovement shadowAssistedObj in m_enemyShadowAssistedList)
+		for(int j=0;j<m_enemyShadowAssistedList.Count;j++)
+		{
+			if(m_enemyShadowAssistedList[j].bCaught)
+				continue;
+			EnemyMovement shadowAssistedObj = m_enemyShadowAssistedList[j];
+			Vector3 currPosEnemy = m_enemyShadowAssistedList[j].enemyObj.transform.position;
+			Task LastTask = Task.Factory.StartNew(() => {
+				//Do Stuff 
+				//Debug.Log("Task started**************************************");
+
+				shadowAssistedObj.vNextPos.Add(findNextPosEnemyShadowAssisted(shadowAssistedObj.enemyObj,currPosEnemy));
+				//m_enemyShadowAssistedList[j].vNextPos.Add(findNextPosEnemyShadowAssisted(m_enemyShadowAssistedList[j].enemyObj,currPosEnemyList[j]));
+
+
+			});
+			/*if(currPosEnemyList[j] == m_enemyShadowAssistedList[j].vNextPos[0])
+				m_enemyShadowAssistedList[j].vNextPos.RemoveAt(0);
+			if(enemyCaught(currPosEnemyList[j]))
+			{
+				m_enemyShadowAssistedList[j].bCaught=true;
+				if(m_SetUpCase)
+				{
+					pointsArray[(int)m_enemyShadowAssistedList[j].startPosIndx.x,(int)m_enemyShadowAssistedList[j].startPosIndx.y] = nextPlayerPath-1;
+					continue;
+				}
+			}*/
+
+			TaskList.Add(LastTask);
+			//Debug.Log("TaskList = "+TaskList.Count);
+		}
+
+		//Task.WhenAll(TaskList.ToArray());
+		Task.WaitAll(TaskList.ToArray());
+
+		for(int j=0;j<m_enemyShadowAssistedList.Count;j++)
+		{
+			if(m_enemyShadowAssistedList[j].bCaught)
+			{
+				m_enemyShadowAssistedList[j].enemyObj.GetComponent<Renderer>().enabled = false;
+				continue;
+			}
+			if(currPosEnemyList[j] == m_enemyShadowAssistedList[j].vNextPos[0])
+				m_enemyShadowAssistedList[j].vNextPos.RemoveAt(0);
+			if(enemyCaught(currPosEnemyList[j]))
+			{
+				m_enemyShadowAssistedList[j].bCaught=true;
+				if(m_SetUpCase)
+				{
+					pointsArray[(int)m_enemyShadowAssistedList[j].startPosIndx.x,(int)m_enemyShadowAssistedList[j].startPosIndx.y] = nextPlayerPath-1;
+					continue;
+				}
+			}
+		}
+		//Debug.Log ("When All Done at "+Time.realtimeSinceStartup);
+		// //////
+		//Sequential
+		/*for(int j=0;j<m_enemyShadowAssistedList.Count;j++)
+		{
+			EnemyMovement shadowAssistedObj = m_enemyShadowAssistedList[j];
+			if(shadowAssistedObj.bCaught)
+				continue;
+
+			Vector3 currPosEnemy = shadowAssistedObj.enemyObj.transform.position;
+			
+			shadowAssistedObj.vNextPos.Add(findNextPosEnemyShadowAssisted(shadowAssistedObj.enemyObj));
+			if(currPosEnemy == shadowAssistedObj.vNextPos[0])
+				shadowAssistedObj.vNextPos.RemoveAt(0);
+			//shadowAssistedObj.vNextPos.RemoveAt(0);
+			if(enemyCaught(shadowAssistedObj.enemyObj.transform.position))
+			{
+				shadowAssistedObj.bCaught=true;
+				if(m_SetUpCase)
+				{
+					pointsArray[(int)shadowAssistedObj.startPosIndx.x,(int)shadowAssistedObj.startPosIndx.y] = nextPlayerPath-1;
+					continue;
+				}
+			}
+			//shadowAssistedObj.enemyObj.transform.position = Vector3.MoveTowards(shadowAssistedObj.enemyObj.transform.position,shadowAssistedObj.vNextPos[0], speedEnemy*Time.deltaTime);
+		}*/
+
+		//Older sequential
 		/*for(int j=0;j<m_enemyShadowAssistedList.Count;j++)
 		{
 			EnemyMovement shadowAssistedObj = m_enemyShadowAssistedList[j];
