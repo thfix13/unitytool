@@ -810,14 +810,14 @@ public partial class Visibility1 : MonoBehaviour {
 				{
 					m_enemyGreedyList[0].enemyObj.transform.position = tempVec;
 					m_enemyGreedyList[0].vNextPos.RemoveRange(0,m_enemyGreedyList[0].vNextPos.Count);
-					m_enemyGreedyList[0].vNextPos.Add (findNextPosEnemyGreedy(m_enemyGreedyList[0].enemyObj));
+					m_enemyGreedyList[0].vNextPos.Add (findNextPosEnemyGreedy(m_enemyGreedyList[0].enemyObj,m_enemyGreedyList[0].enemyObj.transform.position));
 					m_enemyGreedyList[0].bCaught = false;
 				}
 				else if(m_NearMiss)
 				{
 					m_enemyNearMissList[0].enemyObj.transform.position = tempVec;
 					m_enemyNearMissList[0].vNextPos.RemoveRange(0,m_enemyNearMissList[0].vNextPos.Count);
-					m_enemyNearMissList[0].vNextPos.Add(findNextPosEnemyNearMiss2(m_enemyNearMissList[0].enemyObj));
+					m_enemyNearMissList[0].vNextPos.Add(findNextPosEnemyNearMiss2(m_enemyNearMissList[0].enemyObj,m_enemyNearMissList[0].enemyObj.transform.position));
 					m_enemyNearMissList[0].bCaught = false;
 				}
 				else if(m_ShadowEdgeAssisted)
@@ -1819,7 +1819,7 @@ public partial class Visibility1 : MonoBehaviour {
 
 	//UPDATE REQUIRED
 	//Nearest safepoint. Least movement.
-	private Vector3 findNextPosEnemyGreedy(GameObject enemyObj)
+	private Vector3 findNextPosEnemyGreedy(GameObject enemyObj,Vector3 currPosEnemy)
 	{
 		/*if(pointInShadow(enemyObj.transform.position,nextPlayerPath))
 		{
@@ -1829,7 +1829,7 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			Debug.Log("Enemy is outside shadow. "+enemyObj.transform.position);
 		}*/
-		if(!pointInShadow(enemyObj.transform.position,nextPlayerPath))
+		if(!pointInShadow(currPosEnemy,nextPlayerPath))
 		{
 			float timePlayer = Vector3.Distance(pathPoints[nextPlayerPath],pathPoints[nextPlayerPath-1])/speedPlayer;
 			float radiusMovement = speedEnemy*timePlayer;
@@ -1837,20 +1837,20 @@ public partial class Visibility1 : MonoBehaviour {
 			float radiiStep = radiiVar;
 			while(radiiVar<radiusMovement)
 			{
-				Vector3 vecSel = enemyObj.transform.position;
+				Vector3 vecSel = currPosEnemy;
 				//vecSel.x+=radiiVar;
 				int angleVar=0;
-				while(!pointInShadow(vecSel,nextPlayerPath) || !CheckStraightLineVisibility(vecSel,enemyObj.transform.position))
+				while(!pointInShadow(vecSel,nextPlayerPath) || !CheckStraightLineVisibility(vecSel,currPosEnemy))
 				{
 
-					vecSel.x = enemyObj.transform.position.x + radiiVar*Mathf.Cos(angleVar* Mathf.Deg2Rad);
-					vecSel.z = enemyObj.transform.position.z + radiiVar*Mathf.Sin(angleVar* Mathf.Deg2Rad);
+					vecSel.x = currPosEnemy.x + radiiVar*Mathf.Cos(angleVar* Mathf.Deg2Rad);
+					vecSel.z = currPosEnemy.z + radiiVar*Mathf.Sin(angleVar* Mathf.Deg2Rad);
 					angleVar+=skipAngleGreedyGlobal;
 					if(angleVar==360)
 						break;
 
 				}
-				if(pointInShadow(vecSel,nextPlayerPath) && CheckStraightLineVisibility(vecSel,enemyObj.transform.position))
+				if(pointInShadow(vecSel,nextPlayerPath) && CheckStraightLineVisibility(vecSel,currPosEnemy))
 				{
 					//Debug.Log("findNextPosEnemyGreedy. NextPos selected to move to is = "+vecSel);
 					return vecSel;
@@ -1859,27 +1859,27 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 		}
 		//Debug.Log("findNextPosEnemyGreedy. NextPos selected to move to is = "+enemyObj.transform.position);
-		return enemyObj.transform.position;
+		return currPosEnemy;
 
 	}
 	//Reaching safest possible point:based on largest angle made in shadow region from start point.select the middle angle
-	private Vector3 findNextPosEnemyNearMiss2(GameObject enemyObj)
+	private Vector3 findNextPosEnemyNearMiss2(GameObject enemyObj,Vector3 currPosEnemy)
 	{
-		if(!pointInShadow(enemyObj.transform.position,nextPlayerPath))
+		if(!pointInShadow(currPosEnemy,nextPlayerPath))
 		{
 			float timePlayer = Vector3.Distance(pathPoints[nextPlayerPath],pathPoints[nextPlayerPath-1])/speedPlayer;
 			float radiusMovement = speedEnemy*timePlayer;
 			int skipAngle=skipAngleNearMissGlobal;
-			Vector3 vecSel = enemyObj.transform.position;
+			Vector3 vecSel = currPosEnemy;
 			//vecSel.x+=radiusMovement;
 			int angleVar=0;
 			List<int> listAngles = new List<int>();
 			bool insideShadow=false;
 			while(true)
 			{
-				vecSel.x = enemyObj.transform.position.x + radiusMovement*Mathf.Cos(angleVar* Mathf.Deg2Rad);
-				vecSel.z = enemyObj.transform.position.z + radiusMovement*Mathf.Sin(angleVar* Mathf.Deg2Rad);
-				if(pointInShadow(vecSel,nextPlayerPath) && CheckStraightLineVisibility(vecSel,enemyObj.transform.position))
+				vecSel.x = currPosEnemy.x + radiusMovement*Mathf.Cos(angleVar* Mathf.Deg2Rad);
+				vecSel.z = currPosEnemy.z + radiusMovement*Mathf.Sin(angleVar* Mathf.Deg2Rad);
+				if(pointInShadow(vecSel,nextPlayerPath) && CheckStraightLineVisibility(vecSel,currPosEnemy))
 				{
 					if(!insideShadow)
 						listAngles.Add(angleVar);
@@ -1914,7 +1914,7 @@ public partial class Visibility1 : MonoBehaviour {
 			//////////////////////////////////////;
 
 			if(allAnglesCount==0)
-				return enemyObj.transform.position;
+				return currPosEnemy;
 			int lastProbableInsideAngle = -1;
 			if(360%skipAngle!=0)
 				lastProbableInsideAngle = 360-(360%skipAngle);
@@ -1956,11 +1956,11 @@ public partial class Visibility1 : MonoBehaviour {
 				angleSel = (listAngles[indxMaxDiff+1]+listAngles[indxMaxDiff])/2;
 				//angleSel = getAngleWithMaxPotential(listAngles[indxMaxDiff],listAngles[indxMaxDiff+1],enemyObj.transform.position,radiusMovement);
 			}
-			vecSel.x = enemyObj.transform.position.x + radiusMovement*Mathf.Cos(angleSel* Mathf.Deg2Rad);
-			vecSel.z = enemyObj.transform.position.z + radiusMovement*Mathf.Sin(angleSel* Mathf.Deg2Rad);
+			vecSel.x = currPosEnemy.x + radiusMovement*Mathf.Cos(angleSel* Mathf.Deg2Rad);
+			vecSel.z = currPosEnemy.z + radiusMovement*Mathf.Sin(angleSel* Mathf.Deg2Rad);
 			return vecSel;
 		}
-		return enemyObj.transform.position;
+		return currPosEnemy;
 	}
 	private int getAngleWithMaxPotential(int angle1,int angle2,Vector3 currPos,float radiusMovement)
 	{
@@ -2206,7 +2206,7 @@ public partial class Visibility1 : MonoBehaviour {
 		greedyObj.startPosIndx = (Vector2)h_mapPtToIndx [sel];
 		//Debug.Log ("greedyObj.startPosIndx = "+greedyObj.startPosIndx);
 		greedyObj.enemyObj = enemyObj;
-		greedyObj.vNextPos.Add (findNextPosEnemyGreedy(enemyObj));
+		greedyObj.vNextPos.Add (findNextPosEnemyGreedy(enemyObj,enemyObj.transform.position));
 		m_enemyGreedyList.Add(greedyObj);
 	}
 	
@@ -2227,7 +2227,7 @@ public partial class Visibility1 : MonoBehaviour {
 		nearMissObj.bCaught = false;
 		nearMissObj.startPosIndx = (Vector2)h_mapPtToIndx [sel];
 		nearMissObj.enemyObj = enemyObj;
-		nearMissObj.vNextPos.Add (findNextPosEnemyNearMiss2(enemyObj));
+		nearMissObj.vNextPos.Add (findNextPosEnemyNearMiss2(enemyObj,enemyObj.transform.position));
 		m_enemyNearMissList.Add(nearMissObj);
 			
 	}

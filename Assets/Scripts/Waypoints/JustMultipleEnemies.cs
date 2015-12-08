@@ -394,7 +394,51 @@ public partial class Visibility1 : MonoBehaviour {
 	}
 	private void findNextEnemyPositions()
 	{
+		//Parallel
+		List<Vector3> currPosEnemyList = new List<Vector3>();
 		for(int j=0;j<m_enemyNearMissList.Count;j++)
+		{
+			currPosEnemyList.Add(m_enemyNearMissList[j].enemyObj.transform.position);
+		}
+		List<Task> TaskList = new List<Task>();
+		for(int j=0;j<m_enemyNearMissList.Count;j++)
+		{
+			if(m_enemyNearMissList[j].bCaught)
+				continue;
+			EnemyMovement nearMissObj = m_enemyNearMissList[j];
+			Vector3 currPosEnemy = m_enemyNearMissList[j].enemyObj.transform.position;
+			Task LastTask = Task.Factory.StartNew(() => {
+				//Do Stuff 
+				
+				nearMissObj.vNextPos.Add(findNextPosEnemyNearMiss2(nearMissObj.enemyObj,currPosEnemy));
+				
+				
+			});
+			
+			TaskList.Add(LastTask);
+		}
+		Task.WaitAll(TaskList.ToArray());
+		
+		for(int j=0;j<m_enemyNearMissList.Count;j++)
+		{
+			if(m_enemyNearMissList[j].bCaught)
+			{
+				m_enemyNearMissList[j].enemyObj.GetComponent<Renderer>().enabled = false;
+				continue;
+			}
+			if(currPosEnemyList[j] == m_enemyNearMissList[j].vNextPos[0])
+				m_enemyNearMissList[j].vNextPos.RemoveAt(0);
+			if(enemyCaught(currPosEnemyList[j]))
+			{
+				m_enemyNearMissList[j].bCaught=true;
+				if(m_SetUpCase)
+				{
+					pointsArray[(int)m_enemyNearMissList[j].startPosIndx.x,(int)m_enemyNearMissList[j].startPosIndx.y] = nextPlayerPath-1;
+					continue;
+				}
+			}
+		}
+		/*for(int j=0;j<m_enemyNearMissList.Count;j++)
 		{
 			EnemyMovement nearMissObj = m_enemyNearMissList[j];
 			if(nearMissObj.bCaught)
@@ -402,68 +446,96 @@ public partial class Visibility1 : MonoBehaviour {
 			Vector3 currPosEnemy = nearMissObj.enemyObj.transform.position;
 			
 			
-			nearMissObj.vNextPos.Add (findNextPosEnemyNearMiss2(nearMissObj.enemyObj));
+			nearMissObj.vNextPos.Add (findNextPosEnemyNearMiss2(nearMissObj.enemyObj,nearMissObj.enemyObj.transform.position));
 			if(currPosEnemy == nearMissObj.vNextPos[0])
 				nearMissObj.vNextPos.RemoveAt(0);
 			if(enemyCaught(nearMissObj.enemyObj.transform.position))
 			{
-				//GameObject.Destroy(nearMissObj.enemyObj);
 				nearMissObj.bCaught=true;
 				if(m_SetUpCase)
 				{
 					pointsArray[(int)nearMissObj.startPosIndx.x,(int)nearMissObj.startPosIndx.y] = nextPlayerPath-1;
-					//timingArray[nearMissObj.startPosIndx.x,nearMissObj.startPosIndx.y] = Time.time - currRunTimeEnemny;
-					//Debug.Log("Caught!!! Took "+timingArray[m_nCurrDiscretePtIndxX,m_nCurrDiscretePtIndxZ]+" to catch");
-					//resetCase();
-					
-					//return;
 					continue;
 				}
-				Renderer rend = nearMissObj.enemyObj.GetComponent<Renderer>();
-				rend.material.shader = Shader.Find("Specular");
-				rend.material.SetColor("_SpecColor", Color.white);
-				nearMissObj.bCaught=true;
-				Debug.Log("Near Miss Enemy Caught");
 			}
-			//nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,nearMissObj.vNextPos[0], speedEnemy*Time.deltaTime);
+		}*/
+
+
+
+
+		//Parallel
+		currPosEnemyList = new List<Vector3>();
+		for(int j=0;j<m_enemyGreedyList.Count;j++)
+		{
+			currPosEnemyList.Add(m_enemyGreedyList[j].enemyObj.transform.position);
 		}
+		TaskList = new List<Task>();
+		for(int j=0;j<m_enemyGreedyList.Count;j++)
+		{
+			if(m_enemyGreedyList[j].bCaught)
+				continue;
+			EnemyMovement greedyObj = m_enemyGreedyList[j];
+			Vector3 currPosEnemy = m_enemyGreedyList[j].enemyObj.transform.position;
+			Task LastTask = Task.Factory.StartNew(() => {
+				//Do Stuff 
+				
+				greedyObj.vNextPos.Add(findNextPosEnemyGreedy(greedyObj.enemyObj,currPosEnemy));
+				
+				
+			});
+			
+			TaskList.Add(LastTask);
+		}
+		Task.WaitAll(TaskList.ToArray());
 		
 		for(int j=0;j<m_enemyGreedyList.Count;j++)
+		{
+			if(m_enemyGreedyList[j].bCaught)
+			{
+				m_enemyGreedyList[j].enemyObj.GetComponent<Renderer>().enabled = false;
+				continue;
+			}
+			if(currPosEnemyList[j] == m_enemyGreedyList[j].vNextPos[0])
+				m_enemyGreedyList[j].vNextPos.RemoveAt(0);
+			if(enemyCaught(currPosEnemyList[j]))
+			{
+				m_enemyGreedyList[j].bCaught=true;
+				if(m_SetUpCase)
+				{
+					pointsArray[(int)m_enemyGreedyList[j].startPosIndx.x,(int)m_enemyGreedyList[j].startPosIndx.y] = nextPlayerPath-1;
+					continue;
+				}
+			}
+		}
+		//Serial
+		/*for(int j=0;j<m_enemyGreedyList.Count;j++)
 		{
 			EnemyMovement greedyObj = m_enemyGreedyList[j];
 			if(greedyObj.bCaught)
 				continue;
 			Vector3 currPosEnemy = greedyObj.enemyObj.transform.position;
 			
-			greedyObj.vNextPos.Add(findNextPosEnemyGreedy(greedyObj.enemyObj));
+			greedyObj.vNextPos.Add(findNextPosEnemyGreedy(greedyObj.enemyObj,greedyObj.enemyObj.transform.position));
 			if(currPosEnemy == greedyObj.vNextPos[0])
 				greedyObj.vNextPos.RemoveAt(0);
 			if(enemyCaught(greedyObj.enemyObj.transform.position))
 			{
-				//GameObject.Destroy(greedyObj.enemyObj);
 				greedyObj.bCaught=true;
 				if(m_SetUpCase)
 				{
 					pointsArray[(int)greedyObj.startPosIndx.x,(int)greedyObj.startPosIndx.y] = nextPlayerPath-1;
 					continue;
-					//return;
 				}
-				Renderer rend = greedyObj.enemyObj.GetComponent<Renderer>();
-				rend.material.shader = Shader.Find("Specular");
-				rend.material.SetColor("_SpecColor", Color.white);
-				greedyObj.bCaught=true;
-				Debug.Log("Greedy Enemy Caught");
 			}
-			//nearMissObj.enemyObj.transform.position = Vector3.MoveTowards(currPosEnemy,nearMissObj.vNextPos[0], speedEnemy*Time.deltaTime);
-		}
+		}*/
 
-		//Navjot
-		List<Vector3> currPosEnemyList = new List<Vector3>();
+		//Parallel
+		currPosEnemyList = new List<Vector3>();
 		for(int j=0;j<m_enemyShadowAssistedList.Count;j++)
 		{
 			currPosEnemyList.Add(m_enemyShadowAssistedList[j].enemyObj.transform.position);
 		}
-		List<Task> TaskList = new List<Task>();
+		TaskList = new List<Task>();
 		//foreach(EnemyMovement shadowAssistedObj in m_enemyShadowAssistedList)
 		for(int j=0;j<m_enemyShadowAssistedList.Count;j++)
 		{
