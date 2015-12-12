@@ -5,6 +5,8 @@ using System.Collections;
 using System.IO;
 using System.Collections.Generic;
 using UnityEditor;
+using System.Threading;
+using System.Threading.Tasks;
 public partial class Visibility1 : MonoBehaviour 
 {
 	Hashtable m_hCompleteNodeTable = new Hashtable();
@@ -323,8 +325,12 @@ public partial class Visibility1 : MonoBehaviour
 		//justDisplay ();
 		//return;
 		standardMaxMovement = speedEnemy*(m_stepDistance/speedPlayer);
+		//float startTimecreateRelationships = Time.realtimeSinceStartup;
 		Hashtable relationMap = createRelationships ();
 
+		//float totalTimecreateRelationships = (Time.realtimeSinceStartup - startTimecreateRelationships)/60;
+		//Debug.Log ("totalTimecreateRelationships = " + totalTimecreateRelationships);
+		//return;
 		float startTime = Time.realtimeSinceStartup;
 		string dirName = createSaveDataDir(Application.dataPath);
 		int levelOfAccess = 1;
@@ -364,6 +370,53 @@ public partial class Visibility1 : MonoBehaviour
 				
 				j1++;
 			}*/
+
+
+			//Maybe Parallel?////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			/*List<Task> TaskList = new List<Task>();
+			MyHashTableOptimal[] h_MymapChild_Parent = new MyHashTableOptimal[h_mapPtToIndx.Keys.Count];
+			int itr2=0;
+			foreach(Vector3 pt in h_mapPtToIndx.Keys)
+			{
+				h_MymapChild_Parent[itr2] = new MyHashTableOptimal();
+				itr2++;
+
+			}
+			itr2=-1;
+			foreach(Vector3 pt in h_mapPtToIndx.Keys)
+			{
+				itr2++;
+				if(!pointInShadow(pt,levelOfAccess))
+				{
+					continue;
+				}
+
+				Task LastTask = Task.Factory.StartNew(() => {
+					//Do Stuff 
+					h_MymapChild_Parent[itr2] = fillMapWithChildren4Parallel(pt,levelOfAccess,relationMap);
+
+				});
+
+				//
+				TaskList.Add(LastTask);
+			}
+			Task.WaitAll(TaskList.ToArray());
+
+			itr2=-1;
+			foreach(Vector3 pt in h_mapPtToIndx.Keys)
+			{
+				itr2++;
+				MyHashTableOptimal objHashOptimal = h_MymapChild_Parent[itr2];
+				if(objHashOptimal.listValue.Count>0)
+				{
+					h_mapChild_Parent.Add(pt,objHashOptimal.listValue);
+				}
+			}*/
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////;
+			/// 
+			/// Serial
+			//string sourceFileNameFaster = dirName+"\\Edges"+levelOfAccess+".txt";
+			//StreamWriter swFaster = new StreamWriter(sourceFileNameFaster);
 			foreach(Vector3 pt in h_mapPtToIndx.Keys)
 			{
 				if(!pointInShadow(pt,levelOfAccess))
@@ -373,13 +426,90 @@ public partial class Visibility1 : MonoBehaviour
 				
 				Vector2 keyTemp = (Vector2)h_mapPtToIndx[pt];
 
-				fillMapWithChildren4(pt,keyTemp,levelOfAccess,h_mapChild_Parent,relationMap);
+				fillMapWithChildren4(pt,levelOfAccess,h_mapChild_Parent,relationMap);
+				//fillMapWithChildren4Faster(pt,levelOfAccess,relationMap,swFaster);
 			}
+			//swFaster.Close();
+
+			/// Serial Faster
+			/*string sourceFileNameFaster = dirName+"\\Edges"+levelOfAccess+".txt";
+			StreamWriter swFaster = new StreamWriter(sourceFileNameFaster);
+			foreach(Vector3 pt in h_mapPtToIndx.Keys)
+			{
+				if(!pointInShadow(pt,levelOfAccess))
+				{
+					continue;
+				}
+
+				fillMapWithChildren4Faster(pt,levelOfAccess,relationMap,swFaster);
+			}
+			swFaster.Close();*/
+
+
+			//Parallel Faster
+			//List<Task> TaskList = new List<Task>();
+
+
+			/*int taskCounter = 0;
+			foreach(Vector3 pt in h_mapPtToIndx.Keys)
+			{
+				if(!pointInShadow(pt,levelOfAccess))
+				{
+					continue;
+				}
+				taskCounter++;
+				if(!h_mapChild_Parent.ContainsKey(pt))
+				{
+					h_mapChild_Parent.Add(pt,new List<Vector3>());
+				}
+			}
+			Task[] TaskArray = new Task[taskCounter];
+			TaskArray.Initialize();
+			taskCounter = 0;
+
+			string sourceFileNameFaster = dirName+"\\Edges"+levelOfAccess+".txt";
+			//StreamWriter swFaster = new StreamWriter(sourceFileNameFaster);
+			//string fullFileString = "";
+			foreach(Vector3 pt in h_mapPtToIndx.Keys)
+			{
+				if(!pointInShadow(pt,levelOfAccess))
+				{
+					continue;
+				}
+
+
+				List<Vector3> listParents = new List<Vector3>();
+				listParents.AddRange((List<Vector3>)relationMap[pt]);
+
+
+				//Task LastTask
+				TaskArray[taskCounter++] = Task.Factory.StartNew(() => { 
+
+
+					fillMapWithChildren4Faster(pt,levelOfAccess,listParents);
+					h_mapChild_Parent[pt] = listParents;
+				
+				});
+
+
+				
+				//
+				//TaskList.Add(LastTask);
+				//TaskArray[taskCounter++] = LastTask;
+
+			}
+
+			Task MainTask =  Task.WhenAll(TaskArray);//.ToArray());
+			MainTask.Wait();
+			//swFaster.Close();
+			DumpEdgesForLevel3(h_mapChild_Parent,levelOfAccess,dirName);*/
+
 			//float totalTimeCalc = (Time.realtimeSinceStartup - startTimeCalc)/60;
 			//string sourceFileNameCalc = dirName+"\\TimeForCalc"+levelOfAccess+".txt";
 			//StreamWriter sw = new StreamWriter(sourceFileNameCalc);
 			//sw.WriteLine("TotalTimeCalc = "+totalTimeCalc);
 			//sw.Close();
+
 			DumpEdgesForLevel3(h_mapChild_Parent,levelOfAccess,dirName);
 
 			levelOfAccess++;
@@ -387,6 +517,14 @@ public partial class Visibility1 : MonoBehaviour
 		float totalTime = (Time.realtimeSinceStartup - startTime)/60;
 		Debug.Log("executeTrueCase Finished. Time taken is = "+totalTime+" mins");
 		DumpInfoFile (dirName,totalTime);
+	}
+	private void sada(Vector3 pt,int levelOfAccess,List<Vector3> listParents)
+	{
+
+	}
+	private void DumpMiniString(StreamWriter swFaster,string fullFileString)
+	{
+		swFaster.Write(fullFileString);
 	}
 	private Hashtable createRelationships()
 	{
@@ -489,10 +627,61 @@ public partial class Visibility1 : MonoBehaviour
 		relationMap.Add(pt,listOfAvailablePos);
 		//return relationMap;
 	}
-	private void fillMapWithChildren4(Vector3 pt,Vector2 keyTemp,int levelOfAccess,Hashtable h_mapChild_Parent,Hashtable relationMap)
+	bool locked = false;
+	/*class MyHash
 	{
-		int rowJ = (int)keyTemp.x;
-		int colK = (int)keyTemp.y;
+		Vector3 ptKey;
+		List<Vector3> listVals;
+		MyHash(Vector3 pt1,List<Vector3> list1)
+		{
+			ptKey = new Vector3();
+		
+		}
+	}*/
+	private void fillMapWithChildren4Faster(Vector3 pt,int levelOfAccess,Hashtable relationMap,StreamWriter swFaster)
+	{
+		int parentLevelOfAccess = levelOfAccess-1;
+		//string strWrite = "";
+		List<Vector3> ptList = (List<Vector3>)relationMap [pt];
+		//for(int i=0;i<ptList.Count;i++)
+		foreach(Vector3 pt1 in ptList)
+		{
+			//Vector3 pt1 = ptList[i];
+			if(pointInShadow(pt1,levelOfAccess-1))
+			{
+				swFaster.Write("("+pt.x+","+pt.y+","+pt.z+";"+levelOfAccess+")|("+pt1.x+","+pt1.y+","+pt1.z+";"+parentLevelOfAccess+")"+"\n");
+			}
+		}
+
+	}
+	private MyHashTableOptimal fillMapWithChildren4Parallel(Vector3 pt,int levelOfAccess,Hashtable relationMap)
+	{
+		Vector3 currPos = pt;
+		List<Vector3> listOfAvailablePos = new List<Vector3> ();
+		
+		List<Vector3> ptList = (List<Vector3>)relationMap [pt];
+		//List<Vector3> vtList2 = (List<Vector3>)h_mapChild_Parent[pt];
+		//Debug.Log ("vtList2.Count = " + vtList2.Count);
+		//int currCounter = 0;
+		foreach(Vector3 pt1 in ptList)
+		{
+			if(pointInShadow(pt1,levelOfAccess-1))
+			{
+				listOfAvailablePos.Add(pt1);
+			}
+		}
+		//Debug.Log ("currCounter = " + currCounter);
+
+		MyHashTableOptimal objRet = new MyHashTableOptimal ();
+		objRet.ptKey = pt;
+		objRet.listValue.AddRange (listOfAvailablePos);
+		//return listOfAvailablePos;
+		return objRet;
+	}
+	private void fillMapWithChildren4(Vector3 pt,int levelOfAccess,Hashtable h_mapChild_Parent,Hashtable relationMap)
+	{
+		//int rowJ = (int)keyTemp.x;
+		//int colK = (int)keyTemp.y;
 		//standardMaxMovement = speedEnemy*(m_stepDistance/speedPlayer);
 		Vector3 currPos = pt;//((Vector3)h_mapIndxToPt[keyTemp]);
 		List<Vector3> listOfAvailablePos = new List<Vector3> ();
@@ -506,8 +695,6 @@ public partial class Visibility1 : MonoBehaviour
 			}
 		}
 		h_mapChild_Parent.Add(pt,listOfAvailablePos);
-		
-
 	}
 	private void executeTrueCase3()
 	{
@@ -579,7 +766,9 @@ public partial class Visibility1 : MonoBehaviour
 		int parentLevelOfAccess = levelOfAccess - 1;
 		foreach(Vector3 key in h_mapChild_Parent.Keys)
 		{
+
 			List<Vector3> ptList = (List<Vector3>)h_mapChild_Parent[key];
+
 			foreach(Vector3 pt in ptList)
 			{
 				sw.Write("("+key.x+","+key.y+","+key.z+";"+levelOfAccess+")|("+pt.x+","+pt.y+","+pt.z+";"+parentLevelOfAccess+")");
@@ -1184,10 +1373,10 @@ public partial class Visibility1 : MonoBehaviour
 			float G = (255 * numLevelsReached) / numOfLevels;
 			float R = (255 * (numOfLevels - numLevelsReached)) / numOfLevels ;
 			float B = 0f;
-			//showPosOfPointRectangle(keyObj,Color.Lerp(Color.white,Color.green,greenNum));
+			showPosOfPointRectangle(keyObj,Color.Lerp(Color.white,Color.green,greenNum));
 			//showPosOfPointRectangle(keyObj,Color.Lerp(Color.white,Color.grey,greenNum));
 			//showPosOfPoint(keyObj,getColorFromList(numLevelsReached,numOfLevels));
-			showPosOfPointRectangle(keyObj,new Color(R,G,B));
+			//showPosOfPointRectangle(keyObj,new Color(R,G,B));
 			//showPosOfPointRectangle(keyObj,new Color(0.0f,greenNum,0.0f));
 			//showPosOfPointRectangle(keyObj,getColorFromList(numLevelsReached,numOfLevels));
 		}

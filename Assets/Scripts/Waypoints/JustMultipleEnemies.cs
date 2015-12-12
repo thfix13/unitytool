@@ -1,4 +1,4 @@
-#define includeMultipleEnemies
+//#define includeMultipleEnemies
 
 using UnityEngine;
 using UnityEngine.UI;
@@ -959,7 +959,7 @@ public partial class Visibility1 : MonoBehaviour {
 			
 			Vector3 currPosEnemy = shadowAssistedObj.enemyObj.transform.position;
 			
-			shadowAssistedObj.vNextPos.Add(findNextPosEnemyShadowAssisted(shadowAssistedObj.enemyObj));
+			shadowAssistedObj.vNextPos.Add(findNextPosEnemyShadowAssisted(shadowAssistedObj.enemyObj,shadowAssistedObj.enemyObj.transform.position));
 			//if(currPosEnemy == shadowAssistedObj.vNextPos[0])
 			shadowAssistedObj.vNextPos.RemoveAt(0);
 			if(enemyCaught(shadowAssistedObj.enemyObj.transform.position))
@@ -1001,7 +1001,7 @@ public partial class Visibility1 : MonoBehaviour {
 			Vector3 currPosEnemy = nearMissObj.enemyObj.transform.position;
 			
 			
-			nearMissObj.vNextPos.Add (findNextPosEnemyNearMiss2(nearMissObj.enemyObj));
+			nearMissObj.vNextPos.Add (findNextPosEnemyNearMiss2(nearMissObj.enemyObj,nearMissObj.enemyObj.transform.position));
 			if(currPosEnemy == nearMissObj.vNextPos[0])
 				nearMissObj.vNextPos.RemoveAt(0);
 			if(enemyCaught(nearMissObj.enemyObj.transform.position))
@@ -1030,7 +1030,7 @@ public partial class Visibility1 : MonoBehaviour {
 				continue;
 			Vector3 currPosEnemy = greedyObj.enemyObj.transform.position;
 			
-			greedyObj.vNextPos.Add(findNextPosEnemyGreedy(greedyObj.enemyObj));
+			greedyObj.vNextPos.Add(findNextPosEnemyGreedy(greedyObj.enemyObj,greedyObj.enemyObj.transform.position));
 			if(currPosEnemy == greedyObj.vNextPos[0])
 				greedyObj.vNextPos.RemoveAt(0);
 			if(enemyCaught(greedyObj.enemyObj.transform.position))
