@@ -1891,10 +1891,10 @@ public partial class Visibility1 : MonoBehaviour
 				Debug.Log("Head node's can reach limit is ="+numLevelsReached);
 				numLevelsReached=0;
 			}
-			else
+			/*else
 			{
 				Debug.Log("Head node's can reach limit is ="+numLevelsReached);
-			}
+			}*/
 			sw.Write("("+headNode.getPos().x+","+headNode.getPos().y+","+headNode.getPos().z+")"+";"+numLevelsReached);
 			sw.WriteLine("");
 			/*float greenNum = numLevelsReached/numOfLevels;
