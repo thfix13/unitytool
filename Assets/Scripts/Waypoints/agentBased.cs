@@ -5,12 +5,76 @@ using System.Collections.Generic;
 using UnityEditor;
 public partial class Visibility1 : MonoBehaviour 
 {
+
+	private void createDiscreteMapForAgentBased()
+	{
+		int Indx = 0;
+		while(Indx<pathPoints.Count)
+		{
+			if(h_discreteShadows.ContainsKey(pathPoints[Indx]))
+			{
+				Indx++;
+				Debug.Log ("##############$$$$$$$$$$ Repetition of a path point at = "+Indx);
+				continue;
+			}
+			sbyte[,] shadowArray = new sbyte[discretePtsX,discretePtsZ];
+			float radius_hiddenSphere = radius_enemy;
+
+
+			/*int j1=0;	
+			for(float j=m_minX;j<m_maxX && j1<discretePtsX;j+=m_step)
+			{
+				int k1=0;
+				for(float k=m_minZ;k<m_maxZ && k1<discretePtsZ;k+=m_step)
+				{
+					Vector3 pt = new Vector3(j,1,k);
+					
+					if(pointInShadow(pt,Indx))// && !Physics.CheckSphere(pt,radius_hiddenSphere))
+					{
+						shadowArray[j1,k1]=0;
+					}
+					//else if(CheckIfInsidePolygon(pt))
+					//{
+					//	shadowArray[j1,k1]=2;
+					//}
+					else
+					{
+						shadowArray[j1,k1]=1;
+					}
+					k1++;
+				}
+				j1++;
+			}*/
+
+			foreach(Vector2 indx in h_mapIndxToPt.Keys)
+			{
+				Vector3 pt = (Vector3)h_mapIndxToPt[indx];
+				if(pointInShadow(pt,Indx))
+				{
+					shadowArray[(int)indx.x,(int)indx.y]=0;
+				}
+				else
+				{
+					shadowArray[(int)indx.x,(int)indx.y]=1;
+				}
+			}
+			
+
+
+
+			h_discreteShadows.Add(pathPoints[Indx],shadowArray);
+			Indx++;
+		}
+	}
+
 	private void agentBasedAssignmentFromEnd()
 	{
-		createDiscreteMap ();
+		standardMaxMovement = speedEnemy*(m_stepDistance/speedPlayer);
+		createDiscreteMapForAgentBased ();
+		Hashtable relationMap = createRelationships ();
+
 		int row = -1;
 		int col = -1;
-		int numSpots = 1;
 		//Initialize:Placing agents
 		sbyte[,] shadowArray = (sbyte[,])h_discreteShadows [pathPoints [pathPoints.Count-1]];
 		for(int j=0;j<discretePtsX;j++)
@@ -37,7 +101,7 @@ public partial class Visibility1 : MonoBehaviour
 				{
 					if(shadowArrayPrev[j,k]==9)
 					{
-						findChildren(shadowArrayNext,j,k,nodeTable,parentTable);
+						findChildren(shadowArrayNext,j,k,nodeTable,parentTable,relationMap);
 						//placeAgent(shadowArrayNext,j,k);
 					}
 				}
@@ -233,7 +297,7 @@ public partial class Visibility1 : MonoBehaviour
 			return bFilled;
 		}
 	}
-	private void findChildren(sbyte[,] shadowArrayNext,int j,int k, Hashtable nodeTable,Hashtable parentTable)
+	private void findChildren(sbyte[,] shadowArrayNext,int j,int k, Hashtable nodeTable,Hashtable parentTable,Hashtable relationMap)
 	{
 		int rowJ = j;
 		int colK = k;
@@ -242,7 +306,7 @@ public partial class Visibility1 : MonoBehaviour
 		List<Vector2> listOfAvailablePos = new List<Vector2> ();
 		
 		
-		bool runAgain = true;
+		/*bool runAgain = true;
 		
 		if(shadowArrayNext[j,k]==0)
 		{
@@ -286,7 +350,20 @@ public partial class Visibility1 : MonoBehaviour
 					listOfAvailablePos.Add(new Vector2(rowJ+rowLen-1,i2));
 				}
 			}
+		}*/
+		//New algo to fill listOfAvailablePos
+		List<Vector3> listNeighbors = (List<Vector3>)relationMap[currPos];
+		foreach(Vector3 neighborPosVec3 in listNeighbors)
+		{
+			Vector2 neighborPosVec2 = ((Vector2)h_mapPtToIndx[neighborPosVec3]);
+			if(shadowArrayNext[(int)neighborPosVec2.x,(int)neighborPosVec2.y]==0)
+			{
+				listOfAvailablePos.Add(neighborPosVec2);
+			}
 		}
+
+
+
 		List<AgentNode> nodelist = new List<AgentNode> ();
 		foreach(Vector2 vect in listOfAvailablePos)
 		{
@@ -364,9 +441,9 @@ public partial class Visibility1 : MonoBehaviour
 			{
 				if(shadowArray[j,k]==9)
 				{
-					GameObject clone1 = (GameObject)Instantiate(hiddenSphere);
-					clone1.transform.position = (Vector3)h_mapIndxToPt[new Vector2(j,k)];
-					//hiddenSphereList.Add(clone1);
+					showPosOfPointRectangle((Vector3)h_mapIndxToPt[new Vector2(j,k)],Color.Lerp(Color.white,Color.green,1.0f));
+					//GameObject clone1 = (GameObject)Instantiate(hiddenSphere);
+					//clone1.transform.position = (Vector3)h_mapIndxToPt[new Vector2(j,k)];
 				}
 			}
 		}
