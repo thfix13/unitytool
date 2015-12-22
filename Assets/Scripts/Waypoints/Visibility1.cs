@@ -1521,7 +1521,7 @@ public partial class Visibility1 : MonoBehaviour {
 
 
 
-			List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [currPlayerPathPoint]];
+			List<Geometry> shadowPolyTemp = (List<Geometry>)hTable[currPlayerPathPoint]; //[pathPoints [currPlayerPathPoint]];
 			List<Line> allShadowLines = new List<Line>();
 			foreach(Geometry shadowCurr in shadowPolyTemp)
 			{
@@ -3482,7 +3482,7 @@ public partial class Visibility1 : MonoBehaviour {
 	private GameObject allLineParent;
 	private Geometry findCurrentShadowPolygon(Vector3 pt,int Indx)
 	{
-		List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [Indx]];
+		List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [Indx];
 		foreach(Geometry geo in shadowPolyTemp)
 		{
 			if(geo.PointInside(pt))
@@ -3663,7 +3663,7 @@ public partial class Visibility1 : MonoBehaviour {
 				Indx++;
 				continue;
 			}
-			List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [Indx]];
+			List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [Indx];
 			sbyte[,] shadowArray = new sbyte[discretePtsX,discretePtsZ];
 
 			float radius_hiddenSphere = ((SphereCollider)hiddenSphere.GetComponent<Collider>()).radius*((SphereCollider)hiddenSphere.GetComponent<Collider>()).transform.lossyScale.x;
@@ -3733,7 +3733,7 @@ public partial class Visibility1 : MonoBehaviour {
 				maxZ=mapBoundary[i].z;
 			}
 		}
-		List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [Indx]];
+		List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [Indx];
 		float step = 0.1f;
 		for(int i=0;i<shadowPolyTemp.Count;i++)
 		{
@@ -4042,7 +4042,7 @@ public partial class Visibility1 : MonoBehaviour {
 		List<Line> allLines = new List<Line> ();
 		List<int> newTriangles = new List<int>();
 
-		List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [pathPoints [startIndex]];
+		List<Geometry> shadowPolyTemp = (List<Geometry>)hTable [startIndex];
 		for(int i=0;i<shadowPolyTemp.Count;i++)
 		{
 			shadowMeshes.Add(new GameObject("ShadowMesh"));
@@ -5245,7 +5245,7 @@ public partial class Visibility1 : MonoBehaviour {
 				hVisibleTrianglesTable.Add(pathIndexTemp,listTriangles);
 				hVisibleNewPolygons.Add(pathIndexTemp,geoVisibleNew);
 				List<Geometry> shadowPoly1 = FindShadowPolygons(pPoint,listTriangles);
-				hTable.Add(pPoint,shadowPoly1);
+				hTable.Add(pathIndexTemp,shadowPoly1);
 
 				break;
 			}
