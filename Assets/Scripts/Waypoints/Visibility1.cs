@@ -23,6 +23,8 @@ public partial class Visibility1 : MonoBehaviour {
 	string fileLastCaseExecutedFor = "C:\\Users\\Dhaliwal\\Desktop\\lastCaseExecutedFor1.txt";
 	string fileTimings = "C:\\Users\\Dhaliwal\\Desktop\\timingScene1.txt";
 	string filePoints = "C:\\Users\\Dhaliwal\\Desktop\\pointsScene1.txt";
+	string file_proveShadowAssisted = "C:\\Users\\Dhaliwal\\Desktop\\proveShadowAssisted1.txt";
+	string file_AgentBasedEachLevelFolder = "C:\\Users\\Dhaliwal\\Desktop\\AgentBasedEachLevel";
 	bool bShowLogs=false;
 	List<Geometry> globalPolygon;
 	List<Vector3> pathPoints;
@@ -155,7 +157,8 @@ public partial class Visibility1 : MonoBehaviour {
 		fileLastCaseExecutedFor = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop)+"\\lastCaseExecutedFor1.txt";
 		fileTimings = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop)+"\\timingScene1.txt";
 		filePoints = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop)+"\\pointsScene1.txt";
-		
+		file_proveShadowAssisted = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop)+"\\proveShadowAssisted1.txt";
+		file_AgentBasedEachLevelFolder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop)+"\\AgentBasedEachLevel";
 
 		if(currSceneName=="wastleLands2.unity") //USED
 		{
@@ -3500,7 +3503,8 @@ public partial class Visibility1 : MonoBehaviour {
 		}
 		bool bTestAllPoints = true;
 		//Geometry visibleGeoTemp = (Geometry)hVisiblePolyTable[pathPoints [Indx]];
-		List<VisibleTriangles> listVT = ((List<VisibleTriangles>)(hVisibleTrianglesTable[pathPoints[Indx]]));
+		//List<VisibleTriangles> listVT = ((List<VisibleTriangles>)(hVisibleTrianglesTable[pathPoints[Indx]]));
+		List<VisibleTriangles> listVT = ((List<VisibleTriangles>)(hVisibleTrianglesTable[Indx]));
 		List<Vector3> pointListToTest = new List<Vector3>();
 		//Debug.Log (radius_enemy + " radius_enemy");
 		if(bTestAllPoints)
@@ -3654,7 +3658,7 @@ public partial class Visibility1 : MonoBehaviour {
 		int Indx = 0;
 		while(Indx<pathPoints.Count)
 		{
-			if(h_discreteShadows.ContainsKey(pathPoints[Indx]))
+			if(h_discreteShadows.ContainsKey(Indx))
 			{
 				Indx++;
 				continue;
@@ -3687,7 +3691,7 @@ public partial class Visibility1 : MonoBehaviour {
 				}
 				j1++;
 			}
-			h_discreteShadows.Add(pathPoints[Indx],shadowArray);
+			h_discreteShadows.Add(Indx,shadowArray);
 			Indx++;
 		}
 	}
@@ -5484,7 +5488,8 @@ public partial class Visibility1 : MonoBehaviour {
 		}*/
 
 
-		List<VisibleTriangles> listVT = ((List<VisibleTriangles>)(hVisibleTrianglesTable[pathPoints[Indx]]));
+		//List<VisibleTriangles> listVT = ((List<VisibleTriangles>)(hVisibleTrianglesTable[pathPoints[Indx]]));
+		List<VisibleTriangles> listVT = ((List<VisibleTriangles>)(hVisibleTrianglesTable[Indx]));
 		//bool res9 = AnotherCheckIfVisible(pathPoints[Indx],pt1,listVT);
 
 

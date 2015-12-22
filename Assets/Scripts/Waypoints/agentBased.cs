@@ -11,7 +11,8 @@ public partial class Visibility1 : MonoBehaviour
 		int Indx = 0;
 		while(Indx<pathPoints.Count)
 		{
-			if(h_discreteShadows.ContainsKey(pathPoints[Indx]))
+			//if(h_discreteShadows.ContainsKey(pathPoints[Indx]))
+			if(h_discreteShadows.ContainsKey(Indx))
 			{
 				Indx++;
 				Debug.Log ("##############$$$$$$$$$$ Repetition of a path point at = "+Indx);
@@ -62,13 +63,103 @@ public partial class Visibility1 : MonoBehaviour
 
 
 
-			h_discreteShadows.Add(pathPoints[Indx],shadowArray);
+			//h_discreteShadows.Add(pathPoints[Indx],shadowArray);
+			h_discreteShadows.Add(Indx,shadowArray);
 			Indx++;
 		}
 	}
 
+
+
+
+
+
+
+
+
+
+
+	private void writeEachLevel(int level,sbyte[,] shadowArray)
+	{
+		System.IO.File.CreateText(file_AgentBasedEachLevelFolder+"\\PathPoint_"+level+".txt");
+		StreamWriter sw = new StreamWriter(file_AgentBasedEachLevelFolder+"\\PathPoint_"+level+".txt");
+
+		for(int j=0;j<discretePtsX;j++)
+		{
+			for(int k=0;k<discretePtsZ;k++)
+			{
+				sw.Write(", " + shadowArray[j,k]);
+			}
+			sw.WriteLine(""); 
+		}
+		sw.Close ();
+
+	}
+
+
+
+	private void readLevel(int pathPointReadLevel)
+	{
+		StreamReader sr = new StreamReader(file_AgentBasedEachLevelFolder+"\\PathPoint_"+pathPointReadLevel+".txt");
+
+		setGlobalVars1 ();
+		sbyte[,] shadowArray = new sbyte[discretePtsX,discretePtsZ];
+
+		
+		int j = 0;
+		int k = 0;
+		List<char> sep = new List<char>();
+		sep.Add(',');
+		while(!sr.EndOfStream)
+		{
+			string str = sr.ReadLine();
+			k=0;
+			foreach(string s in str.Split(sep.ToArray()))
+			{
+				//Debug.Log(s);
+				if(s.Length==0)
+					continue;
+				shadowArray[j,k] = sbyte.Parse(s);
+				k++;
+			}
+			j++;
+		}
+		sr.Close ();
+
+
+		for(int i=0;i<discretePtsX;i++)
+		{
+			for(j=0;j<discretePtsZ;j++)
+			{
+				//float greenNum = pointsArray[i,j]/(pathPoints.Count-1);
+				//showPosOfPoint((Vector3)h_mapIndxToPt[new Vector2(i,j)],new Color(0.0f,greenNum,0.0f));
+				if(shadowArray[i,j]!=9)
+					continue;
+				float greenNum = 1.0f;
+				showPosOfPointRectangle((Vector3)h_mapIndxToPt[new Vector2(i,j)],Color.Lerp(Color.white,Color.green,greenNum));
+			}
+		}
+
+
+	}
+
+
+
+	bool bDisplayEachLevelAgentBased = false;
+
 	private void agentBasedAssignmentFromEnd()
 	{
+		if(bDisplayEachLevelAgentBased)
+		{
+			int pathPointReadLevel = 10;
+			readLevel(pathPointReadLevel);
+			return;
+		}
+		FileUtil.DeleteFileOrDirectory (file_AgentBasedEachLevelFolder);
+		//if (!System.IO.Directory.Exists(file_AgentBasedEachLevelFolder))
+		//{
+		System.IO.Directory.CreateDirectory(file_AgentBasedEachLevelFolder);
+		//}
 		standardMaxMovement = speedEnemy*(m_stepDistance/speedPlayer);
 		createDiscreteMapForAgentBased ();
 		Hashtable relationMap = createRelationships ();
@@ -76,7 +167,8 @@ public partial class Visibility1 : MonoBehaviour
 		int row = -1;
 		int col = -1;
 		//Initialize:Placing agents
-		sbyte[,] shadowArray = (sbyte[,])h_discreteShadows [pathPoints [pathPoints.Count-1]];
+		//sbyte[,] shadowArray = (sbyte[,])h_discreteShadows [pathPoints [pathPoints.Count-1]];
+		sbyte[,] shadowArray = (sbyte[,])h_discreteShadows [pathPoints.Count-1];
 		for(int j=0;j<discretePtsX;j++)
 		{
 			for(int k=0;k<discretePtsZ;k++)
@@ -87,12 +179,13 @@ public partial class Visibility1 : MonoBehaviour
 				}
 			}
 		}
+		writeEachLevel(pathPoints.Count-1,shadowArray);
 		sbyte[,] shadowArrayPrev;
 		sbyte[,] shadowArrayNext;
 		for(int i=pathPoints.Count-1;i>0;i--)
 		{
-			shadowArrayPrev = (sbyte[,])h_discreteShadows [pathPoints [i]];
-			shadowArrayNext = (sbyte[,])h_discreteShadows [pathPoints [i-1]];
+			shadowArrayPrev = (sbyte[,])h_discreteShadows [i];
+			shadowArrayNext = (sbyte[,])h_discreteShadows [i-1];
 			Hashtable nodeTable = new Hashtable();//contains all node objects
 			Hashtable parentTable = new Hashtable();//contains parent and child nodelist
 			for(int j=0;j<discretePtsX;j++)
@@ -108,13 +201,13 @@ public partial class Visibility1 : MonoBehaviour
 			}
 			//completed Hashtables
 			fillNextLevel(shadowArrayNext,nodeTable,parentTable,i);
-
+			writeEachLevel(i-1,shadowArrayNext);
 		}
 		//shadowArrayNext = (sbyte[,])h_discreteShadows [pathPoints [2]];
 		//shadowArrayPrev = (sbyte[,])h_discreteShadows [pathPoints [pathPoints.Count-1]];
 		for(int i=pathPoints.Count-1;i>=0;i--)
 		{
-			shadowArrayPrev = (sbyte[,])h_discreteShadows [pathPoints [i]];
+			shadowArrayPrev = (sbyte[,])h_discreteShadows [i];
 			Debug.Log("Agents at "+i+" = "+countAgents(shadowArrayPrev));
 		}
 		//Debug.Log("Agents at start = "+countAgents(shadowArrayPrev));
@@ -383,7 +476,7 @@ public partial class Visibility1 : MonoBehaviour
 		int col = -1;
 		int numSpots = 1;
 		//Initialize:Placing agents
-		sbyte[,] shadowArray = (sbyte[,])h_discreteShadows [pathPoints [0]];
+		sbyte[,] shadowArray = (sbyte[,])h_discreteShadows [0];
 		for(int j=0;j<discretePtsX;j++)
 		{
 			for(int k=0;k<discretePtsZ;k++)
@@ -398,8 +491,8 @@ public partial class Visibility1 : MonoBehaviour
 		sbyte[,] shadowArrayNext;
 		for(int i=0;i<pathPoints.Count-1;i++)
 		{
-			shadowArrayPrev = (sbyte[,])h_discreteShadows [pathPoints [i]];
-			shadowArrayNext = (sbyte[,])h_discreteShadows [pathPoints [i+1]];
+			shadowArrayPrev = (sbyte[,])h_discreteShadows [i];
+			shadowArrayNext = (sbyte[,])h_discreteShadows [i+1];
 			for(int j=0;j<discretePtsX;j++)
 			{
 				for(int k=0;k<discretePtsZ;k++)
@@ -411,8 +504,8 @@ public partial class Visibility1 : MonoBehaviour
 				}
 			}
 		}
-		shadowArrayPrev = (sbyte[,])h_discreteShadows [pathPoints [0]];
-		shadowArrayNext = (sbyte[,])h_discreteShadows [pathPoints [pathPoints.Count-1]];
+		shadowArrayPrev = (sbyte[,])h_discreteShadows [0];
+		shadowArrayNext = (sbyte[,])h_discreteShadows [pathPoints.Count-1];
 		Debug.Log("Agents at start = "+countAgents(shadowArrayPrev));
 		Debug.Log("Agents surviving at the end = "+countAgents(shadowArrayNext));
 		displaySurvivingAgents();
@@ -434,7 +527,7 @@ public partial class Visibility1 : MonoBehaviour
 	}
 	private void displaySurvivingAgentsNew()
 	{
-		sbyte[,] shadowArray = (sbyte[,])h_discreteShadows [pathPoints [0]];
+		sbyte[,] shadowArray = (sbyte[,])h_discreteShadows [0];
 		for(int j=0;j<discretePtsX;j++)
 		{
 			for(int k=0;k<discretePtsZ;k++)
@@ -450,7 +543,7 @@ public partial class Visibility1 : MonoBehaviour
 	}
 	private void displaySurvivingAgents()
 	{
-		sbyte[,] shadowArray = (sbyte[,])h_discreteShadows [pathPoints [pathPoints.Count-1]];
+		sbyte[,] shadowArray = (sbyte[,])h_discreteShadows [pathPoints.Count-1];
 		for(int j=0;j<discretePtsX;j++)
 		{
 			for(int k=0;k<discretePtsZ;k++)
