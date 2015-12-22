@@ -4819,16 +4819,10 @@ public partial class Visibility1 : MonoBehaviour {
 		int pathIndexTemp = -1;
 		foreach(Vector3 pPoint in pathPoints)
 		{
+			pathIndexTemp++;
 			if(bDebugNow && pPoint!=pathPoints[PointToDebug])
 			{
 				continue;
-			}
-			//Debug.Log(pPoint);
-			if(bShowJustVisibilityPoly)
-			{
-				pathIndexTemp++;
-				if(pathIndexTemp!=bShowJustVisibilityPolyForIndex)
-					continue;
 			}
 			if(hVisiblePolyTable.ContainsKey(pPoint))
 				continue;
@@ -5248,24 +5242,24 @@ public partial class Visibility1 : MonoBehaviour {
 				{
 					vt.DrawTriangle();
 				}
-				hVisibleTrianglesTable.Add(pPoint,listTriangles);
-				hVisibleNewPolygons.Add(pPoint,geoVisibleNew);
+				hVisibleTrianglesTable.Add(pathIndexTemp,listTriangles);
+				hVisibleNewPolygons.Add(pathIndexTemp,geoVisibleNew);
 				List<Geometry> shadowPoly1 = FindShadowPolygons(pPoint,listTriangles);
 				hTable.Add(pPoint,shadowPoly1);
 
 				break;
 			}
-			hVisibleTrianglesTable.Add(pPoint,listTriangles);
-			hVisibleNewPolygons.Add(pPoint,geoVisibleNew);
+			hVisibleTrianglesTable.Add(pathIndexTemp,listTriangles);
+			hVisibleNewPolygons.Add(pathIndexTemp,geoVisibleNew);
 			//Debug.Log("Before remove duplicate = "+geoVisibleTemp.edges.Count);
 			geoVisibleTemp.removeDuplicateEdges();
 
 			//geoVisibleTemp.CheckForValidity(pathPoints.IndexOf(pPoint));
 			//Debug.Log("After remove duplicate = "+geoVisibleTemp.edges.Count);
-			hVisiblePolyTable.Add(pPoint,geoVisibleTemp);
+			hVisiblePolyTable.Add(pathIndexTemp,geoVisibleTemp);
 
 			List<Geometry> shadowPoly = FindShadowPolygons(pPoint,listTriangles);//FindShadowPolygons(geoVisibleTemp);
-			hTable.Add(pPoint,shadowPoly);
+			hTable.Add(pathIndexTemp,shadowPoly);
 			arrangedPoints.Clear();
 			continue;
 			/*if(pPoint==pathPoints[9])
