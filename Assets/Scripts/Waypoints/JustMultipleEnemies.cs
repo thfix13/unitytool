@@ -284,7 +284,7 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			if(bShowShadowEdges)
 			{
-				List<Geometry> shadowPolygonsTemp = (List<Geometry>)hTable [pathPoints [PointToDebug]];
+				List<Geometry> shadowPolygonsTemp = (List<Geometry>)hTable [PointToDebug];
 				foreach(Geometry geo in shadowPolygonsTemp)
 				{
 					geo.DrawGeometry(allLineParent,matGreen);
@@ -406,7 +406,7 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 			if(bShowShadowEdges)
 			{
-				List<Geometry> shadowPolygonsTemp = (List<Geometry>)hTable [pathPoints [nextPlayerPath]];
+				List<Geometry> shadowPolygonsTemp = (List<Geometry>)hTable [nextPlayerPath];
 				foreach(Geometry geo in shadowPolygonsTemp)
 				{
 					geo.DrawGeometry(allLineParent,matGreen);
