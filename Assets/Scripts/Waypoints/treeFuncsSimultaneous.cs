@@ -1611,7 +1611,7 @@ public partial class Visibility1 : MonoBehaviour
 			}
 		}
 	}
-	GameObject placeNumberedGameObject(Vector3 Pos,int totalPlaced,bool bEnemy)
+	GameObject placeNumberedGameObject(Vector3 Pos,int totalPlaced,bool bEnemy,int fontSize1=52)
 	{
 		GameObject gbOptimalPt;
 		if(bEnemy)
@@ -1637,7 +1637,7 @@ public partial class Visibility1 : MonoBehaviour
 		text1.transform.Rotate(new Vector3(90.0f,0.0f,0.0f));
 		text1.transform.position = Pos;
 		text1.color = Color.white;
-		text1.fontSize = 52;
+		text1.fontSize = fontSize1;
 		text1.anchor = TextAnchor.MiddleCenter;
 		text1.alignment = TextAlignment.Center;
 		//text1.fontStyle = FontStyle.Bold;
