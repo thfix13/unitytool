@@ -81,7 +81,7 @@ public partial class Visibility1 : MonoBehaviour
 
 	private void writeEachLevel(int level,sbyte[,] shadowArray)
 	{
-		System.IO.File.CreateText(file_AgentBasedEachLevelFolder+"\\PathPoint_"+level+".txt");
+		//System.IO.File.CreateText(file_AgentBasedEachLevelFolder+"\\PathPoint_"+level+".txt");
 		StreamWriter sw = new StreamWriter(file_AgentBasedEachLevelFolder+"\\PathPoint_"+level+".txt");
 
 		for(int j=0;j<discretePtsX;j++)
@@ -126,7 +126,7 @@ public partial class Visibility1 : MonoBehaviour
 		}
 		sr.Close ();
 
-
+		int numSurvived = 0;
 		for(int i=0;i<discretePtsX;i++)
 		{
 			for(j=0;j<discretePtsZ;j++)
@@ -135,27 +135,32 @@ public partial class Visibility1 : MonoBehaviour
 				//showPosOfPoint((Vector3)h_mapIndxToPt[new Vector2(i,j)],new Color(0.0f,greenNum,0.0f));
 				if(shadowArray[i,j]!=9)
 					continue;
+				numSurvived++;
 				float greenNum = 1.0f;
 				showPosOfPointRectangle((Vector3)h_mapIndxToPt[new Vector2(i,j)],Color.Lerp(Color.white,Color.green,greenNum));
 			}
 		}
-
+		Debug.Log ("numSurvived = "+numSurvived);
+		showPosOfPoint(pathPoints[pathPointReadLevel],Color.blue);
 
 	}
 
 
 
-	bool bDisplayEachLevelAgentBased = false;
+	bool bDisplayEachLevelAgentBased = true;
 
 	private void agentBasedAssignmentFromEnd()
 	{
 		if(bDisplayEachLevelAgentBased)
 		{
-			int pathPointReadLevel = 10;
+			int pathPointReadLevel = 0;
 			readLevel(pathPointReadLevel);
 			return;
 		}
-		FileUtil.DeleteFileOrDirectory (file_AgentBasedEachLevelFolder);
+		if(System.IO.Directory.Exists(file_AgentBasedEachLevelFolder))
+		{
+			FileUtil.DeleteFileOrDirectory (file_AgentBasedEachLevelFolder);
+		}
 		//if (!System.IO.Directory.Exists(file_AgentBasedEachLevelFolder))
 		//{
 		System.IO.Directory.CreateDirectory(file_AgentBasedEachLevelFolder);
