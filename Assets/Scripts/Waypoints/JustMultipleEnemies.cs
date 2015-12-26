@@ -292,7 +292,7 @@ public partial class Visibility1 : MonoBehaviour {
 			}
 			return;
 		}
-		if(bDisplayEachLevelAgentBased)
+		if(bAgentBasedAssignment || bDisplayEachLevelAgentBased)
 		{
 			return;
 		}
