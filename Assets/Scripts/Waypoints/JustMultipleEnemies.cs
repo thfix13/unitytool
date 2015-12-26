@@ -161,7 +161,10 @@ public partial class Visibility1 : MonoBehaviour {
 				line.Add(line1[i]);
 				//Debug.Log(line1[i]);
 			}
-
+			if(line.Count!=6)
+			{
+				continue;
+			}
 			Vector3 keyObj = new Vector3(float.Parse(line[0]),float.Parse(line[1]),float.Parse(line[2]));
 			Vector3 valObj = new Vector3(float.Parse(line[3]),float.Parse(line[4]),float.Parse(line[5]));
 			if(!h_proveShadowAssissted.ContainsKey(keyObj))
@@ -189,10 +192,10 @@ public partial class Visibility1 : MonoBehaviour {
 			//System.IO.File.WriteAllText(fileTimings, "This is text that goes into the text file fileTimings");
 			System.IO.File.CreateText(fileTimings);
 		}
-		if (!System.IO.File.Exists(file_proveShadowAssisted))
+		if (System.IO.File.Exists(file_proveShadowAssisted))
 		{
 			//System.IO.File.WriteAllText(fileTimings, "This is text that goes into the text file fileTimings");
-			System.IO.File.CreateText(file_proveShadowAssisted);
+			System.IO.File.Delete(file_proveShadowAssisted);
 		}
 		
 		//string tempFile2 = fileLastCaseExecutedFor + "_Temp";
@@ -230,7 +233,7 @@ public partial class Visibility1 : MonoBehaviour {
 
 		//h_proveShadowAssissted
 		StreamWriter swProveShadow = new StreamWriter(file_proveShadowAssisted);
-		foreach(Vector2 keyShadowProve in h_proveShadowAssissted)
+		foreach(Vector2 keyShadowProve in h_proveShadowAssissted.Keys)
 		{
 			Vector3 keyShadowProveVect3 = (Vector3)h_mapIndxToPt[keyShadowProve];
 			foreach(Vector3 vect3 in (List<Vector3>)h_proveShadowAssissted[keyShadowProve])
@@ -257,6 +260,11 @@ public partial class Visibility1 : MonoBehaviour {
 				nearestHeadNode = headNodeVect3;
 			}
 		}
+
+		GameObject go1 = placeNumberedGameObject(nearestHeadNode,0,true,27);
+		go1 = scaleCharacter(go1);
+		displayPathList.Add (go1);
+
 		List<Vector3> list1 = (List<Vector3>)h_proveShadowAssissted[nearestHeadNode];
 		int lenArrayOptimal = list1.Count;
 		int skipPts = 4;
@@ -264,14 +272,19 @@ public partial class Visibility1 : MonoBehaviour {
 		for(int i=0;i<lenArrayOptimal;i+=skipPts)
 		{
 			
-			GameObject go1 = placeNumberedGameObject(list1[i],totalPlaced,true);
-			GameObject go3 = placeNumberedGameObject(pathPoints[i],totalPlaced,false);
+			go1 = placeNumberedGameObject(list1[i],totalPlaced,true,27);
+			go1 = scaleCharacter(go1);
+			GameObject go3 = placeNumberedGameObject(pathPoints[i],totalPlaced,false,27);
+			go3 = scaleCharacter(go3);
 			displayPathList.Add (go1);
 			displayPathList.Add (go3);
 			totalPlaced++;
 		}
-		GameObject go2 = placeNumberedGameObject(list1[lenArrayOptimal-1],totalPlaced,true);
-		GameObject go4 = placeNumberedGameObject(pathPoints[lenArrayOptimal-1],totalPlaced,false);
+		GameObject go2 = placeNumberedGameObject(list1[lenArrayOptimal-1],totalPlaced,true,27);
+		go2 = scaleCharacter(go2);
+		GameObject go4 = placeNumberedGameObject(pathPoints[lenArrayOptimal-1],totalPlaced,false,27);
+		go4 = scaleCharacter(go4);
+
 		displayPathList.Add (go2);
 		displayPathList.Add (go4);
 		totalPlaced++;
@@ -503,6 +516,9 @@ public partial class Visibility1 : MonoBehaviour {
 			centroidObj.enemyObj.transform.position = Vector3.MoveTowards(centroidObj.enemyObj.transform.position,centroidObj.vNextPos[0], speedEnemy*Time.deltaTime);
 		}*/
 	}
+
+
+
 	Hashtable h_proveShadowAssissted = new Hashtable();
 	private void findNextEnemyPositions()
 	{
