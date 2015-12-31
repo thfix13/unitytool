@@ -118,6 +118,8 @@ public partial class Visibility1 : MonoBehaviour {
 	float radius_enemy = -1.0f;
 
 	public bool bAgentBasedAssignment = false;
+	public bool bDisplayEachLevelAgentBased = false;
+	public int pathPointReadLevel = 139;
 
 	float playerScaleForCrash = 0.5f;
 
@@ -3368,7 +3370,7 @@ public partial class Visibility1 : MonoBehaviour {
 			lscale.y*=0.7f;
 			lscale.z*=0.7f;
 		}
-
+		pos.y = 1.5f;
 		Renderer rend = tempObj.GetComponent<Renderer>();
 		rend.material.color = c;
 		rend.transform.localScale = lscale;

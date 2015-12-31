@@ -147,13 +147,13 @@ public partial class Visibility1 : MonoBehaviour
 
 
 
-	bool bDisplayEachLevelAgentBased = true;
+
 
 	private void agentBasedAssignmentFromEnd()
 	{
 		if(bDisplayEachLevelAgentBased)
 		{
-			int pathPointReadLevel = 0;
+			//Debug.Log("pathPointReadLevel = "+pathPointReadLevel);
 			readLevel(pathPointReadLevel);
 			return;
 		}
