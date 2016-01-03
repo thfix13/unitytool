@@ -10,7 +10,7 @@ public partial class Visibility1 : MonoBehaviour
 	int m_VisibleTriangleCount=0;
 	int m_ShadowPolygonCount=0;
 	int m_CommonLinesCount=0;
-	private List<Geometry> FindShadowPolygons(Vector3 pPoint, List<VisibleTriangles> listTriangles)
+	private List<Geometry> FindShadowPolygons(Vector3 pPoint,int pathPointIndx, List<VisibleTriangles> listTriangles)
 	{
 		m_modBoundaryCount=0;
 		m_modObstcleCount=0;
@@ -103,14 +103,14 @@ public partial class Visibility1 : MonoBehaviour
 			return tempListGeo;
 		}
 		//Geometry visiblePolyNew = (Geometry)hVisibleNewPolygons[pPoint];
-		List<Geometry> shadowListFinal = FindShadowPolygons(visiblePoly,pathPoints.IndexOf(pPoint));
-		//List<Geometry> shadowListFinal = FindShadowPolygons(visiblePolyNew,pathPoints.IndexOf(pPoint));
+		List<Geometry> shadowListFinal = FindShadowPolygons(visiblePoly,pathPointIndx);
+		//List<Geometry> shadowListFinal = FindShadowPolygons(visiblePolyNew,pathPointIndx);
 
 		//Debug
 		m_VisibleTriangleCount=listTriangles.Count-1;//-1 because do not know why yet?
 		if((m_modBoundaryCount+m_modObstcleCount) != (m_VisibleTriangleCount+m_ShadowPolygonCount-m_CommonLinesCount))
 		{
-			Debug.Log("ERROR!!!!!!!!!!!!!!!!!!!!! at "+pathPoints.IndexOf(pPoint)+". Shadow Polygon not correct.");
+			Debug.Log("ERROR!!!!!!!!!!!!!!!!!!!!! at "+pathPointIndx+". Shadow Polygon not correct.");
 			/*Debug.Log("(m_modBoundaryCount+m_modObstcleCount) = "+(m_modBoundaryCount+m_modObstcleCount));
 			Debug.Log("(m_VisibleTriangleCount+m_ShadowPolygonCount-m_CommonLinesCount) = "+(m_VisibleTriangleCount+m_ShadowPolygonCount-m_CommonLinesCount));
 			Debug.Log("(m_modBoundaryCount) = "+(m_modBoundaryCount));

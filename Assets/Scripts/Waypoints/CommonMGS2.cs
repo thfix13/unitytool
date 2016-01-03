@@ -12,7 +12,7 @@ using System.Collections.Generic;
 public static class CommonMGS2
 {
 	static float scale = 0.5f;
-	static float stepPath = 0.2f*scale;
+	static float stepPath = 0.4f*scale;
 	public static List<Vector3> definePathFromIndx(int pathIndx)
 	{
 		//List<Vector3> pathPts = new List<Vector3> ();
@@ -64,7 +64,7 @@ public static class CommonMGS2
 		
 		
 		List<Vector3> wayPoints = createWayPoints (sp.transform.position,ep.transform.position);
-		stepPath *= 1.2f; 
+		//stepPath *= 2.1f;
 		List<Vector3>  pathPts = selectPath7(wayPoints);
 		createPathPoints (pathPts);
 		
@@ -91,6 +91,99 @@ public static class CommonMGS2
 	private static List<Vector3> createWayPoints (Vector3 startPt,Vector3 endPt)
 	{
 		List<Vector3> wayPoints = new List<Vector3> ();
+		
+		
+		float step = 6 * stepPath;
+		Vector3 pt1 = new Vector3 (startPt.x, startPt.y, startPt.z+step);
+		showPosOfPoint (pt1, Color.green);
+		
+		step = 8 * stepPath;
+		Vector3 pt2 = new Vector3 (pt1.x+step, pt1.y, pt1.z);
+		showPosOfPoint (pt2, Color.green);
+		
+		step = 5 * stepPath;
+		step = step * step;
+		float xVar = 0.2f;//0.95f;
+		float zVar = Mathf.Sqrt(step - xVar * xVar);
+		Vector3 pt3 = new Vector3 (pt2.x+xVar, pt2.y, pt2.z-zVar);
+		showPosOfPoint (pt3, Color.green);
+		
+		step = 21 * stepPath;
+		Vector3 pt4 = new Vector3 (pt3.x+step, pt3.y, pt3.z);
+		showPosOfPoint (pt4, Color.green);
+		
+		step = 14 * stepPath;
+		Vector3 pt5 = new Vector3 (pt4.x+step, pt4.y, pt4.z);
+		showPosOfPoint (pt5, Color.green);
+		
+		step = 8 * stepPath;
+		Vector3 pt6 = new Vector3 (pt5.x, pt5.y, pt5.z-step);
+		showPosOfPoint (pt6, Color.green);
+		
+		step = 12 * stepPath;
+		Vector3 pt7 = new Vector3 (pt3.x+1.0f, pt3.y, pt3.z-step);
+		showPosOfPoint (pt7, Color.green);
+		
+		Vector3 pt8 = new Vector3 (pt4.x, pt7.y, pt7.z);
+		showPosOfPoint (pt8, Color.green);
+		//Debug.Log ((pt8.x - pt7.x) / stepPath);
+		//Debug.Log ((pt8.z - pt4.z) / stepPath);
+		
+		step = 8 * stepPath;
+		Vector3 pt10 = new Vector3 (pt7.x, pt7.y, pt7.z-step);
+		showPosOfPoint (pt10, Color.green);
+		
+		step = 8 * stepPath;
+		Vector3 pt14 = new Vector3 (pt10.x-step, pt10.y, pt10.z);
+		showPosOfPoint (pt14, Color.green);
+		
+		step = 4 * stepPath;
+		Vector3 pt11 = new Vector3 (pt10.x, pt10.y, pt10.z-step);
+		showPosOfPoint (pt11, Color.green);
+		
+		Vector3 pt12 = new Vector3 (pt8.x, pt8.y, pt11.z);
+		//showPosOfPoint (pt12, Color.green);
+		//Debug.Log ((pt12.x - pt11.x) / stepPath);
+		//Debug.Log ((pt12.z - pt8.z) / stepPath);
+		
+		step = 12 * stepPath;
+		Vector3 pt13 = new Vector3 (pt12.x+step, pt12.y, pt12.z);
+		showPosOfPoint (pt13, Color.green);
+		
+		step = 9 * stepPath;
+		step = step * step;
+		xVar = 1.0f;
+		zVar = Mathf.Sqrt(step - xVar * xVar);
+		Vector3 pt9 = new Vector3 (pt13.x+xVar, pt13.y, pt13.z+zVar);
+		showPosOfPoint (pt9, Color.green);
+		
+		Vector3 pt15 = new Vector3 (pt10.x, pt10.y, pt10.z);
+		
+		
+		wayPoints.Add (startPt);//0
+		wayPoints.Add (pt1);
+		wayPoints.Add (pt2);
+		wayPoints.Add (pt3);
+		wayPoints.Add (pt4);
+		wayPoints.Add (pt5);
+		wayPoints.Add (pt6);
+		wayPoints.Add (pt7);
+		wayPoints.Add (pt8);
+		wayPoints.Add (pt9);
+		wayPoints.Add (pt10);
+		wayPoints.Add (pt11);
+		wayPoints.Add (pt12);
+		wayPoints.Add (pt13);
+		wayPoints.Add (pt14);
+		wayPoints.Add (pt15);
+		wayPoints.Add (endPt);//16
+		return wayPoints;
+	}
+	private static List<Vector3> createWayPoints_Old (Vector3 startPt,Vector3 endPt)
+	{
+		List<Vector3> wayPoints = new List<Vector3> ();
+
+
 		float step = 12 * stepPath;
 		Vector3 pt1 = new Vector3 (startPt.x, startPt.y, startPt.z+step);
 		showPosOfPoint (pt1, Color.green);
@@ -154,8 +247,9 @@ public static class CommonMGS2
 		zVar = Mathf.Sqrt(step - xVar * xVar);
 		Vector3 pt9 = new Vector3 (pt13.x+xVar, pt13.y, pt13.z+zVar);
 		showPosOfPoint (pt9, Color.green);
-		
+
 		Vector3 pt15 = new Vector3 (pt10.x, pt10.y, pt10.z);
+
 		
 		wayPoints.Add (startPt);//0
 		wayPoints.Add (pt1);

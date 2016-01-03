@@ -139,7 +139,7 @@ public partial class Visibility1 : MonoBehaviour {
 	float playerScaleForCurrent;
 
 
-	int PointToDebug = 147;
+	int PointToDebug = 100;
 	public bool bDebugNow = false;
 	bool bShowShadowEdges = true;
 	void Start () 
@@ -195,6 +195,7 @@ public partial class Visibility1 : MonoBehaviour {
 		else if(currSceneName=="MGS2.unity")//USED
 		{
 			playerScaleForCurrent = playerScaleForMGS2;
+			m_step = 0.1f;
 		}
 		else if(currSceneName=="chung.unity")//USED
 		{
@@ -504,19 +505,7 @@ public partial class Visibility1 : MonoBehaviour {
 			pathPoints = CommonMGS2.definePath ();
 			m_stepDistance = CommonMGS2.getStepDistance();
 			Debug.Log("pathPoints.Count = "+pathPoints.Count);
-			if(bTestingMGS2)
-			{
-				setGlobalVars1();
-				CalculateVisibilityForPath();
-				foreach(Vector3 vect in pathPoints)
-				{
-					GameObject pathObj;
-					pathObj = Instantiate(pathSphere, 
-					                      vect, 
-					                      pathSphere.transform.rotation) as GameObject;
-				}
-				return;
-			}
+
 		}
 		else if(currSceneName=="MGS.unity")
 		{
@@ -3563,6 +3552,7 @@ public partial class Visibility1 : MonoBehaviour {
 					return false;
 				}
 			}*/
+
 			bool res9 = AnotherCheckIfVisible(pathPoints[Indx],pt1,listVT);
 			if(res9)
 			{
@@ -5198,7 +5188,7 @@ public partial class Visibility1 : MonoBehaviour {
 				}
 				if(!bTriangleAdded)
 				{
-					Debug.Log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Triangle not added at = "+pathPoints.IndexOf(pPoint));
+					Debug.Log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Triangle not added at = "+pathIndexTemp);
 					if(bDebugNow)
 					{
 						GameObject allLineParentChildTemp = new GameObject();
@@ -5244,10 +5234,10 @@ public partial class Visibility1 : MonoBehaviour {
 				{
 					vt.DrawTriangle();
 				}
-				hVisibleTrianglesTable.Add(pathIndexTemp,listTriangles);
-				hVisibleNewPolygons.Add(pathIndexTemp,geoVisibleNew);
-				List<Geometry> shadowPoly1 = FindShadowPolygons(pPoint,listTriangles);
-				hTable.Add(pathIndexTemp,shadowPoly1);
+				hVisibleTrianglesTable.Add(PointToDebug,listTriangles);
+				hVisibleNewPolygons.Add(PointToDebug,geoVisibleNew);
+				List<Geometry> shadowPoly1 = FindShadowPolygons(pPoint,PointToDebug,listTriangles);
+				hTable.Add(PointToDebug,shadowPoly1);
 
 				break;
 			}
@@ -5260,7 +5250,7 @@ public partial class Visibility1 : MonoBehaviour {
 			//Debug.Log("After remove duplicate = "+geoVisibleTemp.edges.Count);
 			hVisiblePolyTable.Add(pathIndexTemp,geoVisibleTemp);
 
-			List<Geometry> shadowPoly = FindShadowPolygons(pPoint,listTriangles);//FindShadowPolygons(geoVisibleTemp);
+			List<Geometry> shadowPoly = FindShadowPolygons(pPoint,pathIndexTemp,listTriangles);//FindShadowPolygons(geoVisibleTemp);
 			hTable.Add(pathIndexTemp,shadowPoly);
 			arrangedPoints.Clear();
 			continue;
