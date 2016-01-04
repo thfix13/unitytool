@@ -3308,6 +3308,10 @@ public partial class Visibility1 : MonoBehaviour {
 		{
 			scalingTemp = 0.6f;
 		}
+		else if(currSceneName=="MGS2.unity")
+		{
+			scalingTemp = 0.6f;
+		}
 
 		lscale.x*=playerScaleForCurrent*scalingTemp;
 		lscale.y*=playerScaleForCurrent*scalingTemp;
