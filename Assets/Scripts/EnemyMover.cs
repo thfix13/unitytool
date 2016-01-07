@@ -5,8 +5,16 @@ using Objects;
 namespace Extra {
 	public class EnemyMover {
 		
-		public static void Solve (int id, Vector3 position, Quaternion rotation, float moveSpeed, float rotationSpeed, float tpf, Waypoint waypoint, float collisionRadius, out Vector3 outPosition, out Quaternion outRotation, out Waypoint outWaypoint) {
-			if (waypoint is RotationWaypoint) {
+		public static void Solve (int id, Vector3 position, 
+					Quaternion rotation, float moveSpeed, float rotationSpeed, 
+					float tpf, Waypoint waypoint, float collisionRadius, 
+					out Vector3 outPosition, out Quaternion outRotation, 
+					out Waypoint outWaypoint)
+		{
+		
+
+			if (waypoint is RotationWaypoint) 
+			{
 				
 				RotationWaypoint r = (RotationWaypoint)waypoint;
 				
@@ -20,7 +28,9 @@ namespace Extra {
 				outRotation = Quaternion.RotateTowards (rotation, lookDir, rotationSpeed * tpf);
 				outPosition = position;
 				outWaypoint = waypoint;
-			} else if (waypoint is WaitingWaypoint) {
+			} 
+			else if (waypoint is WaitingWaypoint) 
+			{
 				
 				WaitingWaypoint w = (WaitingWaypoint)waypoint;
 				
@@ -42,8 +52,13 @@ namespace Extra {
 				outPosition = position;
 				outWaypoint = waypoint;
 				outRotation = rotation;
-			} else {
-				if (Dist (position, waypoint.transform.position) <= collisionRadius) {
+			} 
+			else 
+			{
+				// Debug.Log(position);
+				// Debug.Log(waypoint.name);
+				if (Dist (position, waypoint.transform.position) <= collisionRadius) 
+				{
 					Solve (id, position, rotation, moveSpeed, rotationSpeed, tpf, waypoint.next, collisionRadius, out outPosition, out outRotation, out outWaypoint);
 					return;
 				}
