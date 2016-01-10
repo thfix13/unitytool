@@ -7,13 +7,22 @@ public class Triangle
 {
 	public Vector3[] vertex = new Vector3[3];
 	public Color[] colourVertex = new Color[3];
+    //SPECIAL SECTION START
+
     public bool visited = false;
     public float area = 0f;
     public float distance = float.MaxValue;
     public bool changed = false;
 
+    public List<Triangle> parents = new List<Triangle>();
     public List<Triangle> treeKids = new List<Triangle>();
     public int treeDepth = -1;
+
+    public List<Triangle> simpTreeKids = new List<Triangle>();
+
+    //SPECIAL SECTION END
+
+
 
 	//Reference to points in Triangulation gameobject data holder
 	public int[] refPoints = new int[3]; 

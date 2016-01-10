@@ -1133,8 +1133,8 @@ public class Triangulation : MonoBehaviour
 
 
         triangles = delaunayIfy(triangles);
-        GameObject triDParent = new GameObject("triDParent");
-        drawTris(triangles, triDParent.transform);
+        //GameObject triDParent = new GameObject("triDParent");
+        //drawTris(triangles, triDParent.transform);
 
         triangulation.triangles = triangles;
 
@@ -1423,32 +1423,206 @@ public class Triangulation : MonoBehaviour
         return visited;
     }
 
-    //private static List<T>
 
 
 
-    private static int antiInfiniLoopTreeDraw = 0;
+    public static List<List<int>> findAllSimpleEndPaths(Triangle startT, Triangle endT) {
+        genTreeStruct(startT);
+        simpTreeStruct(startT);
 
-    public static void drawTreeStruct(Triangle t) {
-        antiInfiniLoopTreeDraw = 0;
-        GameObject triTree = new GameObject("TriTree");
+        List<List<int>> paths = new List<List<int>>();
+        List<int> path = new List<int>();
+        paths.Add(path);
+        int numPaths = 1;
+        int curPath = 0;
+
+        if (startT.simpTreeKids.Count == 1) {
+            path.Add(0);
+            paths = findAllSimpEndPathHelp(startT.simpTreeKids[0], numPaths, curPath, paths, endT);
+        }
+        else if (startT.simpTreeKids.Count > 1) {
+            for (int i = 0; i < startT.simpTreeKids.Count; i++) {
+                if (i < numPaths) {
+                    paths[i].Add(i);
+                }
+                else {
+                    numPaths++;
+                    paths.Add(new List<int>());
+                    paths[i].Add(i);
+                }
+            }
+            for (int i = 0; i < startT.simpTreeKids.Count; i++) {
+                paths = findAllSimpEndPathHelp(startT.simpTreeKids[i], numPaths, i, paths, endT);
+                numPaths = paths.Count;
+            }
+        }
+        List<List<int>> endPaths = new List<List<int>>();
+        foreach(List<int> p in paths) {
+            if (p[p.Count - 1] != -1) {
+                endPaths.Add(p);
+            }
+                
+        }
+
+        return endPaths;
+
+    }
+
+    private static List<List<int>> findAllSimpEndPathHelp(Triangle curT, int numPaths, int curPath, List<List<int>> paths, Triangle endT) {
+        if (curT.simpTreeKids.Count == 1) {
+
+            paths[curPath].Add(0);
+            paths = findAllSimpEndPathHelp(curT.simpTreeKids[0], numPaths, curPath, paths, endT);
+            return paths;
+        }
+        else if (curT.simpTreeKids.Count > 1) {
+            int oldNumPaths = numPaths;
+            for (int i = 0; i < curT.simpTreeKids.Count; i++) {
+                if (i < 1) {
+                    paths[curPath].Add(i);
+                }
+                else {
+                    numPaths++;
+                    List<int> toAdd = new List<int>();
+                    toAdd.AddRange(paths[curPath]);
+                    toAdd.RemoveAt(toAdd.Count - 1);
+                    toAdd.Add(i);
+                    paths.Add(toAdd);
+
+                }
+            }
+
+            paths = findAllSimpEndPathHelp(curT.simpTreeKids[0], numPaths, curPath, paths, endT);
+            numPaths = paths.Count;
+
+            for (int i = 1; i < curT.simpTreeKids.Count; i++) {
+                paths = findAllSimpEndPathHelp(curT.simpTreeKids[i], numPaths, (oldNumPaths - 1 + i), paths, endT);
+                numPaths = paths.Count;
+            }
+            return paths;
+        }
+        else {
+            if (curT.Equals(endT)) {
+                return paths;
+            }
+            else {
+                paths[curPath].Add(-1);
+                return paths;
+            }
+            
+        }
+    }
+
+
+
+
+
+    public static List<List<int>> findAllSimplePaths(Triangle startT) {
+        genTreeStruct(startT);
+        simpTreeStruct(startT);
+
+        List<List<int>> paths = new List<List<int>>();
+        List<int> path = new List<int>();
+        paths.Add(path);
+        int numPaths = 1;
+        int curPath = 0;
+
+        if(startT.simpTreeKids.Count == 1) {
+            path.Add(0);
+            paths = findAllSimpPathHelp(startT.simpTreeKids[0], numPaths, curPath, paths);
+        }
+        else if(startT.simpTreeKids.Count > 1) {
+            for(int i  =0; i < startT.simpTreeKids.Count; i++) {
+                if(i < numPaths) {
+                    paths[i].Add(i);
+                }
+                else {
+                    numPaths++;
+                    paths.Add(new List<int>());
+                    paths[i].Add(i);
+                }
+            }
+            for (int i = 0; i < startT.simpTreeKids.Count; i++) {
+                paths = findAllSimpPathHelp(startT.simpTreeKids[i], numPaths, i, paths);
+                numPaths = paths.Count;
+            }
+        }
+        return paths;
+
+    }
+
+    private static List<List<int>> findAllSimpPathHelp(Triangle curT, int numPaths, int curPath, List<List<int>> paths) {
+        if (curT.simpTreeKids.Count == 1) {
+
+            paths[curPath].Add(0);
+            paths = findAllSimpPathHelp(curT.simpTreeKids[0], numPaths, curPath, paths);
+            return paths;
+        }
+        else if(curT.simpTreeKids.Count > 1) {
+            int oldNumPaths = numPaths;
+            for(int i=0; i < curT.simpTreeKids.Count; i++) {
+                if(i < 1) {
+                    paths[curPath].Add(i);
+                }
+                else {
+                    numPaths++;
+                    List<int> toAdd = new List<int>();
+                    toAdd.AddRange(paths[curPath]);
+                    toAdd.RemoveAt(toAdd.Count - 1);
+                    toAdd.Add(i);
+                    paths.Add(toAdd);
+
+                }
+            }
+
+            paths = findAllSimpPathHelp(curT.simpTreeKids[0], numPaths, curPath, paths);
+            numPaths = paths.Count;
+
+            for (int i = 1; i < curT.simpTreeKids.Count; i++) {
+                paths = findAllSimpPathHelp(curT.simpTreeKids[i], numPaths, (oldNumPaths - 1 + i), paths);
+                numPaths = paths.Count;
+            }
+            return paths;
+        }
+        else {
+            return paths;
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+    private static int antiInfiniLoopTreeDrawSimp = 0;
+
+    public static void drawTreeStructSimp(Triangle t) {
+        antiInfiniLoopTreeDrawSimp = 0;
+        GameObject triTree = new GameObject("TriTreeSimp");
         GameObject node = new GameObject("rootNode");
         node.transform.parent = triTree.transform;
         GameObject root = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         root.transform.position = t.GetCenterTriangle();
         root.transform.parent = node.transform;
         root.name = "root";
-        foreach (Triangle tt in t.treeKids) {
+        foreach (Triangle tt in t.simpTreeKids) {
             DebugDrawLineUsingObjects(node, t.GetCenterTriangle(), tt.GetCenterTriangle());
-            drawTreeStructHelp(tt, node);
+            drawTreeStructHelpSimp(tt, node);
         }
     }
 
-    private static void drawTreeStructHelp(Triangle t, GameObject tObj) {
-        antiInfiniLoopTreeDraw++;
-        if(antiInfiniLoopTreeDraw > 250) {
-            Debug.Log("INFINILOOPTREEDRAW");
-            Debug.Log(t.GetCenterTriangle());
+    private static void drawTreeStructHelpSimp(Triangle t, GameObject tObj) {
+        antiInfiniLoopTreeDrawSimp++;
+        //Debug.Log(t.GetCenterTriangle());
+        if (antiInfiniLoopTreeDrawSimp > 50) {
+            //Debug.Log(antiInfiniLoopTreeDrawSimp);
+            Debug.Log("INFINILOOPTREEDRAWSIMP");
+            //Debug.Log(t.GetCenterTriangle());
             return;
 
         }
@@ -1458,8 +1632,128 @@ public class Triangulation : MonoBehaviour
         ctObj.transform.position = t.GetCenterTriangle();
         ctObj.transform.parent = node.transform;
         ctObj.name = "tri";
-        foreach (Triangle tt in t.treeKids) {
+        /*string toDebug = "This triangle calls on its children:";
+        foreach (Triangle tt in t.simpTreeKids) {
+            toDebug = toDebug + tt.GetCenterTriangle() + ",";
+        }
+        Debug.Log(toDebug);*/
+        foreach (Triangle tt in t.simpTreeKids) {
             DebugDrawLineUsingObjects(node, t.GetCenterTriangle(), tt.GetCenterTriangle());
+            drawTreeStructHelpSimp(tt, node);
+        }
+    }
+
+    public static void simpTreeStruct(Triangle t) {
+        foreach(Triangle tt in t.treeKids) {
+            t.simpTreeKids.Add(simpTreeStructHelp(tt));
+        }
+    }
+
+    private static Triangle simpTreeStructHelp(Triangle t) {
+        if(t.treeKids.Count == 0) {
+            return t;
+        }
+        else if(t.treeKids.Count == 1) {
+            if (t.parents.Count == 1) {
+                return simpTreeStructHelp(t.treeKids[0]);
+            }
+            else {
+                Triangle tkid = simpTreeStructHelp(t.treeKids[0]);
+                if (!t.simpTreeKids.Contains(tkid)) {
+                    t.simpTreeKids.Add(tkid);
+                }
+                return t;
+            }
+        }
+        else {
+            
+            foreach(Triangle tt in t.treeKids) {
+                Triangle tkid = simpTreeStructHelp(tt);
+                if (!t.simpTreeKids.Contains(tkid)) {
+                    t.simpTreeKids.Add(simpTreeStructHelp(tt));
+                }
+            }
+            return t;
+        }
+    }
+
+    private static int antiInfiniLoopTreeDraw = 0;
+
+    public static void drawTreeStruct(Triangle t) {
+        antiInfiniLoopTreeDraw = 0;
+        
+        
+
+
+
+        drawn = new List<Triangle>();
+        drawn.Add(t);
+        //Set up nested objects
+        GameObject triTree = new GameObject("TriTree");
+        GameObject node = new GameObject("rootNode");
+        node.transform.parent = triTree.transform;
+        GameObject root = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        root.transform.position = t.GetCenterTriangle();
+        root.transform.parent = node.transform;
+        root.name = "root";
+
+        /*
+        string toDebug = "Triangle at " + t.GetCenterTriangle() + ". With kids:";
+        foreach(Triangle tt in t.treeKids) {
+            toDebug = toDebug + tt.GetCenterTriangle() + ",";
+        }
+        Debug.Log(toDebug);
+        */
+
+        foreach (Triangle tt in t.treeKids) {
+            //Draw Line from original node to each treeKid
+            DebugDrawLineUsingObjects(node, t.GetCenterTriangle(), tt.GetCenterTriangle());
+
+            //Recursively draw each tree Node
+            drawTreeStructHelp(tt, node);
+        }
+    }
+
+    private static List<Triangle> drawn;
+
+    private static void drawTreeStructHelp(Triangle t, GameObject tObj) {
+        if (drawn.Contains(t)) {
+            return;
+        }
+        else {
+            drawn.Add(t);
+        }
+
+        /*
+        string toDebug = "Triangle at " + t.GetCenterTriangle() + ". With kids:";
+        foreach (Triangle tt in t.treeKids) {
+            toDebug = toDebug + tt.GetCenterTriangle() + ",";
+        }
+        Debug.Log(toDebug);
+        */
+
+        antiInfiniLoopTreeDraw++;
+        if(antiInfiniLoopTreeDraw > 250) {
+            Debug.Log("INFINILOOPTREEDRAW");
+            Debug.Log(t.GetCenterTriangle());
+            return;
+
+        }
+
+        //Set up nested objects
+        GameObject node = new GameObject("node");
+        node.transform.parent = tObj.transform;
+        GameObject ctObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        ctObj.transform.position = t.GetCenterTriangle();
+        ctObj.transform.parent = node.transform;
+        ctObj.name = "tri";
+
+
+        foreach (Triangle tt in t.treeKids) {
+            //Draw Line between each treeKid an this parent
+            DebugDrawLineUsingObjects(node, t.GetCenterTriangle(), tt.GetCenterTriangle());
+
+            //Call recursively on each child
             drawTreeStructHelp(tt, node);
         }
     }
@@ -1471,12 +1765,25 @@ public class Triangulation : MonoBehaviour
         t.treeKids.AddRange(t.voisins);
         t.treeDepth = 0;
         foreach(Triangle tt in t.treeKids) {
+            tt.parents.Add(t);
             tt.treeDepth = 1;
             genTreeStructHelp(tt);
+        }
+        foreach(Triangle tt in t.treeKids) {
+            setParents(tt);
         }
     }
 
     private static int antiInfiniLoopTree = 0;
+
+    private static void setParents(Triangle t) {
+        foreach(Triangle tt in t.treeKids) {
+            if (!tt.parents.Contains(t)) {
+                tt.parents.Add(t);
+                setParents(tt);
+            }
+        }
+    }
 
     private static void genTreeStructHelp(Triangle t) {
         //Debug.Log(t.GetCenterTriangle());
@@ -1489,33 +1796,67 @@ public class Triangulation : MonoBehaviour
         }
         //t.treeKids = new List<Triangle>();
         t.treeKids.Clear();
-        foreach (Triangle tt in t.voisins) {
+        /*foreach (Triangle tt in t.voisins) {
             if(tt.treeDepth < 0) {
                 t.treeKids.Add(tt);
             }
             else if(tt.treeDepth > t.treeDepth) {
                 t.treeKids.Add(tt);
             }
-        }
+        }*/
+        bool testering = false;
+        /*if ((t.GetCenterTriangle() - new Vector3(-14f, 1, 23.3333f)).magnitude < 0.0001f) {
+            testering = true;
+            Debug.Log("TESTERING");
+            Debug.Log(t.GetCenterTriangle());
+        }*/
+
         foreach(Triangle tt in t.voisins) {
+            if (testering) {
+                Debug.Log("New Voisin" + tt.GetCenterTriangle());
+            }
             if(tt.treeDepth < 0) {
+                if (testering) {
+                    Debug.Log("CASE1");
+                }
                 tt.treeDepth = t.treeDepth + 1;
+                if (!t.treeKids.Contains(tt)) {
+
+                    t.treeKids.Add(tt);
+                }
+                else {
+                    Debug.Log("NOT ADDED, YAY1");
+                }
                 genTreeStructHelp(tt);
             }
             else if(tt.treeDepth > t.treeDepth + 1) {
+                if (testering) {
+                    Debug.Log("CASE2");
+                }
                 tt.treeDepth = t.treeDepth + 1;
+                if (!t.treeKids.Contains(tt)) {
+                    
+                    t.treeKids.Add(tt);
+                }
+                else {
+                    Debug.Log("NOT ADDED, YAY1");
+                }
                 genTreeStructHelp(tt);
             }
             else if(tt.treeDepth == t.treeDepth + 1) {
+                if (testering) {
+                    Debug.Log("CASE3");
+                }
+                if (!t.treeKids.Contains(tt)) {
+                    t.treeKids.Add(tt);
+                }
+                else {
+                    Debug.Log("NOT ADDED, YAY1");
+                }
                 tt.treeKids.Remove(t);
             }
         }
     }
-
-
-
-
-
 
     public static void computeDistanceTree(Triangle t) {
         genTreeStruct(t);

@@ -235,16 +235,36 @@ namespace EditorArea {
                 Triangle startTri = null;
                 Vector3 startPoint = new Vector3(-45, 1, 45);
                 //Vector3 startPoint = new Vector3(-20, 1, 20);
+                Vector3 endPoint = new Vector3(43, 1, -43);
+                Triangle endTri = null;
                 foreach (Triangle t in tris) {
                     if (t.containsPoint(startPoint)) {
                         startTri = t;
                     }
+                    if (t.containsPoint(endPoint)) {
+                        endTri = t;
+                    }
+
                 }
 
-                Triangulation.genTreeStruct(startTri);
-                Triangulation.drawTreeStruct(startTri);
+                //Triangulation.genTreeStruct(startTri);
+                //Triangulation.drawTreeStruct(startTri);
+                /*foreach(Triangle t in triangles.triangles) {
+                    Debug.Log(t.GetCenterTriangle());
+                    Debug.Log(t.parents.Count);
+                }*/
+                //Triangulation.simpTreeStruct(startTri);
+                //Triangulation.drawTreeStructSimp(startTri);
 
-
+                List<List<int>> paths = Triangulation.findAllSimpleEndPaths(startTri, endTri);
+                Debug.Log("Number of Paths Found = " + paths.Count);
+                foreach(List<int> path in paths) {
+                    string toPrint = "Path:";
+                    foreach(int choice in path) {
+                        toPrint = toPrint + choice + ",";
+                    }
+                    Debug.Log(toPrint);
+                }
 
 
 
