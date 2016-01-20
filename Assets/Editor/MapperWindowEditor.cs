@@ -843,6 +843,28 @@ namespace EditorArea {
 			ResetAI ();
 			previous = DateTime.Now;
 
+			//Print the volume metric. 
+			int vfov = 0; 
+			int vAll = original.Length * original[0].Length * original[0][0].Length ; 
+			for (int i=0;i< original.Length; i++)
+			{
+				for (int j=0;j< original[i].Length; j++)
+				{
+					for (int k=0;k< original[i][j].Length; k++)
+					{
+						if (original[i][j][k].seen)
+						{
+							vfov+=1;
+						}
+						if(original[i][j][k].blocked)
+						{
+							vAll-=1;
+						}
+					}
+				}
+			}
+			Debug.Log((vfov*1.0f)/vAll);
+
 		}
 		public void Update () {
 			textDraw.Clear();
