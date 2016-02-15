@@ -510,23 +510,128 @@ namespace Exploration {
             return null;
         }
 
-        public List<NodeGeo> ComputeGeoFromPartials(float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> tris) {
+        public List<NodeGeo> ComputeGeoFromPartials(float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, int attemps2, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> tris) {
             tree = new KDTree(3);
             NodeGeo start = GetNodeGeo(0, startX, startY);
             int startTriIndex = -1;
             int endTriIndex = -1;
 
+            foreach (Triangle tri in tris) {
+                tri.resetTriProps();
+            }
+
             for (int i = 0; i < tris.Count; i++) {
                 Triangle tri = tris[i];
-                /*Line[] lins = tri.getLines();
-                float l1 = lins[0].Magnitude();
-                float l2 = lins[1].Magnitude();
-                float l3 = lins[2].Magnitude();
-                float s = 0.5f * (l1 + l2 + l3);
-                float area = Mathf.Sqrt(s * (s - l1) * (s - l2) * (s - l3));
-                tri.area = area;
-                areas.Add(area);
-                areaSum = areaSum + area;*/
+                if (tri.containsPoint(new Vector3(startX, 1, startY))) {
+                    if (startTriIndex >= 0) {
+                        Debug.Log("PROBLEMO 1");
+                    }
+                    tri.visited = true;
+                    startTriIndex = i;
+                }
+                if (tri.containsPoint(new Vector3(endX, 1, endY))) {
+                    endTriIndex = i;
+                }
+            }
+            tris[startTriIndex].visited = true;
+            Triangulation.computeDistanceTree(tris[startTriIndex]);
+            float distToEnd = tris[endTriIndex].distance;
+            //GameObject bobo = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            //bobo.transform.position = tris[endTriIndex].GetCenterTriangle();
+            //bobo.name = "EndTri";
+
+
+            float halfDist = distToEnd / 2;
+            halfDist = halfDist - 5f;
+            Triangle halfway = tris[endTriIndex];
+            float distDiff = halfDist + 10f;
+            //Debug.Log(distToEnd);
+            if (distToEnd > triMaxRRTDist) {
+                foreach (Triangle t in tris) {
+                    if (Mathf.Abs(t.distance - halfDist) < distDiff) {
+                        halfway = t;
+                        distDiff = Mathf.Abs(t.distance - halfDist);
+                    }
+                }
+
+                //Debug.Log(distDiff);
+                //Debug.Log(halfway.distance);
+                //GameObject bob = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                //bob.transform.position = halfway.GetCenterTriangle();
+                //bob.name = "HALFWAYPOINT";
+
+                float partEndX = halfway.GetCenterTriangle().x;
+                float partEndY = halfway.GetCenterTriangle().z;
+
+                NodeGeo partNode = null;
+                for (int i = 0; i < attemps2; i++) {
+                    partNode = ComputePartialGeo(start, partEndX, partEndY, minX, maxX, minY, maxY, 0, maxT, attemps, speed, distractPos, distractPos2, tris, false);
+                    if (partNode == null) {
+                        foreach (Triangle t in tris) {
+                            t.resetTriProps();
+                            tris[startTriIndex].visited = true;
+                            Triangulation.computeDistanceTree(tris[startTriIndex]);
+                        }
+                    }
+                    else {
+                        break;
+                    }
+                }
+                if (partNode == null) {
+                    return new List<NodeGeo>();
+                }
+                Debug.Log("REACHED PARTWAY TO" + partNode);
+                NodeGeo endNode = null;
+                for (int i = 0; i < attemps2; i++) {
+                    endNode = ComputePartialGeo(partNode, endX, endY, minX, maxX, minY, maxY, partNode.t, maxT * 2, attemps, speed, distractPos, distractPos2, tris, true);
+                    if (endNode == null) {
+                        foreach (Triangle t in tris) {
+                            t.resetTriProps();
+                            //tris[startTriIndex].visited = true;
+                            //Triangulation.computeDistanceTree(tris[startTriIndex]);
+                        }
+                    }
+                    else {
+                        break;
+                    }
+
+                }
+                return ReturnPathGeo(endNode, false);
+            }
+            else {
+                NodeGeo endNode = null;
+                for (int i = 0; i < attemps2; i++) {
+                    endNode = ComputePartialGeo(start, endX, endY, minX, maxX, minY, maxY, 0, maxT, attemps, speed, distractPos, distractPos2, tris, false);
+                    if (endNode == null) {
+                        foreach (Triangle t in tris) {
+                            t.resetTriProps();
+                           // tris[startTriIndex].visited = true;
+                            //Triangulation.computeDistanceTree(tris[startTriIndex]);
+                        }
+                    }
+                    else {
+                        break;
+                    }
+                }
+                return ReturnPathGeo(endNode, false);
+            }
+        }
+
+
+        /*
+        public List<NodeGeo> ComputeGeoFromPartials(float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> tris) {
+            tree = new KDTree(3);
+            NodeGeo start = GetNodeGeo(0, startX, startY);
+            int startTriIndex = -1;
+            int endTriIndex = -1;
+            
+            foreach(Triangle tri in tris) {
+                tri.visited = false;
+                tri.distance = float.MaxValue;
+            }
+
+            for (int i = 0; i < tris.Count; i++) {
+                Triangle tri = tris[i];
                 if (tri.containsPoint(new Vector3(startX, 1, startY))) {
                     if (startTriIndex >= 0) {
                         Debug.Log("PROBLEMO 1");
@@ -581,6 +686,8 @@ namespace Exploration {
                 return ReturnPathGeo(endNode, false);
             }
         }
+        */
+
 
         public List<NodeGeo> ComputeGeo (float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> tris,  bool smooth = false) {
 			//Debug.Log ("COMPUTEGEO");
@@ -631,6 +738,11 @@ namespace Exploration {
             int curMaxT = Mathf.Min(rangeTime, maxT);
 
             int startTriIndex = -1;
+            
+            foreach(Triangle tri in tris) {
+                tri.visited = false;
+                tri.distance = float.MaxValue;
+            }
 
             List<float> areas = new List<float>();
             float areaSum = 0;
@@ -664,6 +776,7 @@ namespace Exploration {
                 lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
                 lin.transform.parent = triDists.transform;
                 lin.transform.position = tri.GetCenterTriangle();
+                lin.transform.position = new Vector3(lin.transform.position.x, tri.distance, lin.transform.position.z);
                 Debug.Log(tri.distance);
             }*/
 

@@ -1134,7 +1134,7 @@ public class Triangulation : MonoBehaviour
 
         triangles = delaunayIfy(triangles);
         //GameObject triDParent = new GameObject("triDParent");
-        //drawTris(triangles, triDParent.transform);
+        //(triangles, triDParent.transform);
 
         triangulation.triangles = triangles;
 

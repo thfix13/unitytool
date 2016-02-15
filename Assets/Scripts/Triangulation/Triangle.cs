@@ -20,7 +20,21 @@ public class Triangle
 
     public List<Triangle> simpTreeKids = new List<Triangle>();
 
+
+    public void resetTriProps() {
+        visited = false;
+        distance = float.MaxValue;
+        changed = false;
+        parents = new List<Triangle>();
+        treeKids = new List<Triangle>();
+        treeDepth = -1;
+    }
+
+
     //SPECIAL SECTION END
+
+
+
 
 
 

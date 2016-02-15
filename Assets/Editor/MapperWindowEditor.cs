@@ -897,14 +897,15 @@ namespace EditorArea {
 
                 for (int it = 0; it < iterations; it++) {
 
-                    for (int it2 = 0; it2 < attemps2; it2++) {
 
 
                         // We have this try/catch block here to account for the issue that we don't solve when we find a path when t is near the limit
                         try {
 
                             //nodes= rrtgeo.ComputeGeo (startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, playerSpeed, distractPos2, distract2Pos2);
-                            nodes = rrtgeo.ComputeGeoFromPartials(startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, playerSpeed, distractPos2, distract2Pos2, tris);
+                            nodes = rrtgeo.ComputeGeoFromPartials(startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, attemps2, playerSpeed, distractPos2, distract2Pos2, tris);
+
+                            
                             //nodes = rrt.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
 
                             //Debug.Log (nodes.Count);
@@ -941,7 +942,7 @@ namespace EditorArea {
 								}*/
 
                                 if (nodes.Count > 0) {
-                                    Debug.Log("Succeeded in " + it2 + " attempts");
+                                    Debug.Log("Succeeded in " + "?" + " attempts");
                                     break;
                                 }
                             }
@@ -962,7 +963,7 @@ namespace EditorArea {
 
 
                     }
-                }
+                
 
                 // Compute the summary about the paths and print it
                 String summary = "Summary:\n";
