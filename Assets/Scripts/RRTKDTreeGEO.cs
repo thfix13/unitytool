@@ -617,7 +617,112 @@ namespace Exploration {
             }
         }
 
+        public List<NodeGeo> ComputeGeosFromPartials(float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, int attemps2, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> tris) {
+            tree = new KDTree(3);
+            NodeGeo start = GetNodeGeo(0, startX, startY);
+            int startTriIndex = -1;
+            int endTriIndex = -1;
 
+            foreach (Triangle tri in tris) {
+                tri.resetTriProps();
+            }
+
+            for (int i = 0; i < tris.Count; i++) {
+                Triangle tri = tris[i];
+                if (tri.containsPoint(new Vector3(startX, 1, startY))) {
+                    if (startTriIndex >= 0) {
+                        Debug.Log("PROBLEMO 1");
+                    }
+                    tri.visited = true;
+                    startTriIndex = i;
+                }
+                if (tri.containsPoint(new Vector3(endX, 1, endY))) {
+                    endTriIndex = i;
+                }
+            }
+            tris[startTriIndex].visited = true;
+            
+
+            Triangulation.computeDistanceTree(tris[startTriIndex]);
+            float distToEnd = tris[endTriIndex].distance;
+
+
+            float halfDist = distToEnd / 2;
+            halfDist = halfDist - 5f;
+            float distDiff = halfDist + 10f;
+            //Debug.Log(distToEnd);
+            if (distToEnd > triMaxRRTDist) {
+                List<List<int>> paths = Triangulation.findAllSimpleEndPaths(tris[startTriIndex], tris[endTriIndex]);
+                List<Triangle> midTris = new List<Triangle>();
+                foreach (List<int> pth in paths) {
+                    Triangle t = Triangulation.findMidTriangleAlongPath(tris[startTriIndex], tris[endTriIndex], pth);
+                    if (!midTris.Contains(t)) {
+                        midTris.Add(t);
+                    }
+                }
+
+                foreach (Triangle halfway in midTris) {
+
+                    float partEndX = halfway.GetCenterTriangle().x;
+                    float partEndY = halfway.GetCenterTriangle().z;
+
+                    NodeGeo partNode = null;
+                    for (int i = 0; i < attemps2; i++) {
+                        partNode = ComputePartialGeo(start, partEndX, partEndY, minX, maxX, minY, maxY, 0, maxT, attemps, speed, distractPos, distractPos2, tris, false);
+                        if (partNode == null) {
+                            foreach (Triangle t in tris) {
+                                t.resetTriProps();
+                                tris[startTriIndex].visited = true;
+                                Triangulation.computeDistanceTree(tris[startTriIndex]);
+                            }
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                    if (partNode == null) {
+                        return new List<NodeGeo>();
+                    }
+                    Debug.Log("REACHED PARTWAY TO" + partNode);
+                    NodeGeo endNode = null;
+                    for (int i = 0; i < attemps2; i++) {
+                        endNode = ComputePartialGeo(partNode, endX, endY, minX, maxX, minY, maxY, partNode.t, maxT * 2, attemps, speed, distractPos, distractPos2, tris, true);
+                        if (endNode == null) {
+                            foreach (Triangle t in tris) {
+                                t.resetTriProps();
+                                //tris[startTriIndex].visited = true;
+                                //Triangulation.computeDistanceTree(tris[startTriIndex]);
+                            }
+                        }
+                        else {
+                            break;
+                        }
+
+                    }
+                    if(endNode != null) { 
+                        return ReturnPathGeo(endNode, false);
+                    }         
+                }
+                return ReturnPathGeo(null, false);
+            }
+            else {
+                NodeGeo endNode = null;
+                for (int i = 0; i < attemps2; i++) {
+                    endNode = ComputePartialGeo(start, endX, endY, minX, maxX, minY, maxY, 0, maxT, attemps, speed, distractPos, distractPos2, tris, false);
+                    if (endNode == null) {
+                        foreach (Triangle t in tris) {
+                            t.resetTriProps();
+                            // tris[startTriIndex].visited = true;
+                            //Triangulation.computeDistanceTree(tris[startTriIndex]);
+                        }
+                    }
+                    else {
+                        break;
+                    }
+                }
+                return ReturnPathGeo(endNode, false);
+            }
+        }
         /*
         public List<NodeGeo> ComputeGeoFromPartials(float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> tris) {
             tree = new KDTree(3);

@@ -1133,8 +1133,8 @@ public class Triangulation : MonoBehaviour
 
 
         triangles = delaunayIfy(triangles);
-        //GameObject triDParent = new GameObject("triDParent");
-        //(triangles, triDParent.transform);
+        GameObject triDParent = new GameObject("triDParent");
+        drawTris(triangles, triDParent.transform);
 
         triangulation.triangles = triangles;
 
@@ -1437,7 +1437,7 @@ public class Triangulation : MonoBehaviour
         int curPath = 0;
 
         if (startT.simpTreeKids.Count == 1) {
-            path.Add(0);
+            //path.Add(0);
             paths = findAllSimpEndPathHelp(startT.simpTreeKids[0], numPaths, curPath, paths, endT);
         }
         else if (startT.simpTreeKids.Count > 1) {
@@ -1471,7 +1471,7 @@ public class Triangulation : MonoBehaviour
     private static List<List<int>> findAllSimpEndPathHelp(Triangle curT, int numPaths, int curPath, List<List<int>> paths, Triangle endT) {
         if (curT.simpTreeKids.Count == 1) {
 
-            paths[curPath].Add(0);
+            //paths[curPath].Add(0);
             paths = findAllSimpEndPathHelp(curT.simpTreeKids[0], numPaths, curPath, paths, endT);
             return paths;
         }
@@ -1512,10 +1512,6 @@ public class Triangulation : MonoBehaviour
             
         }
     }
-
-
-
-
 
     public static List<List<int>> findAllSimplePaths(Triangle startT) {
         genTreeStruct(startT);
@@ -1589,14 +1585,70 @@ public class Triangulation : MonoBehaviour
         }
     }
 
+    public static float findDistanceAlongPath(Triangle startT, Triangle endT, List<int> path) {
+        computeDistanceTree(startT);
+        Triangle t = startT;
+        int index = 0;
+        float distance = 0;
+        while (!t.Equals(endT)) {
+            Triangle tt;
+            if(t.treeKids.Count > 1) {
+                tt = t.treeKids[path[index]];
+                index++;
+            }
+            else {
+                if(t.treeKids.Count == 1){
+                    tt = t.treeKids[0];
+                }
+                else {
+                    Debug.Log("THERE ARE PROBLEMS");
+                    Debug.Log(t.GetCenterTriangle());
+                    break;
+                }
+               
+            }
+            Vector3 midPoint = t.ShareEdged(tt).MidPoint();
+            Line l1 = new Line(t.GetCenterTriangle(), midPoint);
+            Line l2 = new Line(midPoint, tt.GetCenterTriangle());
+            distance = distance + l1.Magnitude() + l2.Magnitude();
+            t = tt;
+        }
+        return distance;
+    }
 
-
-
-
-
-
-
-
+    public static Triangle findMidTriangleAlongPath(Triangle startT, Triangle endT, List<int> path) {
+        //computeDistanceTree(startT);
+        float TotDistance = findDistanceAlongPath(startT, endT, path);
+        float halfDist = TotDistance / 2f;
+        float distance = 0;
+        Triangle t = startT;
+        int index = 0;
+        while (!t.Equals(endT)) {
+            Triangle tt;
+            if (t.treeKids.Count > 1) {
+                tt = t.treeKids[path[index]];
+                index++;
+            }
+            else {
+                tt = t.treeKids[0];
+            }
+            Vector3 midPoint = t.ShareEdged(tt).MidPoint();
+            Line l1 = new Line(t.GetCenterTriangle(), midPoint);
+            Line l2 = new Line(midPoint, tt.GetCenterTriangle());
+            distance = distance + l1.Magnitude() + l2.Magnitude();
+            if (distance > halfDist) {
+                if((distance - halfDist) > (halfDist - (distance - l1.Magnitude() - l2.Magnitude()))) {
+                    return t;
+                }
+                else {
+                    return tt;
+                }
+            }
+            t = tt;
+        }
+        Debug.Log("THIS FAILED");
+        return t;
+    }
 
 
     private static int antiInfiniLoopTreeDrawSimp = 0;
@@ -1644,6 +1696,8 @@ public class Triangulation : MonoBehaviour
     }
 
     public static void simpTreeStruct(Triangle t) {
+        t.simpTreeKids.Clear();
+
         foreach(Triangle tt in t.treeKids) {
             t.simpTreeKids.Add(simpTreeStructHelp(tt));
         }
@@ -1765,7 +1819,9 @@ public class Triangulation : MonoBehaviour
         t.treeKids.AddRange(t.voisins);
         t.treeDepth = 0;
         foreach(Triangle tt in t.treeKids) {
-            tt.parents.Add(t);
+            if (!tt.parents.Contains(t)) { 
+                tt.parents.Add(t);
+            }
             tt.treeDepth = 1;
             genTreeStructHelp(tt);
         }

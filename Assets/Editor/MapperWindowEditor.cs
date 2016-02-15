@@ -235,7 +235,7 @@ namespace EditorArea {
                 Triangle startTri = null;
                 Vector3 startPoint = new Vector3(-45, 1, 45);
                 //Vector3 startPoint = new Vector3(-20, 1, 20);
-                Vector3 endPoint = new Vector3(43, 1, -43);
+                Vector3 endPoint = new Vector3(46, 1, -47);
                 Triangle endTri = null;
                 foreach (Triangle t in tris) {
                     if (t.containsPoint(startPoint)) {
@@ -247,24 +247,47 @@ namespace EditorArea {
 
                 }
 
-                //Triangulation.genTreeStruct(startTri);
-                //Triangulation.drawTreeStruct(startTri);
+                Triangulation.genTreeStruct(startTri);
+                Triangulation.drawTreeStruct(startTri);
                 /*foreach(Triangle t in triangles.triangles) {
                     Debug.Log(t.GetCenterTriangle());
                     Debug.Log(t.parents.Count);
                 }*/
                 //Triangulation.simpTreeStruct(startTri);
-                //Triangulation.drawTreeStructSimp(startTri);
 
                 List<List<int>> paths = Triangulation.findAllSimpleEndPaths(startTri, endTri);
+                Triangulation.drawTreeStructSimp(startTri);
+
                 Debug.Log("Number of Paths Found = " + paths.Count);
-                foreach(List<int> path in paths) {
+                foreach (List<int> path in paths) {
                     string toPrint = "Path:";
-                    foreach(int choice in path) {
+                    foreach (int choice in path) {
                         toPrint = toPrint + choice + ",";
                     }
                     Debug.Log(toPrint);
                 }
+
+                Debug.Log("CREATING MIDPOINT OBJECTS");
+                List<Triangle> midTris = new List<Triangle>();
+                foreach (List<int> pth in paths) {
+                    Triangle t = Triangulation.findMidTriangleAlongPath(startTri, endTri, pth);
+                    GameObject midPoint = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    midPoint.name = "A MIDPOINT";
+                    midPoint.transform.position = t.GetCenterTriangle();
+                    Debug.Log(t.GetCenterTriangle());
+                    if (!midTris.Contains(t)) {
+                        midTris.Add(t);
+                    }
+                }
+                Debug.Log("UNIQUE MIDPOINTS FOUND");
+                foreach(Triangle midTri in midTris) {
+                    GameObject midPoint = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    midPoint.name = "A UNique MIDPOINT";
+                    midPoint.transform.position = midTri.GetCenterTriangle();
+                    Debug.Log(midTri.GetCenterTriangle());
+                }
+
+
 
 
 
@@ -975,7 +998,153 @@ namespace EditorArea {
                 Debug.Log(summary);
             }
 
-			EditorGUILayout.LabelField ("");
+
+            if (GUILayout.Button("Compute Path Multi-Multi-Part Geo")) {
+                if (enemygeoobjs == null) {
+                    enemygeoobjs = GameObject.FindGameObjectsWithTag("EnemyGeo");
+                    enemygeos = new List<EnemyGeo>();
+                    foreach (GameObject g in enemygeoobjs) {
+                        enemygeos.Add(g.GetComponent<EnemyGeo>());
+
+                    }
+
+                }
+                rrtgeo.enemies = enemygeos;
+
+
+                rrtgeo.casts = casts;
+                triangles = GameObject.Find("Triangulation").GetComponent<Triangulation>();
+
+                triangles.TriangulationSpace();
+                List<Triangle> tris = triangles.triangles;
+
+
+                float playerSpeed = GameObject.FindGameObjectWithTag("AI").GetComponent<Player>().speed;
+
+                //Check the start and the end and get them from the editor. 
+                if (start == null) {
+                    start = GameObject.Find("Start");
+                }
+                if (end == null) {
+                    end = GameObject.Find("End");
+                }
+
+                paths.Clear();
+
+                float startX = start.transform.position.x;
+                float startY = start.transform.position.z;
+                float endX = end.transform.position.x;
+                float endY = end.transform.position.z;
+
+                GameObject floora = GameObject.Find("Floor");
+
+                float minX = floora.GetComponent<Collider>().bounds.min.x;
+                float maxX = floora.GetComponent<Collider>().bounds.max.x;
+                float minY = floora.GetComponent<Collider>().bounds.min.z;
+                float maxY = floora.GetComponent<Collider>().bounds.max.z;
+
+
+
+
+                int seed = randomSeed;
+                if (randomSeed != -1)
+                    UnityEngine.Random.seed = randomSeed;
+                else {
+                    DateTime now = DateTime.Now;
+                    seed = now.Millisecond + now.Second + now.Minute + now.Hour + now.Day + now.Month + now.Year;
+                    UnityEngine.Random.seed = seed;
+                }
+
+                List<NodeGeo> nodes = null;
+
+                Vector3 distractPos = GameObject.Find("DistractPoint").transform.position;
+                Vector2 distractPos2 = new Vector2(distractPos.x, distractPos.z);
+
+                Vector3 distract2Pos = GameObject.Find("DistractPoint2").transform.position;
+                Vector2 distract2Pos2 = new Vector2(distract2Pos.x, distract2Pos.z);
+
+                for (int it = 0; it < iterations; it++) {
+
+
+
+                    // We have this try/catch block here to account for the issue that we don't solve when we find a path when t is near the limit
+                    try {
+
+                        //nodes= rrtgeo.ComputeGeo (startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, playerSpeed, distractPos2, distract2Pos2);
+                        nodes = rrtgeo.ComputeGeosFromPartials(startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, attemps2, playerSpeed, distractPos2, distract2Pos2, tris);
+
+
+                        //nodes = rrt.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
+
+                        //Debug.Log (nodes.Count);
+                        if (nodes.Count <= 0) {
+                            Debug.Log("RRT Search Failed");
+                        }
+
+                        // Did we found a path?
+                        if (nodes.Count > 0) {
+                            pathsgeo.Add(new PathGeo(nodes));
+                            toggleStatusGeo.Add(pathsgeo.Last(), true);
+                            //Debug.Log ("Count1 is : " + toggleStatusGeo.Count);
+                            pathsgeo.Last().color = new Color(UnityEngine.Random.Range(0.0f, 1.0f), UnityEngine.Random.Range(0.0f, 1.0f), UnityEngine.Random.Range(0.0f, 1.0f));
+                            //paths.Add (new Path (nodes));
+                            //toggleStatus.Add (paths.Last (), true);
+                            //paths.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
+
+
+
+                            //Create path lines using the line objects 
+                            List<Line> path = new List<Line>();
+                            for (int i = 0; i < nodes.Count - 1; i++) {
+                                path.Add(new Line(nodes[i].GetVector3Draw(), nodes[i + 1].GetVector3Draw()));
+                            }
+
+                            GameObject temp = GameObject.Find("temp");
+                            Color c = new Color(UnityEngine.Random.Range(0.0f, 1.0f),
+                                   UnityEngine.Random.Range(0.0f, 1.0f),
+                                   UnityEngine.Random.Range(0.0f, 1.0f));
+
+                            /*foreach(Line l in path)
+                            {
+                                l.DrawVector(temp,c);
+                            }*/
+
+                            if (nodes.Count > 0) {
+                                Debug.Log("Succeeded in " + "?" + " attempts");
+                                break;
+                            }
+                        }
+
+
+
+
+                    }
+                    catch (Exception e) {
+                        Debug.LogWarning("Skip errored calculated path");
+                        Debug.LogException(e);
+                        // This can happen in two different cases:
+                        // In line 376 by having a duplicate node being picked (coincidence picking the EndNode as visiting but the check is later on)
+                        // We also cant just bring the check earlier since there's data to be copied (really really rare cases)
+                        // The other case is yet unkown, but it's a conicidence by trying to insert a node in the tree that already exists (really rare cases)
+                    }
+
+
+
+                }
+
+
+                // Compute the summary about the paths and print it
+                String summary = "Summary:\n";
+                summary += "Seed used:" + seed;
+                summary += "\nSuccessful paths found: " + paths.Count;
+                summary += "\nDead paths: " + deaths.Count;
+
+
+                Debug.Log(summary);
+            }
+
+
+            EditorGUILayout.LabelField ("");
 
 
 			preCompWidth = EditorGUILayout.IntField(preCompWidth);
