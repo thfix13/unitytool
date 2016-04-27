@@ -27,15 +27,18 @@ namespace Exploration {
 
 		public preCast casts;
 
-        private bool debugging  = true;
+        private bool debugging  = false;
 		private bool preventDistractStacks = true;
+        private bool useTriangulation = true;
+        private bool checkWaste = false;
+        private bool useDist = true;
         //First attempt was 50% distractions.
-        private int distractables = 80;
+        private int distractables = 100;
 		private int numNears = 3;
 
         private float rangeDist = 5f;
         private int rangeTime = 100;
-        private float triRangeDist = 20f;
+        private float triRangeDist = 30f;
 
         private float triMaxRRTDist = 80f;
 
@@ -53,8 +56,10 @@ namespace Exploration {
 			return (NodeGeo)o;
 		}
 
-        public NodeGeo ComputePartialGeo(NodeGeo start, float endX, float endY, float minX, float maxX, float minY, float maxY,int minT, int maxT, int attemps, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> tris, bool part2) {
+        public NodeGeo ComputePartialGeo(NodeGeo start, float endX, float endY, float minX, float maxX, float minY, float maxY,int minT, int maxT, int attemps, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> tris, bool part2, RRTResult toReturn, int index) {
             //Debug.Log ("COMPUTEGEO");
+
+            
 
             // Initialization
             tree = new KDTree(3);
@@ -86,7 +91,7 @@ namespace Exploration {
             float areaSum = 0;
             for (int i = 0; i < tris.Count; i++) {
                 Triangle tri = tris[i];
-                tri.visited = false;
+                tri.resetTriProps();
                 /*Line[] lins = tri.getLines();
                 float l1 = lins[0].Magnitude();
                 float l2 = lins[1].Magnitude();
@@ -136,6 +141,12 @@ namespace Exploration {
 
             //RRT algo
             for (int i = 0; i <= attemps; i++) {
+                if (part2) {
+                    toReturn.nodesUsed2MM[index]++;
+                }
+                else {
+                    toReturn.nodesUsedMM[index]++;
+                }
                 if (triAdded) {
                     Triangulation.computeDistanceTree(tris[startTriIndex]);
                     reachable = new List<Triangle>();
@@ -237,7 +248,14 @@ namespace Exploration {
                 nodeVisiting = GetNodeGeo(rt, rx, ry);
                 //if this node has already been visited continue
                 if (nodeVisiting.visited) {
+                    if (part2) {
+                        toReturn.nodesRejected2MM[index]++;
+                    }
+                    else {
+                        toReturn.nodesRejectedMM[index]++;
+                    }
                     i--;
+                    
                     //Consider checking if point is valid earlier, for i--.
                     continue;
                 }
@@ -415,6 +433,8 @@ namespace Exploration {
                 //}
 
 
+
+
                 //Check for collision with obstacles
                 if (checkCollObs(p2.x, p2.z, p1.x, p1.z)) {
 
@@ -510,7 +530,18 @@ namespace Exploration {
             return null;
         }
 
-        public List<NodeGeo> ComputeGeoFromPartials(float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, int attemps2, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> tris) {
+        public RRTResult ComputeGeoFromPartials(float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, int attemps2, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> tris) {
+            RRTResult toReturn = new RRTResult();
+            toReturn.startTime = System.DateTime.Now;
+            toReturn.rrtsUsedMM.Add(0);
+            toReturn.rrtsUsed2MM.Add(0);
+            toReturn.nodesUsedMM.Add(0);
+            toReturn.nodesUsed2MM.Add(0);
+            toReturn.nodesRejectedMM.Add(0);
+            toReturn.nodesRejected2MM.Add(0);
+            int index = 0;
+            toReturn.type = "2-1";
+
             tree = new KDTree(3);
             NodeGeo start = GetNodeGeo(0, startX, startY);
             int startTriIndex = -1;
@@ -547,10 +578,19 @@ namespace Exploration {
             float distDiff = halfDist + 10f;
             //Debug.Log(distToEnd);
             if (distToEnd > triMaxRRTDist) {
+                tris.Reverse();
                 foreach (Triangle t in tris) {
-                    if (Mathf.Abs(t.distance - halfDist) < distDiff) {
-                        halfway = t;
-                        distDiff = Mathf.Abs(t.distance - halfDist);
+                    if (Mathf.Abs(t.distance - halfDist) < distDiff + 0.05f) {
+                        if (Mathf.Abs(t.distance - halfDist) > distDiff - 0.05f) {
+                            if (Random.Range(0f, 1f) > 0.5f) {
+                                halfway = t;
+                                distDiff = Mathf.Abs(t.distance - halfDist);
+                            }
+                        }
+                        else {
+                            halfway = t;
+                            distDiff = Mathf.Abs(t.distance - halfDist);
+                        }
                     }
                 }
 
@@ -565,7 +605,8 @@ namespace Exploration {
 
                 NodeGeo partNode = null;
                 for (int i = 0; i < attemps2; i++) {
-                    partNode = ComputePartialGeo(start, partEndX, partEndY, minX, maxX, minY, maxY, 0, maxT, attemps, speed, distractPos, distractPos2, tris, false);
+                    toReturn.rrtsUsedMM[index]++;
+                    partNode = ComputePartialGeo(start, partEndX, partEndY, minX, maxX, minY, maxY, 0, maxT, attemps, speed, distractPos, distractPos2, tris, false, toReturn, index);
                     if (partNode == null) {
                         foreach (Triangle t in tris) {
                             t.resetTriProps();
@@ -578,12 +619,14 @@ namespace Exploration {
                     }
                 }
                 if (partNode == null) {
-                    return new List<NodeGeo>();
+
+                    return toReturn;
                 }
-                Debug.Log("REACHED PARTWAY TO" + partNode);
+                //Debug.Log("REACHED PARTWAY TO" + partNode);
                 NodeGeo endNode = null;
                 for (int i = 0; i < attemps2; i++) {
-                    endNode = ComputePartialGeo(partNode, endX, endY, minX, maxX, minY, maxY, partNode.t, maxT * 2, attemps, speed, distractPos, distractPos2, tris, true);
+                    toReturn.rrtsUsed2MM[index]++;
+                    endNode = ComputePartialGeo(partNode, endX, endY, minX, maxX, minY, maxY, partNode.t, maxT * 2, attemps, speed, distractPos, distractPos2, tris, true, toReturn, index);
                     if (endNode == null) {
                         foreach (Triangle t in tris) {
                             t.resetTriProps();
@@ -592,16 +635,22 @@ namespace Exploration {
                         }
                     }
                     else {
+                        toReturn.success = true;
                         break;
                     }
 
                 }
-                return ReturnPathGeo(endNode, false);
+                toReturn.Nodes = ReturnPathGeo(endNode, false);
+                if (toReturn.Nodes.Count > 0) {
+                    toReturn.success = true;
+                }
+                return toReturn;
             }
             else {
                 NodeGeo endNode = null;
                 for (int i = 0; i < attemps2; i++) {
-                    endNode = ComputePartialGeo(start, endX, endY, minX, maxX, minY, maxY, 0, maxT, attemps, speed, distractPos, distractPos2, tris, false);
+                    toReturn.rrtsUsedMM[index]++;
+                    endNode = ComputePartialGeo(start, endX, endY, minX, maxX, minY, maxY, 0, maxT, attemps, speed, distractPos, distractPos2, tris, false, toReturn, index);
                     if (endNode == null) {
                         foreach (Triangle t in tris) {
                             t.resetTriProps();
@@ -610,18 +659,31 @@ namespace Exploration {
                         }
                     }
                     else {
+                        toReturn.success = true;
                         break;
                     }
                 }
-                return ReturnPathGeo(endNode, false);
+                toReturn.Nodes = ReturnPathGeo(endNode, false);
+                if (toReturn.Nodes.Count  > 0) {
+                    toReturn.success = true;
+                }
+                return toReturn;
             }
         }
 
-        public List<NodeGeo> ComputeGeosFromPartials(float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, int attemps2, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> tris) {
+        public RRTResult ComputeGeosFromPartials(float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, int attemps2, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> tris) {
+            //Debug.Log("1");
             tree = new KDTree(3);
             NodeGeo start = GetNodeGeo(0, startX, startY);
             int startTriIndex = -1;
             int endTriIndex = -1;
+
+                
+            RRTResult toReturn = new RRTResult();
+            toReturn.startTime = System.DateTime.Now;
+            toReturn.type = "2-2";
+            int index = -1;
+            //Debug.Log("2");
 
             foreach (Triangle tri in tris) {
                 tri.resetTriProps();
@@ -641,9 +703,9 @@ namespace Exploration {
                 }
             }
             tris[startTriIndex].visited = true;
-            
+            //Debug.Log("3");
 
-            Triangulation.computeDistanceTree(tris[startTriIndex]);
+            Triangulation.computeDistanceTreeE(tris[startTriIndex], tris[endTriIndex]);
             float distToEnd = tris[endTriIndex].distance;
 
 
@@ -651,43 +713,78 @@ namespace Exploration {
             halfDist = halfDist - 5f;
             float distDiff = halfDist + 10f;
             //Debug.Log(distToEnd);
+            //Debug.Log("4");
             if (distToEnd > triMaxRRTDist) {
+                //Debug.Log("5");
                 List<List<int>> paths = Triangulation.findAllSimpleEndPaths(tris[startTriIndex], tris[endTriIndex]);
+                //Debug.Log(paths);
+                //Debug.Log(paths.Count);
+                //foreach (List<int> p in paths) {
+                //    Debug.Log(p);
+                 //   foreach(int i in p) {
+                //        Debug.Log(i);
+                //    }
+                //}
+
                 List<Triangle> midTris = new List<Triangle>();
                 foreach (List<int> pth in paths) {
+                    //Debug.Log("5.1");
                     Triangle t = Triangulation.findMidTriangleAlongPath(tris[startTriIndex], tris[endTriIndex], pth);
                     if (!midTris.Contains(t)) {
                         midTris.Add(t);
                     }
                 }
+                //Debug.Log("5.2");
 
+                //int q = 0;
                 foreach (Triangle halfway in midTris) {
+                    //q++;
+                    //Debug.Log("Testing for Midpoint " + q + " which is at location:" + halfway.GetCenterTriangle());
+                    //Debug.Log("5.3");
+                    index++;
+                    toReturn.rrtsUsedMM.Add(0);
+                    toReturn.rrtsUsed2MM.Add(0);
+                    toReturn.nodesUsedMM.Add(0);
+                    toReturn.nodesUsed2MM.Add(0);
+                    toReturn.nodesRejectedMM.Add(0);
+                    toReturn.nodesRejected2MM.Add(0);
 
                     float partEndX = halfway.GetCenterTriangle().x;
                     float partEndY = halfway.GetCenterTriangle().z;
 
                     NodeGeo partNode = null;
                     for (int i = 0; i < attemps2; i++) {
-                        partNode = ComputePartialGeo(start, partEndX, partEndY, minX, maxX, minY, maxY, 0, maxT, attemps, speed, distractPos, distractPos2, tris, false);
+                        toReturn.rrtsUsedMM[index]++;
+                        //Debug.Log("Attempting search part 1 -" + i);
+                        partNode = ComputePartialGeo(start, partEndX, partEndY, minX, maxX, minY, maxY, 0, maxT, attemps, speed, distractPos, distractPos2, tris, false, toReturn, index);
+                        //Debug.Log("7");
                         if (partNode == null) {
+                            //Debug.Log("Failed at search part 1 -" + i);
+                            //Debug.Log("8");
                             foreach (Triangle t in tris) {
                                 t.resetTriProps();
                                 tris[startTriIndex].visited = true;
                                 Triangulation.computeDistanceTree(tris[startTriIndex]);
                             }
+                            
                         }
                         else {
+                            //Debug.Log("Succeeded at search part 1 -" + i);
                             break;
                         }
                     }
                     if (partNode == null) {
-                        return new List<NodeGeo>();
+                        //Debug.Log("Failed search 1 at midpoint" + q);
+                        continue;
                     }
-                    Debug.Log("REACHED PARTWAY TO" + partNode);
+                    //Debug.Log("REACHED PARTWAY TO" + partNode);
                     NodeGeo endNode = null;
                     for (int i = 0; i < attemps2; i++) {
-                        endNode = ComputePartialGeo(partNode, endX, endY, minX, maxX, minY, maxY, partNode.t, maxT * 2, attemps, speed, distractPos, distractPos2, tris, true);
+                        toReturn.rrtsUsed2MM[index]++;
+                        //Debug.Log("Attempting search part 2 -" + i);
+                        endNode = ComputePartialGeo(partNode, endX, endY, minX, maxX, minY, maxY, partNode.t, maxT * 2, attemps, speed, distractPos, distractPos2, tris, true, toReturn, index);
                         if (endNode == null) {
+                            //Debug.Log("Failed at search part 2 -" + i);
                             foreach (Triangle t in tris) {
                                 t.resetTriProps();
                                 //tris[startTriIndex].visited = true;
@@ -695,20 +792,41 @@ namespace Exploration {
                             }
                         }
                         else {
+                            toReturn.success = true;
+                            //Debug.Log("Succeeded at search part 1 -" + i);
                             break;
                         }
 
                     }
-                    if(endNode != null) { 
-                        return ReturnPathGeo(endNode, false);
-                    }         
+                    if(endNode == null) {
+                        //Debug.Log("Failed search 2 at midpoint" + q);
+                        //TODO: CHANGE
+                        continue;
+                    }
+                    else {
+                        //Debug.Log("Succeeded at full search at midpoint" + q);
+                        toReturn.Nodes = ReturnPathGeo(endNode, false);
+                        if (toReturn.Nodes.Count > 0) {
+                            toReturn.success = true;
+                        }
+                        return toReturn;
+                    }       
                 }
-                return ReturnPathGeo(null, false);
+                //Debug.Log("Failed All Searches");
+                return toReturn;
             }
             else {
+                index++;
+                toReturn.rrtsUsedMM.Add(0);
+                toReturn.rrtsUsed2MM.Add(0);
+                toReturn.nodesUsedMM.Add(0);
+                toReturn.nodesUsed2MM.Add(0);
+                toReturn.nodesRejectedMM.Add(0);
+                toReturn.nodesRejected2MM.Add(0);
                 NodeGeo endNode = null;
                 for (int i = 0; i < attemps2; i++) {
-                    endNode = ComputePartialGeo(start, endX, endY, minX, maxX, minY, maxY, 0, maxT, attemps, speed, distractPos, distractPos2, tris, false);
+                    toReturn.rrtsUsedMM[index]++;
+                    endNode = ComputePartialGeo(start, endX, endY, minX, maxX, minY, maxY, 0, maxT, attemps, speed, distractPos, distractPos2, tris, false,toReturn, index);
                     if (endNode == null) {
                         foreach (Triangle t in tris) {
                             t.resetTriProps();
@@ -717,10 +835,15 @@ namespace Exploration {
                         }
                     }
                     else {
+                        toReturn.success = true;
                         break;
                     }
                 }
-                return ReturnPathGeo(endNode, false);
+                toReturn.Nodes = ReturnPathGeo(endNode, false);
+                if (toReturn.Nodes.Count > 0) {
+                    toReturn.success = true;
+                }
+                return toReturn;
             }
         }
         /*
@@ -794,8 +917,145 @@ namespace Exploration {
         */
 
 
-        public List<NodeGeo> ComputeGeo (float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> tris,  bool smooth = false) {
-			//Debug.Log ("COMPUTEGEO");
+
+        public void generateMidPoint(float startX, float startY, float endX, float endY, List<Triangle> tris, bool e) {
+            Debug.Log("GenMId" + e);
+            int startTriIndex = -1;
+            int endTriIndex = -1;
+
+            foreach (Triangle tri in tris) {
+                tri.resetTriProps();
+            }
+
+            for (int i = 0; i < tris.Count; i++) {
+                Triangle tri = tris[i];
+                if (tri.containsPoint(new Vector3(startX, 1, startY))) {
+                    if (startTriIndex >= 0) {
+                        Debug.Log("PROBLEMO 1");
+                    }
+                    tri.visited = true;
+                    startTriIndex = i;
+                }
+                if (tri.containsPoint(new Vector3(endX, 1, endY))) {
+                    endTriIndex = i;
+                }
+            }
+            tris[startTriIndex].visited = true;
+            if (e) {
+                Triangulation.computeDistanceTreeE(tris[startTriIndex], tris[endTriIndex]);
+            }
+            else { 
+                Triangulation.computeDistanceTree(tris[startTriIndex]);
+            }
+            float distToEnd = tris[endTriIndex].distance;
+
+            float halfDist = distToEnd / 2;
+            halfDist = halfDist - 5f;
+            Triangle halfway = tris[endTriIndex];
+            float distDiff = halfDist + 10f;
+            Debug.Log("Dist to End:" + distToEnd);
+            Debug.Log("HalfDist:" + halfDist);
+
+
+            if (distToEnd > triMaxRRTDist) {
+                foreach (Triangle t in tris) {
+                    if (Mathf.Abs(t.distance - halfDist) < distDiff + 0.05f) {
+                        if(Mathf.Abs(t.distance - halfDist) > distDiff - 0.05f) {
+                            if(Random.Range(0f,1f) > 0.5f) {
+                                halfway = t;
+                                distDiff = Mathf.Abs(t.distance - halfDist);
+                            }
+                        }
+                        else {
+                            halfway = t;
+                            distDiff = Mathf.Abs(t.distance - halfDist);
+                        }                        
+                    }
+                }
+                Debug.Log("TriDist:" + halfway.distance);
+
+                //Debug.Log(distDiff);
+                //Debug.Log(halfway.distance);
+                GameObject bob = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                bob.transform.position = halfway.GetCenterTriangle();
+                bob.name = "HALFWAYPOINT";
+                if (e) {
+                    bob.name = bob.name + "e";
+                }
+
+            }
+        }
+
+
+        public void generateMidPoints(float startX, float startY, float endX, float endY, List<Triangle> tris) {
+            //Debug.Log("GenMids");
+            int startTriIndex = -1;
+            int endTriIndex = -1;
+
+            foreach (Triangle tri in tris) {
+                tri.resetTriProps();
+            }
+
+            for (int i = 0; i < tris.Count; i++) {
+                Triangle tri = tris[i];
+                if (tri.containsPoint(new Vector3(startX, 1, startY))) {
+                    if (startTriIndex >= 0) {
+                        Debug.Log("PROBLEMO 1");
+                    }
+                    tri.visited = true;
+                    startTriIndex = i;
+                }
+                if (tri.containsPoint(new Vector3(endX, 1, endY))) {
+                    endTriIndex = i;
+                }
+            }
+            tris[startTriIndex].visited = true;
+            Triangulation.computeDistanceTreeE(tris[startTriIndex], tris[endTriIndex]);
+            float distToEnd = tris[endTriIndex].distance;
+
+            float halfDist = distToEnd / 2;
+            halfDist = halfDist - 5f;
+            Triangle halfway = tris[endTriIndex];
+            float distDiff = halfDist + 10f;
+
+            //Debug.Log("Dist to End:" + distToEnd);
+            //Debug.Log("HalfDist:" + halfDist);
+
+
+            if (distToEnd > triMaxRRTDist) {
+                List<List<int>> paths = Triangulation.findAllSimpleEndPaths(tris[startTriIndex], tris[endTriIndex]);
+                List<Triangle> midTris = new List<Triangle>();
+
+                int z = 0;
+                foreach (List<int> pth in paths) {
+                    //Debug.Log("5.1");
+                    //Debug.Log("FInding a MId");
+                    Triangle t = Triangulation.findMidTriangleAlongPath(tris[startTriIndex], tris[endTriIndex], pth);
+                    if (!midTris.Contains(t)) {
+                        z++;
+                        midTris.Add(t);
+                        GameObject bob = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                        bob.transform.position = t.GetCenterTriangle();
+                        bob.name = "HALFWAYPOINT" + z;
+                    }
+                    else {
+                        GameObject bob = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                        bob.transform.position = t.GetCenterTriangle();
+                        bob.name = "OHALFWAYPOINT" + z;
+
+                    }
+                }
+
+
+            }
+        }
+
+
+        public RRTResult ComputeGeo (float startX, float startY, float endX, float endY, float minX, float maxX, float minY, float maxY, int maxT, int attemps, float speed, Vector2 distractPos, Vector2 distractPos2, List<Triangle> tris, RRTResult toReturn, int index, List<Geometry> obs, bool smooth = false) {
+            //Debug.Log ("COMPUTEGEO");
+            
+
+            toReturn.type = "normal";
 
 			// Initialization
 			tree = new KDTree (3);
@@ -842,75 +1102,74 @@ namespace Exploration {
             float curMinY = Mathf.Max(startY - rangeDist, minY);
             int curMaxT = Mathf.Min(rangeTime, maxT);
 
-            int startTriIndex = -1;
             
-            foreach(Triangle tri in tris) {
-                tri.visited = false;
-                tri.distance = float.MaxValue;
-            }
-
-            List<float> areas = new List<float>();
-            float areaSum = 0;
-            for (int i = 0; i < tris.Count; i++) {
-                Triangle tri = tris[i];
-                /*Line[] lins = tri.getLines();
-                float l1 = lins[0].Magnitude();
-                float l2 = lins[1].Magnitude();
-                float l3 = lins[2].Magnitude();
-                float s = 0.5f * (l1 + l2 + l3);
-                float area = Mathf.Sqrt(s * (s - l1) * (s - l2) * (s - l3));
-                tri.area = area;
-                areas.Add(area);
-                areaSum = areaSum + area;*/
-                if(tri.containsPoint(new Vector3(startX, 1, startY))) {
-                    if(startTriIndex >= 0) {
-                        Debug.Log("PROBLEMO 1");
-                    }
-                    tri.visited = true;
-                    startTriIndex = i;
-                }
-            }
-            if(startTriIndex < 0) {
-                Debug.Log("PROBLEMO 2");
-            }
-            Triangulation.computeDistanceTree(tris[startTriIndex]);
-            /*GameObject triDists = new GameObject("triDists");
-            foreach(Triangle tri in tris) {
-                Debug.Log(tri.GetCenterTriangle());
-                GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
-                lin.transform.parent = triDists.transform;
-                lin.transform.position = tri.GetCenterTriangle();
-                lin.transform.position = new Vector3(lin.transform.position.x, tri.distance, lin.transform.position.z);
-                Debug.Log(tri.distance);
-            }*/
-
-
-
-
-
-
-
-            List<float> standardizedAreas = new List<float>();
-            List<Triangle> reachable = new List<Triangle>();
-            float sumSoFar = 0;
-            /*foreach (float a in areas) {
-                standardizedAreas.Add((a + sumSoFar) / areaSum);
-                sumSoFar = sumSoFar + a;
-            }*/
-
-            bool triAdded = true;
-
-            //RRT algo
-            for (int i = 0; i <= attemps; i++) {
-                if (triAdded) {
-                    Triangulation.computeDistanceTree(tris[startTriIndex]);
-                    reachable = new List<Triangle>();
+                int startTriIndex = -1;
+            if (useTriangulation) {
+                if (useDist) {
                     foreach (Triangle tri in tris) {
-                        if (tri.distance < triRangeDist) {
-                            reachable.Add(tri);
-                        }
+                        tri.visited = false;
+                        tri.distance = float.MaxValue;
                     }
+                }
+                
+            }
+
+                List<float> areas = new List<float>();
+                float areaSum = 0;
+            if (useTriangulation) {
+                for (int i = 0; i < tris.Count; i++) {
+                    Triangle tri = tris[i];
+                    /*Line[] lins = tri.getLines();
+                    float l1 = lins[0].Magnitude();
+                    float l2 = lins[1].Magnitude();
+                    float l3 = lins[2].Magnitude();
+                    float s = 0.5f * (l1 + l2 + l3);
+                    float area = Mathf.Sqrt(s * (s - l1) * (s - l2) * (s - l3));
+                    tri.area = area;
+                    areas.Add(area);
+                    areaSum = areaSum + area;*/
+                    if (tri.containsPoint(new Vector3(startX, 1, startY))) {
+                        if (startTriIndex >= 0) {
+                            Debug.Log("PROBLEMO 1");
+                        }
+                        tri.visited = true;
+                        startTriIndex = i;
+                    }
+                }
+                if (startTriIndex < 0) {
+                    Debug.Log("PROBLEMO 2");
+                }
+                Triangulation.computeDistanceTree(tris[startTriIndex]);
+                /*GameObject triDists = new GameObject("triDists");
+                foreach(Triangle tri in tris) {
+                    Debug.Log(tri.GetCenterTriangle());
+                    GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
+                    lin.transform.parent = triDists.transform;
+                    lin.transform.position = tri.GetCenterTriangle();
+                    lin.transform.position = new Vector3(lin.transform.position.x, tri.distance, lin.transform.position.z);
+                    Debug.Log(tri.distance);
+                }*/
+
+
+            }
+
+
+
+
+                List<float> standardizedAreas = new List<float>();
+                List<Triangle> reachable = new List<Triangle>();
+                float sumSoFar = 0;
+                /*foreach (float a in areas) {
+                    standardizedAreas.Add((a + sumSoFar) / areaSum);
+                    sumSoFar = sumSoFar + a;
+                }*/
+
+                bool triAdded = true;
+            if (useTriangulation) { 
+                if (!useDist) {
+                    reachable = new List<Triangle>();
+                    reachable.AddRange(tris);
                     areas = new List<float>();
                     areaSum = 0;
                     for (int j = 0; j < reachable.Count; j++) {
@@ -931,9 +1190,45 @@ namespace Exploration {
                         standardizedAreas.Add((a + sumSoFar) / areaSum);
                         sumSoFar = sumSoFar + a;
                     }
-
                 }
+            }
 
+
+            //RRT algo
+            for (int i = 0; i <= attemps; i++) {
+                toReturn.nodesUsedMM[index]++;
+                if (useTriangulation) {
+                    if (triAdded) {
+                        Triangulation.computeDistanceTree(tris[startTriIndex]);
+                        reachable = new List<Triangle>();
+                        foreach (Triangle tri in tris) {
+                            if (tri.distance < triRangeDist) {
+                                reachable.Add(tri);
+                            }
+                        }
+                        areas = new List<float>();
+                        areaSum = 0;
+                        for (int j = 0; j < reachable.Count; j++) {
+                            Triangle tri = reachable[j];
+                            Line[] lins = tri.getLines();
+                            float l1 = lins[0].Magnitude();
+                            float l2 = lins[1].Magnitude();
+                            float l3 = lins[2].Magnitude();
+                            float s = 0.5f * (l1 + l2 + l3);
+                            float area = Mathf.Sqrt(s * (s - l1) * (s - l2) * (s - l3));
+                            tri.area = area;
+                            areas.Add(area);
+                            areaSum = areaSum + area;
+                        }
+                        standardizedAreas = new List<float>();
+                        sumSoFar = 0;
+                        foreach (float a in areas) {
+                            standardizedAreas.Add((a + sumSoFar) / areaSum);
+                            sumSoFar = sumSoFar + a;
+                        }
+
+                    }
+                }
 
 				//Then pick random x and y values
 				float rx;
@@ -968,23 +1263,37 @@ namespace Exploration {
 					rx = Random.Range (curMinX, curMaxX);
 					ry = Random.Range (curMinY, curMaxY);
                     */
-                    trisInd = Random.Range(0f, 1f);
-                    for (k = 0; k < standardizedAreas.Count; k++) {
-                        if (trisInd <= standardizedAreas[k]) {
-                            break;
+                    if (useTriangulation) { 
+
+                        trisInd = Random.Range(0f, 1f);
+                        for (k = 0; k < standardizedAreas.Count; k++) {
+                            if (trisInd <= standardizedAreas[k]) {
+                                break;
+                            }
+                        }
+                        Triangle tri = reachable[k];
+                        rl1 = 1.0f;
+                        rl2 = 2.0f;
+                        while (rl2 > rl1) {
+                            rl1 = Random.Range(0f, 1f);
+                            rl2 = Random.Range(0f, 1f);
+                        }
+                        Vector3 point = tri.vertex[0] + rl1 * (tri.vertex[1] - tri.vertex[0]) + rl2 * (tri.vertex[2] - tri.vertex[1]);
+                
+                        rx = point.x;
+                        ry = point.z;
+                    }
+                    else {
+                        if (useDist) { 
+                            rx = Random.Range(curMinX, curMaxX);
+                            ry = Random.Range(curMinY, curMaxY);
+                        }
+                        else {
+                            rx = Random.Range(minX, maxX);
+                            ry = Random.Range(minY, maxY);
                         }
                     }
-                    Triangle tri = reachable[k];
-                    rl1 = 1.0f;
-                    rl2 = 2.0f;
-                    while (rl2 > rl1) { 
-                        rl1 = Random.Range(0f, 1f);
-                        rl2 = Random.Range(0f, 1f);
-                    }
-                    Vector3 point = tri.vertex[0] + rl1 * (tri.vertex[1] - tri.vertex[0]) + rl2 * (tri.vertex[2] - tri.vertex[1]);
-                    rx = point.x;
-                    ry = point.z;
-				}
+                }
 
                 Vector3 pdO = new Vector3(rx - startX, 0, ry - startY);
                 float pdd = pdO.magnitude;
@@ -995,7 +1304,13 @@ namespace Exploration {
 
                 //Pick a random time
                 //int rt = Random.Range (1,maxT);
-                int rt = Random.Range(minT, curMaxT);
+                int rt;
+                if (useDist) { 
+                    rt = Random.Range(minT, curMaxT);
+                }
+                else {
+                    rt = Random.Range(minT, maxT);
+                }
 
 
 
@@ -1005,14 +1320,22 @@ namespace Exploration {
 				//if this node has already been visited continue
 				if (nodeVisiting.visited) {
 					i--;
+                    toReturn.nodesRejectedMM[index]++;
 					//Consider checking if point is valid earlier, for i--.
 					continue;
 				}
 				
 				explored.Add (nodeVisiting);
+                if (checkWaste) {
+                    //Debug.Log("Checking");
+                    if (oldCheckInObs(rx, ry, obs)) {
+                        //Debug.Log("Found1");
+                        toReturn.nodesWasted++;
+                        continue;
+                    }
+                }
 
-
-				Vector3 p1 = new Vector3();
+                Vector3 p1 = new Vector3();
 				Vector3 p2 = new Vector3();
 				Vector3 pd = new Vector3();
 
@@ -1174,18 +1497,18 @@ namespace Exploration {
                 //Debug.Log(nodeVisiting.ToString());
                 //Debug.Log(nodeTheClosestTo.ToString());
 
-				//Old Backup Distract
-				//if(nodeTheClosestTo.distractTime > 0){
-				//	nodeVisiting.distractTime = nodeTheClosestTo.distractTime;
-				//}
-				//else if(distractPick){
-				//	nodeVisiting.distractTime = nodeVisiting.t;
-				//}
+                //Old Backup Distract
+                //if(nodeTheClosestTo.distractTime > 0){
+                //	nodeVisiting.distractTime = nodeTheClosestTo.distractTime;
+                //}
+                //else if(distractPick){
+                //	nodeVisiting.distractTime = nodeVisiting.t;
+                //}
 
 
-				//Check for collision with obstacles
-				if(checkCollObs(p2.x, p2.z, p1.x, p1.z)){
-
+                //Check for collision with obstacles
+                if (checkCollObs(p2.x, p2.z, p1.x, p1.z)){
+                    
 					continue;
 				}
 				
@@ -1209,15 +1532,20 @@ namespace Exploration {
 				nodeVisiting.parent = nodeTheClosestTo;
 				nodeVisiting.visited = true;
 
-                curMaxX = Mathf.Max(Mathf.Min(nodeVisiting.x + rangeDist, maxX), curMaxX);
-                curMinX = Mathf.Min(Mathf.Max(nodeVisiting.x - rangeDist, minX), curMinX);
-                curMaxY = Mathf.Max(Mathf.Min(nodeVisiting.y + rangeDist, maxY), curMaxY);
-                curMinY = Mathf.Min(Mathf.Max(nodeVisiting.y - rangeDist, minY), curMinY);
-                curMaxT = Mathf.Max(Mathf.Min(nodeVisiting.t + rangeTime, maxT), curMaxT);
-                if (k >= 0) {
-                    if (!reachable[k].visited) {
-                        reachable[k].visited = true;
-                        triAdded = true;
+                if (useDist) { 
+
+                    curMaxX = Mathf.Max(Mathf.Min(nodeVisiting.x + rangeDist, maxX), curMaxX);
+                    curMinX = Mathf.Min(Mathf.Max(nodeVisiting.x - rangeDist, minX), curMinX);
+                    curMaxY = Mathf.Max(Mathf.Min(nodeVisiting.y + rangeDist, maxY), curMaxY);
+                    curMinY = Mathf.Min(Mathf.Max(nodeVisiting.y - rangeDist, minY), curMinY);
+                    curMaxT = Mathf.Max(Mathf.Min(nodeVisiting.t + rangeTime, maxT), curMaxT);
+                }
+                if (useTriangulation) {
+                    if (k >= 0) {
+                        if (!reachable[k].visited) {
+                            reachable[k].visited = true;
+                            triAdded = true;
+                        }
                     }
                 }
 
@@ -1252,7 +1580,11 @@ namespace Exploration {
 							DrawTree(start, minX, maxX, minY, maxY, maxT);
                             DrawSamples();
 						}
-						return ReturnPathGeo (endNode, smooth);
+                        toReturn.Nodes = ReturnPathGeo(endNode, smooth);
+                        if(toReturn.Nodes != null) {
+                            toReturn.success = true;
+                        }
+                        return toReturn;
 					}
 				}
 				
@@ -1263,7 +1595,11 @@ namespace Exploration {
 						DrawTree(start, minX, maxX, minY, maxY, maxT);
                         DrawSamples();
 					}
-					return ReturnPathGeo (nodeVisiting, smooth);
+                    toReturn.Nodes = ReturnPathGeo(nodeVisiting, smooth);
+                    if (toReturn.Nodes != null) {
+                        toReturn.success = true;
+                    }
+                    return toReturn;
 					
 				}
 			}
@@ -1275,9 +1611,20 @@ namespace Exploration {
                 DrawSamples();
 			}
 
-			return new List<NodeGeo> ();
-		}
-		
+            return toReturn;
+
+        }
+
+        public bool oldCheckInObs(float x, float y, List<Geometry> obs) {
+            foreach(Geometry g in obs) {
+                if (g.PointInside(new Vector3(x, 0, y))) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
 		//Check for collision of a path with the obstacles, x, t, y
 		public bool checkCollObs(float startX, float startY, float endX, float endY){
 			//Debug.Log ("checkCollObs");
@@ -1458,7 +1805,7 @@ namespace Exploration {
 		}
 
 		private void DrawTree(NodeGeo start, float minX, float maxX, float minY, float maxY, int maxT){
-			Debug.Log ("DRAWTREE CALLED");
+			//Debug.Log ("DRAWTREE CALLED");
 			double[] min = new double[3];
 			double[] max = new double[3];
 			min[0] = minX;
@@ -1568,7 +1915,6 @@ namespace Exploration {
 
 		}
 
-
 		#region oldcode
 		//To prevent errors temporarily
 
@@ -1578,7 +1924,6 @@ namespace Exploration {
 
 
 		//OLD CODE FOLLOWS
-
 
 
 		/*

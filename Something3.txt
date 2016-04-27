@@ -1,0 +1,1006 @@
+Text is being written
+100 search attempts were made, on average the following data:
+Success,RRTs,Nodes,NodesRej,RRTs2,Nodes2,NodesRej2,Time,RRTsF,NodesF,NodesRejF,RRTs2F,Nodes2F,NodesRej2F,TimeF,
+0.45,3.2,10086.9555555556,16.2222222222222,5,19924.0444444444,0.8,45.2643763155556,5,20036.0363636364,31.0363636363636,0,0,0,20.34581206
+--------------------------
+--------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20031 nodes were used for the first half
+26 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:20.3981826
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+4tree searches were made for the first half
+14682 nodes were used for the first half
+20 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:51.8227866
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+2tree searches were made for the first half
+5172 nodes were used for the first half
+5 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:31.0289241
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20037 nodes were used for the first half
+32 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:18.4893112
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20043 nodes were used for the first half
+38 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:19.5878124
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20036 nodes were used for the first half
+31 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:18.2973107
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+4tree searches were made for the first half
+13007 nodes were used for the first half
+27 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20009 nodes were used for the first half
+4 nodes were rejected for already being other nodes in the first half
+The search took 00:00:44.6770846
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20041 nodes were used for the first half
+36 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:20.4323405
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+3tree searches were made for the first half
+9325 nodes were used for the first half
+10 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:50.7599734
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+18292 nodes were used for the first half
+20 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:52.8941609
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+3tree searches were made for the first half
+8232 nodes were used for the first half
+9 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:37.2482993
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+17143 nodes were used for the first half
+34 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:58.7558575
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+3tree searches were made for the first half
+8578 nodes were used for the first half
+6 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:43.5847799
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20028 nodes were used for the first half
+23 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:20.5108867
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20019 nodes were used for the first half
+14 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:18.6892699
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20036 nodes were used for the first half
+31 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:20.1195205
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+3tree searches were made for the first half
+9041 nodes were used for the first half
+13 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20009 nodes were used for the first half
+4 nodes were rejected for already being other nodes in the first half
+The search took 00:00:41.3144165
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20039 nodes were used for the first half
+34 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:18.8884499
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+4tree searches were made for the first half
+14541 nodes were used for the first half
+25 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:50.5019477
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20038 nodes were used for the first half
+33 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:19.7620747
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+3tree searches were made for the first half
+8897 nodes were used for the first half
+12 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+16326 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:41.2688934
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20040 nodes were used for the first half
+35 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:19.5924220
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20044 nodes were used for the first half
+39 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:18.6087128
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+3tree searches were made for the first half
+8987 nodes were used for the first half
+14 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:40.3833725
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20039 nodes were used for the first half
+34 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:21.3347598
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+16220 nodes were used for the first half
+20 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:53.9072557
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20030 nodes were used for the first half
+25 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:20.0082003
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20048 nodes were used for the first half
+43 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:20.2166821
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+1tree searches were made for the first half
+375 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:34.9662617
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20041 nodes were used for the first half
+36 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:24.0711222
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+3tree searches were made for the first half
+8677 nodes were used for the first half
+11 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:47.4353485
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+4tree searches were made for the first half
+12336 nodes were used for the first half
+29 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:50.1087002
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+2tree searches were made for the first half
+7538 nodes were used for the first half
+4 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20009 nodes were used for the first half
+4 nodes were rejected for already being other nodes in the first half
+The search took 00:00:33.7366607
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20050 nodes were used for the first half
+45 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:18.7472148
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+19297 nodes were used for the first half
+31 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20006 nodes were used for the first half
+1 nodes were rejected for already being other nodes in the first half
+The search took 00:00:46.6854876
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+3tree searches were made for the first half
+9036 nodes were used for the first half
+14 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:49.1835331
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20031 nodes were used for the first half
+26 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:20.4453120
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+4tree searches were made for the first half
+12487 nodes were used for the first half
+25 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:49.3500028
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20033 nodes were used for the first half
+28 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:20.8621068
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20033 nodes were used for the first half
+28 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:19.6764600
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+4tree searches were made for the first half
+12453 nodes were used for the first half
+18 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20006 nodes were used for the first half
+1 nodes were rejected for already being other nodes in the first half
+The search took 00:00:59.0014720
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20032 nodes were used for the first half
+27 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:20.7316798
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20030 nodes were used for the first half
+25 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:19.6336902
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20029 nodes were used for the first half
+24 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:19.6609372
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+3tree searches were made for the first half
+8100 nodes were used for the first half
+10 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:48.6331628
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20045 nodes were used for the first half
+40 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:19.5655945
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+2tree searches were made for the first half
+4313 nodes were used for the first half
+5 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:39.3722184
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+1tree searches were made for the first half
+1402 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20007 nodes were used for the first half
+2 nodes were rejected for already being other nodes in the first half
+The search took 00:00:34.7875274
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20034 nodes were used for the first half
+29 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:21.3440781
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20049 nodes were used for the first half
+44 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:20.8756333
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20031 nodes were used for the first half
+26 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:19.9825102
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20026 nodes were used for the first half
+21 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:18.2454829
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+3tree searches were made for the first half
+8165 nodes were used for the first half
+17 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:49.6242988
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20040 nodes were used for the first half
+35 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:19.8536188
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20030 nodes were used for the first half
+25 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:21.2640144
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20026 nodes were used for the first half
+21 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:22.5281047
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+2tree searches were made for the first half
+5206 nodes were used for the first half
+7 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:40.2650080
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20037 nodes were used for the first half
+32 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:21.4523259
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+16314 nodes were used for the first half
+30 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20008 nodes were used for the first half
+3 nodes were rejected for already being other nodes in the first half
+The search took 00:00:53.4224257
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20037 nodes were used for the first half
+32 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:19.7142205
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+4tree searches were made for the first half
+12335 nodes were used for the first half
+19 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20006 nodes were used for the first half
+1 nodes were rejected for already being other nodes in the first half
+The search took 00:00:43.2941371
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+4tree searches were made for the first half
+13447 nodes were used for the first half
+24 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:45.6855164
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+1tree searches were made for the first half
+537 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:36.7055709
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+17052 nodes were used for the first half
+38 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20006 nodes were used for the first half
+1 nodes were rejected for already being other nodes in the first half
+The search took 00:00:52.5742183
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+1tree searches were made for the first half
+1762 nodes were used for the first half
+3 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:32.4507362
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+17070 nodes were used for the first half
+24 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20008 nodes were used for the first half
+3 nodes were rejected for already being other nodes in the first half
+The search took 00:00:59.9411966
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+2tree searches were made for the first half
+7214 nodes were used for the first half
+18 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20007 nodes were used for the first half
+2 nodes were rejected for already being other nodes in the first half
+The search took 00:00:39.6802672
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20029 nodes were used for the first half
+24 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:21.3473662
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20035 nodes were used for the first half
+30 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:21.6127345
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20050 nodes were used for the first half
+45 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:21.0615273
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20037 nodes were used for the first half
+32 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:25.4198111
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+1tree searches were made for the first half
+2215 nodes were used for the first half
+2 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20007 nodes were used for the first half
+2 nodes were rejected for already being other nodes in the first half
+The search took 00:00:44.0206993
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+3tree searches were made for the first half
+8627 nodes were used for the first half
+14 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20007 nodes were used for the first half
+2 nodes were rejected for already being other nodes in the first half
+The search took 00:00:50.8958656
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+3tree searches were made for the first half
+10747 nodes were used for the first half
+20 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:43.8990574
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20036 nodes were used for the first half
+31 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:20.4980503
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+2tree searches were made for the first half
+6803 nodes were used for the first half
+11 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20007 nodes were used for the first half
+2 nodes were rejected for already being other nodes in the first half
+The search took 00:00:37.6604497
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20035 nodes were used for the first half
+30 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:19.2879904
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+3tree searches were made for the first half
+9435 nodes were used for the first half
+21 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:40.7849444
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20032 nodes were used for the first half
+27 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:18.0500658
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20041 nodes were used for the first half
+36 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:20.5569277
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20031 nodes were used for the first half
+26 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:19.8574454
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20037 nodes were used for the first half
+32 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:21.5159747
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20037 nodes were used for the first half
+32 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:20.9486281
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20026 nodes were used for the first half
+21 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:19.9283709
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+2tree searches were made for the first half
+4251 nodes were used for the first half
+5 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20006 nodes were used for the first half
+1 nodes were rejected for already being other nodes in the first half
+The search took 00:00:39.9005218
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20032 nodes were used for the first half
+27 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:20.2513254
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+19274 nodes were used for the first half
+39 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:44.7142110
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20038 nodes were used for the first half
+33 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:19.6727827
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20041 nodes were used for the first half
+36 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:23.2455492
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+19523 nodes were used for the first half
+40 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20008 nodes were used for the first half
+3 nodes were rejected for already being other nodes in the first half
+The search took 00:01:02.9772160
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20041 nodes were used for the first half
+36 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:20.1641230
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+1tree searches were made for the first half
+154 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:32.5571943
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+4tree searches were made for the first half
+13360 nodes were used for the first half
+20 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:43.3833587
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20027 nodes were used for the first half
+22 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:19.8017337
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20035 nodes were used for the first half
+30 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:21.4955705
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20042 nodes were used for the first half
+37 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:20.0230032
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20048 nodes were used for the first half
+43 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:20.3773657
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20034 nodes were used for the first half
+29 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:19.4573570
+The success of the search was False
+--------------------------------
+The search type was single midpoint
+4tree searches were made for the first half
+12291 nodes were used for the first half
+16 nodes were rejected for already being other nodes in the first half
+5tree searches were made for the first half
+20005 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:51.0519135
+The success of the search was True
+--------------------------------
+The search type was single midpoint
+5tree searches were made for the first half
+20035 nodes were used for the first half
+30 nodes were rejected for already being other nodes in the first half
+0tree searches were made for the first half
+0 nodes were used for the first half
+0 nodes were rejected for already being other nodes in the first half
+The search took 00:00:20.8559181
+The success of the search was False
+--------------------------------

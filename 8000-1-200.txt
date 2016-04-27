@@ -1,0 +1,1406 @@
+Text is being written
+200 search attempts were made, on average the following data:
+Success,RRTs,Nodes,NodesRej,NodesWasted,Time,RRTsF,NodesF,NodesRejF,NodesWatedF,TimeF
+0.365,1,1117.52054794521,3.35616438356164,0,0.820841239726028,1,8038.2125984252,37.2125984251969,0,2.32268416692913
+--------------------------
+--------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8033 nodes were used
+32 nodes were rejected for already being other nodes
+The search took 00:00:02.3407691
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8029 nodes were used
+28 nodes were rejected for already being other nodes
+The search took 00:00:02.3127260
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+126 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.5901161
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8038 nodes were used
+37 nodes were rejected for already being other nodes
+The search took 00:00:02.9017255
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8049 nodes were used
+48 nodes were rejected for already being other nodes
+The search took 00:00:02.4041761
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8038 nodes were used
+37 nodes were rejected for already being other nodes
+The search took 00:00:02.3313824
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8043 nodes were used
+42 nodes were rejected for already being other nodes
+The search took 00:00:02.3763583
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8043 nodes were used
+42 nodes were rejected for already being other nodes
+The search took 00:00:02.5298564
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+5373 nodes were used
+18 nodes were rejected for already being other nodes
+The search took 00:00:02.0004472
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8049 nodes were used
+48 nodes were rejected for already being other nodes
+The search took 00:00:02.3711497
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8040 nodes were used
+39 nodes were rejected for already being other nodes
+The search took 00:00:02.3730192
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8046 nodes were used
+45 nodes were rejected for already being other nodes
+The search took 00:00:02.0461460
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8038 nodes were used
+37 nodes were rejected for already being other nodes
+The search took 00:00:02.3924428
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8034 nodes were used
+33 nodes were rejected for already being other nodes
+The search took 00:00:02.0208348
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8052 nodes were used
+51 nodes were rejected for already being other nodes
+The search took 00:00:02.3178033
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8036 nodes were used
+35 nodes were rejected for already being other nodes
+The search took 00:00:01.9826812
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8043 nodes were used
+42 nodes were rejected for already being other nodes
+The search took 00:00:02.2862236
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8048 nodes were used
+47 nodes were rejected for already being other nodes
+The search took 00:00:02.2451427
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+6528 nodes were used
+22 nodes were rejected for already being other nodes
+The search took 00:00:01.9525961
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+112 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.2577547
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+68 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.4948922
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8024 nodes were used
+23 nodes were rejected for already being other nodes
+The search took 00:00:02.1771727
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+192 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.4246364
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+55 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.3599482
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8037 nodes were used
+36 nodes were rejected for already being other nodes
+The search took 00:00:02.3388301
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8041 nodes were used
+40 nodes were rejected for already being other nodes
+The search took 00:00:02.2438994
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8043 nodes were used
+42 nodes were rejected for already being other nodes
+The search took 00:00:02.3226965
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+479 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.8892423
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8048 nodes were used
+47 nodes were rejected for already being other nodes
+The search took 00:00:02.1580643
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8047 nodes were used
+46 nodes were rejected for already being other nodes
+The search took 00:00:02.2214343
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8039 nodes were used
+38 nodes were rejected for already being other nodes
+The search took 00:00:02.1118808
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+216 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.7656736
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8047 nodes were used
+46 nodes were rejected for already being other nodes
+The search took 00:00:02.0872558
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8032 nodes were used
+31 nodes were rejected for already being other nodes
+The search took 00:00:02.2767903
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8028 nodes were used
+27 nodes were rejected for already being other nodes
+The search took 00:00:02.3472966
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+319 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:01.0524520
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+173 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.4878053
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+533 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:01.0433161
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8053 nodes were used
+52 nodes were rejected for already being other nodes
+The search took 00:00:02.3828099
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8053 nodes were used
+52 nodes were rejected for already being other nodes
+The search took 00:00:02.4044993
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8031 nodes were used
+30 nodes were rejected for already being other nodes
+The search took 00:00:02.1852556
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8041 nodes were used
+40 nodes were rejected for already being other nodes
+The search took 00:00:02.6327160
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8037 nodes were used
+36 nodes were rejected for already being other nodes
+The search took 00:00:02.2055710
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8044 nodes were used
+43 nodes were rejected for already being other nodes
+The search took 00:00:01.9722058
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8036 nodes were used
+35 nodes were rejected for already being other nodes
+The search took 00:00:02.5432435
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+79 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.4828484
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8024 nodes were used
+23 nodes were rejected for already being other nodes
+The search took 00:00:02.2036746
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8033 nodes were used
+32 nodes were rejected for already being other nodes
+The search took 00:00:02.2942971
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8041 nodes were used
+40 nodes were rejected for already being other nodes
+The search took 00:00:02.6162762
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+171 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.5034421
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8034 nodes were used
+33 nodes were rejected for already being other nodes
+The search took 00:00:02.2490151
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8037 nodes were used
+36 nodes were rejected for already being other nodes
+The search took 00:00:02.5444583
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8040 nodes were used
+39 nodes were rejected for already being other nodes
+The search took 00:00:02.3083779
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+392 nodes were used
+1 nodes were rejected for already being other nodes
+The search took 00:00:00.7536014
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+338 nodes were used
+1 nodes were rejected for already being other nodes
+The search took 00:00:00.4016703
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8030 nodes were used
+29 nodes were rejected for already being other nodes
+The search took 00:00:02.3743402
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+188 nodes were used
+1 nodes were rejected for already being other nodes
+The search took 00:00:00.4356891
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+257 nodes were used
+1 nodes were rejected for already being other nodes
+The search took 00:00:01.0162544
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+5578 nodes were used
+15 nodes were rejected for already being other nodes
+The search took 00:00:01.8541340
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+248 nodes were used
+1 nodes were rejected for already being other nodes
+The search took 00:00:00.5444753
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8038 nodes were used
+37 nodes were rejected for already being other nodes
+The search took 00:00:02.1273625
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8033 nodes were used
+32 nodes were rejected for already being other nodes
+The search took 00:00:02.5004128
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8033 nodes were used
+32 nodes were rejected for already being other nodes
+The search took 00:00:02.4051030
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8039 nodes were used
+38 nodes were rejected for already being other nodes
+The search took 00:00:02.3262205
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8041 nodes were used
+40 nodes were rejected for already being other nodes
+The search took 00:00:02.3079038
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1750 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.7866089
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1653 nodes were used
+6 nodes were rejected for already being other nodes
+The search took 00:00:01.2325525
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+722 nodes were used
+3 nodes were rejected for already being other nodes
+The search took 00:00:00.8838256
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8031 nodes were used
+30 nodes were rejected for already being other nodes
+The search took 00:00:02.4873506
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8039 nodes were used
+38 nodes were rejected for already being other nodes
+The search took 00:00:01.9200205
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+223 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.6522652
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1262 nodes were used
+1 nodes were rejected for already being other nodes
+The search took 00:00:00.9620156
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+83 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.4151020
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8047 nodes were used
+46 nodes were rejected for already being other nodes
+The search took 00:00:02.2124691
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8041 nodes were used
+40 nodes were rejected for already being other nodes
+The search took 00:00:02.1930423
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8029 nodes were used
+28 nodes were rejected for already being other nodes
+The search took 00:00:01.9340195
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8037 nodes were used
+36 nodes were rejected for already being other nodes
+The search took 00:00:02.3924040
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+15 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.1659414
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8041 nodes were used
+40 nodes were rejected for already being other nodes
+The search took 00:00:02.3086292
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8042 nodes were used
+41 nodes were rejected for already being other nodes
+The search took 00:00:02.2032325
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8032 nodes were used
+31 nodes were rejected for already being other nodes
+The search took 00:00:02.5690462
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8047 nodes were used
+46 nodes were rejected for already being other nodes
+The search took 00:00:02.1652351
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8034 nodes were used
+33 nodes were rejected for already being other nodes
+The search took 00:00:02.4436100
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+78 nodes were used
+1 nodes were rejected for already being other nodes
+The search took 00:00:00.4422195
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8027 nodes were used
+26 nodes were rejected for already being other nodes
+The search took 00:00:02.1134622
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8039 nodes were used
+38 nodes were rejected for already being other nodes
+The search took 00:00:02.4169354
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1705 nodes were used
+9 nodes were rejected for already being other nodes
+The search took 00:00:01.3396072
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+31 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.0942772
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+3395 nodes were used
+12 nodes were rejected for already being other nodes
+The search took 00:00:01.5572686
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8033 nodes were used
+32 nodes were rejected for already being other nodes
+The search took 00:00:02.3719837
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8032 nodes were used
+31 nodes were rejected for already being other nodes
+The search took 00:00:03.1420216
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8028 nodes were used
+27 nodes were rejected for already being other nodes
+The search took 00:00:02.9436847
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+167 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.4643647
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8052 nodes were used
+51 nodes were rejected for already being other nodes
+The search took 00:00:02.4468697
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8031 nodes were used
+30 nodes were rejected for already being other nodes
+The search took 00:00:02.0576593
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+324 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.4351521
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+140 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.7030812
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8046 nodes were used
+45 nodes were rejected for already being other nodes
+The search took 00:00:02.5575562
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+3878 nodes were used
+6 nodes were rejected for already being other nodes
+The search took 00:00:01.6910520
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+7851 nodes were used
+29 nodes were rejected for already being other nodes
+The search took 00:00:02.1794818
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+299 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.9846447
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8052 nodes were used
+51 nodes were rejected for already being other nodes
+The search took 00:00:02.4600367
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1131 nodes were used
+3 nodes were rejected for already being other nodes
+The search took 00:00:00.9696387
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8049 nodes were used
+48 nodes were rejected for already being other nodes
+The search took 00:00:02.4041086
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+315 nodes were used
+1 nodes were rejected for already being other nodes
+The search took 00:00:01.0896439
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8024 nodes were used
+23 nodes were rejected for already being other nodes
+The search took 00:00:02.0948769
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8029 nodes were used
+28 nodes were rejected for already being other nodes
+The search took 00:00:02.3331744
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8040 nodes were used
+39 nodes were rejected for already being other nodes
+The search took 00:00:02.2495042
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8035 nodes were used
+34 nodes were rejected for already being other nodes
+The search took 00:00:02.3212202
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8022 nodes were used
+21 nodes were rejected for already being other nodes
+The search took 00:00:02.3251080
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8031 nodes were used
+30 nodes were rejected for already being other nodes
+The search took 00:00:02.2893873
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8040 nodes were used
+39 nodes were rejected for already being other nodes
+The search took 00:00:02.2415409
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+76 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.4703217
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8027 nodes were used
+26 nodes were rejected for already being other nodes
+The search took 00:00:02.0686942
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8035 nodes were used
+34 nodes were rejected for already being other nodes
+The search took 00:00:02.0065584
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+230 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.3751209
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8041 nodes were used
+40 nodes were rejected for already being other nodes
+The search took 00:00:02.4950981
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+291 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:01.3786208
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8041 nodes were used
+40 nodes were rejected for already being other nodes
+The search took 00:00:02.3486830
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+6568 nodes were used
+39 nodes were rejected for already being other nodes
+The search took 00:00:01.9523736
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8038 nodes were used
+37 nodes were rejected for already being other nodes
+The search took 00:00:02.2896460
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+345 nodes were used
+1 nodes were rejected for already being other nodes
+The search took 00:00:00.4797562
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8035 nodes were used
+34 nodes were rejected for already being other nodes
+The search took 00:00:02.3424955
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8036 nodes were used
+35 nodes were rejected for already being other nodes
+The search took 00:00:02.3726596
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8036 nodes were used
+35 nodes were rejected for already being other nodes
+The search took 00:00:02.3729472
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8026 nodes were used
+25 nodes were rejected for already being other nodes
+The search took 00:00:02.7057040
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1880 nodes were used
+2 nodes were rejected for already being other nodes
+The search took 00:00:01.0744688
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8037 nodes were used
+36 nodes were rejected for already being other nodes
+The search took 00:00:02.5838424
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8026 nodes were used
+25 nodes were rejected for already being other nodes
+The search took 00:00:02.2296369
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+81 nodes were used
+1 nodes were rejected for already being other nodes
+The search took 00:00:00.2943097
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+160 nodes were used
+2 nodes were rejected for already being other nodes
+The search took 00:00:00.5577174
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8035 nodes were used
+34 nodes were rejected for already being other nodes
+The search took 00:00:02.4787192
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+420 nodes were used
+2 nodes were rejected for already being other nodes
+The search took 00:00:01.0197085
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8041 nodes were used
+40 nodes were rejected for already being other nodes
+The search took 00:00:01.9262044
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8044 nodes were used
+43 nodes were rejected for already being other nodes
+The search took 00:00:03.1275932
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8038 nodes were used
+37 nodes were rejected for already being other nodes
+The search took 00:00:02.1262815
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8052 nodes were used
+51 nodes were rejected for already being other nodes
+The search took 00:00:02.4527351
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8020 nodes were used
+19 nodes were rejected for already being other nodes
+The search took 00:00:02.3074492
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8045 nodes were used
+44 nodes were rejected for already being other nodes
+The search took 00:00:01.9596239
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8027 nodes were used
+26 nodes were rejected for already being other nodes
+The search took 00:00:02.2608614
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+648 nodes were used
+3 nodes were rejected for already being other nodes
+The search took 00:00:01.0904810
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+473 nodes were used
+1 nodes were rejected for already being other nodes
+The search took 00:00:00.9721319
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8043 nodes were used
+42 nodes were rejected for already being other nodes
+The search took 00:00:02.3334928
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8046 nodes were used
+45 nodes were rejected for already being other nodes
+The search took 00:00:02.1549480
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8047 nodes were used
+46 nodes were rejected for already being other nodes
+The search took 00:00:02.0934109
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+699 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.8322350
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+607 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.8548388
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8039 nodes were used
+38 nodes were rejected for already being other nodes
+The search took 00:00:02.3121180
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+360 nodes were used
+1 nodes were rejected for already being other nodes
+The search took 00:00:00.8175453
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8039 nodes were used
+38 nodes were rejected for already being other nodes
+The search took 00:00:02.3545611
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+77 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.3404060
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8035 nodes were used
+34 nodes were rejected for already being other nodes
+The search took 00:00:02.3474492
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8041 nodes were used
+40 nodes were rejected for already being other nodes
+The search took 00:00:02.2239196
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+809 nodes were used
+2 nodes were rejected for already being other nodes
+The search took 00:00:00.9722054
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8040 nodes were used
+39 nodes were rejected for already being other nodes
+The search took 00:00:01.9146788
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+200 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.3313820
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8037 nodes were used
+36 nodes were rejected for already being other nodes
+The search took 00:00:02.3272904
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8035 nodes were used
+34 nodes were rejected for already being other nodes
+The search took 00:00:02.2987937
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8037 nodes were used
+36 nodes were rejected for already being other nodes
+The search took 00:00:02.2839050
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8032 nodes were used
+31 nodes were rejected for already being other nodes
+The search took 00:00:02.2652842
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8049 nodes were used
+48 nodes were rejected for already being other nodes
+The search took 00:00:02.5049655
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8028 nodes were used
+27 nodes were rejected for already being other nodes
+The search took 00:00:02.2557256
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1940 nodes were used
+3 nodes were rejected for already being other nodes
+The search took 00:00:00.9948251
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8035 nodes were used
+34 nodes were rejected for already being other nodes
+The search took 00:00:02.0567705
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8035 nodes were used
+34 nodes were rejected for already being other nodes
+The search took 00:00:01.9846641
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8042 nodes were used
+41 nodes were rejected for already being other nodes
+The search took 00:00:02.2037959
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+66 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.2998229
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8032 nodes were used
+31 nodes were rejected for already being other nodes
+The search took 00:00:02.5251232
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8049 nodes were used
+48 nodes were rejected for already being other nodes
+The search took 00:00:02.6471148
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+231 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.3716463
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8042 nodes were used
+41 nodes were rejected for already being other nodes
+The search took 00:00:02.2508537
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8051 nodes were used
+50 nodes were rejected for already being other nodes
+The search took 00:00:02.1693405
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8046 nodes were used
+45 nodes were rejected for already being other nodes
+The search took 00:00:02.4630945
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+312 nodes were used
+1 nodes were rejected for already being other nodes
+The search took 00:00:01.0594814
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+4521 nodes were used
+10 nodes were rejected for already being other nodes
+The search took 00:00:01.5614527
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8044 nodes were used
+43 nodes were rejected for already being other nodes
+The search took 00:00:02.5494286
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+128 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.2421707
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+258 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.6261567
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8039 nodes were used
+38 nodes were rejected for already being other nodes
+The search took 00:00:02.1034308
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8032 nodes were used
+31 nodes were rejected for already being other nodes
+The search took 00:00:02.0785214
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8030 nodes were used
+29 nodes were rejected for already being other nodes
+The search took 00:00:02.2589557
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+55 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.3624912
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8040 nodes were used
+39 nodes were rejected for already being other nodes
+The search took 00:00:02.2992986
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+107 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.4376636
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+35 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.2086054
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+92 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.5531418
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+6587 nodes were used
+29 nodes were rejected for already being other nodes
+The search took 00:00:02.6346842
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8036 nodes were used
+35 nodes were rejected for already being other nodes
+The search took 00:00:03.1848673
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8048 nodes were used
+47 nodes were rejected for already being other nodes
+The search took 00:00:02.5213515
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+6097 nodes were used
+17 nodes were rejected for already being other nodes
+The search took 00:00:01.6157054
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8034 nodes were used
+33 nodes were rejected for already being other nodes
+The search took 00:00:02.2817646
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8047 nodes were used
+46 nodes were rejected for already being other nodes
+The search took 00:00:02.4541657
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+131 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.4301748
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+90 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.4207118
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8033 nodes were used
+32 nodes were rejected for already being other nodes
+The search took 00:00:02.4332432
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8041 nodes were used
+40 nodes were rejected for already being other nodes
+The search took 00:00:02.1157129
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+463 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.3552260
+The success of the search was True
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8036 nodes were used
+35 nodes were rejected for already being other nodes
+The search took 00:00:02.1855875
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+8040 nodes were used
+39 nodes were rejected for already being other nodes
+The search took 00:00:02.3881382
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+95 nodes were used
+0 nodes were rejected for already being other nodes
+The search took 00:00:00.5740895
+The success of the search was True
+--------------------------------

@@ -1,0 +1,706 @@
+Text is being written
+100 search attempts were made, on average the following data:
+Success,RRTs,Nodes,NodesRej,NodesWasted,Time,RRTsF,NodesF,NodesRejF,NodesWatedF,TimeF
+0,NaN,NaN,NaN,NaN,NaN,1,1.01,0,0,-63595628738.8841
+--------------------------
+--------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:37.9762820
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:37.9943233
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.0112825
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.0297493
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.0483030
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.0666979
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.0852915
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.1032040
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.1208001
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.1391460
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.1566986
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.1746233
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.1936720
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.2110295
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.2293489
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.2478662
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.2679144
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.2864674
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.3060170
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.3245699
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.3446165
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.3631528
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.3822174
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.4002555
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+2 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.4182940
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.4358660
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.4544169
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.4729390
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.4905141
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.5095636
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.5281110
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.5481726
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.5667173
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.5872727
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.6053275
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.6243801
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.6439278
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.6624831
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.6810229
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.6995723
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.7181228
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.7356707
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.7542169
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.7722783
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.7903263
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.8083684
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.8269170
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.8444696
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.8630138
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.8805672
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.8990849
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.9181684
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.9357095
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.9537572
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.9718052
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:38.9908590
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.0094017
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.0279538
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.0455028
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.0640514
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.0815953
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.1001194
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.1176933
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.1352431
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.1542918
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.1718346
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.1908876
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.2084339
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.2274850
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.2450321
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.2635826
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.2806252
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.2996502
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.3161938
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.3332391
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.3512872
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.3678312
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.3868819
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.4039272
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.4214739
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.4390206
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.4565724
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.4751154
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.4921608
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.5107101
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.5277554
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.5463048
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.5633501
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.5813985
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.5979422
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.6144862
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.6330355
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.6500809
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.6686302
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.6866782
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.7047263
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.7227743
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.7408223
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.7583998
+The success of the search was False
+--------------------------------
+The search type was normal
+There were 1 tree searches used attempts made
+1 nodes were used
+0 nodes were rejected for already being other nodes
+The search took -736060.12:25:39.7759465
+The success of the search was False
+--------------------------------

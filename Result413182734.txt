@@ -1,0 +1,17 @@
+Text is being written
+10 search attempts were made, on average the following data:
+The search type was single midpoint
+Success,RRTs,Nodes,NodesRej,RRTs2,Nodes2,NodesRej2,Time,RRTsF,NodesF,NodesRejF,RRTs2F,Nodes2F,NodesRej2F,TimeF,
+0,NaN,NaN,NaN,NaN,NaN,NaN,NaN,4.4,15460.9,24.6,8,32009.8,1.8,65.87198739
+--------------------------
+--------------------------
+2,8011,10,40022,77.8524918,0
+10,40084,0,0,35.6394855,0
+8,28855,10,40010,85.1832498,0
+2,4420,10,40010,69.9223435,0
+10,40073,0,0,39.6534217,0
+3,8172,10,40012,74.9060673,0
+2,7458,10,40010,69.0398523,0
+2,4374,10,40010,74.0990527,0
+2,4606,10,40013,60.7711576,0
+3,8556,10,40011,71.6527517,0

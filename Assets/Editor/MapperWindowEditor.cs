@@ -94,8 +94,9 @@ namespace EditorArea {
                 triangles.TriangulationSpace();
                 List<Triangle> tris = triangles.triangles;
                 Triangle startTri = null;
-                Vector3 startPoint = new Vector3(-45, 1, 45);
-                foreach(Triangle t in tris) {
+                //Vector3 startPoint = new Vector3(-45, 1, 45);
+                Vector3 startPoint = new Vector3(-20, 1, 20);
+                foreach (Triangle t in tris) {
                     if (t.containsPoint(startPoint)) {
                         startTri = t;
                     }
@@ -235,7 +236,9 @@ namespace EditorArea {
                 Triangle startTri = null;
                 Vector3 startPoint = new Vector3(-45, 1, 45);
                 //Vector3 startPoint = new Vector3(-20, 1, 20);
-                Vector3 endPoint = new Vector3(46, 1, -47);
+                //Vector3 endPoint = new Vector3(43, 1, -42.7f);
+                Vector3 endPoint = new Vector3(47, 1, -46);
+                //Vector3 endPoint = new Vector3(20, 1, -20);
                 Triangle endTri = null;
                 foreach (Triangle t in tris) {
                     if (t.containsPoint(startPoint)) {
@@ -244,20 +247,25 @@ namespace EditorArea {
                     if (t.containsPoint(endPoint)) {
                         endTri = t;
                     }
-
+                    t.treeDepth = -1;
                 }
 
-                Triangulation.genTreeStruct(startTri);
-                Triangulation.drawTreeStruct(startTri);
+
                 /*foreach(Triangle t in triangles.triangles) {
                     Debug.Log(t.GetCenterTriangle());
                     Debug.Log(t.parents.Count);
                 }*/
                 //Triangulation.simpTreeStruct(startTri);
 
-                List<List<int>> paths = Triangulation.findAllSimpleEndPaths(startTri, endTri);
-                Triangulation.drawTreeStructSimp(startTri);
 
+                //Triangulation.computeDistanceTreeE(startTri, endTri);
+                //Debug.Log(startTri.distance);
+                //Triangulation.drawTreeStruct(startTri);
+
+
+                List<List<int>> paths = Triangulation.findAllSimpleEndPaths(startTri, endTri);
+
+                /*
                 Debug.Log("Number of Paths Found = " + paths.Count);
                 foreach (List<int> path in paths) {
                     string toPrint = "Path:";
@@ -286,8 +294,10 @@ namespace EditorArea {
                     midPoint.transform.position = midTri.GetCenterTriangle();
                     Debug.Log(midTri.GetCenterTriangle());
                 }
-
-
+                /**/
+                Triangulation.computeDistanceTreeE(startTri, endTri);
+                Triangulation.drawTreeStruct(startTri);
+                Triangulation.drawTreeStructSimp(startTri);
 
 
 
@@ -298,14 +308,31 @@ namespace EditorArea {
                 //Triangulation.computeDistanceTree(startTri);
             }
 
+            if (GUILayout.Button("Test Stuff3")) {
+                Debug.Log("Button PRessed");
 
+                triangles = GameObject.Find("Triangulation").GetComponent<Triangulation>();
 
+                RRTKDTreeGEO rrt = new RRTKDTreeGEO();
+                List<Geometry> obstacles = triangles.TriangulationSpace();
+                List<Triangle> tris = triangles.triangles;
 
+                if (start == null) {
+                    start = GameObject.Find("Start");
+                }
+                if (end == null) {
+                    end = GameObject.Find("End");
+                }
+                float startX = start.transform.position.x;
+                float startY = start.transform.position.z;
+                float endX = end.transform.position.x;
+                float endY = end.transform.position.z;
 
+                rrt.generateMidPoint(startX, startY, endX, endY, tris, false);
+                rrt.generateMidPoint(startX, startY, endX, endY,tris, true);
+                rrt.generateMidPoints(startX, startY, endX, endY, tris);
 
-
-
-
+            }
 
             #region Pre-Init
 
@@ -601,7 +628,6 @@ namespace EditorArea {
 			}
 			EditorGUILayout.IntField(curFrame);
 
-
 			EditorGUILayout.LabelField ("");
 
 			if(GUILayout.Button ("Print latest path")){
@@ -616,8 +642,6 @@ namespace EditorArea {
 					
 				}
 			}
-
-
 
 			if (GUILayout.Button ("Compute Path Geo")) {
 				if(enemygeoobjs  == null){
@@ -636,8 +660,8 @@ namespace EditorArea {
 				triangles = GameObject.Find ("Triangulation").GetComponent<Triangulation>();
 
 
-                //List<Geometry> obstacles = triangles.TriangulationSpace();
-                triangles.TriangulationSpace();
+                List<Geometry> obstacles = triangles.TriangulationSpace();
+                //triangles.TriangulationSpace();
                 List<Triangle> tris = triangles.triangles;
 
 
@@ -713,45 +737,36 @@ namespace EditorArea {
 				Vector3 distract2Pos = GameObject.Find ("DistractPoint2").transform.position;
 				Vector2 distract2Pos2 = new Vector2(distract2Pos.x, distract2Pos.z);
 
-				for (int it = 0; it < iterations; it++) {
+                
 
-					/* Screw the Map
-
-					// Make a copy of the original map
-					fullMap = new Cell[original.Length][][];
-					for (int t = 0; t < original.Length; t++) {
-						fullMap[t] = new Cell[original[0].Length][];
-						for (int x = 0; x < original[0].Length; x++) {
-							fullMap[t][x] = new Cell[original[0][0].Length];
-							for (int y = 0; y < original[0][0].Length; y++)
-								fullMap[t][x][y] = original[t][x][y].Copy();
-						}
-					}
-					
-					// Use the copied map so the RRT can modify it
-					foreach (Enemy e in SpaceState.Editor.enemies) {
-						for (int t = 0; t < original.Length; t++)
-							for (int x = 0; x < original[0].Length; x++)
-								for (int y = 0; y < original[0][0].Length; y++)
-									if (e.seenCells[t][x][y] != null)
-										e.seenCells[t][x][y] = fullMap[t][x][y];
-						
-						// TODO: Need to make a backup of the enemies positions, rotations and forwards
+                List<RRTResult> results = new List<RRTResult>();
 
 
+                for (int it = 0; it < iterations; it++) {
 
+                    RRTResult toReturn = new RRTResult();
+                    toReturn.startTime = System.DateTime.Now;
+                    int index = 0;
+                    toReturn.rrtsUsedMM.Add(0);
+                    toReturn.rrtsUsed2MM.Add(0);
+                    toReturn.nodesUsedMM.Add(0);
+                    toReturn.nodesUsed2MM.Add(0);
+                    toReturn.nodesRejectedMM.Add(0);
+                    toReturn.nodesRejected2MM.Add(0);
+                    toReturn.type = "normal";
 
-					}
-					*/
+                    bool found = false;
+                    for (int it2 = 0; it2 < attemps2; it2++){
+                        toReturn.rrtsUsedMM[index]++;
 
-					for(int it2 = 0; it2 < attemps2; it2++){
-
-
-						// We have this try/catch block here to account for the issue that we don't solve when we find a path when t is near the limit
-						try {
+                        // We have this try/catch block here to account for the issue that we don't solve when we find a path when t is near the limit
+                        try {
 
                             //nodes= rrtgeo.ComputeGeo (startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, playerSpeed, distractPos2, distract2Pos2);
-                            nodes = rrtgeo.ComputeGeo(startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, playerSpeed, distractPos2, distract2Pos2, tris);
+                            toReturn = rrtgeo.ComputeGeo(startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, playerSpeed, distractPos2, distract2Pos2, tris, toReturn, index, obstacles, false);
+                            nodes = toReturn.Nodes;
+                            toReturn.endTime = DateTime.Now;
+                            
                             //nodes = rrt.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
 
                             //Debug.Log (nodes.Count);
@@ -761,7 +776,10 @@ namespace EditorArea {
 
 							// Did we found a path?
 							if (nodes.Count > 0) {
-								pathsgeo.Add (new PathGeo(nodes));
+                                found = true;
+                                results.Add(toReturn);
+
+                                pathsgeo.Add (new PathGeo(nodes));
 								toggleStatusGeo.Add(pathsgeo.Last(), true);
 								//Debug.Log ("Count1 is : " + toggleStatusGeo.Count);
 								pathsgeo.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
@@ -810,12 +828,17 @@ namespace EditorArea {
 							// We also cant just bring the check earlier since there's data to be copied (really really rare cases)
 							// The other case is yet unkown, but it's a conicidence by trying to insert a node in the tree that already exists (really rare cases)
 						}
-
-
-
 					}
-				}
-				// Set the map to be drawn
+                    if (!found) {
+                        results.Add(toReturn);
+                    }
+
+
+                }
+
+                printResultsToFile(results);
+                
+                // Set the map to be drawn
 				//drawer.fullMap = fullMap;
 				//ComputeHeatMap (paths, deaths);
 				
@@ -853,7 +876,6 @@ namespace EditorArea {
 				
 			}
 			
-
             if (GUILayout.Button ("Compute Path Multi-Part Geo")) {
                 if (enemygeoobjs == null) {
                     enemygeoobjs = GameObject.FindGameObjectsWithTag("EnemyGeo");
@@ -910,6 +932,7 @@ namespace EditorArea {
                     UnityEngine.Random.seed = seed;
                 }
 
+                RRTResult returned = null;
                 List<NodeGeo> nodes = null;
 
                 Vector3 distractPos = GameObject.Find("DistractPoint").transform.position;
@@ -918,35 +941,24 @@ namespace EditorArea {
                 Vector3 distract2Pos = GameObject.Find("DistractPoint2").transform.position;
                 Vector2 distract2Pos2 = new Vector2(distract2Pos.x, distract2Pos.z);
 
+                List<RRTResult> results = new List<RRTResult>();
                 for (int it = 0; it < iterations; it++) {
 
-
+                    
 
                         // We have this try/catch block here to account for the issue that we don't solve when we find a path when t is near the limit
                         try {
 
-                            //nodes= rrtgeo.ComputeGeo (startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, playerSpeed, distractPos2, distract2Pos2);
-                            nodes = rrtgeo.ComputeGeoFromPartials(startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, attemps2, playerSpeed, distractPos2, distract2Pos2, tris);
-
-                            
-                            //nodes = rrt.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
-
-                            //Debug.Log (nodes.Count);
-                            if (nodes.Count <= 0) {
-                                Debug.Log("RRT Search Failed");
-                            }
+                            returned = rrtgeo.ComputeGeoFromPartials(startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, attemps2, playerSpeed, distractPos2, distract2Pos2, tris);
+                            returned.endTime = System.DateTime.Now;
+                            nodes = returned.Nodes;
+                            results.Add(returned);
 
                             // Did we found a path?
                             if (nodes.Count > 0) {
                                 pathsgeo.Add(new PathGeo(nodes));
                                 toggleStatusGeo.Add(pathsgeo.Last(), true);
-                                //Debug.Log ("Count1 is : " + toggleStatusGeo.Count);
                                 pathsgeo.Last().color = new Color(UnityEngine.Random.Range(0.0f, 1.0f), UnityEngine.Random.Range(0.0f, 1.0f), UnityEngine.Random.Range(0.0f, 1.0f));
-                                //paths.Add (new Path (nodes));
-                                //toggleStatus.Add (paths.Last (), true);
-                                //paths.Last ().color = new Color (UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f), UnityEngine.Random.Range (0.0f, 1.0f));
-
-
 
                                 //Create path lines using the line objects 
                                 List<Line> path = new List<Line>();
@@ -963,11 +975,6 @@ namespace EditorArea {
 								{
 									l.DrawVector(temp,c);
 								}*/
-
-                                if (nodes.Count > 0) {
-                                    Debug.Log("Succeeded in " + "?" + " attempts");
-                                    break;
-                                }
                             }
 
 
@@ -985,7 +992,8 @@ namespace EditorArea {
 
 
 
-                    }
+                }
+                printResultsToFile(results);
                 
 
                 // Compute the summary about the paths and print it
@@ -1056,12 +1064,18 @@ namespace EditorArea {
                 }
 
                 List<NodeGeo> nodes = null;
+                RRTResult returned = null;
 
                 Vector3 distractPos = GameObject.Find("DistractPoint").transform.position;
                 Vector2 distractPos2 = new Vector2(distractPos.x, distractPos.z);
 
                 Vector3 distract2Pos = GameObject.Find("DistractPoint2").transform.position;
                 Vector2 distract2Pos2 = new Vector2(distract2Pos.x, distract2Pos.z);
+
+
+
+
+                List<RRTResult> results = new List<RRTResult>();
 
                 for (int it = 0; it < iterations; it++) {
 
@@ -1071,9 +1085,10 @@ namespace EditorArea {
                     try {
 
                         //nodes= rrtgeo.ComputeGeo (startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, playerSpeed, distractPos2, distract2Pos2);
-                        nodes = rrtgeo.ComputeGeosFromPartials(startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, attemps2, playerSpeed, distractPos2, distract2Pos2, tris);
-
-
+                        returned = rrtgeo.ComputeGeosFromPartials(startX, startY, endX, endY, minX, maxX, minY, maxY, 1000, attemps, attemps2, playerSpeed, distractPos2, distract2Pos2, tris);
+                        returned.endTime = System.DateTime.Now;
+                        nodes = returned.Nodes;
+                        results.Add(returned);
                         //nodes = rrt.Compute (startX, startY, endX, endY, attemps, stepSize, playerMaxHp, playerSpeed, playerDPS, fullMap, smoothPath);
 
                         //Debug.Log (nodes.Count);
@@ -1109,10 +1124,6 @@ namespace EditorArea {
                                 l.DrawVector(temp,c);
                             }*/
 
-                            if (nodes.Count > 0) {
-                                Debug.Log("Succeeded in " + "?" + " attempts");
-                                break;
-                            }
                         }
 
 
@@ -1132,7 +1143,7 @@ namespace EditorArea {
 
                 }
 
-
+                printResultsToFile(results);
                 // Compute the summary about the paths and print it
                 String summary = "Summary:\n";
                 summary += "Seed used:" + seed;
@@ -1328,68 +1339,75 @@ namespace EditorArea {
 				Vector3 nexPos = Vector3.zero;
 				Vector3 disPos = Vector3.zero;
 
-				foreach(EnemyGeo eg in guards.GetComponentsInChildren<EnemyGeo>()){
-					WaypointGeo current = eg.initialTarget;
-					WaypointGeo next = current.next;
-					curPos = eg.transform.position;
-					nexPos = current.transform.position;
-					normals.Add(new Line(curPos, nexPos));
-					List<WaypointGeo> visited = new List<WaypointGeo>();
-					bool check = false;
-					while(!check){
-						visited.Add (current);
-						curPos = current.transform.position;
-						nexPos = current.next.transform.position;
-						disPos = current.distractPoints[colorCodeIndex].transform.position;
-						toDistract.Add (new Line(curPos, disPos));
-						normals.Add (new Line(curPos, nexPos));
-						current = next;
-						next = next.next;
-						foreach(WaypointGeo way in visited){
-							if(way == current){
-								check = true;
-							}
-						}
-				}
+                foreach (EnemyGeo eg in guards.GetComponentsInChildren<EnemyGeo>()) {
+                    WaypointGeo current = eg.initialTarget;
+                    WaypointGeo next = current.next;
+                    curPos = eg.transform.position;
+                    nexPos = current.transform.position;
+                    normals.Add(new Line(curPos, nexPos));
+                    List<WaypointGeo> visited = new List<WaypointGeo>();
+                    bool check = false;
+                    while (!check) {
+                        visited.Add(current);
+                        curPos = current.transform.position;
+                        nexPos = current.next.transform.position;
+                        disPos = current.distractPoints[colorCodeIndex].transform.position;
+                        toDistract.Add(new Line(curPos, disPos));
+                        normals.Add(new Line(curPos, nexPos));
+                        current = next;
+                        next = next.next;
+                        foreach (WaypointGeo way in visited) {
+                            if (way == current) {
+                                check = true;
+                            }
+                        }
+                    }
 
-				foreach (WaypointGeo wp in waypoints.GetComponentsInChildren<WaypointGeo>()){		
-					if(wp.type == "distract"){
-						visited = new List<WaypointGeo>();
-						current = wp;
-						next = current.next;
-						check = false;
-						while(!check){
-							visited.Add (current);
-							curPos = current.transform.position;
-							nexPos = next.transform.position;
-							fromDistract.Add ( new Line(curPos, nexPos));
-							current = next;
-							next = next.next;
-							foreach(WaypointGeo way in visited){
-								if(way == current){
-									check = true;
-								}
-							}
-						}
-					}
-				}
-				normals = returnUniqueLineSet(normals);
-				toDistract = returnUniqueLineSet(toDistract);
-				fromDistract = returnUniqueLineSet(fromDistract);
-				GameObject temp = GameObject.Find ("temp" + colorCodeIndex);
-				foreach(Line l in normals){
-					l.DrawManArrow (temp, Color.blue, 2.0f);
-				}
-				foreach(Line l in toDistract){
-					l.DrawManArrow (temp, Color.red, 4.0f);
-				}
-				foreach(Line l in fromDistract){
-					l.DrawManArrow(temp, Color.green, 6.0f);
-				}
-				foreach(Line l in normals){
-					l.DrawManArrow (temp, Color.blue, 2.0f);
-				}
-			}
+
+                    foreach (WaypointGeo wp in waypoints.GetComponentsInChildren<WaypointGeo>()) {
+                        if (wp.type == "distract") {
+                            visited = new List<WaypointGeo>();
+                            current = wp;
+                            next = current.next;
+                            check = false;
+                            while (!check) {
+                                visited.Add(current);
+                                curPos = current.transform.position;
+                                nexPos = next.transform.position;
+                                fromDistract.Add(new Line(curPos, nexPos));
+                                current = next;
+                                next = next.next;
+                                foreach (WaypointGeo way in visited) {
+                                    if (way == current) {
+                                        check = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    normals = returnUniqueLineSet(normals);
+                    toDistract = returnUniqueLineSet(toDistract);
+                    fromDistract = returnUniqueLineSet(fromDistract);
+                    GameObject temp = GameObject.Find("temp" + colorCodeIndex);
+                    foreach (Line l in normals) {
+                        DebugDrawLineUsingObjectsArrow(temp, l, Color.blue, 1.0f);
+
+
+                        //l.DrawManArrow (temp, Color.blue, 2.0f);
+                    }
+                    foreach (Line l in toDistract) {
+                        DebugDrawLineUsingObjectsArrow(temp, l, Color.red, 2.0f);
+                        //l.DrawManArrow (temp, Color.red, 4.0f);
+                    }
+                    foreach (Line l in fromDistract) {
+                        DebugDrawLineUsingObjectsArrow(temp, l, Color.green, 3.0f);
+                        //l.DrawManArrow(temp, Color.green, 6.0f);
+                    }
+                    //foreach(Line l in normals){
+                    //         DebugDrawLineUsingObjectsLine(temp, l, Color.blue, 2.0f);
+                    //l.DrawManArrow (temp, Color.blue, 2.0f);
+                    //}
+                }
 			}
 
 			if (GUILayout.Button ("Clear Color Code Waypoints")){
@@ -1850,6 +1868,372 @@ namespace EditorArea {
 			}
 
 
+        private void printResultsToFile(List<RRTResult> rs) {
+            DateTime now = DateTime.Now;
+            string dateString = "" + now.Month + "" + now.Day + "" + now.Hour + "" + now.Minute + "" + now.Second;
+            StreamWriter sw = File.CreateText("Result" + dateString + ".txt");//new StreamWriter("Result" + System.DateTime.Now + ".txt");
+            sw.WriteLine("Text is being written");
+            printSummaryResultsToFile(rs, sw);
+            sw.WriteLine("--------------------------");
+            sw.WriteLine("--------------------------");
+            printIndividResultsToFile(rs, sw);
+            sw.Close();
+        }
+
+
+        private void printSummaryResultsToFile(List<RRTResult> rs, StreamWriter sw) {
+            int n = rs.Count;
+            sw.WriteLine(n + " search attempts were made, on average the following data:");
+            if (rs[0].type.Equals("normal")) {
+                sw.WriteLine("The search type was normal");
+                int sumRRTs = 0;
+                int sumNodes = 0;
+                int sumNodesRej = 0;
+                int sumNodesWasted = 0;
+                double sumTimes = 0.0;
+
+                int sumRRTsF = 0;
+                int sumNodesF = 0;
+                int sumNodesRejF = 0;
+                int sumNodesWastedF = 0;
+                double sumTimesF = 0.0;
+
+                int successes = 0;
+                foreach (RRTResult r in rs) {
+                    if (r.success) {
+                        sumNodesWasted += r.nodesWasted;
+                        sumRRTs += r.rrtsUsedMM[0];
+                        sumNodes += r.nodesUsedMM[0];
+                        sumNodesRej += r.nodesRejectedMM[0];
+                        sumTimes += (r.endTime - r.startTime).TotalSeconds;
+                        successes++;
+                    }
+                    else {
+                        sumNodesWastedF += r.nodesWasted;
+                        sumRRTsF += r.rrtsUsedMM[0];
+                        sumNodesF += r.nodesUsedMM[0];
+                        sumNodesRejF += r.nodesRejectedMM[0];
+                        sumTimesF += (r.endTime - r.startTime).TotalSeconds;
+                    }
+                }
+                double avNodesWasted = (double)sumNodesWasted / (double)successes;
+                double avRRTs = (double)sumRRTs / (double)successes;
+                double avNodes = (double)sumNodes / (double)successes;
+                double avNodesRej = (double)sumNodesRej / (double)successes;
+                double avTime =  sumTimes / (double)successes;
+                double avSucc = (double)successes / (double)n;
+                double f = (n - successes);
+                double avNodesWastedF = (double)sumNodesWastedF / (double)f;
+                double avRRTsF = (double)sumRRTsF / (double)f;
+                double avNodesF = (double)sumNodesF / (double)f;
+                double avNodesRejF = (double)sumNodesRejF / (double)f;
+                double avTimeF = sumTimesF / (double)f;
+                sw.WriteLine("Success,RRTs,Nodes,NodesRej,NodesWasted,Time,RRTsF,NodesF,NodesRejF,NodesWatedF,TimeF");
+                sw.WriteLine(avSucc + "," + avRRTs + "," + avNodes + "," + avNodesRej + "," + avNodesWasted + "," + avTime + "," + avRRTsF + "," + avNodesF + "," + avNodesRejF + "," + avNodesWastedF + "," + avTimeF);
+            }
+            else if (rs[0].type.Equals("2-1")) {
+                sw.WriteLine("The search type was single midpoint");
+                int sumRRTs = 0;
+                int sumNodes = 0;
+                int sumNodesRej = 0;
+                int sumRRTs2 = 0;
+                int sumNodes2 = 0;
+                int sumNodesRej2 = 0;
+                double sumTimes = 0.0;
+                int successes = 0;
+
+                int sumRRTsF = 0;
+                int sumNodesF = 0;
+                int sumNodesRejF = 0;
+                double sumTimesF = 0.0;
+                int sumRRTs2F = 0;
+                int sumNodes2F = 0;
+                int sumNodesRej2F = 0;
+
+                foreach (RRTResult r in rs) { 
+                    if (r.success) {                        
+                        sumRRTs += r.rrtsUsedMM[0];
+                        sumNodes += r.nodesUsedMM[0];
+                        sumNodesRej += r.nodesRejectedMM[0];
+                        sumRRTs2 += r.rrtsUsed2MM[0];
+                        sumNodes2 += r.nodesUsed2MM[0];
+                        sumNodesRej2 += r.nodesRejected2MM[0];
+                        sumTimes += (r.endTime - r.startTime).TotalSeconds;                    
+                        successes++;
+                    }
+                    else {
+                        sumRRTsF += r.rrtsUsedMM[0];
+                        sumNodesF += r.nodesUsedMM[0];
+                        sumNodesRejF += r.nodesRejectedMM[0];
+                        sumRRTs2F += r.rrtsUsed2MM[0];
+                        sumNodes2F += r.nodesUsed2MM[0];
+                        sumNodesRej2F += r.nodesRejected2MM[0];
+                        sumTimesF += (r.endTime - r.startTime).TotalSeconds;
+                    }
+                }
+                double avRRTs = (double)sumRRTs / (double)successes;
+                double avNodes = (double)sumNodes / (double)successes;
+                double avNodesRej = (double)sumNodesRej / (double)successes;
+                double avRRTs2 = (double)sumRRTs2 / (double)successes;
+                double avNodes2 = (double)sumNodes2 / (double)successes;
+                double avNodesRej2 = (double)sumNodesRej2 / (double)successes;
+                double avTime = sumTimes / (double)successes;
+                double avSucc = (double)successes / (double)n;
+                double f = (n - successes);
+                double avRRTsF = (double)sumRRTsF / (double)f;
+                double avNodesF = (double)sumNodesF / (double)f;
+                double avNodesRejF = (double)sumNodesRejF / (double)f;
+                double avTimeF = sumTimesF / (double)f;
+                double avRRTs2F = (double)sumRRTs2F / (double)f;
+                double avNodes2F = (double)sumNodes2F / (double)f;
+                double avNodesRej2F = (double)sumNodesRej2F / (double)f;
+
+                sw.WriteLine("Success,RRTs,Nodes,NodesRej,RRTs2,Nodes2,NodesRej2,Time,RRTsF,NodesF,NodesRejF,RRTs2F,Nodes2F,NodesRej2F,TimeF,");
+                sw.WriteLine(avSucc + "," + avRRTs + "," + avNodes + "," + avNodesRej + "," + avRRTs2 + "," + avNodes2 + "," + avNodesRej2 + "," + avTime + "," + avRRTsF + "," + avNodesF + "," + avNodesRejF + "," + avRRTs2F + "," + avNodes2F + "," + avNodesRej2F + "," + avTimeF);
+            }
+            else if (rs[0].type.Equals("2-2")) {
+                sw.WriteLine("The search type was multi-midpoint");
+                int sumRRTs = 0;
+                int sumNodes = 0;
+                int sumNodesRej = 0;
+                int sumMidPoints = 0;
+                int sumRRTs2 = 0;
+                int sumNodes2 = 0;
+                int sumNodesRej2 = 0;
+                double sumTimes = 0.0;
+                int successes = 0;
+
+                int sumRRTsF = 0;
+                int sumNodesF = 0;
+                int sumNodesRejF = 0;
+                int sumMidPointsF = 0;
+                double sumTimesF = 0.0;
+                int sumRRTs2F = 0;
+                int sumNodes2F = 0;
+                int sumNodesRej2F = 0;
+
+
+                foreach (RRTResult r in rs) {
+                    if (r.success) {
+                        successes++;
+                        sumMidPoints += r.rrtsUsedMM.Count;
+                        for(int i = 0; i < r.rrtsUsedMM.Count; i++) { 
+                            sumRRTs += r.rrtsUsedMM[i];
+                            sumNodes += r.nodesUsedMM[i];
+                            sumNodesRej += r.nodesRejectedMM[i];
+                            sumRRTs2 += r.rrtsUsed2MM[i];
+                            sumNodes2 += r.nodesUsed2MM[i];
+                            sumNodesRej2 += r.nodesRejected2MM[i];
+                        }
+
+                        sumTimes += (r.endTime - r.startTime).TotalSeconds;
+                    
+                    }
+                    else {
+                        sumMidPointsF += r.rrtsUsedMM.Count;
+                        for (int i = 0; i < r.rrtsUsedMM.Count; i++) {
+                            sumRRTsF += r.rrtsUsedMM[i];
+                            sumNodesF += r.nodesUsedMM[i];
+                            sumNodesRejF += r.nodesRejectedMM[i];
+                            sumRRTs2F += r.rrtsUsed2MM[i];
+                            sumNodes2F += r.nodesUsed2MM[i];
+                            sumNodesRej2F += r.nodesRejected2MM[i];
+                        }
+
+                        sumTimesF += (r.endTime - r.startTime).TotalSeconds;
+                    }
+                }
+                double avMidPoints = (double)sumMidPoints / (double)successes;
+                double avRRTs = (double)sumRRTs / (double)successes;
+                double avNodes = (double)sumNodes / (double)successes;
+                double avNodesRej = (double)sumNodesRej / (double)successes;
+                double avRRTs2 = (double)sumRRTs2 / (double)successes;
+                double avNodes2 = (double)sumNodes2 / (double)successes;
+                double avNodesRej2 = (double)sumNodesRej2 / (double)successes;
+                double avTime = sumTimes / (double)successes;
+                double avSucc = (double)successes / (double)n;
+                double f = n - successes;
+                double avMidPointsF = (double)sumMidPointsF / (double)f;
+                double avRRTsF = (double)sumRRTsF / (double)f;
+                double avNodesF = (double)sumNodesF / (double)f;
+                double avNodesRejF = (double)sumNodesRejF / (double)f;
+                double avTimeF = sumTimesF / (double)f;
+                double avRRTs2F = (double)sumRRTs2F / (double)f;
+                double avNodes2F = (double)sumNodes2F / (double)f;
+                double avNodesRej2F = (double)sumNodesRej2F / (double)f;
+
+                sw.WriteLine("Success,RRTs,Nodes,NodesRej,RRTs2,Nodes2,NodesRej2,Mids,Time,RRTsF,NodesF,NodesRejF,RRTs2F,Nodes2F,NodesRej2F,MidsF,TimeF,");
+                sw.WriteLine(avSucc + "," + avRRTs + "," + avNodes + "," + avNodesRej + "," + avRRTs2 + "," + avNodes2 + "," + avNodesRej2 + ","  + avMidPoints + "," + avTime + "," + avRRTsF + "," + avNodesF + "," + avNodesRejF + "," + avRRTs2F + "," + avNodes2F + "," + avNodesRej2F + "," + avMidPointsF + "," + avTimeF);
+            }
+
+            
+        }
+
+        private void printIndividResultsToFile(List<RRTResult> rs, StreamWriter sw) {
+            foreach (RRTResult r in rs) {
+                if (r.type.Equals("normal")) {
+                    
+                    //sw.WriteLine("There were " + r.rrtsUsedMM[0] + " tree searches used attempts made");
+                    //sw.WriteLine(r.nodesUsedMM[0] + " nodes were used");
+                    //sw.WriteLine(r.nodesRejectedMM[0] + " nodes were rejected for already being other nodes");
+                    TimeSpan timedif = r.endTime - r.startTime;
+                    //sw.WriteLine("The search took " + timedif);
+                    //sw.WriteLine("The success of the search was " + r.success);
+                    string sults = "";
+                    sults = sults + r.rrtsUsedMM[0] + "," + r.nodesUsedMM[0] + "," + r.nodesWasted + "," + timedif.TotalSeconds;
+                    if (r.success) {
+                        sults = sults + "," + 1;
+                    }
+                    else {
+                        sults = sults + "," + 0;
+                    }
+                    sw.WriteLine(sults);
+                }
+                else if (r.type.Equals("2-1")) {
+                    
+                    /*sw.WriteLine(r.rrtsUsedMM[0] + "tree searches were made for the first half");
+                    sw.WriteLine(r.nodesUsedMM[0] + " nodes were used for the first half");
+                    sw.WriteLine(r.nodesRejectedMM[0] + " nodes were rejected for already being other nodes in the first half");
+
+                    sw.WriteLine(r.rrtsUsed2MM[0] + "tree searches were made for the first half");
+                    sw.WriteLine(r.nodesUsed2MM[0] + " nodes were used for the first half");
+                    sw.WriteLine(r.nodesRejected2MM[0] + " nodes were rejected for already being other nodes in the first half");
+                    */
+                    TimeSpan timedif = r.endTime - r.startTime;
+                    /*
+                    sw.WriteLine("The search took " + timedif);
+                    sw.WriteLine("The success of the search was " + r.success);
+                    */
+                    string sults = "";
+                    sults = sults + r.rrtsUsedMM[0] + "," + r.nodesUsedMM[0] + "," + r.rrtsUsed2MM[0] + "," + r.nodesUsed2MM[0] + "," + timedif.TotalSeconds;
+                    if (r.success) {
+                        sults = sults + "," + 1;
+                    }
+                    else {
+                        sults = sults + "," + 0;
+                    }
+                    sw.WriteLine(sults);
+
+
+                }
+                else if (r.type.Equals("2-2")) {
+                    
+                   /* sw.WriteLine("There were " + r.rrtsUsedMM.Count + " midPoints used");
+                    for (int i = 0; i < r.rrtsUsedMM.Count; i++) {
+                        sw.WriteLine("For midpoint  " + i + ":");
+                        sw.WriteLine(r.rrtsUsedMM[i] + "tree searches were made for the first half");
+                        sw.WriteLine(r.nodesUsedMM[i] + " nodes were used for the first half");
+                        sw.WriteLine(r.nodesRejectedMM[i] + " nodes were rejected for already being other nodes in the first half");
+
+                        sw.WriteLine(r.rrtsUsed2MM[i] + "tree searches were made for the first half");
+                        sw.WriteLine(r.nodesUsed2MM[i] + " nodes were used for the first half");
+                        sw.WriteLine(r.nodesRejected2MM[i] + " nodes were rejected for already being other nodes in the first half");
+                    }*/
+                    TimeSpan timedif = r.endTime - r.startTime;
+                    /*sw.WriteLine("The search took " + timedif);
+                    sw.WriteLine("The success of the search was " + r.success);*/
+
+                    string sults = "";
+
+                    int rrtsUsed = 0;
+                    int rrtsUsed2 = 0;
+                    int nodesUsed = 0;
+                    int nodesUsed2 = 0;
+                    for(int i = 0; i< r.rrtsUsedMM.Count; i++) {
+                        rrtsUsed = rrtsUsed + r.rrtsUsedMM[i];
+                        rrtsUsed2 = rrtsUsed2 + r.rrtsUsed2MM[i];
+                        nodesUsed = nodesUsed + r.nodesUsedMM[i];
+                        nodesUsed2 = nodesUsed2 + r.nodesUsed2MM[i];
+                    }
+
+                   
+                    sults = sults + rrtsUsed + "," +nodesUsed + "," +rrtsUsed2 + "," + nodesUsed2 + "," + timedif.TotalSeconds;
+                    if (r.success) {
+                        sults = sults + "," + 1;
+                    }
+                    else {
+                        sults = sults + "," + 0;
+                    }
+                    sw.WriteLine(sults);
+
+
+
+                }
+                //sw.WriteLine("--------------------------------");
+
+
+
+
+
+
+            }
+        }
+
+
+
+
+        private void DebugDrawLineUsingObjectsArrow(GameObject parent, Line l, Color c, float thickness) {
+
+            float fractionSizeArrow = 0.1f;
+            float angleArrow = 15f;
+
+
+            DebugDrawLineUsingObjectsLine(parent, l, c, thickness);
+
+            Vector3 startPoint = l.vertex[0];
+            Vector3 endPoint = l.vertex[1];
+            //float dist = Vector2.Distance(startPoint, endPoint);
+            //float size = fractionSizeArrow * dist;
+
+
+            Vector3 linePoint1 = endPoint + ((startPoint - endPoint) * fractionSizeArrow);
+            Vector3 linePoint2 = linePoint1;
+
+            linePoint1.x = endPoint.x + ((linePoint1.x - endPoint.x) * Mathf.Cos(Mathf.Deg2Rad * angleArrow)) - ((linePoint1.z - endPoint.z) * Mathf.Sin(Mathf.Deg2Rad * angleArrow));
+            linePoint1.z = endPoint.z + ((linePoint1.x - endPoint.x) * Mathf.Sin(Mathf.Deg2Rad * angleArrow)) + ((linePoint1.z - endPoint.z) * Mathf.Cos(Mathf.Deg2Rad * angleArrow));
+
+            linePoint2.x = endPoint.x + ((linePoint2.x - endPoint.x) * Mathf.Cos(Mathf.Deg2Rad * -angleArrow)) - ((linePoint2.z - endPoint.z) * Mathf.Sin(Mathf.Deg2Rad * -angleArrow));
+            linePoint2.z = endPoint.z + ((linePoint2.x - endPoint.x) * Mathf.Sin(Mathf.Deg2Rad * -angleArrow)) + ((linePoint2.z - endPoint.z) * Mathf.Cos(Mathf.Deg2Rad * -angleArrow));
+
+            Line l1 = new Line(linePoint1, endPoint);
+            Line l2 = new Line(linePoint2, endPoint);
+
+            DebugDrawLineUsingObjectsLine(parent, l1, c, thickness);
+            DebugDrawLineUsingObjectsLine(parent, l2, c, thickness);
+
+
+
+        }
+
+        private void DebugDrawLineUsingObjectsLine(GameObject parent, Line l, Color c, float thickness) {
+            Vector3 l1 = l.vertex[0];
+            Vector3 l2 = l.vertex[1];
+            GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
+            lin.transform.parent = parent.transform;
+            lin.transform.position = (l1 + l2) / 2.0f;
+            lin.transform.position = new Vector3(lin.transform.position.x, 0.05f * lin.transform.position.y, lin.transform.position.z);
+            Vector3 dists = (l1 - l2);
+            dists.y = 0.05f * dists.y;
+
+            Vector3 from = Vector3.right;
+            Vector3 to = dists / dists.magnitude;
+
+            Vector3 axis = Vector3.Cross(from, to);
+            float angle = Mathf.Rad2Deg * Mathf.Acos(Vector3.Dot(from, to));
+            lin.transform.RotateAround(lin.transform.position, axis, angle);
+
+
+            Vector3 scale = Vector3.one;
+            scale.x = Vector3.Magnitude(dists);
+            scale.z = 0.2f*thickness;
+            scale.y = 0.2f;
+
+            lin.transform.localScale = scale;
+
+            lin.GetComponent<Renderer>().material.color = c;
+        }
+
         private void DebugDrawLineUsingObjects(GameObject parent, Vector3 l1, Vector3 l2) {
             GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Cube);
             lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
@@ -1910,7 +2294,7 @@ namespace EditorArea {
 
 		private void preComputeCasts(float minX, float maxX, float minY, float maxY, int width, int height){
 
-
+            DateTime now = DateTime.Now;
 
 			float startX = Mathf.Floor(minX);
 			float startY = Mathf.Floor(minY);
@@ -1957,6 +2341,7 @@ namespace EditorArea {
 			Debug.Log (curY2);
 
 			casts = new preCast(minX, maxX, minY, maxY, width, height, stepX, stepY, castsA);
+            Debug.Log((DateTime.Now - now).TotalSeconds);
 
 		}
 

@@ -578,43 +578,45 @@ public class Triangulation : MonoBehaviour
         //Debug.Log(obsGeos);
         //Debug.Log(obsGeos.Count);
         //TODO REMOVE DEBUG
-       /* GameObject parent = new GameObject("DebugParent");
-        foreach (Line l in obsGeos[0].edges) {
-            //Debug.Log(l.vertex[0] + "," + l.vertex[1]);
+       /*GameObject parent = new GameObject("DebugParent");
+        Debug.Log(obsGeos.Count);
+        foreach(Geometry ggg in obsGeos) {
+            foreach (Line l in ggg.edges/*obsGeos[0].edges/**//*) {
+                //Debug.Log(l.vertex[0] + "," + l.vertex[1]);
 
-            GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
-            lin.transform.parent = parent.transform;
-            lin.transform.position = (l.vertex[0] + l.vertex[1]) / 2.0f;
-            lin.transform.position = new Vector3(lin.transform.position.x, 0.05f * lin.transform.position.y, lin.transform.position.z);
-            Vector3 dists = (l.vertex[1] - l.vertex[0]);
-            dists.y = 0.05f * dists.y;
+                GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
+                lin.transform.parent = parent.transform;
+                lin.transform.position = (l.vertex[0] + l.vertex[1]) / 2.0f;
+                lin.transform.position = new Vector3(lin.transform.position.x, 0.05f * lin.transform.position.y, lin.transform.position.z);
+                Vector3 dists = (l.vertex[1] - l.vertex[0]);
+                dists.y = 0.05f * dists.y;
 
-            Vector3 from = Vector3.right;
-            Vector3 to = dists / dists.magnitude;
+                Vector3 from = Vector3.right;
+                Vector3 to = dists / dists.magnitude;
 
-            Vector3 axis = Vector3.Cross(from, to);
-            float angle = Mathf.Rad2Deg * Mathf.Acos(Vector3.Dot(from, to));
-            lin.transform.RotateAround(lin.transform.position, axis, angle);
-
-
-            Vector3 scale = Vector3.one;
-            scale.x = Vector3.Magnitude(dists);
-            scale.z = 0.2f;
-            scale.y = 0.2f;
-
-            lin.transform.localScale = scale;
+                Vector3 axis = Vector3.Cross(from, to);
+                float angle = Mathf.Rad2Deg * Mathf.Acos(Vector3.Dot(from, to));
+                lin.transform.RotateAround(lin.transform.position, axis, angle);
 
 
+                Vector3 scale = Vector3.one;
+                scale.x = Vector3.Magnitude(dists);
+                scale.z = 0.2f;
+                scale.y = 0.2f;
 
-
+                lin.transform.localScale = scale;
 
 
 
 
 
 
-        }*/
+
+
+
+            }
+        }/**/
         //TODO END OF DEBUG TO REMOVE
 
 		List<Geometry> finalPoly = new List<Geometry> ();//Contains all polygons that are fully insde the map
@@ -1133,8 +1135,8 @@ public class Triangulation : MonoBehaviour
 
 
         triangles = delaunayIfy(triangles);
-        GameObject triDParent = new GameObject("triDParent");
-        drawTris(triangles, triDParent.transform);
+        //GameObject triDParent = new GameObject("triDParent");
+        //drawTris(triangles, triDParent.transform);
 
         triangulation.triangles = triangles;
 
@@ -1142,7 +1144,7 @@ public class Triangulation : MonoBehaviour
 		roadMap.Clear();
 
 
-        makeRoadMap(triangles);  
+        makeRoadMap(triangles);
 
         /*
 		foreach(Triangle tt in triangles)
@@ -1194,9 +1196,9 @@ public class Triangulation : MonoBehaviour
 
             lin.transform.localScale = scale;
         }/**/
-        
-	
-		return toReturn;
+
+        return obsGeos;
+		//return toReturn;
 	}
 
     
@@ -1427,7 +1429,10 @@ public class Triangulation : MonoBehaviour
 
 
     public static List<List<int>> findAllSimpleEndPaths(Triangle startT, Triangle endT) {
-        genTreeStruct(startT);
+        //Debug.Log(startT.GetCenterTriangle());
+        //Debug.Log(endT.GetCenterTriangle());
+
+        genTreeStructE(startT,endT);
         simpTreeStruct(startT);
 
         List<List<int>> paths = new List<List<int>>();
@@ -1602,6 +1607,7 @@ public class Triangulation : MonoBehaviour
                 }
                 else {
                     Debug.Log("THERE ARE PROBLEMS");
+                    Debug.Log(t.treeKids.Count);
                     Debug.Log(t.GetCenterTriangle());
                     break;
                 }
@@ -1619,7 +1625,9 @@ public class Triangulation : MonoBehaviour
     public static Triangle findMidTriangleAlongPath(Triangle startT, Triangle endT, List<int> path) {
         //computeDistanceTree(startT);
         float TotDistance = findDistanceAlongPath(startT, endT, path);
-        float halfDist = TotDistance / 2f;
+        //Debug.Log("TotDistance:" + TotDistance);
+        float halfDist = TotDistance / 2f - 5f;
+        //Debug.Log("HalfDistance:" + TotDistance);
         float distance = 0;
         Triangle t = startT;
         int index = 0;
@@ -1638,9 +1646,13 @@ public class Triangulation : MonoBehaviour
             distance = distance + l1.Magnitude() + l2.Magnitude();
             if (distance > halfDist) {
                 if((distance - halfDist) > (halfDist - (distance - l1.Magnitude() - l2.Magnitude()))) {
+                    //Debug.Log("PDist:" + (distance - l1.Magnitude() - l2.Magnitude()));
+                    //Debug.Log("RealdDist:" + t.distance);
                     return t;
                 }
                 else {
+                    //Debug.Log("PDist:" + distance);
+                    //Debug.Log("RealdDist:" + tt.distance);
                     return tt;
                 }
             }
@@ -1663,7 +1675,7 @@ public class Triangulation : MonoBehaviour
         root.transform.parent = node.transform;
         root.name = "root";
         foreach (Triangle tt in t.simpTreeKids) {
-            DebugDrawLineUsingObjects(node, t.GetCenterTriangle(), tt.GetCenterTriangle());
+            DebugDrawLineUsingObjectsArrowVec(node, t.GetCenterTriangle(), tt.GetCenterTriangle());
             drawTreeStructHelpSimp(tt, node);
         }
     }
@@ -1690,7 +1702,7 @@ public class Triangulation : MonoBehaviour
         }
         Debug.Log(toDebug);*/
         foreach (Triangle tt in t.simpTreeKids) {
-            DebugDrawLineUsingObjects(node, t.GetCenterTriangle(), tt.GetCenterTriangle());
+            DebugDrawLineUsingObjectsArrowVec(node, t.GetCenterTriangle(), tt.GetCenterTriangle());
             drawTreeStructHelpSimp(tt, node);
         }
     }
@@ -1735,10 +1747,6 @@ public class Triangulation : MonoBehaviour
 
     public static void drawTreeStruct(Triangle t) {
         antiInfiniLoopTreeDraw = 0;
-        
-        
-
-
 
         drawn = new List<Triangle>();
         drawn.Add(t);
@@ -1748,6 +1756,7 @@ public class Triangulation : MonoBehaviour
         node.transform.parent = triTree.transform;
         GameObject root = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         root.transform.position = t.GetCenterTriangle();
+        root.transform.position = t.GetCenterTriangle() + new Vector3(0f, t.distance - 1f, 0f);
         root.transform.parent = node.transform;
         root.name = "root";
 
@@ -1761,7 +1770,7 @@ public class Triangulation : MonoBehaviour
 
         foreach (Triangle tt in t.treeKids) {
             //Draw Line from original node to each treeKid
-            DebugDrawLineUsingObjects(node, t.GetCenterTriangle(), tt.GetCenterTriangle());
+            DebugDrawLineUsingObjectsArrowVec(node, t.GetCenterTriangle(), tt.GetCenterTriangle());
 
             //Recursively draw each tree Node
             drawTreeStructHelp(tt, node);
@@ -1799,18 +1808,155 @@ public class Triangulation : MonoBehaviour
         node.transform.parent = tObj.transform;
         GameObject ctObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         ctObj.transform.position = t.GetCenterTriangle();
+        ctObj.transform.position = t.GetCenterTriangle() + new Vector3(0f, t.distance - 1f, 0f);
         ctObj.transform.parent = node.transform;
         ctObj.name = "tri";
 
 
         foreach (Triangle tt in t.treeKids) {
             //Draw Line between each treeKid an this parent
-            DebugDrawLineUsingObjects(node, t.GetCenterTriangle(), tt.GetCenterTriangle());
+            DebugDrawLineUsingObjectsArrowVec(node, t.GetCenterTriangle(), tt.GetCenterTriangle());
 
             //Call recursively on each child
             drawTreeStructHelp(tt, node);
         }
     }
+
+    public static void genTreeStructE(Triangle t, Triangle end) {
+        antiInfiniLoopTree = 0;
+        //t.treeKids = new List<Triangle>();
+        t.treeKids.Clear();
+        t.treeKids.AddRange(t.voisins);
+        t.treeDepth = 0;
+        foreach (Triangle tt in t.treeKids) {
+            if (!tt.parents.Contains(t)) {
+                tt.parents.Add(t);
+            }
+            tt.treeDepth = 1;
+            genTreeStructHelpE(tt,end);
+        }
+        foreach (Triangle tt in t.treeKids) {
+            setParents(tt);
+        }
+    }
+
+
+    private static void genTreeStructHelpE(Triangle t, Triangle end) {
+        //Debug.Log(t.GetCenterTriangle());
+        antiInfiniLoopTree++;
+        if (antiInfiniLoopTree > 250) {
+            Debug.Log("INFINILOOPTREE");
+            Debug.Log(t.GetCenterTriangle());
+
+            return;
+        }
+        //t.treeKids = new List<Triangle>();
+        t.treeKids.Clear();
+        /*foreach (Triangle tt in t.voisins) {
+            if(tt.treeDepth < 0) {
+                t.treeKids.Add(tt);
+            }
+            else if(tt.treeDepth > t.treeDepth) {
+                t.treeKids.Add(tt);
+            }
+        }*/
+        bool testering = false;
+        /*if ((t.GetCenterTriangle() - new Vector3(-14f, 1, 23.3333f)).magnitude < 0.0001f) {
+            testering = true;
+            Debug.Log("TESTERING");
+            Debug.Log(t.GetCenterTriangle());
+        }*/
+        //if ((t.GetCenterTriangle() - new Vector3(47.7f, 1f, -32.3f)).magnitude < 0.5f) {
+        //    Debug.Log("WE HAVE REACHED WEIRDO");
+        //}
+
+        foreach (Triangle tt in t.voisins) {
+            //if((t.GetCenterTriangle() - new Vector3(47.7f, 1f, -32.3f)).magnitude < 0.5f) {
+           //     if (tt.Equals(end)) {
+           //         Debug.Log("INFO!");
+           //         Debug.Log("weirdo" + t.treeDepth);
+            //        Debug.Log("end" + tt.treeDepth);
+           //         Debug.Log("ENDINFO!");
+            //    }
+            //}
+
+
+
+            if (t.Equals(end)) {
+                Debug.Log("FOUND END");
+                Debug.Log(t.GetCenterTriangle());
+                continue;
+            }
+
+            if (testering) {
+                Debug.Log("New Voisin" + tt.GetCenterTriangle());
+            }
+            if (tt.treeDepth < 0) {            
+                if (testering) {
+                    Debug.Log("CASE1");
+                }
+                tt.treeDepth = t.treeDepth + 1;
+                if (!t.treeKids.Contains(tt)) {
+
+                    t.treeKids.Add(tt);
+                }
+                else {
+                    Debug.Log("NOT ADDED, YAY1");
+                }
+                if (!tt.Equals(end)) {
+                    
+                   genTreeStructHelpE(tt, end);
+                    
+                }
+            }
+            else if (tt.treeDepth > t.treeDepth + 1) {
+                if (testering) {
+                    Debug.Log("CASE2");
+                }
+                tt.treeDepth = t.treeDepth + 1;
+                if (!t.treeKids.Contains(tt)) {
+
+                    t.treeKids.Add(tt);
+                }
+                else {
+                    Debug.Log("NOT ADDED, YAY1");
+                }
+                if (!tt.Equals(end)) {
+                    
+                        genTreeStructHelpE(tt, end);
+                    
+                }
+            }
+            else if (tt.treeDepth == t.treeDepth + 1) {
+
+                //TODO: ADD STUFF HERE TO FIX THE THINGS! maybe, or change the distance function...?
+                if (testering) {
+                    Debug.Log("CASE3");
+                }
+                if (!t.treeKids.Contains(tt)) {
+                    t.treeKids.Add(tt);
+                }
+                else {
+                    Debug.Log("NOT ADDED, YAY1");
+                }
+                tt.treeKids.Remove(t);
+            }
+            else if(tt.treeDepth == t.treeDepth) {
+                if (tt.Equals(end)) {
+
+                    t.treeKids.Add(tt);
+                }
+               
+
+            }
+        }
+    }
+
+
+
+
+
+
 
     public static void genTreeStruct(Triangle t) {
         antiInfiniLoopTree = 0;
@@ -1900,6 +2046,8 @@ public class Triangulation : MonoBehaviour
                 genTreeStructHelp(tt);
             }
             else if(tt.treeDepth == t.treeDepth + 1) {
+
+                //TODO: ADD STUFF HERE TO FIX THE THINGS! maybe, or change the distance function...?
                 if (testering) {
                     Debug.Log("CASE3");
                 }
@@ -1914,14 +2062,25 @@ public class Triangulation : MonoBehaviour
         }
     }
 
+    public static void computeDistanceTreeE(Triangle t, Triangle end) {
+        genTreeStructE(t, end);
+        t.distance = 0;
+        computeCloseHelpTree(t);
+        Debug.Log("Max Dist is" + maxDist);
+        antiInfiniLoop2 = 0;
+    }
+
     public static void computeDistanceTree(Triangle t) {
         genTreeStruct(t);
         t.distance = 0;
         computeCloseHelpTree(t);
+        //Debug.Log("Max Dist is" + maxDist);
         antiInfiniLoop2 = 0;
     }
 
     private static int antiInfiniLoop2 = 0;
+
+    private static float maxDist = 0;
 
     private static void computeCloseHelpTree(Triangle t) {
         antiInfiniLoop2++;
@@ -1939,6 +2098,7 @@ public class Triangulation : MonoBehaviour
                 Vector3 midPoint = t.ShareEdged(tt).MidPoint();
                 Line l1 = new Line(t.GetCenterTriangle(), midPoint);
                 Line l2 = new Line(midPoint, tt.GetCenterTriangle());
+                maxDist = Mathf.Max(maxDist, l1.Magnitude() + l2.Magnitude());
                 if (l1.Magnitude() + l2.Magnitude() + t.distance < tt.distance + 0.0001f) {
                     tt.distance = l1.Magnitude() + l2.Magnitude() + t.distance;
                     tt.changed = true;
@@ -1951,6 +2111,74 @@ public class Triangulation : MonoBehaviour
             computeCloseHelpTree(tt);
         }
     }
+
+
+    private static void DebugDrawLineUsingObjectsArrowVec(GameObject parent, Vector3 l1, Vector3 l2) {
+        DebugDrawLineUsingObjectsArrow(parent, new Line(l1, l2), Color.blue, 1f);
+    }
+
+    private static void DebugDrawLineUsingObjectsArrow(GameObject parent, Line l, Color c, float thickness) {
+
+        float fractionSizeArrow = 0.2f;
+        float angleArrow = 15f;
+
+
+        DebugDrawLineUsingObjectsLine(parent, l, c, thickness);
+
+        Vector3 startPoint = l.vertex[0];
+        Vector3 endPoint = l.vertex[1];
+        //float dist = Vector2.Distance(startPoint, endPoint);
+        //float size = fractionSizeArrow * dist;
+
+
+        Vector3 linePoint1 = endPoint + ((startPoint - endPoint) * fractionSizeArrow);
+        Vector3 linePoint2 = linePoint1;
+
+        linePoint1.x = endPoint.x + ((linePoint1.x - endPoint.x) * Mathf.Cos(Mathf.Deg2Rad * angleArrow)) - ((linePoint1.z - endPoint.z) * Mathf.Sin(Mathf.Deg2Rad * angleArrow));
+        linePoint1.z = endPoint.z + ((linePoint1.x - endPoint.x) * Mathf.Sin(Mathf.Deg2Rad * angleArrow)) + ((linePoint1.z - endPoint.z) * Mathf.Cos(Mathf.Deg2Rad * angleArrow));
+
+        linePoint2.x = endPoint.x + ((linePoint2.x - endPoint.x) * Mathf.Cos(Mathf.Deg2Rad * -angleArrow)) - ((linePoint2.z - endPoint.z) * Mathf.Sin(Mathf.Deg2Rad * -angleArrow));
+        linePoint2.z = endPoint.z + ((linePoint2.x - endPoint.x) * Mathf.Sin(Mathf.Deg2Rad * -angleArrow)) + ((linePoint2.z - endPoint.z) * Mathf.Cos(Mathf.Deg2Rad * -angleArrow));
+
+        Line l1 = new Line(linePoint1, endPoint);
+        Line l2 = new Line(linePoint2, endPoint);
+
+        DebugDrawLineUsingObjectsLine(parent, l1, c, thickness);
+        DebugDrawLineUsingObjectsLine(parent, l2, c, thickness);
+
+
+
+    }
+
+    private static void DebugDrawLineUsingObjectsLine(GameObject parent, Line l, Color c, float thickness) {
+        Vector3 l1 = l.vertex[0];
+        Vector3 l2 = l.vertex[1];
+        GameObject lin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        lin.GetComponent<Renderer>().sharedMaterial.color = Color.red;
+        lin.transform.parent = parent.transform;
+        lin.transform.position = (l1 + l2) / 2.0f;
+        lin.transform.position = new Vector3(lin.transform.position.x, 0.05f * lin.transform.position.y, lin.transform.position.z);
+        Vector3 dists = (l1 - l2);
+        dists.y = 0.05f * dists.y;
+
+        Vector3 from = Vector3.right;
+        Vector3 to = dists / dists.magnitude;
+
+        Vector3 axis = Vector3.Cross(from, to);
+        float angle = Mathf.Rad2Deg * Mathf.Acos(Vector3.Dot(from, to));
+        lin.transform.RotateAround(lin.transform.position, axis, angle);
+
+
+        Vector3 scale = Vector3.one;
+        scale.x = Vector3.Magnitude(dists);
+        scale.z = 0.2f * thickness;
+        scale.y = 0.2f;
+
+        lin.transform.localScale = scale;
+
+        lin.GetComponent<Renderer>().material.color = c;
+    }
+
 
 
     private static void DebugDrawLineUsingObjects(GameObject parent, Vector3 l1, Vector3 l2) {
